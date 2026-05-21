@@ -317,7 +317,6 @@
             <img src="{{ $headerImage }}" alt="Header" class="header-image">
         @endif
 
-        <div class="report-chip">Rekap Kinerja Bulanan</div>
         <div class="report-title">Laporan Capaian Kinerja Harian</div>
         <div class="report-subtitle">Dokumen ringkas capaian aktivitas harian selama periode {{ $periodLabel }}</div>
 
