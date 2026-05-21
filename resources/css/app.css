@@ -1,0 +1,876 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@layer components {
+    .silatar-hero {
+        @apply mx-auto max-w-6xl px-6 pb-8 pt-6 lg:px-8 lg:pb-12;
+    }
+
+    .silatar-hero-wrap {
+        @apply space-y-5 text-center;
+    }
+
+    .silatar-hero-badge {
+        @apply inline-flex items-center gap-2 self-center rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-medium text-cyan-700 shadow-sm;
+    }
+
+    .silatar-hero-title {
+        font-family: Georgia, 'Times New Roman', serif;
+        @apply mx-auto max-w-3xl text-5xl font-black uppercase tracking-[0.22em] text-slate-950 sm:text-6xl;
+    }
+
+    .silatar-tab-shell {
+        @apply rounded-[2rem] border border-slate-200/80 bg-white/90 px-4 py-4 shadow-sm backdrop-blur;
+    }
+
+    .silatar-tab-list {
+        @apply flex flex-wrap justify-center gap-3 text-sm font-medium text-slate-600;
+    }
+
+    .silatar-tab-button {
+        @apply inline-flex min-w-[120px] items-center justify-center gap-2 rounded-2xl px-5 py-3 transition;
+    }
+
+    .silatar-unit-grid {
+        @apply mx-auto mt-6 grid max-w-[74rem] justify-items-center gap-5 sm:grid-cols-2 xl:grid-cols-3;
+    }
+
+    .silatar-unit-card {
+        @apply flex h-full min-h-[39rem] w-full max-w-[23.5rem] flex-col overflow-hidden rounded-[1.6rem] border border-slate-200/80 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl;
+    }
+
+    .silatar-unit-cover {
+        @apply relative isolate h-[23rem] overflow-hidden;
+    }
+
+    .silatar-unit-cover-img {
+        @apply absolute inset-0 h-full w-full object-contain object-center p-2.5;
+    }
+
+    .silatar-unit-cover-overlay {
+        @apply absolute inset-0 opacity-70;
+    }
+
+    .silatar-unit-cover-fallback {
+        @apply absolute inset-0 hidden flex items-center justify-center bg-white/40 backdrop-blur-sm;
+    }
+
+    .silatar-unit-cover-fallback-chip {
+        @apply grid h-24 w-24 place-items-center rounded-[2rem] border border-white/60 bg-white/75 text-2xl font-bold tracking-[0.2em] text-slate-900 shadow-xl backdrop-blur;
+    }
+
+    .silatar-unit-cover-chip {
+        @apply absolute left-4 top-4 z-10 rounded-full px-3 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-white shadow-sm;
+    }
+
+    .silatar-unit-cover-star {
+        @apply absolute right-4 top-4 z-10 rounded-full bg-white/80 p-2 text-slate-500 shadow-sm backdrop-blur;
+    }
+
+    .silatar-unit-cover-label {
+        @apply absolute inset-x-0 bottom-0 z-10 px-4 pb-4 pt-16;
+    }
+
+    .silatar-unit-cover-label-chip {
+        @apply mx-auto max-w-[16rem] rounded-full bg-white/24 px-3 py-1.5 text-center shadow-sm backdrop-blur-md;
+    }
+
+    .silatar-unit-cover-label-text {
+        @apply truncate text-[0.52rem] font-semibold uppercase tracking-[0.3em] text-slate-700/70;
+    }
+
+    .silatar-unit-body {
+        @apply flex flex-1 flex-col space-y-3 p-5;
+    }
+
+    .silatar-unit-info {
+        @apply flex items-center justify-between gap-3 rounded-[1.05rem] border border-slate-100 bg-slate-50 px-4 py-2.5 text-xs sm:text-sm;
+    }
+
+    .silatar-unit-head {
+        @apply flex items-center gap-3 rounded-[1.05rem] border border-cyan-100 bg-cyan-50 px-4 py-2.5 text-xs text-cyan-900 sm:text-sm;
+    }
+
+    .silatar-unit-head-placeholder {
+        @apply flex items-center gap-3 rounded-[1.05rem] border border-dashed border-transparent px-4 py-2.5 text-xs sm:text-sm;
+    }
+
+    .silatar-unit-meta-chip {
+        @apply rounded-full px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.2em];
+    }
+
+    .silatar-pagination-shell {
+        @apply mx-auto mt-8 max-w-6xl px-6 lg:px-8;
+    }
+
+    .silatar-pagination-panel {
+        @apply flex flex-col gap-3 rounded-[1.5rem] border border-slate-200/70 bg-white/90 p-3.5 shadow-sm backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:shadow-md lg:flex-row lg:items-center lg:justify-between;
+    }
+
+    .silatar-pagination-meta {
+        @apply flex flex-wrap items-center gap-2.5;
+    }
+
+    .silatar-pagination-side {
+        @apply flex flex-wrap items-center justify-center gap-2.5;
+    }
+
+    .silatar-pagination-badge {
+        @apply inline-flex items-center rounded-full bg-cyan-500 px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white shadow-sm;
+    }
+
+    .silatar-pagination-text {
+        @apply text-sm font-medium text-slate-500;
+    }
+
+    .silatar-pagination-jump {
+        @apply flex flex-wrap items-center justify-center gap-2 rounded-full border border-slate-100 bg-slate-50/80 px-2.5 py-2 lg:justify-end;
+    }
+
+    .silatar-pagination-form-label {
+        @apply text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-slate-500;
+    }
+
+    .silatar-pagination-input {
+        @apply h-10 w-20 rounded-full border border-slate-200 bg-white px-3 text-center text-sm font-semibold text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100;
+    }
+
+    .silatar-pagination-button {
+        @apply inline-flex h-10 items-center justify-center rounded-full bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-cyan-600 active:translate-y-0 active:scale-95;
+    }
+
+    .silatar-pagination-nav {
+        @apply inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-cyan-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-900 active:translate-y-0 active:scale-95;
+    }
+
+    .silatar-global-loading-bar-track {
+        @apply h-1 w-full overflow-hidden bg-slate-200/70;
+    }
+
+    .silatar-global-loading-bar {
+        @apply h-full w-1/2 animate-pulse rounded-r-full shadow-[0_0_18px_rgba(14,165,233,0.45)];
+        animation: silatar-loading-sweep 1.4s ease-in-out infinite;
+    }
+
+    .silatar-global-loading-toast {
+        @apply flex items-center gap-3 rounded-full border bg-white/90 px-4 py-3 shadow-[0_18px_50px_rgba(15,23,42,0.18)] backdrop-blur;
+    }
+
+    .silatar-global-loading-spinner {
+        @apply h-4 w-4 flex-none rounded-full border-2 border-slate-400 border-t-transparent;
+        animation: silatar-spin 0.8s linear infinite;
+    }
+
+    .silatar-detail-shell {
+        @apply mx-auto max-w-6xl px-6 py-8 lg:px-8;
+    }
+
+    .silatar-request-banner {
+        @apply mb-6 overflow-hidden rounded-[2rem] border border-white/80 p-5 shadow-sm;
+        background: linear-gradient(135deg, #ffffff 0%, #ecfeff 45%, #f8fafc 100%);
+    }
+
+    .silatar-request-banner-inner {
+        @apply flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between;
+    }
+
+    .silatar-request-banner-brand {
+        @apply flex items-center gap-4;
+    }
+
+    .silatar-request-banner-mark {
+        @apply grid h-16 w-16 flex-none place-items-center rounded-[1.4rem] border border-cyan-100 bg-white shadow-sm;
+    }
+
+    .silatar-request-banner-mark img {
+        @apply h-10 w-10 object-contain;
+    }
+
+    .silatar-request-banner-kicker {
+        @apply text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700;
+    }
+
+    .silatar-request-banner-title {
+        @apply mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl;
+    }
+
+    .silatar-request-banner-subtitle {
+        @apply mt-1 text-sm text-slate-600;
+    }
+
+    .silatar-request-banner-status {
+        @apply hidden rounded-full border border-cyan-100 bg-white px-4 py-2 text-sm font-semibold text-cyan-800 shadow-sm sm:inline-flex;
+    }
+
+    .silatar-request-banner-special {
+        @apply rounded-full border border-amber-100 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 shadow-sm;
+    }
+
+    .silatar-request-surface {
+        @apply rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm;
+    }
+
+    .silatar-request-section-label {
+        @apply inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-700;
+    }
+
+    .silatar-request-upload-grid {
+        @apply mt-4 grid gap-4 lg:grid-cols-3;
+    }
+
+    .silatar-request-type-group {
+        @apply mt-6;
+    }
+
+    .silatar-request-type-group + .silatar-request-type-group {
+        @apply mt-8;
+    }
+
+    .silatar-request-type-header {
+        @apply mb-3 flex items-center justify-between gap-3;
+    }
+
+    .silatar-request-type-badge {
+        @apply inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-slate-600;
+    }
+
+    .silatar-request-type-stack {
+        @apply space-y-3;
+    }
+
+    .silatar-request-upload-card {
+        @apply flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md;
+    }
+
+    .silatar-request-input-card {
+        @apply flex h-full flex-col gap-3 overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md;
+    }
+
+    .silatar-request-upload-card.is-filled {
+        @apply border-cyan-200 shadow-md shadow-cyan-100/50 ring-1 ring-cyan-100/60 hover:shadow-lg;
+        background: linear-gradient(180deg, #f0fdfa 0%, #ffffff 100%);
+    }
+
+    .silatar-request-upload-card.is-just-uploaded {
+        @apply ring-2 ring-cyan-200 ring-offset-2 ring-offset-cyan-50 animate-pulse;
+    }
+
+    .silatar-request-upload-title {
+        @apply inline-flex items-center gap-2 text-sm font-semibold leading-5 text-slate-900;
+    }
+
+    .silatar-request-upload-note {
+        @apply mt-1 text-[0.7rem] leading-4 text-slate-500;
+    }
+
+    .silatar-request-upload-figure {
+        @apply mt-3 flex flex-1 flex-col items-center justify-center;
+    }
+
+    .silatar-request-upload-figure img {
+        @apply h-32 w-32 object-contain transition duration-500 sm:h-36 sm:w-36;
+    }
+
+    .silatar-request-upload-figure img.is-filled {
+        @apply scale-105 drop-shadow-sm;
+    }
+
+    .silatar-request-upload-file {
+        @apply mt-1 max-w-full truncate text-center text-[0.68rem] font-medium leading-4 text-slate-500 transition duration-300;
+    }
+
+    .silatar-request-upload-terisi {
+        @apply mt-2 inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-cyan-700;
+    }
+
+    .silatar-request-upload-button {
+        @apply inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-300 hover:bg-cyan-700;
+    }
+
+    .silatar-request-upload-button.is-filled {
+        @apply bg-cyan-700 hover:bg-cyan-800;
+    }
+
+    .silatar-request-field-frame {
+        @apply mt-3 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-3 shadow-sm transition duration-300;
+    }
+
+    .silatar-request-field-frame-compact {
+        @apply mt-0;
+    }
+
+    .silatar-request-field-label {
+        @apply inline-flex items-center gap-1.5 rounded-full border border-cyan-100 bg-cyan-50 px-2.5 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-cyan-700;
+    }
+
+    .silatar-request-field-input {
+        @apply w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-100;
+    }
+
+    .silatar-request-field-textarea {
+        @apply min-h-[9rem] resize-y;
+    }
+
+    .silatar-request-field-select {
+        @apply pr-10;
+    }
+
+    .silatar-request-field-value {
+        @apply mt-2 max-w-full truncate text-center text-[0.68rem] font-medium leading-4 text-slate-500 transition duration-300;
+    }
+
+    .silatar-request-field-filled {
+        @apply mt-2 inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-cyan-700;
+    }
+
+    .silatar-request-action-row {
+        @apply mt-6 flex flex-col gap-3 sm:flex-row;
+    }
+
+    .silatar-request-action-button {
+        @apply inline-flex flex-1 items-center justify-center rounded-full px-5 py-3 text-sm font-semibold shadow-sm transition hover:-translate-y-0.5;
+    }
+
+    .silatar-request-action-draft {
+        @apply border border-amber-200 bg-amber-50 text-amber-800 hover:border-amber-300 hover:bg-amber-100 hover:text-amber-900;
+    }
+
+    .silatar-request-action-primary {
+        @apply bg-slate-950 text-white shadow-lg shadow-slate-950/15 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none disabled:hover:translate-y-0 disabled:hover:bg-slate-300;
+    }
+
+    .silatar-request-action-secondary {
+        @apply border border-slate-200 bg-white text-slate-700 hover:border-cyan-200 hover:text-slate-900;
+    }
+
+    .silatar-people-grid {
+        @apply mx-auto grid max-w-6xl gap-4 sm:grid-cols-2 xl:grid-cols-4;
+    }
+
+    .silatar-person-card {
+        @apply overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg;
+    }
+
+    .silatar-person-card-featured {
+        @apply mx-auto max-w-sm;
+    }
+
+    .silatar-person-card-body {
+        @apply p-4 text-center;
+    }
+
+    .silatar-person-avatar {
+        @apply mx-auto grid h-20 w-20 place-items-center rounded-full border border-white/70 bg-gradient-to-br from-cyan-500 to-sky-700 text-xl font-black uppercase tracking-[0.18em] text-white shadow-xl;
+    }
+
+    .silatar-person-avatar-featured {
+        @apply h-28 w-28 text-3xl;
+    }
+
+    .silatar-person-name {
+        @apply mt-3 text-sm font-semibold uppercase tracking-[0.14em] text-slate-900;
+    }
+
+    .silatar-person-name-featured {
+        @apply text-base tracking-[0.18em];
+    }
+
+    .silatar-person-role {
+        @apply mt-2 inline-flex rounded-full bg-cyan-50 px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.28em] text-cyan-700;
+    }
+
+    .silatar-person-meta {
+        @apply mt-3 space-y-1 text-[0.72rem] leading-5 text-slate-500;
+    }
+
+    .silatar-report-page {
+        @apply mx-auto max-w-7xl px-6 py-8 lg:px-8 lg:py-10;
+    }
+
+    .silatar-report-tabs {
+        @apply rounded-[1.75rem] border border-slate-200/80 bg-white/90 p-4 shadow-sm backdrop-blur;
+    }
+
+    .silatar-report-tab-list {
+        @apply grid gap-3 md:grid-cols-3;
+    }
+
+    .silatar-report-tab {
+        @apply inline-flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition;
+    }
+
+    .silatar-report-tab-active {
+        @apply border-rose-700 bg-rose-700 text-white shadow-sm;
+    }
+
+    .silatar-report-tab-inactive {
+        @apply border-slate-200 bg-white text-slate-600 hover:border-cyan-200 hover:text-slate-900;
+    }
+
+    .silatar-report-shell {
+        @apply overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm;
+    }
+
+    .silatar-report-shell-header {
+        @apply flex flex-col gap-4 border-b border-slate-200 px-5 py-5 lg:flex-row lg:items-center lg:justify-between;
+    }
+
+    .silatar-report-title {
+        @apply text-2xl font-semibold text-slate-950;
+    }
+
+    .silatar-report-subtitle {
+        @apply mt-1 text-sm leading-6 text-slate-500;
+    }
+
+    .silatar-report-filter {
+        @apply flex flex-wrap items-center gap-3;
+    }
+
+    .silatar-report-month-input {
+        @apply h-11 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100;
+    }
+
+    .silatar-report-rekap-button {
+        @apply inline-flex h-11 items-center justify-center rounded-full bg-amber-500 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-amber-600 active:translate-y-0 active:scale-95;
+    }
+
+    .silatar-report-summary {
+        @apply rounded-[1.75rem] border border-sky-100 bg-gradient-to-br from-sky-50 via-white to-slate-50 p-5;
+    }
+
+    .silatar-report-summary-header {
+        @apply flex flex-col gap-4 md:flex-row md:items-center md:justify-between;
+    }
+
+    .silatar-report-summary-badge {
+        @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em];
+    }
+
+    .silatar-report-summary-badge-pending {
+        @apply bg-rose-100 text-rose-700;
+    }
+
+    .silatar-report-summary-badge-ready {
+        @apply bg-cyan-100 text-cyan-700;
+    }
+
+    .silatar-report-summary-icon {
+        @apply grid h-14 w-14 place-items-center rounded-2xl bg-sky-100 text-sky-700;
+    }
+
+    .silatar-report-actions {
+        @apply mt-4 flex flex-col gap-3 sm:flex-row sm:items-center;
+    }
+
+    .silatar-report-search-input {
+        @apply h-11 w-full flex-1 rounded-full border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100;
+    }
+
+    .silatar-report-add-button {
+        @apply inline-flex h-11 items-center justify-center gap-2 rounded-full bg-blue-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-800 active:translate-y-0 active:scale-95;
+    }
+
+    .silatar-report-table-shell {
+        @apply mt-4 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm;
+    }
+
+    .silatar-report-table {
+        @apply w-full border-collapse text-sm;
+    }
+
+    .silatar-report-th {
+        @apply border-b border-slate-200 bg-gradient-to-r from-sky-100 via-white to-amber-50 px-4 py-3 text-center font-semibold text-slate-700;
+    }
+
+    .silatar-report-td {
+        @apply border-b border-slate-100 px-4 py-4 align-top text-slate-600;
+    }
+
+    .silatar-report-date {
+        @apply font-semibold text-cyan-700;
+    }
+
+    .silatar-report-activity-list {
+        @apply space-y-2 text-sm leading-6 text-slate-600;
+    }
+
+    .silatar-report-activity-item {
+        @apply rounded-2xl bg-slate-50 px-3 py-2;
+    }
+
+    .silatar-report-activity-row {
+        @apply flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between;
+    }
+
+    .silatar-report-activity-actions {
+        @apply flex items-center justify-center gap-2 sm:justify-end;
+    }
+
+    .silatar-report-action-button {
+        @apply inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition;
+    }
+
+    .silatar-report-action-edit {
+        @apply border-cyan-200 bg-cyan-50 text-cyan-700 hover:border-cyan-300 hover:bg-cyan-100 hover:text-cyan-900;
+    }
+
+    .silatar-report-action-delete {
+        @apply border-rose-200 bg-rose-50 text-rose-700 hover:border-rose-300 hover:bg-rose-100 hover:text-rose-900;
+    }
+
+    .silatar-report-edit-overlay {
+        @apply fixed inset-0 z-[95] flex items-start justify-center overflow-y-auto bg-slate-950/55 px-4 py-4 backdrop-blur-sm;
+    }
+
+    .silatar-report-edit-modal {
+        @apply flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.28)];
+    }
+
+    .silatar-report-edit-header {
+        @apply flex items-start justify-between gap-4 border-b border-slate-200 bg-gradient-to-r from-cyan-50 via-white to-amber-50 px-6 py-5;
+    }
+
+    .silatar-report-edit-body {
+        @apply min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-5;
+    }
+
+    .silatar-report-edit-footer {
+        @apply sticky bottom-0 z-10 flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4 sm:flex-row sm:items-center sm:justify-end;
+    }
+
+    .silatar-report-edit-field {
+        @apply w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100;
+    }
+
+    .silatar-report-edit-textarea {
+        @apply min-h-[140px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100;
+    }
+
+    .silatar-report-edit-primary {
+        @apply inline-flex items-center justify-center rounded-full bg-cyan-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700;
+    }
+
+    .silatar-report-edit-cancel {
+        @apply inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-cyan-200 hover:text-slate-900;
+    }
+
+    .silatar-report-create-overlay {
+        @apply fixed inset-0 z-[96] flex items-start justify-center overflow-y-auto bg-slate-950/55 px-4 py-4 backdrop-blur-sm;
+    }
+
+    .silatar-report-create-modal {
+        @apply flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.28)];
+    }
+
+    .silatar-report-create-header {
+        @apply flex items-start justify-between gap-4 border-b border-slate-200 bg-gradient-to-r from-cyan-50 via-white to-amber-50 px-6 py-5;
+    }
+
+    .silatar-report-create-title {
+        @apply text-3xl font-semibold tracking-tight text-slate-950;
+    }
+
+    .silatar-report-create-subtitle {
+        @apply mt-2 text-sm leading-6 text-slate-600;
+    }
+
+    .silatar-report-create-body {
+        @apply min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-5;
+    }
+
+    .silatar-report-create-grid {
+        @apply grid gap-3 lg:grid-cols-[minmax(0,1fr)_120px_220px_56px];
+    }
+
+    .silatar-report-create-row {
+        @apply rounded-[1.35rem] border border-slate-200 bg-white p-3 shadow-sm;
+    }
+
+    .silatar-report-create-row-list {
+        @apply max-h-[42dvh] overflow-y-auto overscroll-contain pr-1;
+    }
+
+    .silatar-report-create-row-head {
+        @apply mb-3 flex items-center justify-between gap-3;
+    }
+
+    .silatar-report-create-row-badge {
+        @apply inline-flex h-8 w-8 items-center justify-center rounded-full bg-cyan-100 text-sm font-semibold text-cyan-700;
+    }
+
+    .silatar-report-create-add {
+        @apply inline-flex h-10 items-center justify-center gap-2 rounded-full bg-blue-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-800 active:translate-y-0 active:scale-95;
+    }
+
+    .silatar-report-create-remove {
+        @apply inline-flex h-10 w-10 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 hover:text-rose-900;
+    }
+
+    .silatar-report-create-footer {
+        @apply sticky bottom-0 z-10 flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between;
+    }
+
+    .silatar-report-create-actions {
+        @apply flex flex-wrap items-center gap-3;
+    }
+
+    .silatar-datepicker {
+        @apply w-full;
+    }
+
+    .silatar-datepicker-trigger {
+        @apply flex h-14 w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition hover:border-cyan-200 hover:shadow-md focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100;
+    }
+
+    .silatar-datepicker-trigger.is-open {
+        @apply border-cyan-300 ring-4 ring-cyan-100;
+    }
+
+    .silatar-datepicker-trigger-icon {
+        @apply grid h-8 w-8 flex-none place-items-center rounded-full bg-slate-100 text-slate-500;
+    }
+
+    .silatar-datepicker-clear {
+        @apply inline-flex flex-none items-center rounded-full px-2 py-1 text-xs font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900;
+    }
+
+    .silatar-datepicker-popover {
+        @apply absolute left-0 top-[calc(100%+0.75rem)] z-[70] w-[19rem] rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-[0_24px_60px_rgba(15,23,42,0.18)];
+    }
+
+    .silatar-datepicker-popover-header {
+        @apply grid grid-cols-[2rem_minmax(0,1fr)_2rem] items-center gap-2 px-1 pb-3;
+    }
+
+    .silatar-datepicker-nav {
+        @apply grid h-8 w-8 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700;
+    }
+
+    .silatar-datepicker-quick-select,
+    .silatar-datepicker-year-input,
+    .silatar-monthpicker-year-input {
+        @apply h-8 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100;
+    }
+
+    .silatar-datepicker-quick-select {
+        @apply min-w-0;
+    }
+
+    .silatar-datepicker-year-input,
+    .silatar-monthpicker-year-input {
+        @apply w-24 text-center;
+    }
+
+    .silatar-datepicker-weekdays {
+        @apply grid grid-cols-7 gap-1 px-1 text-center text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-slate-400;
+    }
+
+    .silatar-datepicker-grid {
+        @apply mt-2 grid grid-cols-7 gap-1 px-1;
+    }
+
+    .silatar-datepicker-day {
+        @apply grid h-10 place-items-center rounded-full text-sm font-medium text-slate-700 transition;
+    }
+
+    .silatar-datepicker-day:hover:not(.is-disabled):not(.is-selected) {
+        @apply bg-cyan-50 text-cyan-700;
+    }
+
+    .silatar-datepicker-day.is-empty {
+        @apply pointer-events-none;
+    }
+
+    .silatar-datepicker-day.is-selected {
+        @apply bg-cyan-600 text-white shadow-sm;
+    }
+
+    .silatar-datepicker-day.is-today:not(.is-selected) {
+        @apply border border-cyan-200 bg-cyan-50 text-cyan-700;
+    }
+
+    .silatar-datepicker-day.is-disabled {
+        @apply cursor-not-allowed text-slate-300 opacity-40;
+    }
+
+    .silatar-datepicker-popover-footer {
+        @apply mt-3 flex items-center justify-between gap-3 border-t border-slate-100 px-1 pt-3;
+    }
+
+    .silatar-datepicker-footer-button {
+        @apply inline-flex h-9 items-center justify-center rounded-full bg-cyan-600 px-4 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-cyan-700;
+    }
+
+    .silatar-datepicker-footer-link {
+        @apply inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 transition hover:border-slate-300 hover:text-slate-900;
+    }
+
+    .silatar-monthpicker {
+        @apply w-full;
+    }
+
+    .silatar-monthpicker-trigger {
+        @apply flex h-11 w-full items-center gap-3 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm outline-none transition hover:border-cyan-200 hover:shadow-md focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100;
+    }
+
+    .silatar-monthpicker-trigger.is-open {
+        @apply border-cyan-300 ring-4 ring-cyan-100;
+    }
+
+    .silatar-monthpicker-trigger-icon {
+        @apply grid h-8 w-8 flex-none place-items-center rounded-full bg-slate-100 text-slate-500;
+    }
+
+    .silatar-monthpicker-clear {
+        @apply inline-flex flex-none items-center rounded-full px-2 py-1 text-xs font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900;
+    }
+
+    .silatar-monthpicker-popover {
+        @apply absolute left-0 top-[calc(100%+0.75rem)] z-[70] w-[20rem] rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-[0_24px_60px_rgba(15,23,42,0.18)];
+    }
+
+    .silatar-monthpicker-popover-header {
+        @apply grid grid-cols-[2rem_minmax(0,1fr)_2rem] items-center gap-2 px-1 pb-3;
+    }
+
+    .silatar-monthpicker-nav {
+        @apply grid h-8 w-8 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700;
+    }
+
+    .silatar-monthpicker-year-input {
+        @apply w-28;
+    }
+
+    .silatar-monthpicker-grid {
+        @apply grid grid-cols-3 gap-2 px-1;
+    }
+
+    .silatar-monthpicker-month {
+        @apply rounded-2xl border border-slate-200 px-3 py-3 text-sm font-semibold text-slate-700 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700;
+    }
+
+    .silatar-monthpicker-month.is-selected {
+        @apply border-cyan-600 bg-cyan-600 text-white shadow-sm;
+    }
+
+    .silatar-monthpicker-popover-footer {
+        @apply mt-3 flex items-center justify-between gap-3 border-t border-slate-100 px-1 pt-3;
+    }
+
+    .silatar-monthpicker-footer-button {
+        @apply inline-flex h-9 items-center justify-center rounded-full bg-cyan-600 px-4 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-cyan-700;
+    }
+
+    .silatar-monthpicker-footer-link {
+        @apply inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 transition hover:border-slate-300 hover:text-slate-900;
+    }
+
+    .silatar-report-empty {
+        @apply rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-10 text-center;
+    }
+
+    @keyframes silatar-spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes silatar-loading-sweep {
+        0% {
+            transform: translateX(-55%);
+            opacity: 0.7;
+        }
+        50% {
+            opacity: 1;
+        }
+        100% {
+            transform: translateX(120%);
+            opacity: 0.7;
+        }
+    }
+
+    @media print {
+        html,
+        body {
+            background: #ffffff !important;
+        }
+
+        header,
+        .pointer-events-none,
+        .silatar-report-tabs,
+        .silatar-report-shell-header form,
+        .silatar-report-actions {
+            display: none !important;
+        }
+
+        .relative.isolate {
+            overflow: visible !important;
+        }
+
+        .silatar-report-page {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .silatar-report-shell,
+        .silatar-report-summary,
+        .silatar-report-table-shell {
+            box-shadow: none !important;
+        }
+
+        .silatar-report-shell,
+        .silatar-report-summary,
+        .silatar-report-table-shell,
+        .silatar-report-tabs {
+            border-color: #cbd5e1 !important;
+        }
+
+        .silatar-report-table {
+            page-break-inside: auto;
+        }
+
+        .silatar-report-td,
+        .silatar-report-th,
+        .silatar-report-activity-item {
+            break-inside: avoid;
+        }
+    }
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+[wire\:loading],
+[wire\:loading\.delay],
+[wire\:loading\.delay\.short],
+[wire\:loading\.delay\.long],
+[wire\:loading\.delay\.longer],
+[wire\:loading\.delay\.longest] {
+    display: none;
+}
+
+[wire\:dirty]:not(textarea):not(input):not(select) {
+    display: none;
+}
+
+[wire\:offline] {
+    display: none;
+}
+
+[wire\:cloak] {
+    display: none !important;
+}
