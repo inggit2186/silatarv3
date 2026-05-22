@@ -598,6 +598,158 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
+    Alpine.data('silatarYearpicker', (config = {}) => ({
+        open: false,
+        name: config.name || '',
+        value: config.value || '',
+        placeholder: config.placeholder || 'Pilih tahun',
+        clearLabel: config.clearLabel || 'Hapus',
+        applyLabel: config.applyLabel || 'Pilih',
+        locale: config.locale || 'en-US',
+        yearCursor: null,
+        popoverStyle: '',
+        updatePlacement() {
+            const trigger = this.$refs.trigger;
+
+            if (!(trigger instanceof HTMLElement)) {
+                return;
+            }
+
+            const rect = trigger.getBoundingClientRect();
+            const width = 320;
+            const height = 314;
+            const margin = 12;
+            const left = Math.min(
+                Math.max(rect.left, margin),
+                Math.max(margin, window.innerWidth - width - margin)
+            );
+            const shouldOpenAbove = window.innerHeight - rect.bottom < height + margin;
+            const top = shouldOpenAbove
+                ? Math.max(margin, rect.top - height - margin)
+                : Math.min(window.innerHeight - height - margin, rect.bottom + margin);
+
+            this.popoverStyle = `position:fixed;left:${Math.round(left)}px;top:${Math.round(top)}px;width:${width}px;z-index:70;`;
+        },
+        init() {
+            const parsed = Number.parseInt(String(this.value || ''), 10);
+            this.yearCursor = Number.isNaN(parsed) ? new Date().getFullYear() : parsed;
+        },
+        formatValue(year) {
+            return String(year);
+        },
+        formatDisplay(value) {
+            if (!value) {
+                return this.placeholder;
+            }
+
+            const parsed = Number.parseInt(String(value), 10);
+
+            if (Number.isNaN(parsed)) {
+                return this.placeholder;
+            }
+
+            return new Intl.DateTimeFormat(this.locale, {
+                year: 'numeric',
+            }).format(new Date(parsed, 0, 1));
+        },
+        get yearItems() {
+            const startYear = this.yearCursor - 5;
+
+            return Array.from({ length: 12 }, (_, index) => {
+                const year = startYear + index;
+
+                return {
+                    key: String(year),
+                    label: String(year),
+                    year,
+                };
+            });
+        },
+        isSelected(year) {
+            return String(this.value) === String(year);
+        },
+        openPicker() {
+            this.open = true;
+            this.$nextTick(() => {
+                this.updatePlacement();
+            });
+        },
+        closePicker() {
+            this.open = false;
+            this.popoverStyle = '';
+        },
+        togglePicker() {
+            this.open = !this.open;
+
+            if (this.open) {
+                this.$nextTick(() => {
+                    this.updatePlacement();
+                });
+            } else {
+                this.popoverStyle = '';
+            }
+        },
+        prevYear() {
+            this.yearCursor -= 12;
+            this.updatePlacement();
+        },
+        nextYear() {
+            this.yearCursor += 12;
+            this.updatePlacement();
+        },
+        setYear(year) {
+            const parsedYear = Number.parseInt(year, 10);
+
+            if (Number.isNaN(parsedYear)) {
+                return;
+            }
+
+            this.yearCursor = parsedYear;
+            this.updatePlacement();
+        },
+        selectYear(year) {
+            this.value = this.formatValue(year);
+            this.yearCursor = year;
+            this.open = false;
+            this.submitForm();
+        },
+        clearValue() {
+            this.value = '';
+            this.open = false;
+            this.submitForm();
+        },
+        submitForm() {
+            const form = this.$refs.trigger?.closest?.('form') || this.$el.closest('form');
+
+            if (form instanceof HTMLFormElement) {
+                if (String(form.method || '').toLowerCase() === 'get') {
+                    const params = new URLSearchParams(new FormData(form));
+
+                    if (this.name) {
+                        params.set(this.name, this.value || '');
+                    }
+
+                    const url = new URL(form.action || window.location.href, window.location.href);
+                    url.search = params.toString();
+                    window.location.assign(url.toString());
+                    return;
+                }
+
+                setTimeout(() => {
+                    if (typeof form.requestSubmit === 'function') {
+                        form.requestSubmit();
+                        return;
+                    }
+
+                    form.submit();
+                }, 0);
+            }
+        },
+        displayText() {
+            return this.value ? this.formatDisplay(this.value) : this.placeholder;
+        },
+    }));
+
     Alpine.data('requestForm', (requiredIds = []) => ({
         requiredIds: Array.isArray(requiredIds) ? requiredIds : [],
         requiredState: {},

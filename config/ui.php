@@ -52,4 +52,10 @@ return [
         ],
         'locale' => 'id-ID',
     ],
+    'yearpicker' => [
+        'placeholder' => 'Pilih tahun',
+        'clear_label' => 'Hapus',
+        'apply_label' => 'Pilih',
+        'locale' => 'id-ID',
+    ],
 ];
