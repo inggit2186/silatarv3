@@ -17,6 +17,46 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
+    // Stats Counter for Cyberpunk Theme
+    Alpine.data('statsCounter', (config = {}) => ({
+        target: config.target || 0,
+        current: 0,
+        suffix: config.suffix || '',
+        duration: config.duration || 2000,
+        animated: false,
+
+        animate() {
+            const startTime = performance.now();
+            const animate = (currentTime) => {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / this.duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                this.current = Math.floor(easeOut * this.target);
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate.bind(this));
+                }
+            };
+            requestAnimationFrame(animate.bind(this));
+        },
+
+        init() {
+            if (this.animated) return;
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !this.animated) {
+                        this.animate();
+                        this.animated = true;
+                        observer.disconnect();
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            observer.observe(this.$el);
+        }
+    }));
+
     Alpine.data('globalLoading', (config = {}) => ({
         active: false,
         enabled: !!window.silatarLoadingPageEnabled,
@@ -598,6 +638,39 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
+    Alpine.data('silatarYearpicker', (config = {}) => ({
+        name: config.name || '',
+        value: config.value || '',
+        placeholder: config.placeholder || 'Pilih tahun',
+        submitForm() {
+            const form = this.$el.closest('form');
+
+            if (form instanceof HTMLFormElement) {
+                if (String(form.method || '').toLowerCase() === 'get') {
+                    const params = new URLSearchParams(new FormData(form));
+
+                    if (this.name) {
+                        params.set(this.name, this.value || '');
+                    }
+
+                    const url = new URL(form.action || window.location.href, window.location.href);
+                    url.search = params.toString();
+                    window.location.assign(url.toString());
+                    return;
+                }
+
+                setTimeout(() => {
+                    if (typeof form.requestSubmit === 'function') {
+                        form.requestSubmit();
+                        return;
+                    }
+
+                    form.submit();
+                }, 0);
+            }
+        },
+    }));
+
     Alpine.data('requestForm', (requiredIds = []) => ({
         requiredIds: Array.isArray(requiredIds) ? requiredIds : [],
         requiredState: {},
@@ -723,6 +796,7 @@ document.addEventListener('alpine:init', () => {
         addModalOpen: !!config.addModalOpen,
         editModalOpen: !!config.editModalOpen,
         addDate: config.defaultDate || '',
+        humasData: config.humasData || [],
         rows: Array.isArray(config.initialRows) && config.initialRows.length
             ? config.initialRows.map((row) => ({
                 kegiatan: row?.kegiatan || '',
@@ -805,6 +879,76 @@ document.addEventListener('alpine:init', () => {
             }
 
             this.editRows.splice(index, 1);
+        },
+    }));
+
+    Alpine.data('humasPage', () => ({
+        modalOpen: false,
+        isEdit: false,
+        editingId: null,
+        selectedMonth: '',
+        comment: '',
+        platforms: ['Facebook', 'Instagram', 'TikTok', 'Website', 'Youtube'],
+        platformData: {
+            Facebook: { first: { date: '', content: '', link: '' }, last: { date: '', content: '', link: '' } },
+            Instagram: { first: { date: '', content: '', link: '' }, last: { date: '', content: '', link: '' } },
+            TikTok: { first: { date: '', content: '', link: '' }, last: { date: '', content: '', link: '' } },
+            Website: { first: { date: '', content: '', link: '' }, last: { date: '', content: '', link: '' } },
+            Youtube: { first: { date: '', content: '', link: '' }, last: { date: '', content: '', link: '' } },
+        },
+        openAddModal() {
+            this.isEdit = false;
+            this.editingId = null;
+            this.selectedMonth = '';
+            this.comment = '';
+            this.resetPlatformData();
+            this.modalOpen = true;
+        },
+        openEditModal(id) {
+            this.isEdit = true;
+            this.editingId = id;
+
+            // Find the data for this id
+            const report = this.humasData.find(r => r.id === id);
+            if (report) {
+                this.selectedMonth = report.bulan_full || '';
+                this.comment = report.comment || '';
+                this.resetPlatformData();
+
+                // Populate platform data from report
+                report.platforms.forEach(p => {
+                    const platformName = p.name.charAt(0).toUpperCase() + p.name.slice(1);
+                    if (this.platformData[platformName]) {
+                        this.platformData[platformName] = {
+                            first: {
+                                date: p.first_date || '',
+                                content: p.first_content || '',
+                                link: p.first_link || '',
+                            },
+                            last: {
+                                date: p.last_date || '',
+                                content: p.last_content || '',
+                                link: p.last_link || '',
+                            }
+                        };
+                    }
+                });
+            }
+
+            this.modalOpen = true;
+        },
+        closeModal() {
+            this.modalOpen = false;
+            this.resetPlatformData();
+        },
+        resetPlatformData() {
+            this.platformData = {
+                Facebook: { first: { date: '', content: '', link: '' }, last: { date: '', content: '', link: '' } },
+                Instagram: { first: { date: '', content: '', link: '' }, last: { date: '', content: '', link: '' } },
+                TikTok: { first: { date: '', content: '', link: '' }, last: { date: '', content: '', link: '' } },
+                Website: { first: { date: '', content: '', link: '' }, last: { date: '', content: '', link: '' } },
+                Youtube: { first: { date: '', content: '', link: '' }, last: { date: '', content: '', link: '' } },
+            };
         },
     }));
 });

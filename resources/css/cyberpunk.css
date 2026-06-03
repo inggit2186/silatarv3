@@ -1,0 +1,1232 @@
+@import 'tailwindcss';
+
+/* Cyberpunk Theme Variables */
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Custom Cyberpunk Color Palette */
+:root {
+    --cyber-dark: #0a0a0f;
+    --cyber-dark-blue: #0d1117;
+    --cyber-blue: #00d4ff;
+    --cyber-electric: #00f0ff;
+    --cyber-cyan: #22d3ee;
+    --cyber-neon: #0891b2;
+    --cyber-glow: rgba(0, 212, 255, 0.4);
+    --cyber-glow-intense: rgba(0, 240, 255, 0.6);
+    --cyber-purple: #a855f7;
+    --cyber-pink: #ec4899;
+    --cyber-grid: rgba(0, 212, 255, 0.08);
+}
+
+/* Particle Canvas Container */
+.particle-container {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.particle-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Glow Effects */
+.cyber-glow {
+    box-shadow:
+        0 0 20px var(--cyber-glow),
+        0 0 40px rgba(0, 212, 255, 0.2),
+        inset 0 0 20px rgba(0, 212, 255, 0.05);
+}
+
+.cyber-glow-text {
+    text-shadow:
+        0 0 10px var(--cyber-glow),
+        0 0 20px var(--cyber-glow),
+        0 0 40px rgba(0, 212, 255, 0.3);
+}
+
+.cyber-glow-border {
+    box-shadow:
+        0 0 15px var(--cyber-glow),
+        inset 0 0 15px rgba(0, 212, 255, 0.1);
+}
+
+/* Neon Border Animation */
+.cyber-border-glow {
+    position: relative;
+}
+
+.cyber-border-glow::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(
+        45deg,
+        var(--cyber-blue),
+        var(--cyber-electric),
+        var(--cyber-purple),
+        var(--cyber-pink),
+        var(--cyber-blue)
+    );
+    background-size: 400% 400%;
+    border-radius: inherit;
+    z-index: -1;
+    animation: cyber-border-flow 8s ease infinite;
+    opacity: 0.6;
+}
+
+.cyber-border-glow::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--cyber-dark);
+    border-radius: inherit;
+    z-index: -1;
+}
+
+@keyframes cyber-border-flow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* Progress Bar - Game Level Style */
+.level-progress {
+    background: linear-gradient(
+        90deg,
+        var(--cyber-dark) 0%,
+        var(--cyber-dark) 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+
+.level-progress::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        var(--cyber-glow) 50%,
+        transparent 100%
+    );
+    animation: progress-shine 2s ease-in-out infinite;
+}
+
+@keyframes progress-shine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.level-progress-fill {
+    background: linear-gradient(
+        90deg,
+        var(--cyber-blue),
+        var(--cyber-electric),
+        var(--cyber-cyan)
+    );
+    position: relative;
+}
+
+.level-progress-fill::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4)
+    );
+    animation: progress-glow-pulse 1s ease-in-out infinite;
+}
+
+@keyframes progress-glow-pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Case Study Card - Game Unlock Style */
+.case-study-card {
+    background: linear-gradient(
+        135deg,
+        rgba(10, 10, 15, 0.95) 0%,
+        rgba(13, 17, 23, 0.98) 100%
+    );
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.case-study-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--cyber-blue),
+        transparent
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.case-study-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: var(--cyber-blue);
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        0 0 30px var(--cyber-glow),
+        inset 0 0 30px rgba(0, 212, 255, 0.05);
+}
+
+.case-study-card:hover::before {
+    opacity: 1;
+}
+
+.case-study-card.unlocked {
+    border-color: rgba(0, 240, 255, 0.4);
+}
+
+.case-study-card.unlocked::before {
+    opacity: 0.8;
+}
+
+/* Video Expand Container */
+.video-expand-container {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.video-expand-trigger {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 10, 15, 0.6);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
+}
+
+.video-expand-container:hover .video-expand-trigger {
+    opacity: 1;
+}
+
+.video-expand-trigger-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--cyber-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 40px var(--cyber-glow);
+    transition: transform 0.3s ease;
+}
+
+.video-expand-container:hover .video-expand-trigger-icon {
+    transform: scale(1.1);
+}
+
+/* Expand Animation */
+.video-expand-container.expanded {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.video-expand-container.expanded .video-content {
+    width: 90vw;
+    max-width: 1200px;
+    aspect-ratio: 16/9;
+}
+
+/* Level Badge */
+.level-badge {
+    background: linear-gradient(
+        135deg,
+        var(--cyber-dark) 0%,
+        var(--cyber-dark-blue) 100%
+    );
+    border: 1px solid var(--cyber-blue);
+    box-shadow: 0 0 20px var(--cyber-glow);
+}
+
+/* Stats Counter */
+.stats-counter {
+    font-family: 'Courier New', monospace;
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--cyber-electric);
+    text-shadow: 0 0 10px var(--cyber-glow);
+}
+
+/* Scan Line Effect */
+.scan-line {
+    position: relative;
+}
+
+.scan-line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--cyber-blue),
+        transparent
+    );
+    animation: scan-move 4s linear infinite;
+}
+
+@keyframes scan-move {
+    0% { top: 0; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+}
+
+/* Glitch Effect */
+.glitch-text {
+    position: relative;
+    animation: glitch 2s infinite;
+}
+
+@keyframes glitch {
+    0%, 90%, 100% {
+        text-shadow:
+            0 0 10px var(--cyber-glow),
+            0 0 20px var(--cyber-glow);
+    }
+    91% {
+        text-shadow:
+            -2px 0 var(--cyber-pink),
+            2px 0 var(--cyber-blue);
+        transform: translateX(-2px);
+    }
+    93% {
+        text-shadow:
+            2px 0 var(--cyber-pink),
+            -2px 0 var(--cyber-blue);
+        transform: translateX(2px);
+    }
+    95% {
+        text-shadow:
+            0 0 10px var(--cyber-glow),
+            0 0 20px var(--cyber-glow);
+        transform: translateX(0);
+    }
+}
+
+/* Button Styles */
+.cyber-button {
+    background: linear-gradient(
+        135deg,
+        var(--cyber-blue) 0%,
+        var(--cyber-electric) 50%,
+        var(--cyber-cyan) 100%
+    );
+    border: none;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.cyber-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    transition: left 0.5s ease;
+}
+
+.cyber-button:hover::before {
+    left: 100%;
+}
+
+.cyber-button:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 10px 40px var(--cyber-glow),
+        0 0 60px rgba(0, 212, 255, 0.3);
+}
+
+.cyber-button-secondary {
+    background: transparent;
+    border: 2px solid var(--cyber-blue);
+    color: var(--cyber-electric);
+    transition: all 0.3s ease;
+}
+
+.cyber-button-secondary:hover {
+    background: rgba(0, 212, 255, 0.1);
+    box-shadow:
+        0 0 20px var(--cyber-glow),
+        inset 0 0 20px rgba(0, 212, 255, 0.1);
+}
+
+/* Navigation Styles */
+.cyber-nav-link {
+    position: relative;
+    color: rgba(255, 255, 255, 0.7);
+    transition: color 0.3s ease;
+}
+
+.cyber-nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--cyber-blue);
+    box-shadow: 0 0 10px var(--cyber-glow);
+    transition: width 0.3s ease;
+}
+
+.cyber-nav-link:hover {
+    color: var(--cyber-electric);
+}
+
+.cyber-nav-link:hover::after {
+    width: 100%;
+}
+
+/* Section Dividers */
+.cyber-divider {
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--cyber-blue),
+        var(--cyber-electric),
+        var(--cyber-blue),
+        transparent
+    );
+    opacity: 0.3;
+}
+
+/* Card Glass Effect */
+.cyber-glass {
+    background: rgba(13, 17, 23, 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 212, 255, 0.15);
+}
+
+/* Typing Effect */
+.typing-cursor::after {
+    content: '|';
+    animation: cursor-blink 1s step-end infinite;
+}
+
+@keyframes cursor-blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* Floating Elements */
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+.floating {
+    animation: float 6s ease-in-out infinite;
+}
+
+.floating-delayed {
+    animation: float 6s ease-in-out infinite;
+    animation-delay: -3s;
+}
+
+/* Noise Texture */
+.noise-overlay {
+    position: relative;
+}
+
+.noise-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+}
+
+/* ===== REPORT PAGE STYLES ===== */
+.silatar-report-tabs {
+    background: linear-gradient(to bottom, var(--cyber-dark), var(--cyber-dark-blue));
+    border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+    padding: 0 1.5rem;
+}
+
+.silatar-report-tab-list {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding: 1rem 0;
+}
+
+.silatar-report-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.silatar-report-tab-active {
+    background: linear-gradient(135deg, var(--cyber-blue), var(--cyber-electric));
+    color: white;
+    box-shadow: 0 0 20px var(--cyber-glow);
+}
+
+.silatar-report-tab-inactive {
+    background: rgba(30, 41, 59, 0.8);
+    color: var(--cyber-electric);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.silatar-report-tab-inactive:hover {
+    background: rgba(0, 212, 255, 0.1);
+    border-color: var(--cyber-blue);
+}
+
+.silatar-report-shell {
+    background: #0a0f1a;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 1rem;
+    margin: 1rem;
+    overflow: hidden;
+}
+
+.silatar-report-shell-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.15);
+}
+
+.silatar-report-shell-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: rgba(15, 23, 42, 0.5);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.silatar-report-title {
+    font-family: 'Courier New', monospace;
+    font-size: 1.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: white;
+    text-shadow: 0 0 20px var(--cyber-glow);
+}
+
+.silatar-report-subtitle {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    margin-top: 0.5rem;
+}
+
+.silatar-report-summary {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), rgba(168, 85, 247, 0.05));
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+    margin: 1.5rem;
+}
+
+.silatar-report-summary-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.silatar-report-summary-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, var(--cyber-blue), var(--cyber-electric));
+    color: white;
+    box-shadow: 0 0 30px var(--cyber-glow);
+}
+
+.silatar-report-summary-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+}
+
+.silatar-report-summary-badge-ready {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.silatar-report-summary-badge-pending {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.silatar-report-actions {
+    display: flex;
+    gap: 1rem;
+    padding: 0 1.5rem 1.5rem;
+    flex-wrap: wrap;
+}
+
+.silatar-report-search-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    background: rgba(15, 23, 42, 0.8);
+    color: white;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.silatar-report-search-input:focus {
+    outline: none;
+    border-color: var(--cyber-blue);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+.silatar-report-add-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, var(--cyber-blue), var(--cyber-electric));
+    color: white;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    box-shadow: 0 0 20px var(--cyber-glow);
+    transition: all 0.3s ease;
+}
+
+.silatar-report-add-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px var(--cyber-glow);
+}
+
+.silatar-report-table-shell {
+    border: 1px solid rgba(0, 212, 255, 0.15);
+    border-radius: 0.75rem;
+    margin: 1rem;
+    overflow: hidden;
+    background: #0a0a0f;
+}
+
+.silatar-report-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #0a0a0f;
+}
+
+.silatar-report-th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #00f0ff;
+    background: rgba(0, 212, 255, 0.08);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.bulanan-cell {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.silatar-report-td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+    color: #e2e8f0;
+    background: #0a0a0f;
+}
+
+.silatar-report-th {
+    padding: 1rem 1.25rem;
+    text-align: left;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #00f0ff;
+    background: rgba(0, 212, 255, 0.08);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+}
+.silatar-report-th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #00f0ff;
+    background: rgba(0, 212, 255, 0.08);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+/* silatar-report-shell header and table styles - see lines 696-740 */
+
+.silatar-report-empty {
+    padding: 4rem 2rem;
+    text-align: center;
+    background: rgba(15, 23, 42, 0.3);
+}
+
+.silatar-report-empty p:first-child {
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    color: var(--cyber-electric);
+}
+
+.silatar-report-rekap-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--cyber-electric);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease;
+}
+
+.silatar-report-rekap-button:hover {
+    background: rgba(0, 212, 255, 0.2);
+    border-color: var(--cyber-blue);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+.silatar-report-create-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.silatar-report-create-modal {
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    background: var(--cyber-dark);
+    border: 1px solid var(--cyber-blue);
+    border-radius: 1.5rem;
+    box-shadow: 0 0 60px var(--cyber-glow);
+    overflow: hidden;
+}
+
+.silatar-report-create-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(168, 85, 247, 0.1));
+    border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.silatar-report-create-title {
+    font-family: 'Courier New', monospace;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--cyber-electric);
+    text-shadow: 0 0 10px var(--cyber-glow);
+}
+
+.silatar-report-create-subtitle {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    margin-top: 0.5rem;
+}
+
+.silatar-report-create-body {
+    padding: 1.5rem;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.silatar-report-create-row {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(0, 212, 255, 0.15);
+    border-radius: 1rem;
+}
+
+.silatar-report-create-row-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.silatar-report-create-row-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--cyber-blue), var(--cyber-electric));
+    color: white;
+    font-family: 'Courier New', monospace;
+    font-weight: 800;
+}
+
+.silatar-report-create-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--cyber-electric);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.silatar-report-create-add:hover {
+    background: rgba(0, 212, 255, 0.2);
+}
+
+.silatar-report-create-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    transition: all 0.3s ease;
+}
+
+.silatar-report-create-remove:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.silatar-report-create-grid {
+    display: grid;
+    grid-template-columns: 1fr 100px 120px auto;
+    gap: 0.75rem;
+    align-items: end;
+}
+
+.silatar-report-edit-field {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    background: rgba(15, 23, 42, 0.8);
+    color: white;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.silatar-report-edit-field:focus {
+    outline: none;
+    border-color: var(--cyber-blue);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+}
+
+.silatar-report-create-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    background: rgba(15, 23, 42, 0.8);
+    border-top: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.silatar-report-create-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.silatar-report-edit-cancel {
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    background: transparent;
+    color: #94a3b8;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease;
+}
+
+.silatar-report-edit-cancel:hover {
+    background: rgba(148, 163, 184, 0.1);
+    border-color: rgba(148, 163, 184, 0.5);
+}
+
+.silatar-report-edit-primary {
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, var(--cyber-blue), var(--cyber-electric));
+    color: white;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    box-shadow: 0 0 20px var(--cyber-glow);
+    transition: all 0.3s ease;
+}
+
+.silatar-report-edit-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px var(--cyber-glow);
+}
+
+/* Report page action buttons */
+.silatar-report-action-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.5rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    transition: all 0.3s ease;
+}
+
+.silatar-report-action-edit {
+    background: rgba(0, 212, 255, 0.1);
+    color: #00f0ff;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.silatar-report-action-edit:hover {
+    background: rgba(0, 212, 255, 0.2);
+}
+
+.silatar-report-action-delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.silatar-report-action-delete:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* Status Badges - Cyberpunk Dark Mode */
+.cyber-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 9999px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.cyber-status-disetujui {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.cyber-status-disetujui .dot {
+    background: #10b981;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+.cyber-status-dikirim {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.cyber-status-dikirim .dot {
+    background: #f59e0b;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+.cyber-status-ditolak {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.cyber-status-ditolak .dot {
+    background: #f87171;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+.cyber-status-belum {
+    background: rgba(100, 116, 139, 0.15);
+    color: #94a3b8;
+    border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.cyber-status-belum .dot {
+    background: #94a3b8;
+}
+
+/* Override report page colors for dark cyberpunk theme */
+.silatar-report-summary h2 {
+    color: white !important;
+}
+
+.silatar-report-summary .text-slate-600,
+.silatar-report-summary .text-slate-500 {
+    color: #cbd5e1 !important;
+}
+
+.silatar-report-summary .text-emerald-600,
+.silatar-report-summary .text-emerald-700 {
+    color: #34d399 !important;
+}
+
+.silatar-report-summary .text-amber-600,
+.silatar-report-summary .text-amber-700 {
+    color: #fbbf24 !important;
+}
+
+.silatar-report-summary .text-rose-600,
+.silatar-report-summary .text-rose-700 {
+    color: #fb7185 !important;
+}
+
+.silatar-report-summary .bg-emerald-50,
+.silatar-report-summary .bg-amber-50,
+.silatar-report-summary .bg-rose-50,
+.silatar-report-summary .bg-white {
+    background-color: rgba(30, 41, 59, 0.8) !important;
+}
+
+.silatar-report-summary .bg-white {
+    background-color: rgba(15, 23, 42, 0.9) !important;
+}
+
+.silatar-report-summary .border-slate-200,
+.silatar-report-summary .border-emerald-200,
+.silatar-report-summary .border-amber-200,
+.silatar-report-summary .border-rose-200 {
+    border-color: rgba(100, 116, 139, 0.3) !important;
+}
+
+.silatar-report-summary .border-emerald-200 {
+    border-color: rgba(52, 211, 153, 0.4) !important;
+}
+
+.silatar-report-summary .border-amber-200 {
+    border-color: rgba(251, 191, 36, 0.4) !important;
+}
+
+.silatar-report-summary .border-rose-200 {
+    border-color: rgba(251, 113, 133, 0.4) !important;
+}
+
+.silatar-report-table-shell .text-slate-500,
+.silatar-report-table-shell .text-slate-600 {
+    color: #94a3b8 !important;
+}
+
+.silatar-report-table-shell .text-slate-700,
+.silatar-report-table-shell .text-slate-800,
+.silatar-report-table-shell .text-slate-900 {
+    color: #e2e8f0 !important;
+}
+
+.silatar-report-table-shell .bg-slate-100,
+.silatar-report-table-shell .bg-slate-50 {
+    background-color: rgba(30, 41, 59, 0.8) !important;
+    color: #e2e8f0 !important;
+}
+
+.silatar-report-table-shell .bg-emerald-100 {
+    background-color: rgba(52, 211, 153, 0.15) !important;
+    color: #34d399 !important;
+}
+
+.silatar-report-table-shell .bg-amber-100 {
+    background-color: rgba(251, 191, 36, 0.15) !important;
+    color: #fbbf24 !important;
+}
+
+.silatar-report-table-shell .bg-rose-100 {
+    background-color: rgba(251, 113, 133, 0.15) !important;
+    color: #fb7185 !important;
+}
+
+.silatar-report-activity-item {
+    background: rgba(30, 41, 59, 0.6) !important;
+    border-color: rgba(0, 212, 255, 0.15) !important;
+}
+
+.silatar-report-activity-item .text-slate-500,
+.silatar-report-activity-item .text-slate-600,
+.silatar-report-activity-item .text-slate-700 {
+    color: #cbd5e1 !important;
+}
+
+.cyber-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.silatar-report-date {
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--cyber-electric);
+    text-shadow: 0 0 8px var(--cyber-glow);
+}
+
+.silatar-report-activity-item {
+    padding: 0.75rem;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(0, 212, 255, 0.1);
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.silatar-report-activity-item:hover {
+    background: rgba(0, 212, 255, 0.05);
+    border-color: rgba(0, 212, 255, 0.2);
+}
+
+.silatar-report-activity-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Unit Card Styles */
+.silatar-unit-grid {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.silatar-tab-shell {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(0, 212, 255, 0.15);
+    border-radius: 1.25rem;
+    padding: 1rem;
+    margin: 1.5rem 0;
+}
+
+.silatar-tab-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.silatar-tab-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease;
+}

@@ -1,0 +1,849 @@
+@import 'tailwindcss';
+
+/* ================================================
+   SILATAR ADMIN - Global Styles & Components
+   ================================================
+
+   Design System untuk Dashboard Admin
+   Menggunakan Tailwind CSS dengan custom utilities
+
+   ================================================ */
+
+/* ================================================
+   1. ADMIN LAYOUT
+   ================================================ */
+
+.admin-layout {
+    @apply min-h-screen bg-slate-100;
+}
+
+.admin-main {
+    @apply ml-64 min-h-screen transition-all duration-300;
+}
+
+.admin-main.sidebar-collapsed {
+    @apply ml-16;
+}
+
+@media (max-width: 1024px) {
+    .admin-main {
+        @apply ml-0;
+    }
+}
+
+/* ================================================
+   2. SIDEBAR
+   ================================================ */
+
+.admin-sidebar {
+    @apply fixed left-0 top-0 z-40 h-screen w-64 bg-gradient-to-b from-slate-900 to-slate-800 shadow-xl transition-all duration-300;
+}
+
+.admin-sidebar.collapsed {
+    @apply -translate-x-full lg:translate-x-0 lg:w-16;
+}
+
+.sidebar-logo {
+    @apply flex h-16 items-center gap-3 border-b border-slate-700/50 px-4;
+}
+
+.sidebar-nav {
+    @apply flex flex-col gap-1 px-3 py-4;
+}
+
+.sidebar-nav-item {
+    @apply flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-300 transition-all duration-200;
+}
+
+.sidebar-nav-item:hover {
+    @apply bg-slate-700/50 text-white;
+}
+
+.sidebar-nav-item.active {
+    @apply bg-cyan-600/20 text-cyan-400 shadow-[inset_3px_0_0_0_#0891b2];
+}
+
+.sidebar-nav-icon {
+    @apply h-5 w-5 flex-shrink-0;
+}
+
+.sidebar-nav-label {
+    @apply flex-1 truncate;
+}
+
+.sidebar-collapse-btn {
+    @apply absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-white shadow-lg hover:bg-slate-600;
+}
+
+/* ================================================
+   3. HEADER
+   ================================================ */
+
+.admin-header {
+    @apply sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-6 backdrop-blur-md;
+}
+
+.header-breadcrumb {
+    @apply flex items-center gap-2 text-sm;
+}
+
+.header-breadcrumb-item {
+    @apply text-slate-500 transition-colors hover:text-slate-700;
+}
+
+.header-breadcrumb-separator {
+    @apply h-4 w-4 text-slate-400;
+}
+
+.header-breadcrumb-current {
+    @apply font-semibold text-slate-900;
+}
+
+.header-actions {
+    @apply flex items-center gap-4;
+}
+
+.header-search {
+    @apply relative;
+}
+
+.header-search-input {
+    @apply h-10 w-64 rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm placeholder-slate-400 focus:border-cyan-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20;
+}
+
+.header-search-icon {
+    @apply absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400;
+}
+
+.header-notification {
+    @apply relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100;
+}
+
+.header-notification-badge {
+    @apply absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white;
+}
+
+.header-user {
+    @apply flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 transition-colors hover:bg-slate-100;
+}
+
+.header-user-avatar {
+    @apply h-9 w-9 overflow-hidden rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-sm font-bold text-white;
+}
+
+.header-user-info {
+    @apply text-right;
+}
+
+.header-user-name {
+    @apply text-sm font-semibold text-slate-900;
+}
+
+.header-user-role {
+    @apply text-xs text-slate-500;
+}
+
+/* ================================================
+   4. CONTENT AREA
+   ================================================ */
+
+.admin-content {
+    @apply p-6;
+}
+
+.admin-page-header {
+    @apply mb-6 flex items-center justify-between;
+}
+
+.admin-page-title {
+    @apply text-2xl font-bold tracking-tight text-slate-900;
+}
+
+.admin-page-subtitle {
+    @apply mt-1 text-sm text-slate-500;
+}
+
+.admin-page-actions {
+    @apply flex items-center gap-3;
+}
+
+/* ================================================
+   5. STAT CARDS
+   ================================================ */
+
+.stat-card {
+    @apply relative overflow-hidden rounded-2xl border border-slate-200/50 bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:shadow-slate-200/50;
+}
+
+.stat-card-icon {
+    @apply grid h-12 w-12 place-items-center rounded-xl;
+}
+
+.stat-card-icon.cyan {
+    @apply bg-cyan-100 text-cyan-600;
+}
+
+.stat-card-icon.emerald {
+    @apply bg-emerald-100 text-emerald-600;
+}
+
+.stat-card-icon.amber {
+    @apply bg-amber-100 text-amber-600;
+}
+
+.stat-card-icon.rose {
+    @apply bg-rose-100 text-rose-600;
+}
+
+.stat-card-icon.violet {
+    @apply bg-violet-100 text-violet-600;
+}
+
+.stat-card-icon.blue {
+    @apply bg-blue-100 text-blue-600;
+}
+
+.stat-card-icon.indigo {
+    @apply bg-indigo-100 text-indigo-600;
+}
+
+.stat-card-icon.teal {
+    @apply bg-teal-100 text-teal-600;
+}
+
+.stat-card-value {
+    @apply mt-4 text-3xl font-bold tracking-tight text-slate-900;
+}
+
+.stat-card-label {
+    @apply mt-1 text-sm font-medium text-slate-500;
+}
+
+.stat-card-trend {
+    @apply mt-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+}
+
+.stat-card-trend.up {
+    @apply bg-emerald-50 text-emerald-700;
+}
+
+.stat-card-trend.down {
+    @apply bg-rose-50 text-rose-700;
+}
+
+.stat-card-trend.neutral {
+    @apply bg-slate-100 text-slate-600;
+}
+
+.stat-card-trend-icon {
+    @apply h-3 w-3;
+}
+
+.stat-card-decoration {
+    @apply absolute -right-4 -top-4 h-24 w-24 rounded-full opacity-10;
+}
+
+/* ================================================
+   6. DATA TABLES
+   ================================================ */
+
+.data-table-container {
+    @apply overflow-hidden rounded-2xl border border-slate-200/50 bg-white shadow-sm;
+}
+
+.data-table-header {
+    @apply flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4;
+}
+
+.data-table-title {
+    @apply text-lg font-semibold text-slate-900;
+}
+
+.data-table-actions {
+    @apply flex items-center gap-3;
+}
+
+.data-table {
+    @apply w-full text-sm;
+}
+
+.data-table thead {
+    @apply bg-slate-50/50;
+}
+
+.data-table th {
+    @apply px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500;
+}
+
+.data-table td {
+    @apply whitespace-nowrap px-6 py-4 text-slate-700;
+}
+
+.data-table tbody tr {
+    @apply border-b border-slate-100 transition-colors hover:bg-slate-50/50;
+}
+
+.data-table tbody tr:last-child {
+    @apply border-0;
+}
+
+.data-table-actions-cell {
+    @apply flex items-center gap-2;
+}
+
+/* ================================================
+   7. BUTTONS
+   ================================================ */
+
+.btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.btn-primary {
+    @apply bg-cyan-600 text-white shadow-sm hover:bg-cyan-700 focus:ring-cyan-500 active:scale-[0.98];
+}
+
+.btn-secondary {
+    @apply border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus:ring-slate-500 active:scale-[0.98];
+}
+
+.btn-success {
+    @apply bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 focus:ring-emerald-500;
+}
+
+.btn-danger {
+    @apply bg-rose-600 text-white shadow-sm hover:bg-rose-700 focus:ring-rose-500;
+}
+
+.btn-warning {
+    @apply bg-amber-500 text-white shadow-sm hover:bg-amber-600 focus:ring-amber-500;
+}
+
+.btn-ghost {
+    @apply text-slate-600 hover:bg-slate-100 focus:ring-slate-500;
+}
+
+.btn-sm {
+    @apply px-3 py-1.5 text-xs;
+}
+
+.btn-lg {
+    @apply px-6 py-3 text-base;
+}
+
+.btn-icon {
+    @apply h-9 w-9 p-0;
+}
+
+/* ================================================
+   8. FORM ELEMENTS
+   ================================================ */
+
+.form-group {
+    @apply mb-5;
+}
+
+.form-label {
+    @apply mb-2 block text-sm font-semibold text-slate-700;
+}
+
+.form-label.required::after {
+    content: ' *';
+    @apply text-rose-500;
+}
+
+.form-input {
+    @apply h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20;
+}
+
+.form-input.error {
+    @apply border-rose-500 focus:border-rose-500 focus:ring-rose-500/20;
+}
+
+.form-select {
+    @apply h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%236b7280%22%3E%3Cpath%20d%3D%22m5.293%207.293%204.293%204.293%204.293-4.293%201.414%201.414L10.707%2013l-4.293-4.293-1.414%201.414z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat px-4 pr-10 text-sm text-slate-900 transition-all focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20;
+}
+
+.form-textarea {
+    @apply min-h-[120px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20;
+}
+
+.form-helper {
+    @apply mt-1.5 text-xs text-slate-500;
+}
+
+.form-error {
+    @apply mt-1.5 flex items-center gap-1 text-xs text-rose-600;
+}
+
+.form-error-icon {
+    @apply h-3.5 w-3.5;
+}
+
+/* ================================================
+   9. CARDS
+   ================================================ */
+
+.card {
+    @apply overflow-hidden rounded-2xl border border-slate-200/50 bg-white shadow-sm;
+}
+
+.card-header {
+    @apply flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4;
+}
+
+.card-title {
+    @apply text-base font-semibold text-slate-900;
+}
+
+.card-body {
+    @apply p-6;
+}
+
+.card-footer {
+    @apply flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-6 py-4;
+}
+
+/* ================================================
+   10. BADGES & TAGS
+   ================================================ */
+
+.badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+}
+
+.badge-cyan {
+    @apply bg-cyan-100 text-cyan-700;
+}
+
+.badge-emerald {
+    @apply bg-emerald-100 text-emerald-700;
+}
+
+.badge-amber {
+    @apply bg-amber-100 text-amber-700;
+}
+
+.badge-rose {
+    @apply bg-rose-100 text-rose-700;
+}
+
+.badge-violet {
+    @apply bg-violet-100 text-violet-700;
+}
+
+.badge-slate {
+    @apply bg-slate-100 text-slate-700;
+}
+
+.badge-blue {
+    @apply bg-blue-100 text-blue-700;
+}
+
+.badge-indigo {
+    @apply bg-indigo-100 text-indigo-700;
+}
+
+.tag {
+    @apply inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600;
+}
+
+.tag-icon {
+    @apply h-3.5 w-3.5;
+}
+
+/* ================================================
+   11. MODALS
+   ================================================ */
+
+.modal-overlay {
+    @apply fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm transition-opacity;
+}
+
+.modal {
+    @apply fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-2xl;
+}
+
+.modal-lg {
+    @apply max-w-2xl;
+}
+
+.modal-xl {
+    @apply max-w-4xl;
+}
+
+.modal-header {
+    @apply mb-5 flex items-center justify-between;
+}
+
+.modal-title {
+    @apply text-xl font-bold text-slate-900;
+}
+
+.modal-close {
+    @apply flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600;
+}
+
+.modal-body {
+    @apply text-sm text-slate-600;
+}
+
+.modal-footer {
+    @apply mt-6 flex items-center justify-end gap-3;
+}
+
+/* ================================================
+   12. ALERTS & TOASTS
+   ================================================ */
+
+.alert {
+    @apply flex items-start gap-3 rounded-xl p-4;
+}
+
+.alert-success {
+    @apply border border-emerald-200 bg-emerald-50;
+}
+
+.alert-error {
+    @apply border border-rose-200 bg-rose-50;
+}
+
+.alert-warning {
+    @apply border border-amber-200 bg-amber-50;
+}
+
+.alert-info {
+    @apply border border-blue-200 bg-blue-50;
+}
+
+.alert-icon {
+    @apply h-5 w-5 flex-shrink-0;
+}
+
+.alert-success .alert-icon {
+    @apply text-emerald-600;
+}
+
+.alert-error .alert-icon {
+    @apply text-rose-600;
+}
+
+.alert-warning .alert-icon {
+    @apply text-amber-600;
+}
+
+.alert-info .alert-icon {
+    @apply text-blue-600;
+}
+
+.alert-content {
+    @apply flex-1;
+}
+
+.alert-title {
+    @apply font-semibold text-slate-900;
+}
+
+.alert-message {
+    @apply mt-1 text-sm text-slate-600;
+}
+
+.alert-dismiss {
+    @apply text-slate-400 transition-colors hover:text-slate-600;
+}
+
+/* Toast */
+.toast-container {
+    @apply fixed bottom-6 right-6 z-50 flex flex-col gap-3;
+}
+
+.toast {
+    @apply flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-lg;
+}
+
+.toast-icon {
+    @apply h-5 w-5;
+}
+
+/* ================================================
+   13. AVATARS
+   ================================================ */
+
+.avatar {
+    @apply inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-sm font-bold text-white;
+}
+
+.avatar-sm {
+    @apply h-8 w-8 text-xs;
+}
+
+.avatar-md {
+    @apply h-10 w-10 text-sm;
+}
+
+.avatar-lg {
+    @apply h-12 w-12 text-base;
+}
+
+.avatar-xl {
+    @apply h-16 w-16 text-lg;
+}
+
+.avatar img {
+    @apply h-full w-full object-cover;
+}
+
+/* ================================================
+   14. PAGINATION
+   ================================================ */
+
+.pagination {
+    @apply flex items-center gap-1;
+}
+
+.pagination-item {
+    @apply flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100;
+}
+
+.pagination-item.active {
+    @apply bg-cyan-600 text-white shadow-sm;
+}
+
+.pagination-item.disabled {
+    @apply cursor-not-allowed opacity-50;
+}
+
+.pagination-ellipsis {
+    @apply px-2 text-slate-400;
+}
+
+/* ================================================
+   15. TABS
+   ================================================ */
+
+.tabs {
+    @apply flex items-center gap-1 border-b border-slate-200;
+}
+
+.tab-item {
+    @apply relative px-4 py-3 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700;
+}
+
+.tab-item.active {
+    @apply text-cyan-600;
+}
+
+.tab-item.active::after {
+    content: '';
+    @apply absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-600;
+}
+
+.tab-content {
+    @apply py-6;
+}
+
+/* ================================================
+   16. DROPdowns
+   ================================================ */
+
+.dropdown {
+    @apply relative inline-block;
+}
+
+.dropdown-menu {
+    @apply absolute right-0 top-full z-10 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg;
+}
+
+.dropdown-item {
+    @apply flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50;
+}
+
+.dropdown-item-icon {
+    @apply h-4 w-4 text-slate-400;
+}
+
+.dropdown-divider {
+    @apply my-2 h-px bg-slate-100;
+}
+
+/* ================================================
+   17. PROGRESS & LOADING
+   ================================================ */
+
+.progress {
+    @apply h-2 overflow-hidden rounded-full bg-slate-100;
+}
+
+.progress-bar {
+    @apply h-full rounded-full bg-cyan-600 transition-all duration-500;
+}
+
+.skeleton {
+    @apply animate-pulse rounded-lg bg-slate-200;
+}
+
+.loading-spinner {
+    @apply h-5 w-5 animate-spin text-slate-400;
+}
+
+/* ================================================
+   18. CHARTS CONTAINER
+   ================================================ */
+
+.chart-container {
+    @apply relative h-80 w-full;
+}
+
+/* ================================================
+   19. EMPTY STATES
+   ================================================ */
+
+.empty-state {
+    @apply flex flex-col items-center justify-center py-16 text-center;
+}
+
+.empty-state-icon {
+    @apply mb-4 h-16 w-16 text-slate-300;
+}
+
+.empty-state-title {
+    @apply text-lg font-semibold text-slate-700;
+}
+
+.empty-state-description {
+    @apply mt-2 max-w-sm text-sm text-slate-500;
+}
+
+.empty-state-action {
+    @apply mt-6;
+}
+
+/* ================================================
+   20. UTILITY CLASSES
+   ================================================ */
+
+/* Text utilities */
+.text-gradient {
+    @apply bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+.animate-slide-down {
+    animation: slideDown 0.3s ease-out;
+}
+
+/* Hide scrollbar but allow scroll */
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Status indicators */
+.status-dot {
+    @apply h-2 w-2 rounded-full;
+}
+
+.status-dot.online {
+    @apply bg-emerald-500;
+}
+
+.status-dot.offline {
+    @apply bg-slate-300;
+}
+
+.status-dot.busy {
+    @apply bg-amber-500;
+}
+
+/* Quick action card */
+.quick-action {
+    @apply flex flex-col items-center gap-3 rounded-xl border border-slate-200 bg-white p-5 text-center transition-all hover:border-cyan-200 hover:shadow-md hover:shadow-cyan-100/50;
+}
+
+.quick-action-icon {
+    @apply grid h-12 w-12 place-items-center rounded-xl bg-slate-100 text-slate-600;
+}
+
+.quick-action-label {
+    @apply text-sm font-medium text-slate-700;
+}
+
+/* Activity timeline */
+.activity-item {
+    @apply relative border-l-2 border-slate-200 pb-6 pl-6 last:border-0 last:pb-0;
+}
+
+.activity-item::before {
+    content: '';
+    @apply absolute -left-[9px] top-0 h-4 w-4 rounded-full border-2 border-white bg-slate-300;
+}
+
+.activity-item.success::before {
+    @apply bg-emerald-500;
+}
+
+.activity-item.warning::before {
+    @apply bg-amber-500;
+}
+
+.activity-item.error::before {
+    @apply bg-rose-500;
+}
+
+.activity-item.info::before {
+    @apply bg-cyan-500;
+}
+
+.activity-time {
+    @apply text-xs text-slate-400;
+}
+
+.activity-content {
+    @apply text-sm text-slate-700;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+    .admin-content {
+        @apply p-4;
+    }
+
+    .stat-card {
+        @apply p-4;
+    }
+
+    .data-table-container {
+        @apply -mx-4 rounded-none;
+    }
+
+    .modal {
+        @apply mx-4 max-w-full rounded-b-none;
+    }
+}

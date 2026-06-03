@@ -874,3 +874,29 @@
 [wire\:cloak] {
     display: none !important;
 }
+
+/* Year Picker Component */
+.silatar-yearpicker {
+    @apply relative;
+}
+
+.silatar-yearpicker-select {
+    @apply block w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-900 shadow-sm transition;
+    @apply hover:border-cyan-200;
+    @apply focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-100;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='1.8' d='m19 9-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+}
+
+.silatar-yearpicker-select::-webkit-inner-spin-button,
+.silatar-yearpicker-select::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.silatar-yearpicker-select {
+    -moz-appearance: textfield;
+}

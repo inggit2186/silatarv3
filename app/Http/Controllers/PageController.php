@@ -177,9 +177,24 @@ class PageController extends Controller
         $activeTab = $request->string('tab')->toString();
         $activeTab = in_array($activeTab, ['harian', 'bulanan', 'humas'], true) ? $activeTab : 'harian';
 
+        // Handle year parameter for bulanan tab, or month for other tabs
+        $selectedYear = $request->input('year');
         $selectedMonth = $request->string('month')->toString();
-        if (! preg_match('/^\d{4}-\d{2}$/', $selectedMonth)) {
-            $selectedMonth = now()->format('Y-m');
+
+        if ($activeTab === 'bulanan') {
+            // For bulanan tab, use year parameter
+            if (!$selectedYear || !preg_match('/^\d{4}$/', $selectedYear)) {
+                $selectedYear = now()->format('Y');
+            }
+            $selectedYear = (int) $selectedYear;
+            // Convert year to month format for display (use January as default)
+            $selectedMonth = $selectedYear . '-01';
+        } else {
+            // For harian and humas tabs, use month parameter
+            if (! preg_match('/^\d{4}-\d{2}$/', $selectedMonth)) {
+                $selectedMonth = now()->format('Y-m');
+            }
+            $selectedYear = (int) Carbon::parse($selectedMonth)->format('Y');
         }
 
         $selectedMonthStart = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
@@ -273,31 +288,112 @@ class PageController extends Controller
                 ];
             });
 
-        $humasReports = DB::table('laporan_humas as lh')
+        // Rekap Bulanan dari satker_ckh - data laporan kinerja bulanan user
+        // For bulanan tab, show only current user's data for the selected year
+        if ($activeTab === 'bulanan') {
+            $yearStart = Carbon::createFromFormat('Y-m-d', $selectedYear . '-01-01')->startOfYear();
+            $yearEnd = Carbon::createFromFormat('Y-m-d', $selectedYear . '-12-31')->endOfYear();
+        } else {
+            $yearStart = $selectedMonthStart;
+            $yearEnd = $selectedMonthEnd;
+        }
+
+        // For bulanan tab, show only current user's reports
+        $bulananReports = DB::table('satker_ckh as ck')
+            ->leftJoin('users as u', 'u.id', '=', 'ck.user_id')
+            ->leftJoin('ktd_department as dept', 'dept.id', '=', 'ck.dept_id')
+            ->whereBetween('ck.bulan', [$yearStart->toDateString(), $yearEnd->toDateString()])
+            ->where('ck.item_id', 1)
+            // Filter: only show current user's reports for bulanan tab
+            ->where('ck.user_id', $user->id)
+            ->select([
+                'ck.id',
+                'ck.user_id',
+                'ck.dept_id',
+                'ck.bulan',
+                'ck.filename',
+                'ck.status',
+                'ck.alasan',
+                'ck.petugas',
+                'ck.sending',
+                'ck.created_at',
+                'ck.updated_at',
+                'u.name as user_name',
+                'u.nomor_induk',
+                'dept.nama as dept_name',
+            ])
+            ->orderBy('ck.bulan', 'desc')
+            ->get()
+            ->map(function ($item) {
+                $statusConfig = [
+                    'KOSONG' => ['label' => 'Belum Kirim', 'color' => 'slate'],
+                    'DIKIRIM' => ['label' => 'Dikirim', 'color' => 'amber'],
+                    'DISETUJUI' => ['label' => 'Disetujui', 'color' => 'emerald'],
+                    'DITOLAK' => ['label' => 'Ditolak', 'color' => 'rose'],
+                ];
+                $status = $statusConfig[$item->status] ?? ['label' => $item->status, 'color' => 'slate'];
+                // Handle bulan field - could be date only or datetime
+                $bulanRaw = is_string($item->bulan) ? substr($item->bulan, 0, 10) : $item->bulan;
+                $bulanDate = Carbon::createFromFormat('Y-m-d', $bulanRaw);
+
+                return [
+                    'id' => $item->id,
+                    'user_id' => $item->user_id,
+                    'user_name' => $item->user_name ?? 'Unknown',
+                    'nomor_induk' => $item->nomor_induk ?? '-',
+                    'dept_name' => $item->dept_name ?? '-',
+                    'bulan' => $bulanDate->format('F Y'),
+                    'bulan_raw' => $bulanRaw,
+                    'filename' => $item->filename,
+                    'status' => $item->status,
+                    'status_label' => $status['label'],
+                    'status_color' => $status['color'],
+                    'alasan' => $item->alasan,
+                    'sending' => $item->sending,
+                    'created_at' => $item->created_at,
+                    'updated_at' => $item->updated_at,
+                ];
+            });
+
+        $humasData = DB::table('laporan_humas as lh')
+            ->leftJoin('users as u', 'u.id', '=', 'lh.user_id')
             ->where('lh.user_id', $user->id)
             ->orderByDesc('lh.bulan')
             ->get()
             ->map(function ($item) {
                 $data = json_decode((string) ($item->data ?? '{}'), true) ?: [];
-                $channels = collect(['facebook', 'instagram', 'tiktok', 'website', 'youtube'])->map(function (string $channel) use ($data) {
+                $platforms = collect(['facebook', 'instagram', 'tiktok', 'website', 'youtube'])->map(function (string $channel) use ($data) {
                     $channelData = $data[$channel] ?? [];
 
                     return [
-                        'name' => ucfirst($channel),
+                        'name' => $channel,
                         'has_data' => filled(data_get($channelData, 'first.date')) || filled(data_get($channelData, 'last.date')),
+                        'first_date' => data_get($channelData, 'first.date'),
                         'first_content' => data_get($channelData, 'first.content'),
+                        'first_link' => data_get($channelData, 'first.link'),
+                        'last_date' => data_get($channelData, 'last.date'),
                         'last_content' => data_get($channelData, 'last.content'),
+                        'last_link' => data_get($channelData, 'last.link'),
                     ];
                 })->values();
 
+                $verifikatorName = null;
+                if ($item->verifikator_id) {
+                    $verifikator = DB::table('users')->where('id', $item->verifikator_id)->first();
+                    $verifikatorName = $verifikator?->name;
+                }
+
                 return [
                     'id' => $item->id,
-                    'month_label' => Carbon::parse($item->bulan)->format('m/Y'),
+                    'month_label' => $item->bulan ? Carbon::createFromFormat('Y-m-d', substr($item->bulan, 0, 10))->format('m/Y') : '-',
+                    'bulan_full' => $item->bulan ? substr($item->bulan, 0, 7) : '',
+                    'author' => $item->name ?? 'Unknown',
                     'status' => $item->status ?: '-',
+                    'verifikator' => $verifikatorName,
                     'comment' => $item->komen ?: $item->user_komen ?: '-',
                     'updated_at' => $item->updated_at,
-                    'channels' => $channels,
-                    'active_channels' => $channels->where('has_data', true)->count(),
+                    'platforms' => $platforms,
+                    'active_channels' => $platforms->where('has_data', true)->count(),
                 ];
             });
 
@@ -350,6 +446,7 @@ class PageController extends Controller
             'activeTab' => $activeTab,
             'selectedMonth' => $selectedMonth,
             'selectedMonthLabel' => $this->indonesianMonthLabel($selectedMonthStart),
+            'selectedYear' => $selectedYear,
             'search' => $search,
             'printMode' => $printMode,
             'editingGroup' => $editingGroup,
@@ -358,7 +455,8 @@ class PageController extends Controller
             'dailySummary' => $dailySummary,
             'activityUnits' => $activityUnits,
             'monthlyRecaps' => $monthlyRecaps,
-            'humasReports' => $humasReports,
+            'bulananReports' => $bulananReports,
+            'humasData' => $humasData,
         ]);
     }
 
@@ -539,6 +637,87 @@ class PageController extends Controller
                 'month' => Carbon::parse($data['tanggal'])->format('Y-m'),
             ])
             ->with('success', 'Kegiatan harian berhasil ditambahkan.');
+    }
+    public function storeHumas(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($user, 403);
+
+        $validated = $request->validate([
+            'bulan' => ['required', 'date_format:Y-m'],
+            'comment' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        // Process platform data from request
+        $platforms = ['facebook', 'instagram', 'tiktok', 'website', 'youtube'];
+        $platformData = [];
+
+        foreach ($platforms as $platform) {
+            $platformData[$platform] = [
+                'first' => [
+                    'date' => $request->input("{$platform}.first.date") ?: '',
+                    'content' => $request->input("{$platform}.first.content") ?: '',
+                    'link' => $request->input("{$platform}.first.link") ?: '',
+                ],
+                'last' => [
+                    'date' => $request->input("{$platform}.last.date") ?: '',
+                    'content' => $request->input("{$platform}.last.content") ?: '',
+                    'link' => $request->input("{$platform}.last.link") ?: '',
+                ],
+            ];
+        }
+
+        // Check if record already exists for this month
+        $existing = DB::table('laporan_humas')
+            ->where('user_id', $user->id)
+            ->where('bulan', $validated['bulan'] . '-01')
+            ->first();
+
+        if ($existing) {
+            // Update existing record
+            DB::table('laporan_humas')
+                ->where('id', $existing->id)
+                ->update([
+                    'data' => json_encode($platformData),
+                    'user_komen' => $validated['comment'] ?? '',
+                    'updated_at' => now(),
+                ]);
+        } else {
+            // Insert new record
+            DB::table('laporan_humas')->insert([
+                'user_id' => $user->id,
+                'dept_id' => $user->dept_id ?? null,
+                'bulan' => $validated['bulan'] . '-01',
+                'data' => json_encode($platformData),
+                'user_komen' => $validated['comment'] ?? '',
+                'status' => 'tersimpan',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return redirect()
+            ->route('laporan-kinerja', ['tab' => 'humas'])
+            ->with('success', 'Laporan humas berhasil disimpan.');
+    }
+
+    public function destroyHumas(Request $request, int $id)
+    {
+        $user = $request->user();
+        abort_unless($user, 403);
+
+        $report = DB::table('laporan_humas')
+            ->where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($report, 404);
+
+        DB::table('laporan_humas')->where('id', $id)->delete();
+
+        return redirect()
+            ->route('laporan-kinerja', ['tab' => 'humas'])
+            ->with('success', 'Laporan humas berhasil dihapus.');
     }
 
     public function updateLaporanKinerjaByDate(Request $request)
