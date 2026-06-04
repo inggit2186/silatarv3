@@ -68,6 +68,7 @@
                 @click.outside="closePicker()"
                 class="silatar-datepicker-popover"
                 :style="popoverStyle"
+                :data-name="'{{ $name }}'"
             >
             <div class="silatar-datepicker-popover-header">
                 <button type="button" @click="prevMonth()" class="silatar-datepicker-nav" aria-label="Bulan sebelumnya">

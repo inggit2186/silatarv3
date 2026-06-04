@@ -309,7 +309,7 @@ document.addEventListener('alpine:init', () => {
                 ? Math.max(margin, rect.top - height - margin)
                 : Math.min(window.innerHeight - height - margin, rect.bottom + margin);
 
-            this.popoverStyle = `position:fixed;left:${Math.round(left)}px;top:${Math.round(top)}px;width:${width}px;z-index:70;`;
+            this.popoverStyle = `position:fixed;left:${Math.round(left)}px;top:${Math.round(top)}px;width:${width}px;z-index:110;`;
         },
         init() {
             this.monthCursor = this.value ? this.parseValue(this.value) : new Date();
@@ -500,7 +500,7 @@ document.addEventListener('alpine:init', () => {
                 ? Math.max(margin, rect.top - height - margin)
                 : Math.min(window.innerHeight - height - margin, rect.bottom + margin);
 
-            this.popoverStyle = `position:fixed;left:${Math.round(left)}px;top:${Math.round(top)}px;width:${width}px;z-index:70;`;
+            this.popoverStyle = `position:fixed;left:${Math.round(left)}px;top:${Math.round(top)}px;width:${width}px;z-index:110;`;
         },
         init() {
             const sourceDate = this.value ? this.parseValue(this.value) : new Date();
@@ -822,6 +822,20 @@ document.addEventListener('alpine:init', () => {
         unitOptions: Array.isArray(config.unitOptions) && config.unitOptions.length
             ? config.unitOptions
             : ['Kegiatan', 'Dokumen', 'Jam'],
+        // PDF Preview Modal
+        pdfPreviewOpen: false,
+        pdfPreviewUrl: '',
+        pdfPreviewTitle: '',
+        openPdfPreview(url, title) {
+            this.pdfPreviewUrl = url;
+            this.pdfPreviewTitle = title || 'Preview PDF';
+            this.pdfPreviewOpen = true;
+        },
+        closePdfPreview() {
+            this.pdfPreviewOpen = false;
+            this.pdfPreviewUrl = '';
+            this.pdfPreviewTitle = '';
+        },
         openAddModal() {
             this.addModalOpen = true;
 
@@ -895,6 +909,35 @@ document.addEventListener('alpine:init', () => {
             TikTok: { first: { date: '', content: '', link: '' }, last: { date: '', content: '', link: '' } },
             Website: { first: { date: '', content: '', link: '' }, last: { date: '', content: '', link: '' } },
             Youtube: { first: { date: '', content: '', link: '' }, last: { date: '', content: '', link: '' } },
+        },
+        // Platform Detail Modal
+        platformDetailOpen: false,
+        platformDetailData: null,
+        platformDetailName: '',
+        openPlatformDetail(reportId, platformName) {
+            const report = this.humasData.find(r => r.id === reportId);
+            if (report) {
+                const platform = report.platforms.find(p => p.name.toLowerCase() === platformName.toLowerCase());
+                if (platform) {
+                    // Map platform names to display names
+                    const displayNames = {
+                        'facebook': 'Facebook',
+                        'instagram': 'Instagram',
+                        'tiktok': 'TikTok',
+                        'website': 'Website',
+                        'youtube': 'YouTube'
+                    };
+                    const lowerName = platformName.toLowerCase();
+                    this.platformDetailName = displayNames[lowerName] || platformName;
+                    this.platformDetailData = platform;
+                    this.platformDetailOpen = true;
+                }
+            }
+        },
+        closePlatformDetail() {
+            this.platformDetailOpen = false;
+            this.platformDetailData = null;
+            this.platformDetailName = '';
         },
         openAddModal() {
             this.isEdit = false;

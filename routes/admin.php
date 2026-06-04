@@ -69,6 +69,13 @@ Route::middleware(['auth', 'admin'])
             return view('admin.reports.index');
         })->name('reports.index');
 
+        // Utilities
+        Route::post('/utilities/migrate-satker', [DashboardController::class, 'migrateSatker'])->name('utilities.migrate-satker');
+        Route::post('/utilities/migrate-satker-preview', [DashboardController::class, 'migrateSatkerPreview'])->name('utilities.migrate-satker-preview');
+
+        // Laporan Kinerja Verification
+        Route::post('/laporan-kinerja/approve', [DashboardController::class, 'approveLaporanKinerja'])->name('laporan-kinerja.approve');
+
         // Profile
         Route::get('/profile', function () {
             return view('admin.profile');

@@ -13,10 +13,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/pengajuan-saya/{requestId}/edit', [PageController::class, 'editRequest'])->name('pengajuan-saya.edit');
     Route::get('/pengajuan-saya/{requestId}/file/{syaratId}/preview', [PageController::class, 'previewRequestFile'])->name('pengajuan-saya.preview-file');
     Route::get('/laporan-kinerja', [PageController::class, 'laporanKinerja'])->name('laporan-kinerja');
+    Route::get('/laporan-kinerja/bawahan', [PageController::class, 'laporanKinerjaBawahan'])->name('laporan-kinerja.bawahan');
+    Route::get('/profil', [PageController::class, 'profil'])->name('profil');
+    Route::get('/profil/edit', [PageController::class, 'editProfil'])->name('profil.edit');
+    Route::put('/profil/edit', [PageController::class, 'updateProfil'])->name('profil.update');
     Route::post('/laporan-kinerja/humas', [PageController::class, 'storeHumas'])->name('laporan-humas.store');
     Route::delete('/laporan-kinerja/humas/{id}', [PageController::class, 'destroyHumas'])->name('laporan-humas.destroy');
-    Route::post('/laporan-kinerja/harian', [PageController::class, 'storeKinerja'])->name('laporan-kinerja.store');
+    Route::post('/laporan-kinerja/harian', [PageController::class, 'storeLaporanKinerja'])->name('laporan-kinerja.store');
     Route::get('/laporan-kinerja/rekap', [PageController::class, 'rekapLaporanKinerja'])->name('laporan-kinerja.rekap');
+    Route::post('/laporan-kinerja/rekap/supervisor', [PageController::class, 'submitSupervisor'])->name('laporan-kinerja.rekap.supervisor');
     Route::put('/laporan-kinerja/day', [PageController::class, 'updateLaporanKinerjaByDate'])->name('laporan-kinerja.update-day');
     Route::delete('/laporan-kinerja/day', [PageController::class, 'deleteLaporanKinerjaByDate'])->name('laporan-kinerja.delete-day');
     Route::put('/laporan-kinerja/{activityId}', [PageController::class, 'updateLaporanKinerja'])->whereNumber('activityId')->name('laporan-kinerja.update');
@@ -34,3 +39,12 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 Route::view('/register', 'auth.register')->name('register');
+
+// Laporan Kinerja API (verification by atasan)
+Route::post('/laporan-kinerja/verify', [App\Http\Controllers\PageController::class, 'verifyLaporanKinerja'])->middleware('auth')->name('laporan-kinerja.verify');
+
+// User Signature Management
+Route::middleware('auth')->group(function () {
+    Route::get('/signature', [App\Http\Controllers\PageController::class, 'getSignature'])->name('signature.get');
+    Route::post('/signature', [App\Http\Controllers\PageController::class, 'saveSignature'])->name('signature.save');
+});

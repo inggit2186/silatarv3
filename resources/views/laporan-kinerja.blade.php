@@ -129,6 +129,19 @@
                         {{ $tab['label'] }}
                     </a>
                 @endforeach
+
+                {{-- Laporan Bawahan Tab - only for kepala, kasubbag, kasi --}}
+                @if(in_array(strtolower(auth()->user()->kat_jabatan ?? ''), ['kepala', 'kasubbag', 'kasi']))
+                    <a
+                        href="{{ route('laporan-kinerja.bawahan') }}"
+                        class="silatar-report-tab silatar-report-tab-inactive"
+                    >
+                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        Laporan Bawahan
+                    </a>
+                @endif
             </div>
         </section>
 
@@ -161,14 +174,22 @@
                                 :value="$selectedYear"
                                 placeholder="Pilih tahun"
                             />
+                        @elseif($activeTab === 'humas')
+                            {{-- Year picker for humas tab --}}
+                            <x-ui.yearpicker
+                                name="humas_year"
+                                :value="$humasYear ?? date('Y')"
+                                placeholder="Pilih tahun"
+                            />
                         @else
-                            {{-- Month picker for harian & humas tab --}}
+                            {{-- Month picker for harian tab --}}
                             <x-ui.monthpicker
                                 name="month"
                                 :value="$selectedMonth"
                                 placeholder="Pilih bulan"
                             />
                         @endif
+                        @if($activeTab === 'harian')
                         <a
                             href="{{ route('laporan-kinerja.rekap', ['tab' => $activeTab, 'month' => $selectedMonth]) }}"
                             target="_blank"
@@ -184,6 +205,7 @@
                             </svg>
                             Rekap
                         </a>
+                        @endif
                     </div>
                 </form>
             </div>
@@ -414,10 +436,14 @@
                                                 <td class="bulanan-cell font-mono text-cyan-300">{{ $report['bulan'] }}</td>
                                                 <td class="bulanan-cell text-center">
                                                     @if($report['filename'])
-                                                        <span class="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 font-mono text-xs text-white">
+                                                        <button
+                                                            type="button"
+                                                            @click="openPdfPreview('/storage/satker_ckh/{{ $report['user_id'] }}/{{ $report['filename'] }}', '{{ $report['bulan'] }}')"
+                                                            class="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 font-mono text-xs text-white hover:bg-cyan-500/20 hover:border-cyan-500/50 transition cursor-pointer"
+                                                        >
                                                             <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                                                             PDF
-                                                        </span>
+                                                        </button>
                                                     @else
                                                         <span class="inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 font-mono text-xs text-rose-400">
                                                             -
@@ -452,6 +478,7 @@
                     </div>
                 </div>
             @else
+                <div x-data="humasPage()">
                 <div class="p-5">
                     <div class="silatar-report-summary">
                         <div class="silatar-report-summary-header">
@@ -491,60 +518,15 @@
                                 </div>
                                 <div class="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 flex flex-col justify-center">
                                     <p class="font-mono text-xs font-semibold uppercase tracking-widest text-cyan-100 mb-2">Aksi</p>
-                                    <button type="button" @click="humasModalOpen = true" class="rounded-full bg-gradient-to-r from-cyan-600 to-cyan-500 px-5 py-2 font-mono text-sm font-semibold text-white shadow-[0_0_20px_rgba(0,212,255,0.3)]">+ Tambah</button>
-                                </div>
-                            </div>
-                        </div>
-
-
-                    <!-- Hugias Modal -->
-                    <div x-show="humasModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.85);">
-                        <div class="w-full max-w-lg rounded-2xl border border-cyan-500/30 bg-slate-900 p-6 shadow-[0_0_60px_rgba(0,212,255,0.3)]">
-                            <div class="flex items-center justify-between mb-5">
-                                <div>
-                                    <h3 class="font-mono text-lg font-bold text-cyan-400">Tambah Laporan Hugias</h3>
-                                    <p class="text-xs text-slate-400 mt-1">Isi platform yang aktif</p>
-                                </div>
-                                <button type="button" @click="humasModalOpen = false" class="text-slate-400 hover:text-white">
-                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    <button type="button" @click="openAddModal()" class="rounded-full bg-gradient-to-r from-rose-600 to-rose-500 px-5 py-2 font-mono text-sm font-semibold text-white shadow-[0_0_20px_rgba(244,63,94,0.3)]">
+                                    TAMBAH
                                 </button>
+                                </div>
                             </div>
-                            <form method="POST" action="{{ route('laporan-humas.store') }}" class="space-y-4">
-                                @csrf
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block font-mono text-xs uppercase tracking-wider text-cyan-400 mb-1.5">Facebook</label>
-                                        <input type="url" name="facebook" class="w-full rounded-lg border border-cyan-500/30 bg-slate-800 px-4 py-2.5 text-white text-sm" placeholder="https://facebook.com/...">
-                                    </div>
-                                    <div>
-                                        <label class="block font-mono text-xs uppercase tracking-wider text-cyan-400 mb-1.5">Instagram</label>
-                                        <input type="url" name="instagram" class="w-full rounded-lg border border-cyan-500/30 bg-slate-800 px-4 py-2.5 text-white text-sm" placeholder="https://instagram.com/...">
-                                    </div>
-                                    <div>
-                                        <label class="block font-mono text-xs uppercase tracking-wider text-cyan-400 mb-1.5">Tiktok</label>
-                                        <input type="url" name="tiktok" class="w-full rounded-lg border border-cyan-500/30 bg-slate-800 px-4 py-2.5 text-white text-sm" placeholder="https://tiktok.com/@...">
-                                    </div>
-                                    <div>
-                                        <label class="block font-mono text-xs uppercase tracking-wider text-cyan-400 mb-1.5">Website</label>
-                                        <input type="url" name="website" class="w-full rounded-lg border border-cyan-500/30 bg-slate-800 px-4 py-2.5 text-white text-sm" placeholder="https://...">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block font-mono text-xs uppercase tracking-wider text-cyan-400 mb-1.5">Youtube</label>
-                                    <input type="url" name="youtube" class="w-full rounded-lg border border-cyan-500/30 bg-slate-800 px-4 py-2.5 text-white text-sm" placeholder="https://youtube.com/...">
-                                </div>
-                                <div>
-                                    <label class="block font-mono text-xs uppercase tracking-wider text-cyan-400 mb-2">Komentar / Kendala Yang Dihadapi <span class="text-rose-400">*</span></label>
-                                    <textarea name="comment" rows="4" class="w-full rounded-lg border border-cyan-500/30 bg-slate-800 px-4 py-3 text-white resize-none" placeholder="Ceritakan kendala..."></textarea>
-                                </div>
-                                <div class="flex justify-end gap-3">
-                                    <button type="button" @click="humasModalOpen = false" class="rounded-full border border-slate-600 px-6 py-2.5 font-mono text-sm text-slate-300 hover:bg-slate-800">Batal</button>
-                                    <button type="submit" class="rounded-full bg-gradient-to-r from-cyan-600 to-cyan-500 px-6 py-2.5 font-mono text-sm font-semibold text-white shadow-[0_0_20px_rgba(0,212,255,0.3)]">Simpan</button>
-                                </div>
-                            </form>
                         </div>
-                    </div>
-                    <div class="silatar-report-table-shell">
+
+
+                                        <div class="silatar-report-table-shell">
                         @if ($humasData->isEmpty())
                             <div class="silatar-report-empty">
                                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-400">Kosong</p>
@@ -556,7 +538,7 @@
                                     <thead>
                                         <tr>
                                             <th class="silatar-report-th">Bulan</th>
-                                            <th class="silatar-report-th">Kanal</th>
+                                            <th class="silatar-report-th text-center">Platform</th>
                                             <th class="silatar-report-th">Status</th>
                                             <th class="silatar-report-th">Komen</th>
                                             <th class="silatar-report-th">Update</th>
@@ -566,14 +548,37 @@
                                         @foreach ($humasData as $report)
                                             <tr>
                                                 <td class="silatar-report-td text-center">
-                                                    <span class="silatar-report-date">{{ $report['month_label'] }}</span>
+                                                    @php
+                                                                $namaBulan = [
+                                                                    '01' => 'Januari', '02' => 'Februari', '03' => 'Maret',
+                                                                    '04' => 'April', '05' => 'Mei', '06' => 'Juni',
+                                                                    '07' => 'Juli', '08' => 'Agustus', '09' => 'September',
+                                                                    '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+                                                                ];
+                                                                $parts = explode('/', $report['month_label']);
+                                                                $bulanNama = $namaBulan[$parts[0]] ?? $report['month_label'];
+                                                                $tahun = $parts[1] ?? '';
+                                                            @endphp
+                                                    <span class="silatar-report-date">{{ $bulanNama }} {{ $tahun }}</span>
                                                 </td>
                                                 <td class="silatar-report-td">
-                                                    <div class="flex flex-wrap justify-center gap-2">
-                                                        @foreach ($report['platforms'] as $channel)
-                                                            <span class="inline-flex items-center rounded-full border px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] {{ $channel['has_data'] ? 'border-cyan-400/40 bg-cyan-500/20 text-cyan-300' : 'border-slate-600/40 bg-slate-800/50 text-slate-400' }}">
-                                                                {{ ucfirst($channel['name']) }}
-                                                            </span>
+                                                    <div class="flex items-center justify-center gap-2">
+                                                        @foreach ($report['platforms'] as $platform)
+                                                            @if ($platform['has_data'])
+                                                                <button type="button" @click="openPlatformDetail({{ $report['id'] }}, '{{ $platform['name'] }}')" class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-white/10 shadow-lg hover:bg-white/20 transition cursor-pointer" title="{{ ucfirst($platform['name']) }}">
+                                                                    @if ($platform['name'] === 'facebook')
+                                                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                                                                    @elseif ($platform['name'] === 'instagram')
+                                                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="url(#instagram-gradient)"><defs><linearGradient id="instagram-gradient" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#FFDC80"/><stop offset="50%" style="stop-color:#F56040"/><stop offset="100%" style="stop-color:#833AB4"/></linearGradient></defs><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                                                                    @elseif ($platform['name'] === 'tiktok')
+                                                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#000"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/></svg>
+                                                                    @elseif ($platform['name'] === 'website')
+                                                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                                                                    @elseif ($platform['name'] === 'youtube')
+                                                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                                                                    @endif
+                                                                </button>
+                                                            @endif
                                                         @endforeach
                                                     </div>
                                                 </td>
@@ -587,6 +592,233 @@
                             </div>
                         @endif
                     </div>
+                </div>
+
+                {{-- Platform Detail Modal --}}
+                <div x-show="platformDetailOpen" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="background:rgba(0,0,0,0.9); backdrop-filter:blur(4px);">
+                    <div class="w-full max-w-lg rounded-2xl border border-cyan-500/40 bg-gradient-to-b from-slate-900 to-slate-950 shadow-[0_0_80px_rgba(0,212,255,0.4)]">
+                        {{-- Header with Platform Logo --}}
+                        <div class="relative rounded-t-2xl overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-transparent to-cyan-500/20"></div>
+                            <div class="relative flex items-center gap-4 px-6 py-5 border-b border-cyan-500/20">
+                                <template x-if="platformDetailName === 'Facebook'">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 rounded-xl bg-[#1877F2] flex items-center justify-center shadow-lg">
+                                            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-xl text-white">Facebook</h3>
+                                            <p class="text-xs text-cyan-400">Platform Media Sosial</p>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="platformDetailName === 'Instagram'">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
+                                            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="#fff"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-xl text-white">Instagram</h3>
+                                            <p class="text-xs text-pink-400">Platform Media Sosial</p>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="platformDetailName === 'TikTok'">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 rounded-xl bg-black flex items-center justify-center shadow-lg border border-slate-700">
+                                            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="#fff"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-xl text-white">TikTok</h3>
+                                            <p class="text-xs text-slate-400">Platform Media Sosial</p>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="platformDetailName === 'Website'">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center shadow-lg">
+                                            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10 15.3 15.3 0 014-10z"/></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-xl text-white">Website</h3>
+                                            <p class="text-xs text-cyan-400">Website Resmi</p>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="platformDetailName === 'YouTube'">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 rounded-xl bg-red-600 flex items-center justify-center shadow-lg">
+                                            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="#fff"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-xl text-white">YouTube</h3>
+                                            <p class="text-xs text-red-400">Platform Video</p>
+                                        </div>
+                                    </div>
+                                </template>
+                                <button type="button" @click="closePlatformDetail()" class="ml-auto rounded-full bg-slate-800/50 p-2 text-slate-400 hover:text-white hover:bg-slate-700 transition">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Content --}}
+                        <div class="p-6 space-y-6">
+                            {{-- First Posting --}}
+                            <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                                <div class="bg-gradient-to-r from-cyan-500/10 to-transparent px-4 py-3 border-b border-white/10">
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.828a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+                                        <span class="font-semibold text-cyan-400 text-sm">Posting Pertama</span>
+                                    </div>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    <div class="flex items-start gap-3">
+                                        <span class="text-slate-500 text-xs font-mono w-16 mt-0.5">Tanggal</span>
+                                        <span class="text-white text-sm" x-text="platformDetailData?.first_date ? new Date(platformDetailData.first_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'">-</span>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <span class="text-slate-500 text-xs font-mono w-16 mt-0.5">Judul</span>
+                                        <span class="text-white text-sm" x-text="platformDetailData?.first_content || '-'">-</span>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <span class="text-slate-500 text-xs font-mono w-16 mt-0.5">Link</span>
+                                        <template x-if="platformDetailData?.first_link">
+                                            <a :href="platformDetailData.first_link" target="_blank" class="text-cyan-400 hover:text-cyan-300 text-sm underline break-all" x-text="platformDetailData.first_link"></a>
+                                        </template>
+                                        <span x-if="!platformDetailData?.first_link" class="text-slate-600 text-sm">-</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Last Posting --}}
+                            <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                                <div class="bg-gradient-to-r from-amber-500/10 to-transparent px-4 py-3 border-b border-white/10">
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.828a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/><path fill="currentColor" d="M10 10a.75.75 0 01.75.75v4a.75.75 0 01-.75.75h-4a.75.75 0 010-1.5h4z"/></svg>
+                                        <span class="font-semibold text-amber-400 text-sm">Posting Terakhir</span>
+                                    </div>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    <div class="flex items-start gap-3">
+                                        <span class="text-slate-500 text-xs font-mono w-16 mt-0.5">Tanggal</span>
+                                        <span class="text-white text-sm" x-text="platformDetailData?.last_date ? new Date(platformDetailData.last_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'">-</span>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <span class="text-slate-500 text-xs font-mono w-16 mt-0.5">Judul</span>
+                                        <span class="text-white text-sm" x-text="platformDetailData?.last_content || '-'">-</span>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <span class="text-slate-500 text-xs font-mono w-16 mt-0.5">Link</span>
+                                        <template x-if="platformDetailData?.last_link">
+                                            <a :href="platformDetailData.last_link" target="_blank" class="text-amber-400 hover:text-amber-300 text-sm underline break-all" x-text="platformDetailData.last_link"></a>
+                                        </template>
+                                        <span x-if="!platformDetailData?.last_link" class="text-slate-600 text-sm">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Hummas Modal --}}
+                <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.85);">
+                    <div class="w-full max-w-4xl rounded-2xl border border-cyan-500/30 bg-slate-900 shadow-[0_0_60px_rgba(0,212,255,0.3)] max-h-[90vh] overflow-y-auto">
+                        <div class="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-cyan-500/30 bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-4">
+                            <div>
+                                <h3 class="font-mono text-lg font-bold text-cyan-400">::: Laporan Kehumasan :::</h3>
+                                <p class="text-xs text-slate-400 mt-1" x-text="isEdit ? 'Edit Detail Kegiatan' : 'Detail Kegiatan Baru'"></p>
+                            </div>
+                            <button type="button" @click="closeModal()" class="rounded-full bg-slate-700/50 p-2 text-slate-400 transition hover:bg-slate-600 hover:text-white">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <form method="POST" :action="isEdit ? '/laporan-kinerja/humas/' + editingId : '{{ route('laporan-humas.store') }}'" class="p-6 space-y-6">
+                            @csrf
+                            <template x-if="isEdit">
+                                @method('PUT')
+                            </template>
+
+                            <div>
+                                <label class="block font-mono text-xs uppercase tracking-wider text-cyan-400 mb-2">Bulan Pelaporan <span class="text-rose-400">*</span></label>
+                                <input type="month" name="bulan" x-model="selectedMonth" class="w-full rounded-lg border border-cyan-500/30 bg-slate-800 px-4 py-3 text-white font-mono" required>
+                            </div>
+
+                            <div class="space-y-4">
+                                <h4 class="font-mono text-sm font-semibold uppercase tracking-wider text-cyan-300 border-b border-cyan-500/20 pb-2">Data Posting per Platform</h4>
+
+                                <template x-for="platform in platforms" :key="platform">
+                                    <div class="rounded-xl border border-cyan-500/20 bg-slate-800/50 p-4">
+                                        <div class="flex items-center justify-center gap-3 mb-4">
+                                            {{-- Platform Logo SVG --}}
+                                            <template x-if="platform === 'Facebook'">
+                                                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                                            </template>
+                                            <template x-if="platform === 'Instagram'">
+                                                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="url(#instagram-gradient)"><defs><linearGradient id="instagram-gradient" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#FFDC80"/><stop offset="50%" style="stop-color:#F56040"/><stop offset="100%" style="stop-color:#833AB4"/></linearGradient></defs><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                                            </template>
+                                            <template x-if="platform === 'TikTok'">
+                                                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="#000"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/></svg>
+                                            </template>
+                                            <template x-if="platform === 'Website'">
+                                                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                                            </template>
+                                            <template x-if="platform === 'YouTube'">
+                                                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                                            </template>
+                                            <h5 class="font-mono text-sm font-bold text-cyan-400 uppercase tracking-wider" x-text="platform"></h5>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="space-y-3">
+                                                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Posting Pertama</div>
+                                                <div>
+                                                    <label class="block text-xs text-slate-400 mb-1">Tanggal</label>
+                                                    <input type="date" :name="platform.toLowerCase() + '[first][date]'" x-model="platformData[platform].first.date" class="w-full rounded-lg border border-cyan-500/30 bg-slate-900 px-3 py-2 text-white text-sm">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-slate-400 mb-1">Judul Pemberitaan</label>
+                                                    <input type="text" :name="platform.toLowerCase() + '[first][content]'" x-model="platformData[platform].first.content" placeholder="Judul pemberitaan..." class="w-full rounded-lg border border-cyan-500/30 bg-slate-900 px-3 py-2 text-white text-sm">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-slate-400 mb-1">Link</label>
+                                                    <input type="url" :name="platform.toLowerCase() + '[first][link]'" x-model="platformData[platform].first.link" placeholder="https://..." class="w-full rounded-lg border border-cyan-500/30 bg-slate-900 px-3 py-2 text-white text-sm">
+                                                </div>
+                                            </div>
+                                            <div class="space-y-3">
+                                                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Posting Terakhir</div>
+                                                <div>
+                                                    <label class="block text-xs text-slate-400 mb-1">Tanggal</label>
+                                                    <input type="date" :name="platform.toLowerCase() + '[last][date]'" x-model="platformData[platform].last.date" class="w-full rounded-lg border border-cyan-500/30 bg-slate-900 px-3 py-2 text-white text-sm">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-slate-400 mb-1">Judul Pemberitaan</label>
+                                                    <input type="text" :name="platform.toLowerCase() + '[last][content]'" x-model="platformData[platform].last.content" placeholder="Judul pemberitaan..." class="w-full rounded-lg border border-cyan-500/30 bg-slate-900 px-3 py-2 text-white text-sm">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-slate-400 mb-1">Link</label>
+                                                    <input type="url" :name="platform.toLowerCase() + '[last][link]'" x-model="platformData[platform].last.link" placeholder="https://..." class="w-full rounded-lg border border-cyan-500/30 bg-slate-900 px-3 py-2 text-white text-sm">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div>
+                                <label class="block font-mono text-xs uppercase tracking-wider text-cyan-400 mb-2">Komentar / Kendala Yang Dihadapi</label>
+                                <textarea name="comment" x-model="comment" rows="4" class="w-full rounded-lg border border-cyan-500/30 bg-slate-800 px-4 py-3 text-white resize-none" placeholder="Ceritakan kendala atau komentar..."></textarea>
+                            </div>
+
+                            <div class="flex justify-end gap-3 pt-4 border-t border-cyan-500/20">
+                                <button type="button" @click="closeModal()" class="rounded-full border border-slate-600 px-6 py-2.5 font-mono text-sm text-slate-300 hover:bg-slate-800">Batal</button>
+                                <button type="submit" class="rounded-full bg-gradient-to-r from-cyan-600 to-cyan-500 px-6 py-2.5 font-mono text-sm font-semibold text-white shadow-[0_0_20px_rgba(0,212,255,0.3)]">Simpan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
                 </div>
             @endif
         </section>
@@ -872,5 +1104,58 @@
             });
         </script>
     @endif
+
+    {{-- PDF Preview Modal --}}
+    <div
+        x-show="pdfPreviewOpen"
+        x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);"
+        @keydown.escape.window="closePdfPreview()"
+    >
+        <div class="relative w-full max-w-5xl h-[90vh] bg-gradient-to-b from-slate-900 to-slate-950 border border-cyan-500/30 rounded-2xl shadow-[0_0_60px_rgba(0,212,255,0.3)] overflow-hidden flex flex-col">
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-6 py-4 border-b border-cyan-500/30 bg-slate-900/80">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            <path d="M9 13h6M9 17h4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-mono text-sm font-semibold text-cyan-400">Preview Laporan</h3>
+                        <p class="text-xs text-slate-400" x-text="pdfPreviewTitle"></p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    @click="closePdfPreview()"
+                    class="rounded-full bg-slate-700/50 p-2 text-slate-400 hover:text-white hover:bg-slate-600 transition"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            {{-- PDF Content --}}
+            <div class="flex-1 overflow-hidden bg-slate-800/50">
+                <iframe
+                    x-show="pdfPreviewUrl"
+                    :src="pdfPreviewUrl"
+                    class="w-full h-full border-0"
+                    title="PDF Preview"
+                ></iframe>
+                <div x-show="!pdfPreviewUrl" class="flex items-center justify-center h-full">
+                    <div class="text-center">
+                        <svg class="w-16 h-16 mx-auto text-slate-600 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                        </svg>
+                        <p class="text-slate-400">Memuat PDF...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </main>
 </x-layouts.app>

@@ -265,4 +265,52 @@
             </a>
         </div>
     </div>
+
+    {{-- Database Utilities --}}
+    <div class="mt-8">
+        <h2 class="mb-4 text-lg font-semibold text-slate-900">Utilities Database</h2>
+        <div class="rounded-xl border border-amber-200 bg-amber-50 p-6">
+            <div class="flex items-start gap-4">
+                <div class="rounded-full bg-amber-100 p-3">
+                    <svg class="h-6 w-6 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v16c0 1.1.9 2 2 2h12a2 2 0 002-2V7M4 7l8-4 8 4M4 7l8 4 8-4"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-semibold text-amber-900">Migrasi Data Laporan Kinerja</h3>
+                    <p class="mt-1 text-sm text-amber-700">
+                        Konversi format data lama (per-baris) ke format baru (per-tanggal JSON).
+                        Data akan digabungkan per user per tanggal.
+                    </p>
+                    <div class="mt-4 flex flex-wrap items-center gap-3">
+                        <form method="POST" action="{{ route('admin.utilities.migrate-satker') }}" onsubmit="return confirm('Yakin ingin menjalankan migrasi data? Pastikan sudah backup database.');">
+                            @csrf
+                            <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                                Jalankan Migrasi
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ route('admin.utilities.migrate-satker-preview') }}">
+                            @csrf
+                            <button type="submit" class="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-100">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Preview (Dry Run)
+                            </button>
+                        </form>
+                    </div>
+                    @if(session('migration_result'))
+                        <div class="mt-4 rounded-lg bg-white p-4">
+                            <h4 class="text-sm font-semibold text-slate-700">Hasil Migrasi:</h4>
+                            <pre class="mt-2 whitespace-pre-wrap text-xs text-slate-600">{{ session('migration_result') }}</pre>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
 </x-admin.layouts.app>

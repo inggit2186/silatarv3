@@ -4,304 +4,385 @@
     <meta charset="utf-8">
     <style>
         @page {
-            margin: 20mm 12mm 18mm 12mm;
+            margin: 12mm 18mm 12mm 18mm;
         }
 
         body {
-            font-family: DejaVu Sans, Arial, sans-serif;
-            font-size: 9.5pt;
-            color: #0f172a;
-            line-height: 1.4;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            color: #1a1a2e;
+            line-height: 1.45;
+            background: #ffffff;
         }
 
         .page-shell {
             position: relative;
         }
 
+        /* Header Image */
         .header-image {
             width: 100%;
             margin-bottom: 8px;
         }
 
-        .report-chip {
+        /* Title Section */
+        .title-section {
+            text-align: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2563eb;
+        }
+
+        .title-chip {
             display: inline-block;
-            padding: 3px 10px;
-            border-radius: 999px;
-            background: #e0f2fe;
-            color: #0369a1;
-            font-size: 8pt;
+            background: #2563eb;
+            color: #ffffff;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 7pt;
             font-weight: 700;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
         .report-title {
-            font-size: 16pt;
+            font-size: 15pt;
             font-weight: 700;
-            text-align: center;
-            letter-spacing: 0.05em;
-            margin: 0 0 8px;
+            margin: 0 0 2px;
             text-transform: uppercase;
-            border-top: 2px solid #1e293b;
-            border-bottom: 2px solid #1e293b;
-            padding: 6px 0 5px;
+            letter-spacing: 0.08em;
+            color: #1a1a2e;
         }
 
         .report-subtitle {
-            text-align: center;
-            color: #475569;
-            font-size: 8.8pt;
-            margin-bottom: 10px;
+            font-size: 9.5pt;
+            color: #64748b;
+            margin: 0;
         }
 
-        .identity-card {
-            border: 1px solid #dbeafe;
-            border-radius: 10px;
-            background: #f8fbff;
-            padding: 10px 12px 12px;
-            margin-bottom: 10px;
+        /* Identity Section */
+        .identity-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
         }
 
-        .identity-card__header {
-            display: table;
-            width: 100%;
+        .identity-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 6px;
             margin-bottom: 8px;
+            border-bottom: 1px dashed #e2e8f0;
         }
 
-        .section-badge {
-            display: inline-block;
-            width: 28px;
-            height: 28px;
-            line-height: 28px;
-            border-radius: 999px;
-            text-align: center;
-            background: #dbeafe;
-            color: #1d4ed8;
-            margin-right: 8px;
-            vertical-align: middle;
-            font-size: 0;
-            position: relative;
-        }
-
-        .section-badge::before {
-            content: "▣";
-            display: block;
+        .identity-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             font-size: 9pt;
             font-weight: 700;
-            line-height: 28px;
-            text-align: center;
-            color: currentColor;
+            color: #2563eb;
+            text-transform: uppercase;
         }
 
-        .identity-card__title {
-            display: inline-block;
-            vertical-align: middle;
-            font-size: 11pt;
+        .identity-icon {
+            width: 18px;
+            height: 18px;
+            background: #2563eb;
+            border-radius: 50%;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
             font-weight: 700;
-            color: #0f172a;
-            margin-left: 4mm;
         }
 
-        .identity-card__period {
-            float: right;
-            padding: 4px 9px;
-            border-radius: 999px;
-            background: #ecfeff;
-            color: #0f766e;
-            font-size: 8pt;
+        .identity-period {
+            background: #dbeafe;
+            color: #2563eb;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 7pt;
             font-weight: 700;
-            letter-spacing: 0.05em;
             text-transform: uppercase;
         }
 
         .identity-grid {
+            display: table;
             width: 100%;
-            border-collapse: collapse;
-            font-size: 9pt;
         }
 
-        .identity-grid td {
-            padding: 5px 0;
-            vertical-align: top;
+        .identity-row {
+            display: table-row;
         }
 
-        .identity-icon {
+        .identity-row td {
+            padding: 4px 0;
+            vertical-align: middle;
+        }
+
+        .identity-icon-cell {
             width: 24px;
             padding-right: 8px;
-            vertical-align: top;
         }
 
-        .identity-icon__box {
-            width: 22px;
-            height: 22px;
-            border-radius: 7px;
+        .identity-icon-box {
+            width: 18px;
+            height: 18px;
             background: #dbeafe;
-            color: #1d4ed8;
-            text-align: center;
-            line-height: 22px;
+            border-radius: 4px;
+            color: #2563eb;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 7px;
             font-weight: 700;
-            font-size: 0;
         }
 
-        .identity-icon__box::before {
-            display: block;
-            line-height: 22px;
-            text-align: center;
-            color: currentColor;
-            font-weight: 700;
-            letter-spacing: 0;
-        }
-
-        .identity-icon--user::before {
-            content: "◉";
-            font-size: 10pt;
-        }
-
-        .identity-icon--nip::before {
-            content: "ID";
-            font-size: 7pt;
-            letter-spacing: -0.1pt;
-        }
-
-        .identity-icon--unit::before {
-            content: "⌂";
-            font-size: 9pt;
-        }
-
-        .identity-icon--job::before {
-            content: "J";
-            font-size: 9pt;
-        }
-
-        .identity-icon--period::before {
-            content: "◔";
-            font-size: 9pt;
+        .identity-label-cell {
+            width: 80px;
+            padding-right: 8px;
         }
 
         .identity-label {
-            width: 30mm;
-            font-weight: 700;
-            color: #334155;
+            font-size: 8pt;
+            color: #64748b;
         }
 
-        .identity-sep {
-            width: 5mm;
+        .identity-sep-cell {
+            width: 15px;
             text-align: center;
             color: #94a3b8;
         }
 
         .identity-value {
-            font-weight: 700;
-            color: #0f172a;
+            font-size: 9pt;
+            font-weight: 600;
+            color: #1a1a2e;
         }
 
-        .summary {
-            font-size: 8.8pt;
-            color: #475569;
-            margin: 0 0 8px;
+        /* Table */
+        .table-wrapper {
+            border: 1px solid #2563eb;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
         }
 
         .table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed;
-            margin-top: 4px;
         }
 
         .table th,
         .table td {
-            border: 1px solid #d1d5db;
+            border: none;
+            padding: 0;
             vertical-align: top;
         }
 
         .table th {
-            background: linear-gradient(90deg, #dbeafe 0%, #fef3c7 100%);
+            background: #2563eb;
+            color: #ffffff;
+            padding: 8px 12px;
             text-align: center;
             font-size: 9pt;
-            padding: 8px 8px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #334155;
-        }
-
-        .table td {
-            padding: 8px 10px;
-        }
-
-        .table-col-date {
-            width: 22%;
-        }
-
-        .table-col-activity {
-            width: 78%;
+            letter-spacing: 0.05em;
         }
 
         .col-date {
-            text-align: center;
-            font-weight: 700;
-            background: #f8fafc;
-            color: #0f172a;
-            padding-left: 6px;
-            padding-right: 6px;
-            width: 22%;
+            width: 160px;
         }
 
         .col-activity {
-            padding-left: 12px;
-            padding-right: 12px;
-            width: 78%;
+            width: auto;
         }
 
-        .date-label {
-            display: block;
+        /* Date Cell */
+        .date-cell {
+            background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+            padding: 12px 10px;
+            border-right: 2px solid #2563eb;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .date-day {
+            font-size: 9pt;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .date-number {
+            font-size: 18pt;
             font-weight: 700;
-            color: #0f172a;
+            color: #1e40af;
+            line-height: 1.1;
         }
 
-        .entry-count {
-            margin-top: 4px;
-            font-size: 8pt;
+        .date-month {
+            font-size: 7pt;
             color: #64748b;
             text-transform: uppercase;
-            letter-spacing: 0.12em;
+            letter-spacing: 0.03em;
+        }
+
+        /* Activity Cell */
+        .activity-cell {
+            padding: 12px 12px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .activity-header {
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .activity-header-day {
+            font-size: 8pt;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .activity-header-count {
+            font-size: 7pt;
+            color: #94a3b8;
         }
 
         .activity-list {
             padding-left: 0;
             margin: 0;
             list-style: none;
-            width: 100%;
         }
 
         .activity-item {
-            margin-bottom: 8px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e2e8f0;
-            page-break-inside: avoid;
+            margin-bottom: 6px;
+            padding-left: 14px;
+            position: relative;
+        }
+
+        .activity-item::before {
+            content: "-";
+            position: absolute;
+            left: 0;
+            color: #2563eb;
+            font-size: 11px;
+            font-weight: 700;
         }
 
         .activity-item:last-child {
             margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
         }
 
-        .activity-name {
-            font-weight: 700;
-            color: #0f172a;
+        .activity-text {
+            font-size: 9pt;
+            color: #1a1a2e;
         }
 
         .activity-meta {
-            color: #475569;
-            margin-top: 2px;
+            font-size: 7.5pt;
+            color: #2563eb;
+            font-weight: 600;
+            margin-top: 1px;
         }
 
-        .footer-note {
-            margin-top: 8px;
+        /* Row Alternating */
+        .data-row:nth-child(even) .activity-cell {
+            background: #fafbfc;
+        }
+
+        /* Signature Section - using table for PDF compatibility */
+        .signature-section {
+            margin-top: 30px;
+        }
+
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .signature-table td {
+            width: 50%;
+            text-align: center;
+            vertical-align: top;
+            padding: 0 20px;
+        }
+
+        .signature-label {
+            font-size: 9pt;
+            color: #64748b;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .signature-image {
+            max-width: 350px;
+            max-height: 60px;
+            margin-bottom: 3px;
+        }
+
+        .signature-name {
+            font-size: 9pt;
+            font-weight: 700;
+            text-decoration: underline;
+            color: #1a1a2e;
+            margin-bottom: 2px;
+            margin-top: 5px;
+        }
+
+        .signature-nip {
             font-size: 8pt;
             color: #64748b;
-            text-align: right;
+        }
+
+        .signature-name-right {
+            margin-top: 85px !important;
+        }
+
+        .signature-name-no-image {
+            margin-top: 65px !important;
+        }
+
+        .signature-image {
+            max-width: 150px;
+            max-height: 60px;
+            margin-bottom: 5px;
+        }
+
+        /* Footer */
+        .footer-section {
+            margin-top: 15px;
+            text-align: center;
+            padding: 8px;
+            background: #f8fafc;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .footer-text {
+            font-size: 7.5pt;
+            color: #94a3b8;
+        }
+
+        .footer-brand {
+            color: #2563eb;
+            font-weight: 700;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #94a3b8;
+            font-size: 10pt;
         }
 
         .clearfix::after {
@@ -317,109 +398,166 @@
             <img src="{{ $headerImage }}" alt="Header" class="header-image">
         @endif
 
-        <div class="report-title">Laporan Capaian Kinerja Harian</div>
-        <div class="report-subtitle">Dokumen ringkas capaian aktivitas harian selama periode {{ $periodLabel }}</div>
+        <div class="title-section">
+            <div class="title-chip">* Digital Report</div>
+            <h1 class="report-title">Laporan Capaian Kinerja Harian</h1>
+            <p class="report-subtitle">Periode {{ $periodLabel }}</p>
+        </div>
 
-        <div class="identity-card clearfix">
-            <div class="identity-card__header">
-                <span class="section-badge"></span>
-                <span class="identity-card__title">Identitas ASN</span>
-                <span class="identity-card__period">{{ $periodLabel }}</span>
+        <div class="identity-section">
+            <div class="identity-header">
+                <span class="identity-title">
+                    <span class="identity-icon">i</span>
+                    Identitas ASN
+                </span>
+                <span class="identity-period">{{ $periodLabel }}</span>
             </div>
 
-            <table class="identity-grid">
-                <tr>
-                    <td class="identity-icon">
-                        <span class="identity-icon__box identity-icon--user"></span>
+            <div class="identity-grid">
+                <div class="identity-row">
+                    <td class="identity-icon-cell">
+                        <span class="identity-icon-box">N</span>
                     </td>
-                    <td class="identity-label">Nama</td>
-                    <td class="identity-sep">:</td>
-                    <td class="identity-value">{{ $userName }}</td>
-                </tr>
-                <tr>
-                    <td class="identity-icon">
-                        <span class="identity-icon__box identity-icon--nip"></span>
+                    <td class="identity-label-cell">
+                        <span class="identity-label">Nama</span>
                     </td>
-                    <td class="identity-label">NIP</td>
-                    <td class="identity-sep">:</td>
-                    <td class="identity-value">{{ $userNip }}</td>
-                </tr>
-                <tr>
-                    <td class="identity-icon">
-                        <span class="identity-icon__box identity-icon--unit"></span>
+                    <td class="identity-sep-cell">:</td>
+                    <td>
+                        <span class="identity-value">{{ $userName }}</span>
                     </td>
-                    <td class="identity-label">Unit Kerja</td>
-                    <td class="identity-sep">:</td>
-                    <td class="identity-value">{{ $unitName }}</td>
-                </tr>
-                <tr>
-                    <td class="identity-icon">
-                        <span class="identity-icon__box identity-icon--job"></span>
+                </div>
+                <div class="identity-row">
+                    <td class="identity-icon-cell">
+                        <span class="identity-icon-box">ID</span>
                     </td>
-                    <td class="identity-label">Jabatan</td>
-                    <td class="identity-sep">:</td>
-                    <td class="identity-value">{{ $positionName }}</td>
-                </tr>
-                <tr>
-                    <td class="identity-icon">
-                        <span class="identity-icon__box identity-icon--period"></span>
+                    <td class="identity-label-cell">
+                        <span class="identity-label">NIP</span>
                     </td>
-                    <td class="identity-label">Periode</td>
-                    <td class="identity-sep">:</td>
-                    <td class="identity-value">{{ $periodLabel }}</td>
+                    <td class="identity-sep-cell">:</td>
+                    <td>
+                        <span class="identity-value">{{ $userNip }}</span>
+                    </td>
+                </div>
+                <div class="identity-row">
+                    <td class="identity-icon-cell">
+                        <span class="identity-icon-box">U</span>
+                    </td>
+                    <td class="identity-label-cell">
+                        <span class="identity-label">Unit Kerja</span>
+                    </td>
+                    <td class="identity-sep-cell">:</td>
+                    <td>
+                        <span class="identity-value">{{ $unitName }}</span>
+                    </td>
+                </div>
+                <div class="identity-row">
+                    <td class="identity-icon-cell">
+                        <span class="identity-icon-box">J</span>
+                    </td>
+                    <td class="identity-label-cell">
+                        <span class="identity-label">Jabatan</span>
+                    </td>
+                    <td class="identity-sep-cell">:</td>
+                    <td>
+                        <span class="identity-value">{{ $positionName }}</span>
+                    </td>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th class="col-date">Tanggal</th>
+                        <th class="col-activity">Detail Kegiatan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($dailyGroups as $group)
+                        @php
+                            $dateObj = \Carbon\Carbon::parse($group['date']);
+                            $dayNum = $dateObj->format('d');
+                            $monthName = $dateObj->format('F');
+                            $monthMap = [
+                                'January' => 'Januari', 'February' => 'Februari', 'March' => 'Maret',
+                                'April' => 'April', 'May' => 'Mei', 'June' => 'Juni',
+                                'July' => 'Juli', 'August' => 'Agustus', 'September' => 'September',
+                                'October' => 'Oktober', 'November' => 'November', 'December' => 'Desember'
+                            ];
+                            $weekday = $dateObj->format('l');
+                            $weekdayMap = [
+                                'Monday' => 'Senin', 'Tuesday' => 'Selasa',
+                                'Wednesday' => 'Rabu', 'Thursday' => 'Kamis',
+                                'Friday' => 'Jumat', 'Saturday' => 'Sabtu',
+                                'Sunday' => 'Minggu'
+                            ];
+                            $weekdayId = $weekdayMap[$weekday] ?? $weekday;
+                            $monthId = $monthMap[$monthName] ?? $monthName;
+                        @endphp
+                        <tr class="data-row">
+                            <td class="date-cell">
+                                <div class="date-day">{{ $weekdayId }}</div>
+                                <div class="date-number">{{ $dayNum }}</div>
+                                <div class="date-month">{{ $monthId }} {{ $dateObj->format('Y') }}</div>
+                            </td>
+                            <td class="activity-cell">
+                                <div class="activity-header">
+                                    <span class="activity-header-day">{{ $weekdayId }}, {{ $dayNum }} {{ $monthId }} {{ $dateObj->format('Y') }}</span>
+                                    <span class="activity-header-count">* {{ count($group['items']) }} kegiatan</span>
+                                </div>
+                                <ul class="activity-list">
+                                    @foreach ($group['items'] as $activity)
+                                        <li class="activity-item">
+                                            <span class="activity-text">{{ $activity['kegiatan'] }}</span>
+                                            @if (! empty($activity['meta']))
+                                                <div class="activity-meta">* {{ $activity['meta'] }}</div>
+                                            @endif
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="2" class="empty-state">
+                                Belum ada kegiatan pada periode ini
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <div class="signature-section">
+            <table class="signature-table">
+                <tr>
+                    <td>
+                        <p class="signature-label">{!! $signatureLabel !!}</p>
+                        @if($signatureImage)
+                        <img src="{{ $signatureImage }}" alt="Tanda Tangan" class="signature-image">
+                        @endif
+                        <p class="signature-name{{ !$signatureImage ? ' signature-name-no-image' : '' }}">{{ $signatureName }}</p>
+                        <p class="signature-nip">{{ $signatureNip }}</p>
+                    </td>
+                    <td>
+                        <p class="signature-label">Yang Bersangkutan,</p>
+                        <p class="signature-name signature-name-right">{{ $userName }}</p>
+                        <p class="signature-nip">{{ $userNip }}</p>
+                    </td>
                 </tr>
             </table>
         </div>
 
-        <div class="summary">Dicetak pada {{ $generatedAt }}</div>
-
-        <table class="table">
-            <colgroup>
-                <col class="table-col-date">
-                <col class="table-col-activity">
-            </colgroup>
-            <thead>
-                <tr>
-                    <th class="col-date">Tanggal</th>
-                    <th class="col-activity">Kegiatan</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($dailyGroups as $group)
-                    <tr>
-                        <td class="col-date">
-                            <span class="date-label">{{ $group['label'] }}</span>
-                            <div class="entry-count">{{ count($group['items']) }} entri</div>
-                        </td>
-                        <td class="col-activity">
-                            <ul class="activity-list">
-                                @foreach ($group['items'] as $activity)
-                                    <li class="activity-item">
-                                        <div class="activity-name">{{ $activity['kegiatan'] }}</div>
-                                        @if (! empty($activity['meta']))
-                                            <div class="activity-meta">{{ $activity['meta'] }}</div>
-                                        @endif
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td class="col-date">{{ $periodLabel }}</td>
-                        <td style="text-align:center; color:#64748b;">Belum ada kegiatan pada periode ini.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+        <div class="footer-section">
+            <span class="footer-text">* Dicetak pada {{ $generatedAt }} | <span class="footer-brand">SILATAR</span> v2 *</span>
+        </div>
     </div>
-
-    <div class="footer-note">SILATAR - Capaian Kinerja Harian</div>
 
     <script type="text/php">
         if (isset($pdf)) {
-            $font = $fontMetrics->get_font("DejaVu Sans", "normal");
-            $pdf->page_text(500, 805, "Halaman {PAGE_NUM} / {PAGE_COUNT}", $font, 8, [100, 116, 139]);
+            $font = $fontMetrics->get_font("Helvetica", "normal");
+            $pdf->page_text(500, 815, "Halaman {PAGE_NUM} / {PAGE_COUNT}", $font, 7, [100, 116, 139]);
         }
     </script>
 </body>

@@ -111,6 +111,12 @@
                                     </svg>
                                     Laporan Kinerja
                                 </a>
+                                <a href="{{ route('profil') }}" class="flex items-center gap-3 rounded-lg px-4 py-3 font-mono text-sm font-medium text-slate-400 transition-all hover:bg-cyan-500/10 hover:text-cyan-400">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                    Profil
+                                </a>
                             </div>
                             <div class="border-t border-cyan-500/20 bg-slate-900/50 p-2">
                                 <form method="POST" action="{{ route('logout') }}">

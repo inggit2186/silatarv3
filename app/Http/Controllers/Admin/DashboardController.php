@@ -293,4 +293,196 @@ class DashboardController extends Controller
             return \Carbon\Carbon::parse($timestamp)->format('d M');
         }
     }
+
+    /**
+     * Preview migration (dry run) for satker_kegiatan to JSON format.
+     */
+    public function migrateSatkerPreview(Request $request)
+    {
+        $combinations = DB::table('satker_kegiatan')
+            ->select('user_id', 'tanggal')
+            ->whereNull('data_json')
+            ->whereNotNull('kegiatan')
+            ->where('kegiatan', '!=', '')
+            ->groupBy('user_id', 'tanggal')
+            ->selectRaw('user_id, tanggal, COUNT(*) as count, MIN(id) as keep_id')
+            ->get();
+
+        $totalGroups = $combinations->count();
+        $totalRows = $combinations->sum('count');
+        $rowsToDelete = $totalRows - $totalGroups;
+
+        $result = "PREVIEW (Dry Run) - Tidak ada perubahan dilakukan\n";
+        $result .= "===============================================\n";
+        $result .= "Grup tanggal yang perlu dikonversi: {$totalGroups}\n";
+        $result .= "Total baris saat ini: {$totalRows}\n";
+        $result .= "Baris yang akan dihapus (setelah merge): {$rowsToDelete}\n";
+        $result .= "Baris yang akan dipertahankan: {$totalGroups}\n";
+
+        if ($combinations->isNotEmpty()) {
+            $result .= "\nContoh grup (5 pertama):\n";
+            $examples = $combinations->take(5);
+            foreach ($examples as $group) {
+                $result .= "- User {$group->user_id}, Tanggal {$group->tanggal}: {$group->count} baris -> 1 baris\n";
+            }
+        }
+
+        return redirect()->route('admin.dashboard')->with('migration_result', $result);
+    }
+
+    /**
+     * Execute migration for satker_kegiatan to JSON format.
+     */
+    public function migrateSatker(Request $request)
+    {
+        $combinations = DB::table('satker_kegiatan')
+            ->select('user_id', 'tanggal')
+            ->whereNull('data_json')
+            ->whereNotNull('kegiatan')
+            ->where('kegiatan', '!=', '')
+            ->groupBy('user_id', 'tanggal')
+            ->selectRaw('user_id, tanggal, COUNT(*) as count, MIN(id) as keep_id')
+            ->get();
+
+        if ($combinations->isEmpty()) {
+            $result = "Tidak ada data yang perlu dikonversi.\n";
+            return redirect()->route('admin.dashboard')->with('migration_result', $result);
+        }
+
+        $totalGroups = $combinations->count();
+        $converted = 0;
+        $deleted = 0;
+        $errors = 0;
+
+        foreach ($combinations as $group) {
+            try {
+                $rows = DB::table('satker_kegiatan')
+                    ->where('user_id', $group->user_id)
+                    ->where('tanggal', $group->tanggal)
+                    ->orderBy('id')
+                    ->get();
+
+                if ($rows->isEmpty()) {
+                    continue;
+                }
+
+                // Build JSON items
+                $items = [];
+                $itemId = 1;
+
+                foreach ($rows as $row) {
+                    $items[] = [
+                        'id' => $itemId++,
+                        'k' => trim((string) $row->kegiatan),
+                        'v' => (int) ($row->volume ?? 0),
+                        's' => trim((string) ($row->satuan ?? 'Kegiatan')),
+                    ];
+                }
+
+                $jsonData = json_encode(['items' => $items], JSON_UNESCAPED_UNICODE);
+
+                // Update the first row with JSON data
+                DB::table('satker_kegiatan')
+                    ->where('id', $group->keep_id)
+                    ->update([
+                        'data_json' => $jsonData,
+                        'updated_at' => now(),
+                    ]);
+
+                // Delete the other rows
+                $deletedRows = DB::table('satker_kegiatan')
+                    ->where('user_id', $group->user_id)
+                    ->where('tanggal', $group->tanggal)
+                    ->where('id', '!=', $group->keep_id)
+                    ->delete();
+
+                $converted++;
+                $deleted += $deletedRows;
+            } catch (\Exception $e) {
+                $errors++;
+            }
+        }
+
+        $result = "MIGRASI SELESAI\n";
+        $result .= "===============================================\n";
+        $result .= "Grup berhasil dikonversi: {$converted}\n";
+        $result .= "Total baris dihapus: {$deleted}\n";
+        if ($errors > 0) {
+            $result .= "Error: {$errors}\n";
+        }
+        $result .= "\nData lama (per-baris) telah dikonversi ke format baru (per-tanggal JSON).";
+
+        return redirect()->route('admin.dashboard')->with('migration_result', $result);
+    }
+
+    /**
+     * Approve or reject laporan kinerja from bawahan.
+     */
+    public function approveLaporanKinerja(Request $request)
+    {
+        $request->validate([
+            'report_id' => ['nullable', 'integer'],
+            'user_id' => ['required', 'integer'],
+            'bulan' => ['required', 'string'],
+            'action' => ['required', 'in:approve,reject'],
+            'alasan' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $data = $request->only(['user_id', 'bulan', 'action', 'alasan']);
+
+        // Find the report by user_id and bulan
+        $report = DB::table('satker_ckh')
+            ->where('user_id', $data['user_id'])
+            ->where('bulan', $data['bulan'])
+            ->first();
+
+        if (!$report) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Laporan tidak ditemukan.',
+            ], 404);
+        }
+
+        // Update status
+        $newStatus = $data['action'] === 'approve' ? 'DISETUJUI' : 'DITOLAK';
+
+        DB::table('satker_ckh')
+            ->where('id', $report->id)
+            ->update([
+                'status' => $newStatus,
+                'alasan' => $data['action'] === 'reject' ? ($data['alasan'] ?? null) : null,
+                'updated_at' => now(),
+            ]);
+
+        // Log activity
+        $this->logActivity(
+            $request->user()->id,
+            'verifikasi_laporan',
+            "Laporan kinerja {$data['bulan']} " . ($data['action'] === 'approve' ? 'disetujui' : 'ditolak'),
+            $report->id
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => $data['action'] === 'approve'
+                ? 'Laporan berhasil disetujui.'
+                : 'Laporan berhasil ditolak.',
+            'new_status' => $newStatus,
+        ]);
+    }
+
+    /**
+     * Log user activity.
+     */
+    private function logActivity($userId, $action, $description, $refId = null)
+    {
+        DB::table('activities')->insert([
+            'user_id' => $userId,
+            'activity_type' => $action,
+            'description' => $description,
+            'ref_id' => $refId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
 }

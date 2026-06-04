@@ -207,51 +207,100 @@ class PageController extends Controller
             $editingDate = '';
         }
 
+        // New query: 1 row per user per date (Option A: JSON Column)
         $dailyQuery = DB::table('satker_kegiatan')
             ->where('user_id', $user->id)
-            ->whereBetween('tanggal', [$selectedMonthStart->toDateString(), $selectedMonthEnd->toDateString()]);
+            ->whereBetween('tanggal', [$selectedMonthStart->toDateString(), $selectedMonthEnd->toDateString()])
+            ->orderBy('tanggal');
 
-        if ($search !== '') {
-            $dailyQuery->where('kegiatan', 'like', '%' . $search . '%');
-        }
+        // For search, we need to search in JSON - handle separately
+        $dailyEntries = $dailyQuery->get();
 
-        $dailyEntries = $dailyQuery
-            ->orderBy('tanggal')
-            ->orderBy('created_at')
-            ->get();
+        // Process JSON data format
+        $dailyGroups = collect([])
+            ->keyBy(fn ($item) => $item['date'])
+            ->toArray();
 
-        $dailyGroups = $dailyEntries
-            ->groupBy(fn ($row) => Carbon::parse($row->tanggal)->toDateString())
-            ->map(function ($items, $date) {
-                $dateCarbon = Carbon::parse($date);
+        $totalEntries = 0;
+        $totalVolume = 0;
+        $latestUpdate = null;
+
+        foreach ($dailyEntries as $row) {
+            $date = Carbon::parse($row->tanggal)->toDateString();
+            $jsonData = json_decode((string) ($row->data_json ?? '{"items":[]}'), true) ?: ['items' => []];
+            $items = $jsonData['items'] ?? [];
+
+            // Handle legacy format (direct columns instead of JSON)
+            if (empty($items) && !empty($row->kegiatan)) {
+                $items = [[
+                    'id' => $row->id,
+                    'k' => $row->kegiatan,
+                    'v' => $row->volume ?? 0,
+                    's' => $row->satuan ?? 'Kegiatan'
+                ]];
+            }
+
+            // Filter by search if needed
+            if ($search !== '') {
+                $items = array_filter($items, function ($item) use ($search) {
+                    $kegiatan = $item['k'] ?? ($item['kegiatan'] ?? '');
+                    return stripos($kegiatan, $search) !== false;
+                });
+            }
+
+            if (empty($items)) {
+                continue;
+            }
+
+            $mappedItems = array_map(function ($item) use ($row) {
+                $volume = (int) ($item['v'] ?? 0);
+                $satuan = $item['s'] ?? 'Kegiatan';
 
                 return [
+                    'id' => $item['id'] ?? null,
+                    'kegiatan' => trim((string) ($item['k'] ?? '')),
+                    'volume' => $volume,
+                    'satuan' => $satuan,
+                    'meta' => $volume > 0 ? trim($volume . ' ' . $satuan) : $satuan,
+                    'tanggal' => $row->tanggal,
+                ];
+            }, array_values($items));
+
+            $dayVolume = array_sum(array_column($mappedItems, 'volume'));
+            $dayEntries = count($mappedItems);
+            $totalEntries += $dayEntries;
+            $totalVolume += $dayVolume;
+
+            if ($row->updated_at && (!$latestUpdate || $row->updated_at > $latestUpdate)) {
+                $latestUpdate = $row->updated_at;
+            }
+
+            $dateCarbon = Carbon::parse($date);
+
+            if (!isset($dailyGroups[$date])) {
+                $dailyGroups[$date] = [
                     'date' => $dateCarbon->toDateString(),
                     'label' => $this->indonesianDateLabel($dateCarbon),
-                    'items' => $items->map(function ($item) {
-                        $volume = (int) ($item->volume ?? 0);
-                        $unit = trim((string) ($item->satuan ?? ''));
-
-                        return [
-                            'id' => $item->id,
-                            'kegiatan' => trim((string) $item->kegiatan),
-                            'volume' => $volume,
-                            'satuan' => $unit,
-                            'meta' => $volume > 0 ? trim($volume . ' ' . $unit) : $unit,
-                            'tanggal' => $item->tanggal,
-                        ];
-                    })->values(),
-                    'entries' => $items->count(),
-                    'volume' => $items->sum(fn ($item) => (int) ($item->volume ?? 0)),
+                    'items' => [],
+                    'entries' => 0,
+                    'volume' => 0,
+                    'row_id' => $row->id,
                 ];
-            })
-            ->values();
+            }
+
+            $dailyGroups[$date]['items'] = array_merge($dailyGroups[$date]['items'], $mappedItems);
+            $dailyGroups[$date]['entries'] += $dayEntries;
+            $dailyGroups[$date]['volume'] += $dayVolume;
+        }
+
+        // Sort by date and re-index
+        $dailyGroups = collect($dailyGroups)->sortBy('date')->values();
 
         $dailySummary = [
-            'entries' => $dailyEntries->count(),
-            'days' => $dailyGroups->count(),
-            'volume' => $dailyEntries->sum(fn ($item) => (int) ($item->volume ?? 0)),
-            'latest_update' => optional($dailyEntries->sortByDesc('updated_at')->first())->updated_at,
+            'entries' => $totalEntries,
+            'days' => count($dailyGroups),
+            'volume' => $totalVolume,
+            'latest_update' => $latestUpdate,
         ];
 
         $activityUnits = DB::table('satker_kegiatan')
@@ -355,9 +404,22 @@ class PageController extends Controller
                 ];
             });
 
+        // Filter humas data by selected year (only for humas tab)
+        $humasYearFilter = null;
+        if ($activeTab === 'humas') {
+            $humasYearFilter = $request->input('humas_year');
+            if (!$humasYearFilter || !preg_match('/^\d{4}$/', $humasYearFilter)) {
+                $humasYearFilter = (int) date('Y');
+            }
+        }
+
         $humasData = DB::table('laporan_humas as lh')
             ->leftJoin('users as u', 'u.id', '=', 'lh.user_id')
             ->where('lh.user_id', $user->id)
+            ->when($humasYearFilter, function ($query) use ($humasYearFilter) {
+                // Filter by year if humas_year is provided
+                return $query->whereRaw("LEFT(lh.bulan, 4) = ?", [$humasYearFilter]);
+            })
             ->orderByDesc('lh.bulan')
             ->get()
             ->map(function ($item) {
@@ -417,27 +479,28 @@ class PageController extends Controller
 
         $editingGroup = null;
         if ($editingDate !== '') {
-            $editingRows = DB::table('satker_kegiatan')
+            $editingRow = DB::table('satker_kegiatan')
                 ->where('user_id', $user->id)
                 ->whereDate('tanggal', $editingDate)
-                ->orderBy('created_at')
-                ->orderBy('id')
-                ->get();
+                ->first();
 
-            if ($editingRows->isNotEmpty()) {
+            if ($editingRow) {
                 $dateCarbon = Carbon::parse($editingDate);
+                $jsonData = json_decode((string) ($editingRow->data_json ?? '{"items":[]}'), true) ?: ['items' => []];
+                $items = $jsonData['items'] ?? [];
 
                 $editingGroup = [
+                    'row_id' => $editingRow->id,
                     'date' => $dateCarbon->toDateString(),
                     'label' => $this->indonesianDateLabel($dateCarbon),
-                    'items' => $editingRows->map(function ($item) {
+                    'items' => array_map(function ($item) {
                         return [
-                            'id' => $item->id,
-                            'kegiatan' => trim((string) $item->kegiatan),
-                            'volume' => (int) ($item->volume ?? 0),
-                            'satuan' => trim((string) ($item->satuan ?? '')),
+                            'id' => $item['id'] ?? null,
+                            'kegiatan' => trim((string) ($item['k'] ?? '')),
+                            'volume' => (int) ($item['v'] ?? 0),
+                            'satuan' => $item['s'] ?? 'Kegiatan',
                         ];
-                    })->values(),
+                    }, $items),
                 ];
             }
         }
@@ -457,7 +520,262 @@ class PageController extends Controller
             'monthlyRecaps' => $monthlyRecaps,
             'bulananReports' => $bulananReports,
             'humasData' => $humasData,
+            'humasYear' => $humasYearFilter,
         ]);
+    }
+
+    public function laporanKinerjaBawahan(Request $request)
+    {
+        $user = $request->user();
+
+        abort_unless($user, 403);
+
+        // Check role - only kepala, kasubbag, or kasi can access
+        $allowedRoles = ['kepala', 'kasubbag', 'kasi'];
+        $userRole = strtolower(trim((string) ($user->kat_jabatan ?? '')));
+
+        if (!in_array($userRole, $allowedRoles)) {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
+        if (!$user->dept_id) {
+            return view('laporan-kinerja-bawahan', [
+                'error' => 'Unit kerja Anda belum ditetapkan. Hubungi administrator.',
+                'reports' => collect([]),
+                'selectedMonth' => date('Y-m'),
+                'selectedMonthLabel' => now()->format('F Y'),
+                'totalUsers' => 0,
+                'userRole' => $userRole,
+            ]);
+        }
+
+        $selectedMonth = $request->string('month')->toString();
+        if (!preg_match('/^\d{4}-\d{2}$/', $selectedMonth)) {
+            $selectedMonth = now()->format('Y-m');
+        }
+
+        $monthStart = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
+        $monthEnd = $monthStart->copy()->endOfMonth();
+
+        // Get all users in the same department
+        $bawahanUsers = DB::table('users')
+            ->where('dept_id', $user->dept_id)
+            ->where('id', '!=', $user->id)
+            ->select(['id', 'name', 'kat_jabatan'])
+            ->get();
+
+        $userIds = $bawahanUsers->pluck('id')->toArray();
+        $totalUsers = count($userIds);
+
+        // Get laporan bulanan (satker_ckh) data for all bawahan in selected month
+        $reports = DB::table('satker_ckh as ck')
+            ->leftJoin('users as u', 'u.id', '=', 'ck.user_id')
+            ->leftJoin('ktd_department as dept', 'dept.id', '=', 'ck.dept_id')
+            ->whereIn('ck.user_id', $userIds)
+            ->whereBetween('ck.bulan', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->where('ck.item_id', 1)
+            ->select([
+                'ck.id',
+                'ck.user_id',
+                'ck.dept_id',
+                'ck.bulan',
+                'ck.filename',
+                'ck.status',
+                'ck.alasan',
+                'ck.petugas',
+                'ck.sending',
+                'ck.created_at',
+                'ck.updated_at',
+                'u.name as user_name',
+                'u.pekerjaan',
+                'dept.nama as dept_name',
+            ])
+            ->orderBy('u.name')
+            ->orderBy('ck.bulan', 'desc')
+            ->get()
+            ->map(function ($item) {
+                $bulanDate = Carbon::createFromFormat('Y-m-d', substr($item->bulan, 0, 10));
+                $bulanLabel = $bulanDate->format('F Y');
+
+                $statusColors = [
+                    'DISETUJUI' => 'emerald',
+                    'DIKIRIM' => 'amber',
+                    'DITOLAK' => 'rose',
+                ];
+
+                return [
+                    'id' => $item->id,
+                    'user_id' => $item->user_id,
+                    'user_name' => $item->user_name ?? 'Unknown',
+                    'jabatan' => $item->pekerjaan ?? '-',
+                    'bulan' => $bulanDate->format('Y-m'),
+                    'bulan_label' => $bulanLabel,
+                    'filename' => $item->filename,
+                    'status' => $item->status,
+                    'status_color' => $statusColors[$item->status] ?? 'slate',
+                    'alasan' => $item->alasan,
+                    'sending' => $item->sending,
+                    'sending_formatted' => $this->indonesianDateTimeFormat($item->sending),
+                    'created_at' => $item->created_at,
+                    'updated_at' => $item->updated_at,
+                ];
+            });
+
+        return view('laporan-kinerja-bawahan', [
+            'reports' => $reports,
+            'selectedMonth' => $selectedMonth,
+            'selectedMonthLabel' => $monthStart->format('F Y'),
+            'totalUsers' => $totalUsers,
+            'userRole' => $userRole,
+            'bawahanUsers' => $bawahanUsers,
+            'deptName' => DB::table('ktd_department')->where('id', $user->dept_id)->value('nama') ?? 'Unit Kerja',
+            'error' => null,
+        ]);
+    }
+
+    public function profil(Request $request)
+    {
+        $user = $request->user();
+
+        abort_unless($user, 403);
+
+        $menuItems = [
+            [
+                'id' => 'data-pribadi',
+                'title' => 'Data Pribadi',
+                'icon' => '513.png',
+                'route' => 'profil.edit',
+            ],
+            [
+                'id' => 'riwayat-pendidikan',
+                'title' => 'Riwayat Pendidikan',
+                'icon' => '514.png',
+                'route' => null,
+            ],
+            [
+                'id' => 'riwayat-pekerjaan',
+                'title' => 'Riwayat Pekerjaan',
+                'icon' => '515.png',
+                'route' => null,
+            ],
+            [
+                'id' => 'data-kgb',
+                'title' => 'Data Kenaikan Gaji Berkala',
+                'icon' => 'KGB.png',
+                'route' => null,
+            ],
+            [
+                'id' => 'riwayat-slip-gaji',
+                'title' => 'Riwayat Slip Gaji',
+                'icon' => '516.png',
+                'route' => null,
+            ],
+            [
+                'id' => 'dokumen-amprah',
+                'title' => 'Dokumen Amprah',
+                'icon' => 'keu003.png',
+                'route' => null,
+            ],
+        ];
+
+        return view('profil', [
+            'menuItems' => $menuItems,
+            'user' => $user,
+            'userDept' => $user->dept_id ? DB::table('ktd_department')->where('id', $user->dept_id)->value('nama') : null,
+        ]);
+    }
+
+    public function editProfil(Request $request)
+    {
+        $user = $request->user();
+
+        abort_unless($user, 403);
+
+        // Get department name
+        if ($user->dept_id == 999 || $user->dept_id == 998) {
+            $satuanKerja = $user->satker ?? '-';
+        } elseif ($user->dept_id) {
+            $satuanKerja = DB::table('ktd_department')->where('id', $user->dept_id)->value('nama') ?? '-';
+        } else {
+            $satuanKerja = '-';
+        }
+
+        return view('profil-edit', [
+            'user' => $user,
+            'satuanKerja' => $satuanKerja,
+        ]);
+    }
+
+    public function updateProfil(Request $request)
+    {
+        $user = $request->user();
+
+        abort_unless($user, 403);
+
+        $validator = Validator::make($request->all(), [
+            'nip' => ['nullable', 'string', 'max:50'],
+            'tempat_lahir' => ['nullable', 'string', 'max:100'],
+            'tanggal_lahir' => ['nullable', 'date'],
+            'jenis_kelamin' => ['nullable', 'string', 'in:laki-laki,perempuan'],
+            'alamat' => ['nullable', 'string', 'max:500'],
+            'no_hp' => ['nullable', 'string', 'max:20'],
+            'email' => ['nullable', 'email'],
+            'npwp' => ['nullable', 'string', 'max:30'],
+            'rekening' => ['nullable', 'string', 'max:30'],
+            'bio' => ['nullable', 'string', 'max:1000'],
+            'facebook' => ['nullable', 'string', 'max:255'],
+            'twitter' => ['nullable', 'string', 'max:255'],
+            'linkedin' => ['nullable', 'string', 'max:255'],
+            'instagram' => ['nullable', 'string', 'max:255'],
+            'nikah' => ['nullable', 'in:0,1'],
+            'jenis_pjob' => ['nullable', 'string', 'max:50'],
+            'pjob' => ['nullable', 'string', 'max:255'],
+            'jml_anak' => ['nullable', 'integer', 'min:0'],
+            'req_tunjangan' => ['nullable', 'in:0,1'],
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $data = $validator->validated();
+
+        // Map jk values to jenis_kelamin for compatibility
+        $jkMap = [
+            'laki-laki' => 'laki-laki',
+            'perempuan' => 'perempuan',
+            'Pria' => 'laki-laki',
+            'Wanita' => 'perempuan',
+        ];
+        $jenisKelamin = $data['jenis_kelamin'] ?? null;
+        if ($jenisKelamin && isset($jkMap[$jenisKelamin])) {
+            $jenisKelamin = $jkMap[$jenisKelamin];
+        }
+
+        DB::table('users')->where('id', $user->id)->update([
+            'nip' => $data['nip'] ?? null,
+            'tempat_lahir' => $data['tempat_lahir'] ?? null,
+            'tanggal_lahir' => $data['tanggal_lahir'] ?? null,
+            'jk' => $jenisKelamin,
+            'alamat' => $data['alamat'] ?? null,
+            'telp' => $data['no_hp'] ?? null,
+            'email' => $data['email'] ?? null,
+            'npwp' => $data['npwp'] ?? null,
+            'rekening' => $data['rekening'] ?? null,
+            'bio' => $data['bio'] ?? null,
+            'facebook' => $data['facebook'] ?? null,
+            'twitter' => $data['twitter'] ?? null,
+            'linkedin' => $data['linkedin'] ?? null,
+            'instagram' => $data['instagram'] ?? null,
+            'nikah' => $data['nikah'] ?? null,
+            'jenis_pjob' => $data['jenis_pjob'] ?? null,
+            'pjob' => $data['pjob'] ?? null,
+            'jml_anak' => $data['jml_anak'] ?? null,
+            'req_tunjangan' => $data['req_tunjangan'] ?? null,
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('profil')->with('success', 'Profil berhasil diperbarui.');
     }
 
     public function rekapLaporanKinerja(Request $request)
@@ -479,6 +797,21 @@ class PageController extends Controller
             ->where('id', $user->dept_id)
             ->value('nama');
 
+        // Cek apakah dept_id memerlukan input manual atasan
+        $specialDeptIds = [998, 999];
+        $deptId = (int) $user->dept_id;
+
+        if (in_array($deptId, $specialDeptIds)) {
+            // Tampilkan form input atasan
+            return view('pdf.supervisor-input', [
+                'deptId' => $deptId,
+                'month' => $selectedMonth,
+                'tab' => $request->input('tab', 'harian'),
+                'unitName' => $unitName ?: '-',
+                'periodLabel' => $periodLabel,
+            ]);
+        }
+
         $dailyEntries = DB::table('satker_kegiatan')
             ->where('user_id', $user->id)
             ->whereBetween('tanggal', [$selectedMonthStart->toDateString(), $selectedMonthEnd->toDateString()])
@@ -491,24 +824,73 @@ class PageController extends Controller
             ->map(function ($items, $date) {
                 $dateCarbon = Carbon::parse($date);
 
-                return [
-                    'date' => $dateCarbon->toDateString(),
-                    'label' => $this->indonesianDateLabel($dateCarbon),
-                    'items' => $items->map(function ($item) {
-                        $volume = (int) ($item->volume ?? 0);
-                        $unit = trim((string) ($item->satuan ?? ''));
+                $allItems = [];
+                foreach ($items as $item) {
+                    // Try JSON format first
+                    $jsonData = json_decode((string) ($item->data_json ?? '{"items":[]}'), true) ?: ['items' => []];
+                    $itemsArr = $jsonData['items'] ?? [];
 
-                        return [
-                            'kegiatan' => trim((string) $item->kegiatan),
+                    // Handle legacy format (direct columns)
+                    if (empty($itemsArr) && !empty($item->kegiatan)) {
+                        $itemsArr = [[
+                            'k' => $item->kegiatan,
+                            'v' => $item->volume ?? 0,
+                            's' => $item->satuan ?? 'Kegiatan'
+                        ]];
+                    }
+
+                    foreach ($itemsArr as $it) {
+                        $volume = (int) ($it['v'] ?? ($it['volume'] ?? 0));
+                        $unit = trim((string) ($it['s'] ?? ($it['satuan'] ?? 'Kegiatan')));
+
+                        $allItems[] = [
+                            'kegiatan' => trim((string) ($it['k'] ?? ($it['kegiatan'] ?? ''))),
                             'volume' => $volume,
                             'satuan' => $unit,
                             'meta' => $volume > 0 ? trim($volume . ' ' . $unit) : $unit,
                         ];
-                    })->values(),
+                    }
+                }
+
+                return [
+                    'date' => $dateCarbon->toDateString(),
+                    'label' => $this->indonesianDateLabel($dateCarbon),
+                    'items' => $allItems,
                 ];
             })
             ->values()
             ->all();
+
+        // Cek PLT/PJH di tabel plt_plh
+        $pltPlh = DB::table('plt_plh')
+            ->where('dept_id_plh', $user->dept_id)
+            ->first();
+
+        $isPlh = false;
+        $signatureName = '..................................';
+        $signatureNip = '';
+
+        if ($pltPlh) {
+            // PLT exist - gunakan user PLT
+            $pltUser = DB::table('users')->where('id', $pltPlh->user_id)->first();
+            if ($pltUser) {
+                $isPlh = true;
+                $signatureName = $pltUser->name;
+                $signatureNip = $pltUser->nomor_induk ? 'NIP. ' . $pltUser->nomor_induk : '';
+            }
+        } else {
+            // Cari kepala/kasi/kasubbag berdasarkan dept_id
+            $kepalaJabatan = ['kepala', 'kasi', 'kasubbag'];
+            $kepala = DB::table('users')
+                ->where('dept_id', $user->dept_id)
+                ->whereIn('kat_jabatan', $kepalaJabatan)
+                ->first();
+
+            if ($kepala) {
+                $signatureName = $kepala->name;
+                $signatureNip = $kepala->nomor_induk ? 'NIP. ' . $kepala->nomor_induk : '';
+            }
+        }
 
         $pdfData = [
             'userName' => $user->name,
@@ -519,6 +901,167 @@ class PageController extends Controller
             'dailyGroups' => $dailyGroups,
             'headerImage' => $this->assetToDataUri(public_path('assets/img/template/header.png')),
             'generatedAt' => now()->translatedFormat('d F Y H:i'),
+            'signatureName' => $signatureName,
+            'signatureNip' => $signatureNip,
+            'signatureImage' => null,
+            'signatureLabel' => $isPlh ? 'Mengetahui<br>PLT Kepala,' : 'Mengetahui<br>Kepala,',
+        ];
+
+        $pdf = Pdf::loadView('pdf.laporan-kinerja-harian', $pdfData)
+            ->setPaper('a4', 'portrait')
+            ->setOption('isRemoteEnabled', true)
+            ->setOption('isHtml5ParserEnabled', true);
+
+        $filename = sprintf('%s.kinerja-%s.pdf', $user->id, $selectedMonthStart->format('m-Y'));
+        $storagePath = "satker_ckh/{$user->id}/{$filename}";
+        $pdfBinary = $pdf->output();
+
+        Storage::disk('public')->put($storagePath, $pdfBinary);
+
+        $reportData = [
+            'item_id' => 1,
+            'dept_id' => $user->dept_id,
+            'user_id' => $user->id,
+            'bulan' => $selectedMonthStart->toDateString(),
+            'filename' => $filename,
+            'status' => 'DIKIRIM',
+            'alasan' => null,
+            'petugas' => 777,
+            'sending' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        DB::table('satker_ckh')->updateOrInsert(
+            [
+                'item_id' => 1,
+                'dept_id' => $user->dept_id,
+                'user_id' => $user->id,
+                'bulan' => $selectedMonthStart->toDateString(),
+            ],
+            $reportData
+        );
+
+        return response($pdfBinary, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function submitSupervisor(Request $request)
+    {
+        $user = $request->user();
+
+        abort_unless($user, 403);
+
+        $validator = Validator::make($request->all(), [
+            'dept_id' => ['required', 'integer'],
+            'month' => ['required', 'string'],
+            'tab' => ['nullable', 'string'],
+            'supervisor_name' => ['required', 'string', 'max:255'],
+            'supervisor_nip' => ['required', 'string', 'max:50'],
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $data = $validator->validated();
+
+        // Validasi dept_id adalah 998 atau 999
+        $specialDeptIds = [998, 999];
+        if (! in_array((int) $data['dept_id'], $specialDeptIds)) {
+            abort(403, 'Departemen tidak valid untuk input atasan.');
+        }
+
+        $selectedMonth = $data['month'];
+        $selectedMonthStart = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
+        $selectedMonthEnd = $selectedMonthStart->copy()->endOfMonth();
+        $periodLabel = $this->indonesianMonthLabel($selectedMonthStart);
+
+        $unitName = DB::table('ktd_department')
+            ->where('id', $user->dept_id)
+            ->value('nama');
+
+        $dailyEntries = DB::table('satker_kegiatan')
+            ->where('user_id', $user->id)
+            ->whereBetween('tanggal', [$selectedMonthStart->toDateString(), $selectedMonthEnd->toDateString()])
+            ->orderBy('tanggal')
+            ->orderBy('created_at')
+            ->get();
+
+        $dailyGroups = $dailyEntries
+            ->groupBy(fn ($row) => Carbon::parse($row->tanggal)->toDateString())
+            ->map(function ($items, $date) {
+                $dateCarbon = Carbon::parse($date);
+
+                $allItems = [];
+                foreach ($items as $item) {
+                    $jsonData = json_decode((string) ($item->data_json ?? '{"items":[]}'), true) ?: ['items' => []];
+                    $itemsArr = $jsonData['items'] ?? [];
+
+                    if (empty($itemsArr) && ! empty($item->kegiatan)) {
+                        $itemsArr = [[
+                            'k' => $item->kegiatan,
+                            'v' => $item->volume ?? 0,
+                            's' => $item->satuan ?? 'Kegiatan',
+                        ]];
+                    }
+
+                    foreach ($itemsArr as $it) {
+                        $volume = (int) ($it['v'] ?? ($it['volume'] ?? 0));
+                        $unit = trim((string) ($it['s'] ?? ($it['satuan'] ?? 'Kegiatan')));
+
+                        $allItems[] = [
+                            'kegiatan' => trim((string) ($it['k'] ?? ($it['kegiatan'] ?? ''))),
+                            'volume' => $volume,
+                            'satuan' => $unit,
+                            'meta' => $volume > 0 ? trim($volume . ' ' . $unit) : $unit,
+                        ];
+                    }
+                }
+
+                return [
+                    'date' => $dateCarbon->toDateString(),
+                    'label' => $this->indonesianDateLabel($dateCarbon),
+                    'items' => $allItems,
+                ];
+            })
+            ->values()
+            ->all();
+
+        // Cek PLT/PJH di tabel plt_plh
+        $pltPlh = DB::table('plt_plh')
+            ->where('dept_id_plh', $user->dept_id)
+            ->first();
+
+        $isPlh = false;
+        $signatureName = $data['supervisor_name'];
+        $signatureNip = 'NIP. ' . $data['supervisor_nip'];
+
+        if ($pltPlh) {
+            // PLT exist - gunakan user PLT (override input manual)
+            $pltUser = DB::table('users')->where('id', $pltPlh->user_id)->first();
+            if ($pltUser) {
+                $isPlh = true;
+                $signatureName = $pltUser->name;
+                $signatureNip = $pltUser->nomor_induk ? 'NIP. ' . $pltUser->nomor_induk : '';
+            }
+        }
+
+        $pdfData = [
+            'userName' => $user->name,
+            'userNip' => $user->nomor_induk ?: '-',
+            'unitName' => $unitName ?: '-',
+            'positionName' => trim((string) ($user->pekerjaan ?: '-')) ?: '-',
+            'periodLabel' => $periodLabel,
+            'dailyGroups' => $dailyGroups,
+            'headerImage' => $this->assetToDataUri(public_path('assets/img/template/header.png')),
+            'generatedAt' => now()->translatedFormat('d F Y H:i'),
+            'signatureName' => $signatureName,
+            'signatureNip' => $signatureNip,
+            'signatureImage' => null,
+            'signatureLabel' => $isPlh ? 'Mengetahui<br>PLT Kepala,' : 'Mengetahui<br>Kepala,',
         ];
 
         $pdf = Pdf::loadView('pdf.laporan-kinerja-harian', $pdfData)
@@ -613,28 +1156,79 @@ class PageController extends Controller
             }
         }
 
-        $submittedAt = now();
-        $insertRows = [];
+        // Build JSON data structure (Option A: JSON Column)
+        $jsonItems = $rows->map(fn ($row, $index) => [
+            'id' => null, // null = new item
+            'k' => $row['kegiatan'],
+            'v' => (int) ($row['volume'] ?? 0),
+            's' => $row['satuan'],
+        ])->toArray();
 
-        foreach ($rows as $row) {
-            $insertRows[] = [
+        $jsonData = json_encode(['items' => $jsonItems], JSON_UNESCAPED_UNICODE);
+        $tanggal = $data['tanggal'];
+        $submittedAt = now();
+
+        // Check if record exists for this user + date
+        $existing = DB::table('satker_kegiatan')
+            ->where('user_id', $user->id)
+            ->whereDate('tanggal', $tanggal)
+            ->first();
+
+        if ($existing) {
+            // Merge new items with existing data
+            $existingData = json_decode((string) ($existing->data_json ?? '{"items":[]}'), true) ?: ['items' => []];
+            $existingItems = $existingData['items'] ?? [];
+
+            // Append new items (those with null id)
+            $maxId = 0;
+            foreach ($existingItems as $item) {
+                if (isset($item['id']) && $item['id'] > $maxId) {
+                    $maxId = $item['id'];
+                }
+            }
+
+            foreach ($jsonItems as &$item) {
+                if ($item['id'] === null) {
+                    $item['id'] = ++$maxId;
+                }
+            }
+            unset($item);
+
+            $allItems = array_merge($existingItems, $jsonItems);
+            $newJsonData = json_encode(['items' => $allItems], JSON_UNESCAPED_UNICODE);
+
+            // Update existing row with merged data
+            DB::table('satker_kegiatan')
+                ->where('id', $existing->id)
+                ->update([
+                    'data_json' => $newJsonData,
+                    'updated_at' => $submittedAt,
+                ]);
+        } else {
+            // Insert new row with JSON data
+            // Re-assign IDs starting from 1
+            $jsonItems = array_map(function ($item, $index) {
+                $item['id'] = $index + 1;
+                return $item;
+            }, $jsonItems, array_keys($jsonItems));
+
+            DB::table('satker_kegiatan')->insert([
                 'user_id' => $user->id,
-                'tanggal' => $data['tanggal'],
-                'kegiatan' => $row['kegiatan'],
-                'volume' => $row['volume'],
-                'satuan' => $row['satuan'],
+                'tanggal' => $tanggal,
+                'kegiatan' => $rows->first()['kegiatan'], // Keep first for compatibility
+                'volume' => $rows->first()['volume'] ?? 0,
+                'satuan' => $rows->first()['satuan'] ?? 'Kegiatan',
                 'staff_id' => $user->id,
+                'data_json' => json_encode(['items' => $jsonItems], JSON_UNESCAPED_UNICODE),
                 'created_at' => $submittedAt,
                 'updated_at' => $submittedAt,
-            ];
+            ]);
         }
-
-        DB::table('satker_kegiatan')->insert($insertRows);
 
         return redirect()
             ->route('laporan-kinerja', [
                 'tab' => 'harian',
-                'month' => Carbon::parse($data['tanggal'])->format('Y-m'),
+                'month' => Carbon::parse($tanggal)->format('Y-m'),
             ])
             ->with('success', 'Kegiatan harian berhasil ditambahkan.');
     }
@@ -771,33 +1365,46 @@ class PageController extends Controller
             }
         }
 
-        DB::table('satker_kegiatan')
-            ->where('user_id', $user->id)
-            ->whereDate('tanggal', $data['tanggal'])
-            ->delete();
-
+        $tanggal = $data['tanggal'];
         $submittedAt = now();
-        $insertRows = [];
 
+        // Build JSON data structure
+        $jsonItems = [];
+        $itemId = 1;
         foreach ($rows as $row) {
-            $insertRows[] = [
-                'user_id' => $user->id,
-                'tanggal' => $data['tanggal'],
-                'kegiatan' => $row['kegiatan'],
-                'volume' => $row['volume'],
-                'satuan' => $row['satuan'],
-                'staff_id' => $user->id,
-                'created_at' => $submittedAt,
-                'updated_at' => $submittedAt,
+            $jsonItems[] = [
+                'id' => $itemId++,
+                'k' => $row['kegiatan'],
+                'v' => (int) ($row['volume'] ?? 0),
+                's' => $row['satuan'],
             ];
         }
 
-        DB::table('satker_kegiatan')->insert($insertRows);
+        $jsonData = json_encode(['items' => $jsonItems], JSON_UNESCAPED_UNICODE);
+
+        // Find existing record
+        $existing = DB::table('satker_kegiatan')
+            ->where('user_id', $user->id)
+            ->whereDate('tanggal', $tanggal)
+            ->first();
+
+        if ($existing) {
+            // Update existing row with new JSON data
+            DB::table('satker_kegiatan')
+                ->where('id', $existing->id)
+                ->update([
+                    'kegiatan' => $rows->first()['kegiatan'],
+                    'volume' => $rows->first()['volume'] ?? 0,
+                    'satuan' => $rows->first()['satuan'] ?? 'Kegiatan',
+                    'data_json' => $jsonData,
+                    'updated_at' => $submittedAt,
+                ]);
+        }
 
         return redirect()
             ->route('laporan-kinerja', [
                 'tab' => 'harian',
-                'month' => Carbon::parse($data['tanggal'])->format('Y-m'),
+                'month' => Carbon::parse($tanggal)->format('Y-m'),
             ])
             ->with('success', 'Data laporan kinerja berhasil diperbarui.');
     }
@@ -911,6 +1518,390 @@ class PageController extends Controller
                 'search' => trim((string) ($data['search'] ?? '')),
             ])
             ->with('success', 'Semua kegiatan pada tanggal tersebut berhasil dihapus.');
+    }
+
+    /**
+     * Verify (approve/reject) laporan kinerja from bawahan.
+     */
+    public function verifyLaporanKinerja(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($user, 403);
+
+        // Custom validation messages
+        $messages = [
+            'user_id.required' => 'User ID diperlukan.',
+            'bulan.required' => 'Bulan diperlukan.',
+            'action.required' => 'Action diperlukan.',
+            'action.in' => 'Action tidak valid.',
+        ];
+
+        $validator = Validator::make($request->all(), [
+            'user_id' => ['required', 'integer'],
+            'bulan' => ['required', 'string'],
+            'action' => ['required', 'in:approve,reject'],
+            'alasan' => ['nullable', 'string', 'max:500'],
+        ], $messages);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        // Verify user is kepala/kasi/kasubbag and has same dept_id
+        $validJabatan = ['kepala', 'kasi', 'kasubbag'];
+        $atasanRole = in_array(strtolower($user->kat_jabatan ?? ''), $validJabatan);
+
+        if (!$atasanRole) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki hak untuk memverifikasi laporan.',
+            ], 403);
+        }
+
+        // Find the report by user_id and bulan
+        // Convert Y-m to Y-m-01 format for database query
+        $bulanDate = Carbon::createFromFormat('Y-m', $data['bulan'])->startOfMonth()->toDateString();
+
+        $report = DB::table('satker_ckh')
+            ->where('user_id', $data['user_id'])
+            ->where('bulan', $bulanDate)
+            ->first();
+
+        if (!$report) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Laporan tidak ditemukan.',
+            ], 404);
+        }
+
+        // Update status
+        $newStatus = $data['action'] === 'approve' ? 'DISETUJUI' : 'DITOLAK';
+
+        try {
+            // Get report info before update
+            $reportInfo = DB::table('satker_ckh')
+                ->where('id', $report->id)
+                ->first();
+
+            // Get bawahan user info
+            $bawahanUser = DB::table('users')
+                ->where('id', $data['user_id'])
+                ->first();
+
+            // Check if signature is enabled by atasan
+            $signature = DB::table('user_signatures')
+                ->where('user_id', $user->id)
+                ->where('is_active', true)
+                ->first();
+
+            // Update status
+            DB::table('satker_ckh')
+                ->where('id', $report->id)
+                ->update([
+                    'status' => $newStatus,
+                    'alasan' => $data['action'] === 'reject' ? ($data['alasan'] ?? null) : null,
+                    'updated_at' => now(),
+                ]);
+
+            // If approved and signature is active, regenerate PDF
+            if ($newStatus === 'DISETUJUI' && $signature) {
+                // Get period label
+                $bulanDate = Carbon::createFromFormat('Y-m-d', $reportInfo->bulan);
+                $periodLabel = $bulanDate->translatedFormat('F Y');
+
+                // Generate PDF with signature
+                $pdfBinary = $this->generateApprovedPdf($reportInfo, $user, $periodLabel);
+
+                // Save new PDF with approved suffix
+                $filename = sprintf('%s.kinerja-%s-DISETUJUI.pdf', $data['user_id'], $bulanDate->format('m-Y'));
+                $storagePath = "satker_ckh/{$data['user_id']}/{$filename}";
+
+                Storage::disk('public')->put($storagePath, $pdfBinary);
+
+                // Update filename in database
+                DB::table('satker_ckh')
+                    ->where('id', $report->id)
+                    ->update(['filename' => $filename]);
+            }
+
+            // Log activity (optional - skip if table doesn't exist)
+            try {
+                DB::table('activities')->insert([
+                    'user_id' => $user->id,
+                    'activity_type' => 'verifikasi_laporan',
+                    'description' => "Laporan kinerja {$data['bulan']} " . ($data['action'] === 'approve' ? 'disetujui' : 'ditolak') . " oleh atasan",
+                    'ref_id' => $report->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } catch (\Exception $e) {
+                // Skip logging if table doesn't exist
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal update status: ' . $e->getMessage(),
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $data['action'] === 'approve'
+                ? 'Laporan berhasil disetujui.'
+                : 'Laporan berhasil ditolak.',
+            'new_status' => $newStatus,
+        ]);
+    }
+
+    /**
+     * Get user signature settings.
+     */
+    public function getSignature(Request $request)
+    {
+        $user = $request->user();
+
+        $signature = DB::table('user_signatures')
+            ->where('user_id', $user->id)
+            ->first();
+
+        // Default values from users table
+        $defaultName = $user->name ?? '';
+        $defaultNip = $user->nomor_induk ?? '';
+
+        if ($signature) {
+            // Use saved values, fallback to user defaults if empty
+            $signature->signature_name = $signature->signature_name ?: $defaultName;
+            $signature->nip = $signature->nip ?: ($defaultNip ? 'NIP. ' . $defaultNip : '');
+        } else {
+            // No signature exists, use user defaults
+            $signature = (object) [
+                'signature_name' => $defaultName,
+                'signature_image' => '',
+                'nip' => $defaultNip ? 'NIP. ' . $defaultNip : '',
+                'is_active' => false,
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $signature,
+        ]);
+    }
+
+    /**
+     * Save user signature settings.
+     */
+    public function saveSignature(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'signature_name' => ['nullable', 'string', 'max:255'],
+            'signature_image' => ['nullable', 'string'],
+            'nip' => ['nullable', 'string', 'max:50'],
+            'is_active' => ['nullable', 'string'],
+        ]);
+
+        $data = $request->only(['signature_name', 'signature_image', 'nip']);
+        $data['user_id'] = $user->id;
+
+        // Convert is_active: '1' = true, anything else = false
+        $isActiveRaw = $request->input('is_active', '0');
+        $data['is_active'] = ($isActiveRaw === '1') ? true : false;
+
+        // Format NIP with "NIP. " prefix if not empty and doesn't have it
+        if (!empty($data['nip']) && !str_starts_with($data['nip'], 'NIP. ')) {
+            $data['nip'] = 'NIP. ' . $data['nip'];
+        }
+
+        // If signature_image is base64 data, save to file
+        if (!empty($request->input('signature_image')) && str_starts_with($request->input('signature_image'), 'data:image')) {
+            $imageData = $request->input('signature_image');
+            $image = str_replace('data:image/png;base64,', '', $imageData);
+            $image = str_replace(' ', '+', $image);
+            $decoded = base64_decode($image);
+
+            $filename = 'signatures/' . $user->id . '_' . time() . '.png';
+            Storage::disk('public')->put($filename, $decoded);
+            $data['signature_image'] = '/storage/' . $filename;
+        }
+
+        // Update or insert signature
+        $existing = DB::table('user_signatures')
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($existing) {
+            DB::table('user_signatures')
+                ->where('user_id', $user->id)
+                ->update($data);
+        } else {
+            DB::table('user_signatures')->insert($data);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tanda tangan berhasil disimpan.',
+            'is_active' => $data['is_active'],
+        ]);
+    }
+
+    /**
+     * Upload signature image.
+     */
+    public function uploadSignatureImage(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'signature_image' => ['required', 'image', 'max:2048'],
+        ]);
+
+        $file = $request->file('signature_image');
+        $path = $file->storeAs(
+            'signatures',
+            $user->id . '_' . time() . '.' . $file->getClientOriginalExtension(),
+            'public'
+        );
+
+        return response()->json([
+            'success' => true,
+            'path' => '/storage/' . $path,
+        ]);
+    }
+
+    /**
+     * Generate PDF with signature for approval.
+     */
+    private function generateApprovedPdf($reportInfo, $atasan, $periodLabel)
+    {
+        // Get signature if active
+        $signature = DB::table('user_signatures')
+            ->where('user_id', $atasan->id)
+            ->where('is_active', true)
+            ->first();
+
+        // Get bawahan user data
+        $bawahanUser = DB::table('users')
+            ->where('id', $reportInfo->user_id)
+            ->first();
+
+        // Get unit name
+        $unitName = DB::table('ktd_department')
+            ->where('id', $bawahanUser->dept_id ?? $reportInfo->dept_id)
+            ->value('nama') ?: '-';
+
+        // Get activities
+        $monthStart = Carbon::parse($reportInfo->bulan)->startOfMonth();
+        $monthEnd = $monthStart->copy()->endOfMonth();
+
+        $dailyEntries = DB::table('satker_kegiatan')
+            ->where('user_id', $reportInfo->user_id)
+            ->whereBetween('tanggal', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->orderBy('tanggal')
+            ->orderBy('created_at')
+            ->get();
+
+        $dailyGroups = $dailyEntries
+            ->groupBy(fn ($row) => Carbon::parse($row->tanggal)->toDateString())
+            ->map(function ($items, $date) {
+                $dateCarbon = Carbon::parse($date);
+                $allItems = [];
+
+                foreach ($items as $item) {
+                    $jsonData = json_decode((string) ($item->data_json ?? '{"items":[]}'), true) ?: ['items' => []];
+                    $itemsArr = $jsonData['items'] ?? [];
+
+                    if (empty($itemsArr) && ! empty($item->kegiatan)) {
+                        $itemsArr = [[
+                            'k' => $item->kegiatan,
+                            'v' => $item->volume ?? 0,
+                            's' => $item->satuan ?? 'Kegiatan',
+                        ]];
+                    }
+
+                    foreach ($itemsArr as $it) {
+                        $volume = (int) ($it['v'] ?? ($it['volume'] ?? 0));
+                        $unit = trim((string) ($it['s'] ?? ($it['satuan'] ?? 'Kegiatan')));
+
+                        $allItems[] = [
+                            'kegiatan' => trim((string) ($it['k'] ?? ($it['kegiatan'] ?? ''))),
+                            'volume' => $volume,
+                            'satuan' => $unit,
+                            'meta' => $volume > 0 ? trim($volume . ' ' . $unit) : $unit,
+                        ];
+                    }
+                }
+
+                return [
+                    'date' => $dateCarbon->toDateString(),
+                    'label' => $this->indonesianDateLabel($dateCarbon),
+                    'items' => $allItems,
+                ];
+            })
+            ->values()
+            ->all();
+
+        // Determine signature data - use signature data if exists, otherwise use atasan data
+        $signatureName = $signature->signature_name ?? $atasan->name;
+        $signatureNip = $signature->nip ?? ($atasan->nomor_induk ? 'NIP. ' . $atasan->nomor_induk : '');
+
+        // Process signature image - convert storage path to proper URL/path for DomPDF
+        $signatureImage = null;
+        if (!empty($signature->signature_image)) {
+            $imagePath = $signature->signature_image;
+            // If it's a storage path, convert to absolute path
+            if (str_starts_with($imagePath, '/storage/')) {
+                $fullPath = public_path(ltrim($imagePath, '/'));
+                if (file_exists($fullPath)) {
+                    // Use absolute file path for DomPDF
+                    $signatureImage = $fullPath;
+                }
+            } elseif (file_exists($imagePath)) {
+                $signatureImage = $imagePath;
+            }
+        }
+
+        // Check PLT
+        $deptId = $bawahanUser->dept_id ?? $reportInfo->dept_id;
+        $pltPlh = DB::table('plt_plh')
+            ->where('dept_id_plh', $deptId)
+            ->first();
+
+        if ($pltPlh) {
+            $pltUser = DB::table('users')->where('id', $pltPlh->user_id)->first();
+            if ($pltUser) {
+                $signatureName = $signature->signature_name ?? $pltUser->name;
+                $signatureNip = $signature->nip ?? ($pltUser->nomor_induk ? 'NIP. ' . $pltUser->nomor_induk : '');
+            }
+        }
+
+        $pdfData = [
+            'userName' => $bawahanUser->name ?? '-',
+            'userNip' => $bawahanUser->nomor_induk ?? '-',
+            'unitName' => $unitName,
+            'positionName' => $bawahanUser->pekerjaan ?? '-',
+            'periodLabel' => $periodLabel,
+            'dailyGroups' => $dailyGroups,
+            'headerImage' => $this->assetToDataUri(public_path('assets/img/template/header.png')),
+            'generatedAt' => now()->translatedFormat('d F Y H:i'),
+            'signatureName' => $signatureName,
+            'signatureNip' => $signatureNip,
+            'signatureImage' => $signatureImage,
+            'signatureLabel' => $pltPlh ? 'Mengetahui<br>PLT Kepala,' : 'Mengetahui<br>Kepala,',
+        ];
+
+        $pdf = Pdf::loadView('pdf.laporan-kinerja-harian', $pdfData)
+            ->setPaper('a4', 'portrait')
+            ->setOption('isRemoteEnabled', true)
+            ->setOption('isHtml5ParserEnabled', true);
+
+        return $pdf->output();
     }
 
     private function sanitizeActivityRows(array $items, string $defaultUnit = 'Kegiatan')
@@ -1486,6 +2477,30 @@ class PageController extends Controller
             $months[$date->month] ?? $date->format('F'),
             $date->year
         );
+    }
+
+    private function indonesianDateTimeFormat(?string $dateTime): string
+    {
+        if (!$dateTime) {
+            return '-';
+        }
+
+        try {
+            $date = Carbon::parse($dateTime);
+            $days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            $months = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'];
+
+            return sprintf(
+                '%d %s %d, %02d:%02d',
+                $date->day,
+                $months[$date->month] ?? $date->format('F'),
+                $date->year,
+                $date->hour,
+                $date->minute
+            );
+        } catch (\Exception $e) {
+            return '-';
+        }
     }
 
     private function assetToDataUri(string $path): string
