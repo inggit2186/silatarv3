@@ -15,8 +15,26 @@
             background: #ffffff;
         }
 
+        .pdf-watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            transform: translate(-50%, -50%) rotate(-34deg);
+            text-align: center;
+            font-family: "DejaVu Serif", serif;
+            font-size: 31pt;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            color: #0f172a;
+            opacity: 0.08;
+            z-index: 0;
+            white-space: nowrap;
+        }
+
         .page-shell {
             position: relative;
+            z-index: 1;
         }
 
         /* Header Image */
@@ -393,6 +411,8 @@
     </style>
 </head>
 <body>
+    <div class="pdf-watermark">{{ strtoupper($watermarkText ?? 'Kankemenag Kab.Tanah Datar') }}</div>
+
     <div class="page-shell">
         @if (! empty($headerImage))
             <img src="{{ $headerImage }}" alt="Header" class="header-image">

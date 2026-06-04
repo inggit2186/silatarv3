@@ -21,7 +21,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/laporan-kinerja/humas/{id}', [PageController::class, 'destroyHumas'])->name('laporan-humas.destroy');
     Route::post('/laporan-kinerja/harian', [PageController::class, 'storeLaporanKinerja'])->name('laporan-kinerja.store');
     Route::get('/laporan-kinerja/rekap', [PageController::class, 'rekapLaporanKinerja'])->name('laporan-kinerja.rekap');
+<<<<<<< HEAD
     Route::post('/laporan-kinerja/rekap/supervisor', [PageController::class, 'submitSupervisor'])->name('laporan-kinerja.rekap.supervisor');
+=======
+    Route::get('/laporan-kinerja/bulanan/{reportId}/pdf', [PageController::class, 'downloadLaporanKinerjaPdf'])->whereNumber('reportId')->name('laporan-kinerja.pdf');
+>>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
     Route::put('/laporan-kinerja/day', [PageController::class, 'updateLaporanKinerjaByDate'])->name('laporan-kinerja.update-day');
     Route::delete('/laporan-kinerja/day', [PageController::class, 'deleteLaporanKinerjaByDate'])->name('laporan-kinerja.delete-day');
     Route::put('/laporan-kinerja/{activityId}', [PageController::class, 'updateLaporanKinerja'])->whereNumber('activityId')->name('laporan-kinerja.update');

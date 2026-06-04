@@ -200,6 +200,14 @@ class PageController extends Controller
         $selectedMonthStart = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
         $selectedMonthEnd = $selectedMonthStart->copy()->endOfMonth();
 
+        $selectedYear = $request->string('year')->toString();
+        if (! preg_match('/^\d{4}$/', $selectedYear)) {
+            $selectedYear = now()->format('Y');
+        }
+
+        $selectedYearStart = Carbon::createFromFormat('Y', $selectedYear)->startOfYear();
+        $selectedYearEnd = $selectedYearStart->copy()->endOfYear();
+
         $search = trim((string) $request->query('search', ''));
         $printMode = $request->boolean('print');
         $editingDate = $request->string('edit_date')->toString();
@@ -317,25 +325,53 @@ class PageController extends Controller
             $activityUnits = collect(['Kegiatan', 'Dokumen', 'Jam']);
         }
 
-        $monthlyRecaps = DB::table('satker_kegiatan')
+        $monthlyActivityStats = DB::table('satker_kegiatan')
             ->where('user_id', $user->id)
+            ->whereBetween('tanggal', [$selectedYearStart->toDateString(), $selectedYearEnd->toDateString()])
             ->selectRaw("DATE_FORMAT(tanggal, '%Y-%m-01') as month_key")
-            ->selectRaw("DATE_FORMAT(tanggal, '%m/%Y') as month_label")
             ->selectRaw('COUNT(*) as entries')
+            ->selectRaw('COUNT(DISTINCT DATE(tanggal)) as days')
             ->selectRaw('COALESCE(SUM(volume), 0) as total_volume')
-            ->selectRaw('MAX(updated_at) as latest_update')
-            ->groupBy('month_key', 'month_label')
-            ->orderByDesc('month_key')
+            ->groupBy('month_key')
             ->get()
-            ->map(function ($item) {
+            ->keyBy('month_key');
+
+        $monthlyRecaps = DB::table('satker_ckh as ckh')
+            ->where('ckh.user_id', $user->id)
+            ->whereBetween('ckh.bulan', [$selectedYearStart->toDateString(), $selectedYearEnd->toDateString()])
+            ->orderByDesc('ckh.bulan')
+            ->orderByDesc('ckh.updated_at')
+            ->get()
+            ->map(function ($item) use ($monthlyActivityStats) {
+                $monthCarbon = Carbon::parse($item->bulan)->startOfMonth();
+                $stats = $monthlyActivityStats->get($monthCarbon->toDateString());
+                $status = strtoupper(trim((string) ($item->status ?? 'KOSONG')));
+                $pdfPath = filled($item->filename)
+                    ? "satker_ckh/{$item->user_id}/{$item->filename}"
+                    : '';
+
                 return [
-                    'month_key' => $item->month_key,
-                    'month_label' => $item->month_label,
-                    'entries' => (int) $item->entries,
-                    'total_volume' => (int) $item->total_volume,
-                    'latest_update' => $item->latest_update,
+                    'id' => $item->id,
+                    'month_key' => $monthCarbon->toDateString(),
+                    'month_label' => $monthCarbon->translatedFormat('F'),
+                    'days' => (int) ($stats->days ?? 0),
+                    'entries' => (int) ($stats->entries ?? 0),
+                    'total_volume' => (int) ($stats->total_volume ?? 0),
+                    'status' => $status,
+                    'status_label' => $this->reportStatusLabel($status),
+                    'status_tone' => $this->reportStatusTone($status),
+                    'status_class' => $this->reportStatusClass($status),
+                    'sending_label' => filled($item->sending)
+                        ? Carbon::parse($item->sending)->translatedFormat('d F Y H:i')
+                        : '-',
+                    'pdf_exists' => $pdfPath !== '' && Storage::disk('public')->exists($pdfPath),
+                    'pdf_url' => $pdfPath !== '' && Storage::disk('public')->exists($pdfPath)
+                        ? Storage::disk('public')->url($pdfPath)
+                        : null,
+                    'latest_update' => $item->updated_at,
                 ];
-            });
+            })
+            ->values();
 
         // Rekap Bulanan dari satker_ckh - data laporan kinerja bulanan user
         // For bulanan tab, show only current user's data for the selected year
@@ -510,6 +546,10 @@ class PageController extends Controller
             'selectedMonth' => $selectedMonth,
             'selectedMonthLabel' => $this->indonesianMonthLabel($selectedMonthStart),
             'selectedYear' => $selectedYear,
+<<<<<<< HEAD
+=======
+            'selectedYearLabel' => $selectedYear,
+>>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
             'search' => $search,
             'printMode' => $printMode,
             'editingGroup' => $editingGroup,
@@ -518,9 +558,20 @@ class PageController extends Controller
             'dailySummary' => $dailySummary,
             'activityUnits' => $activityUnits,
             'monthlyRecaps' => $monthlyRecaps,
+<<<<<<< HEAD
             'bulananReports' => $bulananReports,
             'humasData' => $humasData,
             'humasYear' => $humasYearFilter,
+=======
+            'monthlySummary' => [
+                'months' => $monthlyRecaps->count(),
+                'days' => $monthlyRecaps->sum('days'),
+                'entries' => $monthlyRecaps->sum('entries'),
+                'volume' => $monthlyRecaps->sum('total_volume'),
+                'latest_update' => optional($monthlyRecaps->sortByDesc('latest_update')->first())->latest_update,
+            ],
+            'humasReports' => $humasReports,
+>>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
         ]);
     }
 
@@ -901,6 +952,7 @@ class PageController extends Controller
             'dailyGroups' => $dailyGroups,
             'headerImage' => $this->assetToDataUri(public_path('assets/img/template/header.png')),
             'generatedAt' => now()->translatedFormat('d F Y H:i'),
+<<<<<<< HEAD
             'signatureName' => $signatureName,
             'signatureNip' => $signatureNip,
             'signatureImage' => null,
@@ -1062,6 +1114,9 @@ class PageController extends Controller
             'signatureNip' => $signatureNip,
             'signatureImage' => null,
             'signatureLabel' => $isPlh ? 'Mengetahui<br>PLT Kepala,' : 'Mengetahui<br>Kepala,',
+=======
+            'watermarkText' => 'Kankemenag Kab.Tanah Datar',
+>>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
         ];
 
         $pdf = Pdf::loadView('pdf.laporan-kinerja-harian', $pdfData)
@@ -1102,6 +1157,30 @@ class PageController extends Controller
         return response($pdfBinary, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function downloadLaporanKinerjaPdf(Request $request, int $reportId)
+    {
+        $user = $request->user();
+
+        abort_unless($user, 403);
+
+        $report = DB::table('satker_ckh')
+            ->where('id', $reportId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($report, 404);
+        abort_unless(filled($report->filename), 404);
+
+        $storagePath = "satker_ckh/{$report->user_id}/{$report->filename}";
+
+        abort_unless(Storage::disk('public')->exists($storagePath), 404);
+
+        return Storage::disk('public')->response($storagePath, $report->filename, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $report->filename . '"',
         ]);
     }
 
@@ -2402,6 +2481,37 @@ class PageController extends Controller
     private function isUploadRequirement(string $type): bool
     {
         return in_array($type, ['file', 'image'], true);
+    }
+
+    private function reportStatusLabel(string $status): string
+    {
+        return match ($status) {
+            'DIKIRIM' => 'Dikirim',
+            'DISETUJUI' => 'Disetujui',
+            'DITOLAK' => 'Ditolak',
+            'KOSONG' => 'Kosong',
+            default => $status !== '' ? Str::headline(strtolower($status)) : 'Kosong',
+        };
+    }
+
+    private function reportStatusTone(string $status): string
+    {
+        return match ($status) {
+            'DISETUJUI' => 'emerald',
+            'DITOLAK' => 'rose',
+            'DIKIRIM' => 'amber',
+            default => 'slate',
+        };
+    }
+
+    private function reportStatusClass(string $status): string
+    {
+        return match ($this->reportStatusTone($status)) {
+            'emerald' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
+            'rose' => 'border-rose-200 bg-rose-50 text-rose-700',
+            'amber' => 'border-amber-200 bg-amber-50 text-amber-700',
+            default => 'border-slate-200 bg-slate-50 text-slate-500',
+        };
     }
 
     private function requestFormViewData(array $service, $requester, bool $editing = false, $requestRecord = null, array $existingAnswers = [], array $existingFiles = []): array
