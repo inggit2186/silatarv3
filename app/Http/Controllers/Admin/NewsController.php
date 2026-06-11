@@ -193,17 +193,20 @@ class NewsController extends Controller
                 $manager = new ImageManager(new Driver());
                 $img = $manager->decode($image->getPathname());
 
-                // Resize if too large (max 1200px width for news thumbnail)
-                if ($img->width() > 1200) {
-                    $img->resize(1200, null, function ($constraint) {
-                        $constraint->aspectRatio();
-                        $constraint->upsize();
-                    });
-                }
+                // Resize only if dimensions exceed threshold - maintain aspect ratio
+                $maxWidth = 1200;
+                if ($img->width() > $maxWidth) {
+                    $originalWidth = $img->width();
+                    $originalHeight = $img->height();
+                    $newHeight = (int) round(($maxWidth / $originalWidth) * $originalHeight);
 
-                // Save as WebP for better compression
+                    $img->resize($maxWidth, $newHeight);
+                }
+                // If smaller than max, keep original dimensions
+
+                // Save as WebP with high quality (90) - maintains aspect ratio
                 $outputPath = $filename . '.webp';
-                $encoded = $img->encodeUsingFormat(Format::WEBP, quality: 85);
+                $encoded = $img->encodeUsingFormat(Format::WEBP, quality: 90);
                 Storage::disk('public')->put('news/' . $outputPath, $encoded->toString());
                 $imagePath = 'news/' . $outputPath;
             } catch (\Exception $e) {
@@ -326,17 +329,20 @@ class NewsController extends Controller
                 $manager = new ImageManager(new Driver());
                 $img = $manager->decode($image->getPathname());
 
-                // Resize if too large (max 1200px width for news thumbnail)
-                if ($img->width() > 1200) {
-                    $img->resize(1200, null, function ($constraint) {
-                        $constraint->aspectRatio();
-                        $constraint->upsize();
-                    });
-                }
+                // Resize only if dimensions exceed threshold - maintain aspect ratio
+                $maxWidth = 1200;
+                if ($img->width() > $maxWidth) {
+                    $originalWidth = $img->width();
+                    $originalHeight = $img->height();
+                    $newHeight = (int) round(($maxWidth / $originalWidth) * $originalHeight);
 
-                // Save as WebP for better compression
+                    $img->resize($maxWidth, $newHeight);
+                }
+                // If smaller than max, keep original dimensions
+
+                // Save as WebP with high quality (90) - maintains aspect ratio
                 $outputPath = $filename . '.webp';
-                $encoded = $img->encodeUsingFormat(Format::WEBP, quality: 85);
+                $encoded = $img->encodeUsingFormat(Format::WEBP, quality: 90);
                 Storage::disk('public')->put('news/' . $outputPath, $encoded->toString());
                 $imagePath = 'news/' . $outputPath;
             } catch (\Exception $e) {
@@ -433,20 +439,28 @@ class NewsController extends Controller
                 $originalWidth = $img->width();
                 $originalHeight = $img->height();
 
-                // Configurable max dimensions (balance between quality and size)
+                // Max dimensions - only resize if exceeds
                 $maxWidth = 1920;
                 $maxHeight = 1080;
 
-                // Resize if larger than max dimensions (maintain aspect ratio)
-                if ($originalWidth > $maxWidth || $originalHeight > $maxHeight) {
-                    $img->resize($maxWidth, $maxHeight, function ($constraint) {
-                        $constraint->aspectRatio();
-                        $constraint->upsize();
-                    });
+                // Resize only if exceeds max - maintain aspect ratio explicitly
+                if ($originalWidth > $maxWidth) {
+                    $newHeight = (int) round(($maxWidth / $originalWidth) * $originalHeight);
+                    if ($newHeight > $maxHeight) {
+                        $newHeight = $maxHeight;
+                        $newWidth = (int) round(($maxHeight / $originalHeight) * $originalWidth);
+                        $img->resize($newWidth, $maxHeight);
+                    } else {
+                        $img->resize($maxWidth, $newHeight);
+                    }
+                } elseif ($originalHeight > $maxHeight) {
+                    $newWidth = (int) round(($maxHeight / $originalHeight) * $originalWidth);
+                    $img->resize($newWidth, $maxHeight);
                 }
+                // If smaller than max, keep original dimensions
 
-                // Quality settings
-                $quality = 82; // Good quality without being too large
+                // Quality settings - higher quality (90) for content images
+                $quality = 90;
 
                 // Determine output format - convert to WebP for better compression
                 $outputFilename = $filename . '.webp';
