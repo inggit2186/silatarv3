@@ -136,12 +136,6 @@
                         </svg>
                         Login
                     </a>
-                    <a href="{{ route('register') }}" class="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-600 to-cyan-500 px-6 py-2.5 font-mono text-sm font-semibold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all hover:shadow-[0_0_30px_rgba(0,212,255,0.6)] hover:-translate-y-0.5">
-                        Register
-                        <svg class="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                        </svg>
-                    </a>
                 @endauth
             </div>
 
@@ -209,14 +203,9 @@
                         </form>
                     </div>
                 @else
-                    <div class="mt-4 grid grid-cols-2 gap-3">
-                        <a href="{{ route('login') }}" class="flex items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-slate-900/80 px-4 py-4 font-mono text-sm font-semibold uppercase tracking-wider text-cyan-400 backdrop-blur-sm">
-                            Login
-                        </a>
-                        <a href="{{ route('register') }}" class="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 px-4 py-4 font-mono text-sm font-semibold uppercase tracking-wider text-white shadow-[0_0_15px_rgba(0,212,255,0.3)]">
-                            Register
-                        </a>
-                    </div>
+                    <a href="{{ route('login') }}" class="flex items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-slate-900/80 px-4 py-4 font-mono text-sm font-semibold uppercase tracking-wider text-cyan-400 backdrop-blur-sm">
+                        Login
+                    </a>
                 @endauth
             </div>
         </div>

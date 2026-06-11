@@ -42,11 +42,12 @@ Route::get('/satuan-kerja/{department}', [PageController::class, 'satuanKerjaDet
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('forgot-password');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
-Route::view('/register', 'auth.register')->name('register');
+// Route::view('/register', 'auth.register')->name('register'); // Disabled for now
 
 // Laporan Kinerja API (verification by atasan)
 Route::post('/laporan-kinerja/verify', [App\Http\Controllers\PageController::class, 'verifyLaporanKinerja'])->middleware('auth')->name('laporan-kinerja.verify');
