@@ -4,56 +4,49 @@
 ])
 
 <article @class([
-    'silatar-person-card',
-    'silatar-person-card-featured' => $featured,
+    'cyber-person-card',
+    'cyber-person-card-featured' => $featured,
 ])>
     <div @class([
-        'silatar-person-card-body',
-        'p-6' => $featured,
+        'cyber-person-photo-wrapper',
+        'cyber-person-photo-wrapper-featured' => $featured,
     ])>
         @if (! empty($person['photo_path']))
-            <div @class([
-                'mx-auto overflow-hidden rounded-full border border-white/70 shadow-xl',
-                'h-28 w-28' => $featured,
-                'h-20 w-20' => ! $featured,
-            ])>
+            <div class="cyber-person-photo">
                 <img
                     src="{{ $person['photo_path'] }}"
                     alt="{{ $person['name'] ?? 'PP' }}"
-                    class="h-full w-full object-cover"
-                    onerror="this.style.display='none'; this.parentElement.nextElementSibling.classList.remove('hidden');"
+                    class="cyber-person-photo-img"
+                    onerror="this.style.display='none'; this.parentElement.style.display='none'; this.parentElement.nextElementSibling.style.display='flex';"
                 >
+            </div>
+            <div class="cyber-person-avatar" style="display: none;">
+                {{ $person['avatar_text'] ?? 'PP' }}
+            </div>
+        @else
+            <div class="cyber-person-avatar">
+                {{ $person['avatar_text'] ?? 'PP' }}
             </div>
         @endif
 
-        <div @class([
-            'silatar-person-avatar',
-            'silatar-person-avatar-featured' => $featured,
-            'hidden' => ! empty($person['photo_path']),
-        ])>
-            {{ $person['avatar_text'] ?? 'PP' }}
-        </div>
+        @if ($featured)
+            <div class="cyber-person-glow-ring"></div>
+        @endif
+    </div>
 
-        <p @class([
-            'silatar-person-name',
-            'silatar-person-name-featured' => $featured,
-        ])>
-            {{ $person['name'] ?? '-' }}
-        </p>
+    <div class="cyber-person-info">
+        <p class="cyber-person-name">{{ $person['name'] ?? '-' }}</p>
+        <p class="cyber-person-role">{{ $person['role_label'] ?? 'Pegawai' }}</p>
 
-        <div class="silatar-person-role">
-            {{ $person['role_label'] ?? 'Pegawai' }}
-        </div>
-
-        <div class="silatar-person-meta">
-            <div>
-                <span class="font-semibold text-slate-700">Nomor Induk: </span>
-                <span>{{ $person['nomor_induk'] ?? '-' }}</span>
-            </div>
-            <div>
-                <span class="font-semibold text-slate-700">Satker: </span>
-                <span>{{ $person['satker'] ?? '-' }}</span>
+        <div class="cyber-person-meta">
+            <div class="cyber-person-meta-item">
+                <span class="cyber-person-meta-label">NIP</span>
+                <span class="cyber-person-meta-value">{{ $person['nomor_induk'] ?? '-' }}</span>
             </div>
         </div>
     </div>
+
+    @if ($featured)
+        <div class="cyber-card-glow-line"></div>
+    @endif
 </article>

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\NewsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,6 +32,15 @@ Route::middleware(['auth', 'admin'])
         Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
         Route::post('/users/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
         Route::get('/users/{id}/show', [UserController::class, 'show'])->name('users.show');
+
+        // News Management
+        Route::get('/news', [NewsController::class, 'index'])->name('news.index');
+        Route::get('/news/create', [NewsController::class, 'create'])->name('news.create');
+        Route::post('/news', [NewsController::class, 'store'])->name('news.store');
+        Route::get('/news/{id}/edit', [NewsController::class, 'edit'])->name('news.edit');
+        Route::put('/news/{id}', [NewsController::class, 'update'])->name('news.update');
+        Route::delete('/news/{id}', [NewsController::class, 'destroy'])->name('news.destroy');
+        Route::post('/news/upload-image', [NewsController::class, 'uploadImage'])->name('news.upload-image');
 
         // Placeholder routes for other admin modules
         Route::get('/services', function () {

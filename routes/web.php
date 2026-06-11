@@ -4,11 +4,18 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [PageController::class, 'home']);
+Route::get('/', [PageController::class, 'home'])->name('home');
+Route::get('/berita', [PageController::class, 'allNews'])->name('news.index');
+Route::get('/berita/{slug}', [PageController::class, 'newsShow'])->name('news.show');
 Route::get('/pelayanan', [PageController::class, 'pelayanan'])->name('pelayanan');
+Route::get('/pelayanan/unit/{deptId}/employees', [PageController::class, 'unitEmployees'])->name('pelayanan.unit.employees');
+Route::get('/pelayanan/janji-temu/{deptId}', [PageController::class, 'janjiTemu'])->name('pelayanan.janji-temu')->whereNumber('deptId');
+Route::post('/pelayanan/janji-temu/{deptId}', [PageController::class, 'submitJanjiTemu'])->name('pelayanan.janji-temu.submit')->whereNumber('deptId');
+Route::get('/whistleblowing', [PageController::class, 'whistleblowing'])->name('whistleblowing');
+Route::post('/whistleblowing', [PageController::class, 'submitWhistleblowing'])->name('whistleblowing.submit');
 Route::middleware('auth')->group(function () {
-    Route::get('/pelayanan/ajukan/{serviceId}', [PageController::class, 'requestService'])->name('pelayanan.request');
-    Route::post('/pelayanan/ajukan/{serviceId}', [PageController::class, 'submitServiceRequest'])->name('pelayanan.request.submit');
+    Route::get('/pelayanan/ajukan/{serviceId}', [PageController::class, 'requestService'])->whereNumber('serviceId')->name('pelayanan.request');
+    Route::post('/pelayanan/ajukan/{serviceId}', [PageController::class, 'submitServiceRequest'])->whereNumber('serviceId')->name('pelayanan.request.submit');
     Route::get('/pengajuan-saya', [PageController::class, 'myRequests'])->name('pengajuan-saya');
     Route::get('/pengajuan-saya/{requestId}/edit', [PageController::class, 'editRequest'])->name('pengajuan-saya.edit');
     Route::get('/pengajuan-saya/{requestId}/file/{syaratId}/preview', [PageController::class, 'previewRequestFile'])->name('pengajuan-saya.preview-file');
@@ -21,11 +28,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/laporan-kinerja/humas/{id}', [PageController::class, 'destroyHumas'])->name('laporan-humas.destroy');
     Route::post('/laporan-kinerja/harian', [PageController::class, 'storeLaporanKinerja'])->name('laporan-kinerja.store');
     Route::get('/laporan-kinerja/rekap', [PageController::class, 'rekapLaporanKinerja'])->name('laporan-kinerja.rekap');
-<<<<<<< HEAD
-    Route::post('/laporan-kinerja/rekap/supervisor', [PageController::class, 'submitSupervisor'])->name('laporan-kinerja.rekap.supervisor');
-=======
+Route::post('/laporan-kinerja/rekap/supervisor', [PageController::class, 'submitSupervisor'])->name('laporan-kinerja.rekap.supervisor');
     Route::get('/laporan-kinerja/bulanan/{reportId}/pdf', [PageController::class, 'downloadLaporanKinerjaPdf'])->whereNumber('reportId')->name('laporan-kinerja.pdf');
->>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
     Route::put('/laporan-kinerja/day', [PageController::class, 'updateLaporanKinerjaByDate'])->name('laporan-kinerja.update-day');
     Route::delete('/laporan-kinerja/day', [PageController::class, 'deleteLaporanKinerjaByDate'])->name('laporan-kinerja.delete-day');
     Route::put('/laporan-kinerja/{activityId}', [PageController::class, 'updateLaporanKinerja'])->whereNumber('activityId')->name('laporan-kinerja.update');

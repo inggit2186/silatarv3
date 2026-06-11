@@ -271,13 +271,13 @@ document.addEventListener('alpine:init', () => {
         placeholder: config.placeholder || 'Pilih tanggal',
         todayLabel: config.todayLabel || 'Hari ini',
         clearLabel: config.clearLabel || 'Hapus',
-        locale: config.locale || 'en-US',
+        locale: config.locale || 'id-ID',
         months: Array.isArray(config.months) && config.months.length
             ? config.months
-            : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+            : ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
         weekdays: Array.isArray(config.weekdays) && config.weekdays.length
             ? config.weekdays
-            : ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
+            : ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'],
         min: config.min || '',
         max: config.max || '',
         monthCursor: null,
@@ -341,7 +341,7 @@ document.addEventListener('alpine:init', () => {
 
             return new Intl.DateTimeFormat(this.locale, {
                 day: 'numeric',
-                month: 'short',
+                month: 'long',
                 year: 'numeric',
             }).format(this.parseValue(value));
         },
@@ -461,6 +461,226 @@ document.addEventListener('alpine:init', () => {
         },
         displayText() {
             return this.value ? this.formatDisplay(this.value) : this.placeholder;
+        },
+    }));
+
+    // DateTime Picker - Combined Date & Time Selection
+    Alpine.data('silatarDateTimePicker', (config = {}) => ({
+        open: false,
+        dateValue: config.dateValue || '',
+        timeValue: config.timeValue || '',
+        placeholder: config.placeholder || 'Pilih tanggal & waktu',
+        todayLabel: config.todayLabel || 'Hari ini',
+        clearLabel: config.clearLabel || 'Hapus',
+        locale: config.locale || 'id-ID',
+        months: Array.isArray(config.months) && config.months.length
+            ? config.months
+            : ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+        weekdays: Array.isArray(config.weekdays) && config.weekdays.length
+            ? config.weekdays
+            : ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'],
+        timeOptions: Array.isArray(config.timeOptions) && config.timeOptions.length
+            ? config.timeOptions
+            : ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00'],
+        min: config.min || '',
+        max: config.max || '',
+        monthCursor: null,
+        popoverStyle: '',
+        activeTab: 'date', // 'date' or 'time'
+        isDateTimePicker: true,
+        monthNames() {
+            return Array.isArray(this.months) ? this.months : [];
+        },
+        yearInputValue() {
+            return this.monthCursor?.getFullYear?.() || new Date().getFullYear();
+        },
+        updatePlacement() {
+            const trigger = this.$refs.trigger;
+
+            if (!(trigger instanceof HTMLElement)) {
+                return;
+            }
+
+            const rect = trigger.getBoundingClientRect();
+            const width = 320;
+            const height = 420;
+            const margin = 12;
+            const left = Math.min(
+                Math.max(rect.left, margin),
+                Math.max(margin, window.innerWidth - width - margin)
+            );
+            const shouldOpenAbove = window.innerHeight - rect.bottom < height + margin;
+            const top = shouldOpenAbove
+                ? Math.max(margin, rect.top - height - margin)
+                : Math.min(window.innerHeight - height - margin, rect.bottom + margin);
+
+            this.popoverStyle = `position:fixed;left:${Math.round(left)}px;top:${Math.round(top)}px;width:${width}px;z-index:110;`;
+        },
+        init() {
+            this.monthCursor = this.dateValue ? this.parseValue(this.dateValue) : new Date();
+            this.monthCursor = new Date(this.monthCursor.getFullYear(), this.monthCursor.getMonth(), 1);
+        },
+        parseValue(value) {
+            const [year, month, day] = String(value).split('-').map((part) => parseInt(part, 10));
+
+            if (!year || !month || !day) {
+                return new Date();
+            }
+
+            return new Date(year, month - 1, day, 12, 0, 0, 0);
+        },
+        pad(number) {
+            return String(number).padStart(2, '0');
+        },
+        formatDateValue(date) {
+            return [
+                date.getFullYear(),
+                this.pad(date.getMonth() + 1),
+                this.pad(date.getDate()),
+            ].join('-');
+        },
+        formatDisplay() {
+            if (!this.dateValue) {
+                return this.placeholder;
+            }
+
+            const parts = [];
+            if (this.dateValue) {
+                parts.push(this.formatDateDisplay(this.dateValue));
+            }
+            if (this.timeValue) {
+                parts.push(this.timeValue + ' WIB');
+            }
+            return parts.join(' • ');
+        },
+        formatDateDisplay(value) {
+            if (!value) return '';
+            return new Intl.DateTimeFormat(this.locale, {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+            }).format(this.parseValue(value));
+        },
+        get monthLabel() {
+            return new Intl.DateTimeFormat(this.locale, {
+                month: 'long',
+                year: 'numeric',
+            }).format(this.monthCursor);
+        },
+        get currentMonthIndex() {
+            return this.monthCursor.getMonth();
+        },
+        setMonth(index) {
+            this.monthCursor = new Date(this.monthCursor.getFullYear(), index, 1);
+            this.updatePlacement();
+        },
+        setYear(year) {
+            const parsedYear = Number.parseInt(year, 10);
+            if (Number.isNaN(parsedYear)) {
+                return;
+            }
+            this.monthCursor = new Date(parsedYear, this.monthCursor.getMonth(), 1);
+            this.updatePlacement();
+        },
+        get days() {
+            const year = this.monthCursor.getFullYear();
+            const month = this.monthCursor.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const offset = (firstDay.getDay() + 6) % 7;
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            const cells = [];
+
+            for (let index = 0; index < offset; index += 1) {
+                cells.push({ blank: true, key: `blank-${index}` });
+            }
+
+            for (let day = 1; day <= totalDays; day += 1) {
+                cells.push({
+                    blank: false,
+                    key: `${year}-${this.pad(month + 1)}-${this.pad(day)}`,
+                    date: new Date(year, month, day, 12, 0, 0, 0),
+                });
+            }
+
+            return cells;
+        },
+        inRange(date) {
+            const value = this.formatDateValue(date);
+            if (this.min && value < this.min) {
+                return false;
+            }
+            if (this.max && value > this.max) {
+                return false;
+            }
+            return true;
+        },
+        isSelected(date) {
+            return this.dateValue === this.formatDateValue(date);
+        },
+        isToday(date) {
+            const today = new Date();
+            return date.getFullYear() === today.getFullYear()
+                && date.getMonth() === today.getMonth()
+                && date.getDate() === today.getDate();
+        },
+        openPicker() {
+            this.open = true;
+            this.activeTab = 'date';
+            this.$nextTick(() => {
+                this.updatePlacement();
+            });
+        },
+        closePicker() {
+            this.open = false;
+            this.popoverStyle = '';
+        },
+        togglePicker() {
+            this.open = !this.open;
+            if (this.open) {
+                this.activeTab = 'date';
+                this.$nextTick(() => {
+                    this.updatePlacement();
+                });
+            } else {
+                this.popoverStyle = '';
+            }
+        },
+        prevMonth() {
+            this.monthCursor = new Date(this.monthCursor.getFullYear(), this.monthCursor.getMonth() - 1, 1);
+        },
+        nextMonth() {
+            this.monthCursor = new Date(this.monthCursor.getFullYear(), this.monthCursor.getMonth() + 1, 1);
+        },
+        selectDay(date) {
+            if (!this.inRange(date)) {
+                return;
+            }
+            this.dateValue = this.formatDateValue(date);
+            this.monthCursor = new Date(date.getFullYear(), date.getMonth(), 1);
+            // Auto switch to time tab after selecting date
+            this.activeTab = 'time';
+        },
+        selectTime(time) {
+            this.timeValue = time;
+            this.open = false;
+        },
+        clearValue() {
+            this.dateValue = '';
+            this.timeValue = '';
+            this.open = false;
+        },
+        setToday() {
+            const today = new Date();
+            this.monthCursor = new Date(today.getFullYear(), today.getMonth(), 1);
+            this.dateValue = this.formatDateValue(today);
+            this.timeValue = '';
+            this.activeTab = 'time';
+        },
+        displayText() {
+            return this.formatDisplay();
+        },
+        get hasValue() {
+            return !!(this.dateValue && this.timeValue);
         },
     }));
 
@@ -639,13 +859,6 @@ document.addEventListener('alpine:init', () => {
     }));
 
     Alpine.data('silatarYearpicker', (config = {}) => ({
-<<<<<<< HEAD
-        name: config.name || '',
-        value: config.value || '',
-        placeholder: config.placeholder || 'Pilih tahun',
-        submitForm() {
-            const form = this.$el.closest('form');
-=======
         open: false,
         name: config.name || '',
         value: config.value || '',
@@ -767,7 +980,6 @@ document.addEventListener('alpine:init', () => {
         },
         submitForm() {
             const form = this.$refs.trigger?.closest?.('form') || this.$el.closest('form');
->>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
 
             if (form instanceof HTMLFormElement) {
                 if (String(form.method || '').toLowerCase() === 'get') {
@@ -793,12 +1005,9 @@ document.addEventListener('alpine:init', () => {
                 }, 0);
             }
         },
-<<<<<<< HEAD
-=======
         displayText() {
             return this.value ? this.formatDisplay(this.value) : this.placeholder;
         },
->>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
     }));
 
     Alpine.data('requestForm', (requiredIds = []) => ({

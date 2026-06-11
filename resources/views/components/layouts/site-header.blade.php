@@ -7,12 +7,10 @@
             <div class="flex items-center justify-between gap-6">
                 {{-- Logo --}}
                 <a href="{{ url('/') }}" class="flex items-center gap-3 shrink-0 group">
-                    <div class="relative flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-500/40 bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 shadow-[0_0_15px_rgba(0,212,255,0.3)]">
-                        <span class="font-mono text-sm font-bold uppercase tracking-wider text-cyan-400">KT</span>
-                    </div>
+                    <img src="{{ asset('favicon.webp') }}" alt="SILATAR Logo" class="h-11 w-11 rounded-xl object-cover shadow-[0_0_15px_rgba(0,212,255,0.3)]">
                     <div class="hidden sm:block">
-                        <p class="font-mono text-sm font-bold uppercase tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300">SILATAR</p>
-                        <p class="font-mono text-[9px] uppercase tracking-widest text-slate-500">Kankemenag Tanah Datar</p>
+                        <p class="text-sm font-bold uppercase tracking-wider text-cyan-400">SILATAR</p>
+                        <p class="text-[9px] uppercase tracking-widest text-slate-500">Kankemenag Tanah Datar</p>
                     </div>
                 </a>
 

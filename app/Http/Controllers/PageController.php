@@ -15,7 +15,113 @@ class PageController extends Controller
 {
     public function home()
     {
-        return view('welcome');
+        // Fetch slideshow news (is_slideshow = 1)
+        $slideshowNews = DB::table('news')
+            ->where('status', 'published')
+            ->where('is_slideshow', 1)
+            ->orderByDesc('publish_date')
+            ->limit(5)
+            ->get();
+
+        // Fetch featured news (is_featured = 1)
+        $featuredNews = DB::table('news')
+            ->where('status', 'published')
+            ->where('is_featured', 1)
+            ->orderByDesc('publish_date')
+            ->limit(4)
+            ->get();
+
+        // Fetch latest news - all published news from current year
+        $currentYear = Carbon::now()->year;
+        $latestNews = DB::table('news')
+            ->where('status', 'published')
+            ->whereYear('publish_date', $currentYear)
+            ->orderByDesc('publish_date')
+            ->get();
+
+        // If not enough slideshow/featured, fill with latest published news
+        if ($slideshowNews->count() < 4) {
+            $excludeIds = $slideshowNews->pluck('id')->toArray();
+            $additionalSlides = DB::table('news')
+                ->where('status', 'published')
+                ->whereNotIn('id', $excludeIds)
+                ->orderByDesc('publish_date')
+                ->limit(4 - $slideshowNews->count())
+                ->get();
+            $slideshowNews = $slideshowNews->merge($additionalSlides);
+        }
+
+        if ($featuredNews->count() < 4) {
+            $excludeIds = $slideshowNews->pluck('id')->merge($featuredNews->pluck('id'))->toArray();
+            $additionalFeatured = DB::table('news')
+                ->where('status', 'published')
+                ->whereNotIn('id', $excludeIds)
+                ->orderByDesc('publish_date')
+                ->limit(4 - $featuredNews->count())
+                ->get();
+            $featuredNews = $featuredNews->merge($additionalFeatured);
+        }
+
+        return view('welcome', [
+            'slideshowNews' => $slideshowNews,
+            'featuredNews' => $featuredNews,
+            'latestNews' => $latestNews,
+        ]);
+    }
+
+    public function allNews(Request $request)
+    {
+        $query = DB::table('news')
+            ->where('status', 'published')
+            ->orderByDesc('publish_date');
+
+        // Filter by category if provided
+        if ($request->has('category') && $request->category) {
+            $query->where('category', $request->category);
+        }
+
+        $allNews = $query->paginate(12);
+
+        // Get unique categories for filter
+        $categories = DB::table('news')
+            ->where('status', 'published')
+            ->select('category')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
+
+        return view('news.index', [
+            'news' => $allNews,
+            'categories' => $categories,
+            'selectedCategory' => $request->category,
+        ]);
+    }
+
+    public function newsShow($slug)
+    {
+        // Try to find by slug first, then by id
+        $news = DB::table('news')
+            ->where('slug', $slug)
+            ->orWhere('id', $slug)
+            ->first();
+
+        if (!$news || $news->status !== 'published') {
+            abort(404);
+        }
+
+        // Get related news (same category, excluding current)
+        $relatedNews = DB::table('news')
+            ->where('status', 'published')
+            ->where('category', $news->category)
+            ->where('id', '!=', $news->id)
+            ->orderByDesc('publish_date')
+            ->limit(3)
+            ->get();
+
+        return view('news.show', [
+            'news' => $news,
+            'relatedNews' => $relatedNews,
+        ]);
     }
 
     public function pelayanan()
@@ -30,10 +136,236 @@ class PageController extends Controller
         ]);
     }
 
-    public function requestService(int $serviceId)
+    public function janjiTemu(int $deptId, Request $request)
+    {
+        $dept = DB::table('ktd_department')->where('id', $deptId)->first();
+        abort_unless($dept, 404);
+
+        $user = auth()->user();
+        $employeeId = $request->query('employee_id');
+        $isDirect = $request->query('direct') == '1';
+
+        $targetData = null;
+
+        if ($employeeId) {
+            $employee = DB::table('users')->where('id', $employeeId)->first();
+            if ($employee) {
+                $targetData = [
+                    'type' => 'employee',
+                    'employee_id' => $employee->id,
+                    'employee_name' => $employee->name,
+                    'employee_role' => $this->personLabel($employee),
+                    'employee_nip' => $employee->nomor_induk,
+                    'employee_photo' => $this->personPhotoUrl($employee),
+                ];
+            }
+        } elseif ($isDirect) {
+            $targetData = [
+                'type' => 'direct',
+                'employee_id' => null,
+                'employee_name' => 'Langsung ke Seksi',
+                'employee_role' => 'Tanpa Pegawai Tertentu',
+                'employee_nip' => null,
+                'employee_photo' => asset('assets/img/ikon/505.png'),
+            ];
+        }
+
+        return view('janji-temu', [
+            'deptId' => $deptId,
+            'deptName' => $dept->nama,
+            'targetData' => $targetData,
+            'requester' => [
+                'name' => $user?->name,
+                'identity' => $user?->nomor_induk ?? '',
+            ],
+        ]);
+    }
+
+    public function submitJanjiTemu(int $deptId, Request $request)
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $validator = Validator::make($request->all(), [
+            'tanggal' => ['required'],
+            'jam' => ['required'],
+            'keterangan' => ['required', 'max:1000'],
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $data = $validator->validated();
+        $waktu = $data['tanggal'] . ' ' . $data['jam'] . ':00';
+
+        $userNip = $user->nomor_induk ?? null;
+        $userName = $user->name ?? '-';
+        $userSatker = $user->satker ?? null;
+        $tipe = $request->input('tipe', 'asn');
+        $tujuan = $data['keterangan'];
+
+        if($tipe === 'direct') {
+            $tipex = 'satker';
+        }else{
+            $tipex = 'asn';
+        }
+
+        $insertData = [
+            'nomor_induk' => $userNip,
+            'kategori' => $user->role ?? 'public',
+            'tipe' => $tipex,
+            'nama' => $userName,
+            'waktu' => $waktu,
+            'nip_tujuan' => $request->input('nip_tujuan'),
+            'tujuan' => $tujuan,
+            'asal' => $userSatker,
+            'status' => 'APPOINTMENT',
+            'onStaff' => 999,
+            'komen' => null,
+            'ttd' => 'NONE',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        DB::table('ktd_bukutamu')->insert($insertData);
+
+        return redirect()->route('pelayanan')->with('success', 'Janji temu berhasil diajukan.');
+    }
+
+    public function whistleblowing()
+    {
+        $user = auth()->user();
+        return view('whistleblowing', [
+            'user' => $user,
+        ]);
+    }
+
+    public function submitWhistleblowing(Request $request)
+    {
+        $user = auth()->user();
+
+        $validator = Validator::make($request->all(), [
+            'judul' => ['required', 'max:244'],
+            'keterangan' => ['required', 'max:5000'],
+            'email' => ['required', 'email', 'max:255'],
+            'telp' => ['nullable', 'max:255'],
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $data = $validator->validated();
+
+        // Generate kode
+        $kode = 'PENGADUAN' . date('Ymd') . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
+
+        $insertData = [
+            'kode' => $kode,
+            'jenis' => 'PENGADUAN',
+            'user_nip' => $user->nomor_induk ?? 0,
+            'nama' => $user->name ?? '-',
+            'email' => $data['email'],
+            'telp' => $data['telp'] ?? null,
+            'judul' => $data['judul'],
+            'keterangan' => $data['keterangan'],
+            'filename' => null,
+            'status' => 'PENDING',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        DB::table('ktd_pengaduan')->insert($insertData);
+
+        return redirect()->route('pelayanan')->with('success', 'Pengaduan berhasil diajukan. Kami akan segera memproses laporan Anda.');
+    }
+
+    public function unitEmployees(int $deptId)
+    {
+        $departmentRow = DB::table('ktd_department')->where('id', $deptId)->first();
+
+        // Get leaders (kepala/kasi)
+        $head = $this->departmentHead($deptId, $departmentRow->kategori ?? 'kantor', $departmentRow->nama ?? '');
+        $pltHead = $head ? null : $this->departmentPltHead($deptId);
+        $leader = $head ?? $pltHead;
+        $leaderLabel = $head ? $this->personLabel($head) : ($pltHead ? 'PLT Kepala' : 'Kepala');
+        $isPlt = ! $head && $pltHead;
+
+        $leaders = [];
+        if ($leader) {
+            $leaders[] = [
+                'id' => $leader->id,
+                'name' => $leader->name,
+                'role_label' => $leaderLabel,
+                'is_plt' => $isPlt,
+                'nomor_induk' => $leader->nomor_induk ?? '-',
+                'avatar_text' => $this->personInitials($leader->name),
+                'photo_path' => $this->personPhotoUrl($leader),
+            ];
+        }
+
+        // Get regular employees (excluding leaders)
+        $excludeIds = array_filter([$head?->id, $pltHead?->id]);
+        $employees = DB::table('users')
+            ->where('dept_id', $deptId)
+            ->whereNotIn('role', ['other', 'pensiun', 'pindah'])
+            ->when($excludeIds, fn ($q) => $q->whereNotIn('id', $excludeIds))
+            ->orderByRaw("FIELD(kat_jabatan, 'kaur', 'kasubag', 'pelaksana', 'staf', 'honorer', 'guru')")
+            ->orderBy('name', 'asc')
+            ->get()
+            ->map(function ($item) {
+                $isKaur = strtolower($item->kat_jabatan ?? '') === 'kaur';
+                return [
+                    'id' => $item->id,
+                    'name' => $item->name,
+                    'role_label' => $this->personLabel($item),
+                    'nomor_induk' => $item->nomor_induk ?? '-',
+                    'avatar_text' => $this->personInitials($item->name),
+                    'photo_path' => $this->personPhotoUrl($item),
+                    'is_kaur' => $isKaur,
+                ];
+            })
+            ->values()
+            ->all();
+
+        return response()->json([
+            'leaders' => $leaders,
+            'employees' => $employees,
+            'dept_id' => $deptId,
+        ]);
+    }
+
+    public function requestService(int $serviceId, Request $request = null)
     {
         $service = $this->serviceDetail($serviceId);
         $requester = auth()->user();
+
+        $appointmentData = null;
+        $req = $request ?? request();
+        $employeeId = $req->query('employee_id');
+        $isDirect = $req->query('direct') === 'true';
+
+        if ($employeeId) {
+            $employee = DB::table('users')->where('id', $employeeId)->first();
+            if ($employee) {
+                $appointmentData = [
+                    'type' => 'employee',
+                    'employee_id' => $employee->id,
+                    'employee_name' => $employee->name,
+                    'employee_role' => $this->personLabel($employee),
+                    'employee_photo' => $this->personPhotoUrl($employee),
+                ];
+            }
+        } elseif ($isDirect) {
+            $appointmentData = [
+                'type' => 'direct',
+                'employee_id' => null,
+                'employee_name' => 'Langsung ke Seksi',
+                'employee_role' => 'Tanpa Pegawai Tertentu',
+                'employee_photo' => asset('assets/img/ikon/505.png'),
+            ];
+        }
 
         return view('service-request', array_merge($this->requestFormViewData($service, $requester), [
             'service' => $service,
@@ -41,6 +373,7 @@ class PageController extends Controller
                 'name' => $requester?->name,
                 'identity' => $requester?->nomor_induk ?? '',
             ],
+            'appointmentData' => $appointmentData,
         ]));
     }
 
@@ -541,15 +874,15 @@ class PageController extends Controller
             }
         }
 
+        // Alias for view compatibility
+        $humasReports = $humasData;
+
         return view('laporan-kinerja', [
             'activeTab' => $activeTab,
             'selectedMonth' => $selectedMonth,
             'selectedMonthLabel' => $this->indonesianMonthLabel($selectedMonthStart),
             'selectedYear' => $selectedYear,
-<<<<<<< HEAD
-=======
             'selectedYearLabel' => $selectedYear,
->>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
             'search' => $search,
             'printMode' => $printMode,
             'editingGroup' => $editingGroup,
@@ -558,11 +891,9 @@ class PageController extends Controller
             'dailySummary' => $dailySummary,
             'activityUnits' => $activityUnits,
             'monthlyRecaps' => $monthlyRecaps,
-<<<<<<< HEAD
             'bulananReports' => $bulananReports,
             'humasData' => $humasData,
             'humasYear' => $humasYearFilter,
-=======
             'monthlySummary' => [
                 'months' => $monthlyRecaps->count(),
                 'days' => $monthlyRecaps->sum('days'),
@@ -571,7 +902,6 @@ class PageController extends Controller
                 'latest_update' => optional($monthlyRecaps->sortByDesc('latest_update')->first())->latest_update,
             ],
             'humasReports' => $humasReports,
->>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
         ]);
     }
 
@@ -952,11 +1282,11 @@ class PageController extends Controller
             'dailyGroups' => $dailyGroups,
             'headerImage' => $this->assetToDataUri(public_path('assets/img/template/header.png')),
             'generatedAt' => now()->translatedFormat('d F Y H:i'),
-<<<<<<< HEAD
             'signatureName' => $signatureName,
             'signatureNip' => $signatureNip,
             'signatureImage' => null,
             'signatureLabel' => $isPlh ? 'Mengetahui<br>PLT Kepala,' : 'Mengetahui<br>Kepala,',
+            'watermarkText' => 'Kankemenag Kab.Tanah Datar',
         ];
 
         $pdf = Pdf::loadView('pdf.laporan-kinerja-harian', $pdfData)
@@ -1020,7 +1350,6 @@ class PageController extends Controller
 
         $data = $validator->validated();
 
-        // Validasi dept_id adalah 998 atau 999
         $specialDeptIds = [998, 999];
         if (! in_array((int) $data['dept_id'], $specialDeptIds)) {
             abort(403, 'Departemen tidak valid untuk input atasan.');
@@ -1082,7 +1411,6 @@ class PageController extends Controller
             ->values()
             ->all();
 
-        // Cek PLT/PJH di tabel plt_plh
         $pltPlh = DB::table('plt_plh')
             ->where('dept_id_plh', $user->dept_id)
             ->first();
@@ -1092,7 +1420,6 @@ class PageController extends Controller
         $signatureNip = 'NIP. ' . $data['supervisor_nip'];
 
         if ($pltPlh) {
-            // PLT exist - gunakan user PLT (override input manual)
             $pltUser = DB::table('users')->where('id', $pltPlh->user_id)->first();
             if ($pltUser) {
                 $isPlh = true;
@@ -1114,9 +1441,7 @@ class PageController extends Controller
             'signatureNip' => $signatureNip,
             'signatureImage' => null,
             'signatureLabel' => $isPlh ? 'Mengetahui<br>PLT Kepala,' : 'Mengetahui<br>Kepala,',
-=======
             'watermarkText' => 'Kankemenag Kab.Tanah Datar',
->>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
         ];
 
         $pdf = Pdf::loadView('pdf.laporan-kinerja-harian', $pdfData)
@@ -2224,6 +2549,19 @@ class PageController extends Controller
         $leader = $head ?? $pltHead;
         $leaderLabel = $this->departmentHeadLabel($departmentRow->kategori, $departmentRow->nama, (bool) $pltHead);
 
+        $peoplePaginator = $this->departmentPeople($departmentRow->id, $leader?->id);
+        $peopleData = $peoplePaginator->items();
+        $kaurs = [];
+        $others = [];
+
+        foreach ($peopleData as $person) {
+            if ($person['is_kaur'] ?? false) {
+                $kaurs[] = $person;
+            } else {
+                $others[] = $person;
+            }
+        }
+
         return view('unit-kerja-detail', [
             'department' => [
                 'id' => $departmentRow->id,
@@ -2235,7 +2573,8 @@ class PageController extends Controller
             ],
             'leader' => $leader ? $this->personCard($leader, $leaderLabel, true) : null,
             'leaderLabel' => $leaderLabel,
-            'people' => $this->departmentPeople($departmentRow->id, $leader?->id),
+            'kaurs' => $kaurs,
+            'people' => $peoplePaginator,
         ]);
     }
 
@@ -2260,9 +2599,17 @@ class PageController extends Controller
             ->map(function ($item) use ($kategori) {
                 $head = $this->departmentHead($item->id, $kategori, $item->nama);
                 $pltHead = $head ? null : $this->departmentPltHead($item->id);
+                $activeHead = $head ?? $pltHead;
+
                 $employeeCount = DB::table('users')
                     ->where('dept_id', $item->id)
                     ->count();
+
+                // Build head photo path
+                $headPhotoPath = null;
+                if ($activeHead && ! empty($activeHead->pp) && ! empty($activeHead->nomor_induk)) {
+                    $headPhotoPath = asset("assets/img/users/{$activeHead->nomor_induk}/{$activeHead->pp}");
+                }
 
                 return [
                     'id' => $item->id,
@@ -2273,7 +2620,9 @@ class PageController extends Controller
                     'extra_label' => 'Pegawai',
                     'extra_value' => $employeeCount,
                     'head_label' => $this->departmentHeadLabel($kategori, $item->nama, (bool) $pltHead),
-                    'head_value' => $head?->name ?? $pltHead?->name,
+                    'head_value' => $activeHead?->name,
+                    'head_photo' => $headPhotoPath,
+                    'head_initials' => $activeHead ? Str::upper(Str::substr($activeHead->name, 0, 2)) : Str::upper(Str::substr($item->nama, 0, 2)),
                     'cover' => Str::upper(Str::substr($item->nama, 0, 2)),
                     'cover_path' => asset("assets/img/seksi/{$item->id}.jpg"),
                     'href' => route('unit-kerja.detail', $item->id),
@@ -2295,7 +2644,7 @@ class PageController extends Controller
             [
                 'key' => 'janji-temu',
                 'title' => 'Janji Temu',
-                'description' => 'Atur appointment agar layanan bisa diproses lebih terjadwal.',
+                'description' => 'Atur appointment dengan pegawai/unit kerja.',
                 'tag' => 'Layanan umum',
                 'cover_path' => asset('assets/img/ikon/508.png'),
             ],
@@ -2649,8 +2998,15 @@ class PageController extends Controller
         };
     }
 
-    private function serviceIconPath(int $seed): string
+    private function serviceIconPath(int $serviceId): string
     {
+        // First check if specific icon exists for this service
+        $specificIconPath = public_path("assets/img/ikon/{$serviceId}.png");
+        if (file_exists($specificIconPath)) {
+            return asset("assets/img/ikon/{$serviceId}.png");
+        }
+
+        // Fallback to random icon
         $icons = [
             'humas.png',
             'presensi.png',
@@ -2660,9 +3016,13 @@ class PageController extends Controller
             'tukin.png',
             'uangmakan.png',
             'logohalal.png',
+            '777.png',
+            '508.png',
+            '888.png',
+            '507.png',
         ];
 
-        $icon = $icons[$seed % count($icons)] ?? 'FileUploaded.png';
+        $icon = $icons[$serviceId % count($icons)] ?? 'FileUploaded.png';
 
         return asset("assets/img/ikon/{$icon}");
     }
@@ -2705,9 +3065,16 @@ class PageController extends Controller
         $paginator->setCollection($paginator->getCollection()->map(function ($item) use ($kategori) {
                 $head = $this->departmentHead($item->id, $kategori, $item->nama);
                 $pltHead = $head ? null : $this->departmentPltHead($item->id);
+                $activeHead = $head ?? $pltHead;
                 $employeeCount = DB::table('users')
                     ->where('dept_id', $item->id)
                     ->count();
+
+                // Build head photo path
+                $headPhotoPath = null;
+                if ($activeHead && ! empty($activeHead->pp) && ! empty($activeHead->nomor_induk)) {
+                    $headPhotoPath = asset("assets/img/users/{$activeHead->nomor_induk}/{$activeHead->pp}");
+                }
 
                 return [
                     'id' => $item->id,
@@ -2718,7 +3085,9 @@ class PageController extends Controller
                     'extra_label' => 'Pegawai',
                     'extra_value' => $employeeCount,
                     'head_label' => $this->departmentHeadLabel($kategori, $item->nama, (bool) $pltHead),
-                    'head_value' => $head?->name ?? $pltHead?->name,
+                    'head_value' => $activeHead?->name,
+                    'head_photo' => $headPhotoPath,
+                    'head_initials' => $activeHead ? Str::upper(Str::substr($activeHead->name, 0, 2)) : Str::upper(Str::substr($item->nama, 0, 2)),
                     'cover' => Str::upper(Str::substr($item->nama, 0, 2)),
                     'cover_path' => asset("assets/img/seksi/{$item->id}.jpg"),
                     'href' => route('unit-kerja.detail', $item->id),
@@ -2750,20 +3119,30 @@ class PageController extends Controller
         $paginator->appends(['tab' => $deptId === 999 ? 'swasta-lainnya' : 'pemerintah-daerah']);
 
         $paginator->setCollection($paginator->getCollection()->map(function ($item) use ($deptId) {
-                return [
-                    'id' => $item->id,
-                    'title' => $item->name,
-                    'subtitle' => 'PP',
-                    'meta_label' => 'Nomor Induk',
-                    'meta_value' => $item->nomor_induk,
-                    'extra_label' => 'Satker',
-                    'extra_value' => $item->satker ?: '-',
-                    'cover' => 'PP',
-                    'cover_path' => asset("assets/img/seksi/{$item->id}.jpg"),
-                    'dept_id' => $deptId,
-                    'type' => 'user',
-                ];
-            }));
+            // Build user photo path
+            $userPhotoPath = null;
+            if (! empty($item->pp) && ! empty($item->nomor_induk)) {
+                $userPhotoPath = asset("assets/img/users/{$item->nomor_induk}/{$item->pp}");
+            }
+
+            return [
+                'id' => $item->id,
+                'title' => $item->name,
+                'subtitle' => 'PP',
+                'meta_label' => 'Nomor Induk',
+                'meta_value' => $item->nomor_induk,
+                'extra_label' => 'Satker',
+                'extra_value' => $item->satker ?: '-',
+                'head_label' => 'Pegawai',
+                'head_value' => $item->name,
+                'head_photo' => $userPhotoPath,
+                'head_initials' => Str::upper(Str::substr($item->name, 0, 2)),
+                'cover' => 'PP',
+                'cover_path' => $userPhotoPath,
+                'dept_id' => $deptId,
+                'type' => 'user',
+            ];
+        }));
 
         return $paginator;
     }
@@ -2773,6 +3152,7 @@ class PageController extends Controller
         $pageName = 'page_people_' . $deptId;
         $query = DB::table('users')
             ->where('dept_id', $deptId)
+            ->whereNotIn('role', ['other', 'pensiun', 'pindah'])
             ->when($excludeUserId, fn ($builder) => $builder->where('id', '!=', $excludeUserId))
             ->orderBy('id');
 
@@ -2780,7 +3160,8 @@ class PageController extends Controller
         $paginator->withPath(route('unit-kerja.detail', $deptId));
 
         $paginator->setCollection($paginator->getCollection()->map(function ($item) use ($deptId) {
-            return $this->personCard($item, $this->personLabel($item), false);
+            $isKaur = strtolower($item->kat_jabatan ?? '') === 'kaur';
+            return $this->personCard($item, $this->personLabel($item), false, $isKaur);
         }));
 
         return $paginator;
@@ -2857,7 +3238,7 @@ class PageController extends Controller
             ->first();
     }
 
-    private function personCard(object $item, string $roleLabel, bool $featured = false): array
+    private function personCard(object $item, string $roleLabel, bool $featured = false, bool $isKaur = false): array
     {
         return [
             'id' => $item->id,
@@ -2868,11 +3249,16 @@ class PageController extends Controller
             'avatar_text' => $this->personInitials($item->name),
             'photo_path' => $this->personPhotoUrl($item),
             'featured' => $featured,
+            'is_kaur' => $isKaur,
         ];
     }
 
     private function personLabel(object $item): string
     {
+        if (! empty($item->pekerjaan)) {
+            return Str::headline($item->pekerjaan);
+        }
+
         if (! empty($item->kat_jabatan)) {
             return Str::headline($item->kat_jabatan);
         }

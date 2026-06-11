@@ -3,18 +3,12 @@
         $activeTab = $activeTab ?? 'harian';
         $selectedMonth = $selectedMonth ?? now()->format('Y-m');
         $selectedMonthLabel = $selectedMonthLabel ?? now()->format('m/Y');
-<<<<<<< HEAD
         $selectedYear = $selectedYear ?? date('Y');
-        $search = $search ?? '';
-        $dailySummary = $dailySummary ?? ['entries' => 0, 'days' => 0, 'volume' => 0, 'latest_update' => null];
-        $bulananReports = $bulananReports ?? collect([]);
-=======
-        $selectedYear = $selectedYear ?? now()->format('Y');
         $selectedYearLabel = $selectedYearLabel ?? $selectedYear;
         $search = $search ?? '';
         $dailySummary = $dailySummary ?? ['entries' => 0, 'days' => 0, 'volume' => 0, 'latest_update' => null];
+        $bulananReports = $bulananReports ?? collect([]);
         $monthlySummary = $monthlySummary ?? ['months' => 0, 'days' => 0, 'entries' => 0, 'volume' => 0, 'latest_update' => null];
->>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
         $printMode = $printMode ?? false;
         $activityUnits = isset($activityUnits) ? collect($activityUnits)->filter()->values()->all() : ['Kegiatan', 'Dokumen', 'Jam'];
         $defaultActivityDate = \Illuminate\Support\Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth()->format('Y-m-d');
@@ -181,19 +175,14 @@
                     <input type="hidden" name="tab" value="{{ $activeTab }}">
                     <input type="hidden" name="search" value="{{ $search }}">
                     <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-<<<<<<< HEAD
-                        @if($activeTab === 'bulanan')
-                            {{-- Year picker for bulanan tab - use component directly --}}
-=======
                         @if ($activeTab === 'bulanan')
->>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
+                            {{-- Year picker for bulanan tab - use component directly --}}
                             <x-ui.yearpicker
                                 name="year"
                                 :value="$selectedYear"
                                 placeholder="Pilih tahun"
                             />
-<<<<<<< HEAD
-                        @elseif($activeTab === 'humas')
+                        @elseif ($activeTab === 'humas')
                             {{-- Year picker for humas tab --}}
                             <x-ui.yearpicker
                                 name="humas_year"
@@ -202,33 +191,12 @@
                             />
                         @else
                             {{-- Month picker for harian tab --}}
-=======
-                        @else
->>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
                             <x-ui.monthpicker
                                 name="month"
                                 :value="$selectedMonth"
                                 placeholder="Pilih bulan"
                             />
                         @endif
-<<<<<<< HEAD
-                        @if($activeTab === 'harian')
-                        <a
-                            href="{{ route('laporan-kinerja.rekap', ['tab' => $activeTab, 'month' => $selectedMonth]) }}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            data-loading-variant="print"
-                            data-loading-title="Menyiapkan PDF"
-                            data-loading-message="Sedang membuka dialog cetak."
-                            class="silatar-report-rekap-button"
-                        >
-                            <svg class="mr-2 h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.5A2 2 0 0 1 6.5 4.5h7A2 2 0 0 1 15.5 6.5v7A2 2 0 0 1 13.5 15.5h-7a2 2 0 0 1-2-2z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h6" />
-                            </svg>
-                            Rekap
-                        </a>
-=======
                         @if ($activeTab === 'harian')
                             <a
                                 href="{{ route('laporan-kinerja.rekap', ['tab' => $activeTab, 'month' => $selectedMonth]) }}"
@@ -245,7 +213,6 @@
                                 </svg>
                                 Rekap
                             </a>
->>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
                         @endif
                     </div>
                 </form>
@@ -415,7 +382,6 @@
                                     <div class="silatar-report-summary-badge silatar-report-summary-badge-ready">
                                         Rekap Bulanan
                                     </div>
-<<<<<<< HEAD
                                     <h2 class="mt-2 font-mono text-xl font-bold text-white">
                                         Rekap Kinerja Tahun {{ $selectedYear }}
                                     </h2>
@@ -441,26 +407,6 @@
                                 <div class="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3">
                                     <p class="font-mono text-xs font-semibold uppercase tracking-widest text-rose-400">Ditolak</p>
                                     <p class="mt-2 font-mono text-2xl font-bold text-rose-400">{{ $bulananReports->where('status', 'DITOLAK')->count() }}</p>
-=======
-                                    <h2 class="mt-2 text-2xl font-semibold text-slate-950">
-                                        Rekap laporan bulanan tahun {{ $selectedYearLabel }}
-                                    </h2>
-                                </div>
-                            </div>
-
-                            <div class="grid gap-3 sm:grid-cols-3">
-                                <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Bulan</p>
-                                    <p class="mt-2 text-2xl font-semibold text-slate-950">{{ $monthlySummary['months'] }}</p>
-                                </div>
-                                <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Hari</p>
-                                    <p class="mt-2 text-2xl font-semibold text-slate-950">{{ $monthlySummary['days'] }}</p>
-                                </div>
-                                <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Entri</p>
-                                    <p class="mt-2 text-2xl font-semibold text-slate-950">{{ $monthlySummary['entries'] }}</p>
->>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
                                 </div>
                             </div>
                         </div>
@@ -483,26 +429,17 @@
                                     <table class="silatar-report-table">
                                     <thead>
                                         <tr>
-<<<<<<< HEAD
                                             <th class="text-center">No</th>
                                             <th class="text-left">Bulan</th>
                                             <th class="text-center">File</th>
                                             <th class="text-center">Status</th>
                                             <th class="text-center">Keterangan</th>
                                             <th class="text-center">Tanggal Kirim</th>
-=======
-                                            <th class="silatar-report-th">No</th>
-                                            <th class="silatar-report-th">Bulan</th>
-                                            <th class="silatar-report-th">Hari</th>
-                                            <th class="silatar-report-th">Entri</th>
-                                            <th class="silatar-report-th">Status</th>
->>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach ($bulananReports as $index => $report)
                                             <tr>
-<<<<<<< HEAD
                                                 <td class="bulanan-cell text-center font-mono text-cyan-400 font-bold">{{ $index + 1 }}</td>
                                                 <td class="bulanan-cell font-mono text-cyan-300">{{ $report['bulan'] }}</td>
                                                 <td class="bulanan-cell text-center">
@@ -540,38 +477,6 @@
                                                         -
                                                     @endif
                                                 </td>
-=======
-                                                <td class="silatar-report-td text-center font-semibold text-slate-500">{{ $loop->iteration }}</td>
-                                                <td class="silatar-report-td text-center">
-                                                    <span class="silatar-report-date">{{ $recap['month_label'] }}</span>
-                                                </td>
-                                                <td class="silatar-report-td text-center font-semibold text-slate-900">{{ $recap['days'] }}</td>
-                                                <td class="silatar-report-td text-center font-semibold text-slate-900">{{ $recap['entries'] }}</td>
-                                                <td class="silatar-report-td text-center">
-                                                    <span class="inline-flex items-center rounded-full border px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] {{ $recap['status_class'] }}">
-                                                        {{ $recap['status_label'] }}
-                                                    </span>
-                                                    <div class="mt-1 text-[0.7rem] font-medium text-slate-400">
-                                                        Dikirim {{ $recap['sending_label'] }}
-                                                    </div>
-                                                    <div class="mt-1">
-                                                        @if ($recap['pdf_exists'])
-                                                            <a
-                                                                href="{{ route('laporan-kinerja.pdf', ['reportId' => $recap['id']]) }}"
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                class="inline-flex items-center rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-cyan-700 transition hover:border-cyan-300 hover:bg-cyan-100"
-                                                            >
-                                                                Buka PDF
-                                                            </a>
-                                                        @else
-                                                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                                                                PDF belum ada
-                                                            </span>
-                                                        @endif
-                                                    </div>
-                                                </td>
->>>>>>> 1cdcd39f051e5cf74502037ab3e117ad5b143f87
                                             </tr>
                                         @endforeach
                                     </tbody>

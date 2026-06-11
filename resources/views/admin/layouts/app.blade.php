@@ -1,22 +1,30 @@
+<?php
+use App\Http\Middleware\AdminAccess;
+$userAccess = AdminAccess::getUserAccess(auth()->id());
+$isAdmin = in_array('admin', $userAccess) || in_array('superadmin', $userAccess);
+?>
+
 <!DOCTYPE html>
 <html lang="id" class="h-full">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/webp" href="{{ asset('favicon.webp') }}">
     <title>{{ $title ?? 'Admin Dashboard - SILATAR' }}</title>
 
     @fonts
     @vite(['resources/css/app.css', 'resources/css/admin.css', 'resources/js/app.js'])
-
-    <!-- Alpine.js for interactivity -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
         [x-cloak] { display: none !important; }
     </style>
 </head>
 <body class="admin-layout">
+    <!-- Cyberpunk Background Effects -->
+    <div class="cyber-bg-grid"></div>
+    <div class="cyber-bg-glow cyber-bg-glow-1"></div>
+    <div class="cyber-bg-glow cyber-bg-glow-2"></div>
 
     <!-- Sidebar -->
     <aside
@@ -27,9 +35,7 @@
         <!-- Logo -->
         <div class="sidebar-logo">
             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
-                <div class="grid h-10 w-10 place-items-center rounded-xl bg-cyan-600 text-sm font-bold text-white shadow-md">
-                    KT
-                </div>
+                <img src="{{ asset('favicon.webp') }}" alt="SILATAR Logo" class="h-10 w-10 rounded-xl object-cover shadow-md">
                 <div x-show="!collapsed" x-transition class="min-w-0">
                     <p class="text-xs font-bold uppercase tracking-[0.18em] text-white">SILATAR</p>
                     <p class="truncate text-[10px] text-slate-400">Admin Panel</p>
@@ -48,6 +54,7 @@
                 <span x-show="!collapsed" x-transition class="sidebar-nav-label">Dashboard</span>
             </a>
 
+            @if($isAdmin)
             <!-- User Management -->
             <a href="{{ route('admin.users.index') }}"
                class="sidebar-nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
@@ -91,6 +98,16 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
                 <span x-show="!collapsed" x-transition class="sidebar-nav-label">Laporan</span>
+            </a>
+            @endif
+
+            <!-- News Management -->
+            <a href="{{ route('admin.news.index') }}"
+               class="sidebar-nav-item {{ request()->routeIs('admin.news.*') ? 'active' : '' }}">
+                <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V9a2 2 0 012-2h2a2 2 0 012 2v9a2 2 0 01-2 2h-2z"/>
+                </svg>
+                <span x-show="!collapsed" x-transition class="sidebar-nav-label">Berita</span>
             </a>
 
             <!-- Divider -->
@@ -185,11 +202,14 @@
         <!-- Navigation -->
         <nav class="sidebar-nav">
             <a href="{{ route('admin.dashboard') }}" class="sidebar-nav-item">Dashboard</a>
+            @if($isAdmin)
             <a href="{{ route('admin.users.index') }}" class="sidebar-nav-item">Pengguna</a>
             <a href="{{ route('admin.services.index') }}" class="sidebar-nav-item">Layanan</a>
             <a href="{{ route('admin.units.index') }}" class="sidebar-nav-item">Unit Kerja</a>
             <a href="{{ route('admin.requests.index') }}" class="sidebar-nav-item">Pengajuan</a>
             <a href="{{ route('admin.reports.index') }}" class="sidebar-nav-item">Laporan</a>
+            @endif
+            <a href="{{ route('admin.news.index') }}" class="sidebar-nav-item">Berita</a>
             <div class="my-4 h-px bg-slate-700/50"></div>
             <a href="{{ url('/') }}" target="_blank" class="sidebar-nav-item">Lihat Website</a>
         </nav>

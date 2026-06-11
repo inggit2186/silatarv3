@@ -36,11 +36,11 @@ return [
         'today_label' => 'Hari ini',
         'clear_label' => 'Hapus',
         'months' => [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December',
+            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
         ],
-        'weekdays' => ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
-        'locale' => 'en-US',
+        'weekdays' => ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'],
+        'locale' => 'id-ID',
     ],
     'monthpicker' => [
         'placeholder' => 'Pilih bulan',

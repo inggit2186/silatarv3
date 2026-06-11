@@ -1,21 +1,20 @@
 <x-layouts.app title="Satuan Kerja - SILATAR">
     @php
         $covers = [
-            'kantor' => ['bg' => 'bg-[linear-gradient(135deg,_#eff6ff_0%,_#dbeafe_100%)]', 'chip' => 'bg-blue-600'],
-            'kua' => ['bg' => 'bg-[linear-gradient(135deg,_#fff1f2_0%,_#ffe4e6_100%)]', 'chip' => 'bg-rose-600'],
-            'min' => ['bg' => 'bg-[linear-gradient(135deg,_#f0fdf4_0%,_#dcfce7_100%)]', 'chip' => 'bg-emerald-600'],
-            'mtsn' => ['bg' => 'bg-[linear-gradient(135deg,_#fefce8_0%,_#fef9c3_100%)]', 'chip' => 'bg-amber-500'],
-            'man' => ['bg' => 'bg-[linear-gradient(135deg,_#f5f3ff_0%,_#ede9fe_100%)]', 'chip' => 'bg-violet-600'],
-            'swasta-lainnya' => ['bg' => 'bg-[linear-gradient(135deg,_#fff7ed_0%,_#ffedd5_100%)]', 'chip' => 'bg-orange-500'],
-            'pemerintah-daerah' => ['bg' => 'bg-[linear-gradient(135deg,_#f8fafc_0%,_#e2e8f0_100%)]', 'chip' => 'bg-slate-600'],
+            'kantor' => ['chip' => 'bg-cyan-600', 'bg' => ''],
+            'kua' => ['chip' => 'bg-rose-600', 'bg' => ''],
+            'min' => ['chip' => 'bg-emerald-600', 'bg' => ''],
+            'mtsn' => ['chip' => 'bg-amber-500', 'bg' => ''],
+            'man' => ['chip' => 'bg-violet-600', 'bg' => ''],
+            'swasta-lainnya' => ['chip' => 'bg-orange-500', 'bg' => ''],
+            'pemerintah-daerah' => ['chip' => 'bg-slate-600', 'bg' => ''],
         ];
-        $activeKey = $sections[0]['key'] ?? 'kantor';
     @endphp
 
     <main
-        class="relative"
+        class="relative cyber-bg"
         x-data="{
-            active: '{{ request('tab', $activeKey) }}',
+            active: '{{ request('tab', 'kantor') }}',
             setTab(key) {
                 this.active = key;
                 const url = new URL(window.location);
@@ -27,23 +26,23 @@
         <x-ui.page-hero badge="Direktori satuan kerja" title="UNIT KERJA" />
 
         <section class="mx-auto max-w-6xl px-6 pb-4 lg:px-8">
-            <div class="silatar-tab-shell">
-                <div class="silatar-tab-list">
-                    @foreach ($sections as $section)
-                        <button
-                            type="button"
-                            @click="setTab('{{ $section['key'] }}')"
-                            :class="active === '{{ $section['key'] }}'
-                                ? 'bg-rose-700 text-white shadow-sm'
-                                : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'"
-                            class="silatar-tab-button"
-                        >
-                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5h4v4H4zM12 5.5h4v4h-4zM4 13.5h4v4H4zM12 13.5h4v4h-4z" />
-                            </svg>
-                            <span>{{ $section['label'] }}</span>
-                        </button>
-                    @endforeach
+            <div class="cyber-card">
+                <div class="cyber-card-header !flex-row !gap-4">
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($sections as $section)
+                            <button
+                                type="button"
+                                @click="setTab('{{ $section['key'] }}')"
+                                class="cyber-tab-btn"
+                                :class="active === '{{ $section['key'] }}' ? 'is-active' : ''"
+                            >
+                                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5h4v4H4zM12 5.5h4v4h-4zM4 13.5h4v4H4zM12 13.5h4v4h-4z" />
+                                </svg>
+                                <span>{{ $section['label'] }}</span>
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         </section>
@@ -51,7 +50,7 @@
         <section class="mx-auto max-w-6xl px-6 py-8 lg:px-8">
             @foreach ($sections as $section)
                 <section id="{{ $section['key'] }}" class="scroll-mt-8" x-show="active === '{{ $section['key'] }}'" x-cloak>
-                    <div class="silatar-unit-grid">
+                    <div class="cyber-unit-grid">
                         @forelse ($section['cards'] as $card)
                             <x-ui.unit-card
                                 :card="$card"
@@ -61,8 +60,12 @@
                                 :href="$card['href'] ?? null"
                             />
                         @empty
-                            <div class="rounded-[1.5rem] border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
-                                Belum ada data unit kerja untuk kategori ini.
+                            <div class="cyber-empty-state col-span-full">
+                                <svg class="h-16 w-16 text-cyan-500/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H3a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-2M5 21h2m-2 0H3m14 0h2m-2 0h-2M7 7h10M7 11h10M7 15h6" />
+                                </svg>
+                                <p class="cyber-empty-title">Belum ada data</p>
+                                <p class="cyber-empty-text">Belum ada data unit kerja untuk kategori ini.</p>
                             </div>
                         @endforelse
                     </div>
