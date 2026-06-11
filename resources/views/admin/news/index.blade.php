@@ -14,7 +14,7 @@
                     </h1>
                     <p class="mt-2 text-sm text-slate-400">Kelola semua berita dan pengumuman portal SILATAR</p>
                 </div>
-                @if($canManage)
+                @if($canCreate)
                 <a href="{{ route('admin.news.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 px-5 py-3 font-mono text-sm font-bold uppercase tracking-wider text-white shadow-[0_0_25px_rgba(0,212,255,0.4)] transition-all hover:shadow-[0_0_35px_rgba(0,212,255,0.6)] hover:-translate-y-0.5">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
@@ -186,7 +186,7 @@
                                 </span>
                                 @endif
                             </div>
-                            @if($canManage)
+                            @if($canCreate)
                             <div class="flex items-center gap-2">
                                 <a href="{{ route('admin.news.edit', $item->id) }}" class="rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-2 text-cyan-400 hover:bg-cyan-500/20 transition-all">
                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -211,7 +211,7 @@
                 </svg>
                 <h3 class="font-mono text-lg font-bold text-white mb-2">Belum Ada Berita</h3>
                 <p class="text-sm text-slate-400 mb-6">Mulai tambahkan berita pertama untuk portal SILATAR</p>
-                @if($canManage)
+                @if($canCreate)
                 <a href="{{ route('admin.news.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 px-5 py-3 font-mono text-sm font-bold uppercase tracking-wider text-white shadow-[0_0_25px_rgba(0,212,255,0.4)] transition-all hover:shadow-[0_0_35px_rgba(0,212,255,0.6)]">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                     Tambah Berita

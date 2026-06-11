@@ -13,8 +13,8 @@ $isAdmin = in_array('admin', $userAccess) || in_array('superadmin', $userAccess)
     <link rel="icon" type="image/webp" href="{{ asset('favicon.webp') }}">
     <title>{{ $title ?? 'Admin Dashboard - SILATAR' }}</title>
 
-    @fonts
-    @vite(['resources/css/app.css', 'resources/css/admin.css', 'resources/js/app.js'])
+    <link rel="stylesheet" href="{{ asset('build/assets/fonts-DkuEHybc.css') }}">
+    @vite(['resources/css/app.css', 'resources/css/admin.css', 'resources/css/cyberpunk.css', 'resources/js/app.js', 'resources/js/cyber-particles.js'])
 
     <style>
         [x-cloak] { display: none !important; }

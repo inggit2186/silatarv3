@@ -83,6 +83,10 @@ Route::middleware(['auth', 'admin'])
         Route::post('/utilities/migrate-satker', [DashboardController::class, 'migrateSatker'])->name('utilities.migrate-satker');
         Route::post('/utilities/migrate-satker-preview', [DashboardController::class, 'migrateSatkerPreview'])->name('utilities.migrate-satker-preview');
 
+        // Impersonate (Login sebagai user lain)
+        Route::post('/impersonate', [UserController::class, 'impersonate'])->name('impersonate');
+        Route::post('/impersonate/stop', [UserController::class, 'stopImpersonate'])->name('impersonate.stop');
+
         // Laporan Kinerja Verification
         Route::post('/laporan-kinerja/approve', [DashboardController::class, 'approveLaporanKinerja'])->name('laporan-kinerja.approve');
 

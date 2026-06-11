@@ -1,4 +1,32 @@
 <header class="fixed top-0 left-0 right-0 z-50 px-4 py-3">
+    {{-- Impersonation Warning Bar --}}
+    @if(session('impersonate'))
+    <div class="mb-3 rounded-xl border border-amber-500/50 bg-gradient-to-r from-amber-500/20 via-amber-600/10 to-amber-500/20 p-3 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
+                    <svg class="h-5 w-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-mono text-sm font-bold text-amber-400 uppercase tracking-wider">MODE IMPERSONASI AKTIF</p>
+                    <p class="font-mono text-xs text-amber-300">Anda login sebagai <strong>{{ auth()->user()->name }}</strong></p>
+                </div>
+            </div>
+            <form action="{{ route('impersonate.stop') }}" method="POST">
+                @csrf
+                <button type="submit" class="flex items-center gap-2 rounded-lg border border-violet-500/50 bg-violet-500/20 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-violet-300 transition-all hover:bg-violet-500/30 hover:border-violet-400">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    Kembali ke Admin
+                </button>
+            </form>
+        </div>
+    </div>
+    @endif
+
     <div class="mx-auto max-w-7xl">
         <nav
             x-data="siteNav"
@@ -79,7 +107,7 @@
                                 <p class="font-mono text-xs text-slate-500">{{ auth()->user()->nomor_induk }}</p>
                             </div>
                             <div class="p-2">
-                                <a href="{{ url('/') }}" class="flex items-center gap-3 rounded-lg px-4 py-3 font-mono text-sm font-medium text-slate-400 transition-all hover:bg-cyan-500/10 hover:text-cyan-400">
+                                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 rounded-lg px-4 py-3 font-mono text-sm font-medium text-slate-400 transition-all hover:bg-cyan-500/10 hover:text-cyan-400">
                                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>

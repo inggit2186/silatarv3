@@ -334,4 +334,69 @@ class UserController extends Controller
 
         return response()->json(['success' => true, 'user' => $user]);
     }
+
+    /**
+     * Impersonate (login as) another user.
+     */
+    public function impersonate(Request $request)
+    {
+        $request->validate([
+            'nip' => ['required', 'string', 'max:50'],
+        ], [
+            'nip.required' => 'NIP harus diisi.',
+        ]);
+
+        $targetUser = DB::table('users')
+            ->where('nomor_induk', $request->nip)
+            ->first();
+
+        if (!$targetUser) {
+            return back()->with('error', 'NIP tidak ditemukan dalam sistem.');
+        }
+
+        if ($targetUser->status != 1) {
+            return back()->with('error', 'Akun tidak aktif. Silakan hubungi administrator.');
+        }
+
+        // Store current admin info in session before impersonating
+        session(['impersonate' => [
+            'id' => auth()->id(),
+            'name' => auth()->user()->name,
+            'role' => auth()->user()->role,
+        ]]);
+
+        // Login as target user
+        auth()->loginUsingId($targetUser->id);
+        session()->regenerate();
+
+        return redirect()->intended(route('pelayanan'))->with('success', 'Anda sekarang masuk sebagai <strong>' . $targetUser->name . '</strong>');
+    }
+
+    /**
+     * Stop impersonating and return to admin account.
+     */
+    public function stopImpersonate(Request $request)
+    {
+        $impersonateData = session('impersonate');
+
+        if (!$impersonateData) {
+            return redirect()->route('home');
+        }
+
+        // Logout current (impersonated) user
+        auth()->logout();
+
+        // Restore original admin session
+        $adminUser = DB::table('users')->where('id', $impersonateData['id'])->first();
+
+        if ($adminUser) {
+            auth()->loginUsingId($adminUser->id);
+            session()->regenerate();
+        }
+
+        // Clear impersonate session
+        session()->forget('impersonate');
+
+        return redirect()->route('admin.dashboard')->with('success', 'Kembali ke akun admin: <strong>' . $impersonateData['name'] . '</strong>');
+    }
 }

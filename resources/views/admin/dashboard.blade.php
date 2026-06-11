@@ -1,4 +1,9 @@
 <x-admin.layouts.app>
+    @php
+    $userAccess = \App\Http\Middleware\AdminAccess::getUserAccess(auth()->id());
+    $isAdmin = in_array('admin', $userAccess) || in_array('superadmin', $userAccess);
+    @endphp
+
     {{-- Page Header - Cyberpunk Style --}}
     <div class="cyber-dashboard-header">
         <div class="cyber-header-glow"></div>
@@ -9,6 +14,13 @@
                 <p class="cyber-text-subtle">Selamat datang di panel administrasi SILATAR</p>
             </div>
             <div class="cyber-header-actions">
+                <!-- Login sebagai User -->
+                <button type="button" onclick="openImpersonateModal()" class="cyber-btn-secondary cyber-btn-secondary-sm !border-violet-500/50 !text-violet-400">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Login sebagai
+                </button>
                 <a href="{{ route('admin.reports.index') }}" class="cyber-btn-secondary cyber-btn-secondary-sm">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -24,6 +36,124 @@
             </div>
         </div>
     </div>
+
+    {{-- Flash Messages --}}
+    @if(session('success'))
+    <div class="mb-6 rounded-xl border border-emerald-500/50 bg-gradient-to-r from-emerald-500/20 to-emerald-900/20 p-4">
+        <div class="flex items-center gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20">
+                <svg class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+            </div>
+            <p class="font-mono text-sm text-emerald-300">@(session('success'))</p>
+        </div>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="mb-6 rounded-xl border border-rose-500/50 bg-gradient-to-r from-rose-500/20 to-rose-900/20 p-4">
+        <div class="flex items-center gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500/20">
+                <svg class="h-5 w-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <p class="font-mono text-sm text-rose-300">@(session('error'))</p>
+        </div>
+    </div>
+    @endif
+
+    {{-- Impersonate Modal --}}
+    <div id="impersonateModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-slate-950/95 backdrop-blur-xl" onclick="closeImpersonateModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="relative w-full max-w-md">
+                <div class="absolute -inset-0.5 bg-gradient-to-r from-violet-500 via-purple-500 to-violet-500 rounded-2xl blur opacity-30 animate-pulse"></div>
+                <div class="relative rounded-2xl border border-violet-500/50 bg-slate-900/95 p-8 shadow-[0_0_60px_rgba(139,92,246,0.3)]">
+                    <button type="button" onclick="closeImpersonateModal()" class="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/50 transition-all">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+
+                    <div class="text-center mb-6">
+                        <div class="relative mx-auto w-20 h-20 mb-4">
+                            <div class="absolute inset-0 bg-violet-500/20 rounded-full blur-xl animate-ping"></div>
+                            <div class="relative flex h-20 w-20 items-center justify-center rounded-full border-2 border-violet-500/50 bg-gradient-to-br from-violet-500/20 to-purple-500/20 shadow-[0_0_30px_rgba(139,92,246,0.4)]">
+                                <svg class="w-10 h-10 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <h2 class="font-mono text-2xl font-black uppercase tracking-wider text-white">
+                            <span class="text-violet-400">LOGIN</span> SEBAGAI
+                        </h2>
+                        <div class="mt-2 flex items-center justify-center gap-2">
+                            <div class="h-px w-8 bg-gradient-to-r from-transparent to-violet-500/50"></div>
+                            <p class="font-mono text-xs text-violet-400/70 uppercase tracking-widest">Masuk sebagai user lain</p>
+                            <div class="h-px w-8 bg-gradient-to-l from-transparent to-violet-500/50"></div>
+                        </div>
+                    </div>
+
+                    <form action="{{ route('admin.impersonate') }}" method="POST">
+                        @csrf
+                        <div class="space-y-5">
+                            <div>
+                                <label class="mb-2 flex items-center gap-2 font-mono text-sm font-medium text-violet-400/70">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/>
+                                    </svg>
+                                    Masukkan NIP / NIK
+                                </label>
+                                <input
+                                    type="text"
+                                    name="nip"
+                                    class="w-full rounded-xl border border-violet-500/30 bg-slate-900/80 px-4 py-3.5 font-mono text-lg text-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition placeholder:text-slate-500 focus:border-violet-400 focus:ring-2 focus:ring-violet-400/30 focus:shadow-[0_0_20px_rgba(139,92,246,0.3)]"
+                                    placeholder="1978xxxx"
+                                    required
+                                >
+                                @error('nip')
+                                <p class="mt-1 font-mono text-xs text-rose-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <button type="submit" class="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-violet-600 via-purple-500 to-violet-600 bg-[length:200%_100%] px-6 py-3.5 font-mono text-sm font-bold uppercase tracking-wider text-white shadow-[0_0_30px_rgba(139,92,246,0.5)] transition-all hover:shadow-[0_0_40px_rgba(139,92,246,0.7)] hover:bg-[position:100%_0]">
+                                <span class="flex items-center justify-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                                    </svg>
+                                    Login sebagai User
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+                        <div class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <p class="font-mono text-xs text-amber-300 leading-relaxed">
+                                <strong>Peringatan:</strong> Aktivitas Anda akan tercatat sebagai user yang di-impersonate. Gunakan fitur ini dengan tanggung jawab.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openImpersonateModal() {
+            document.getElementById('impersonateModal').classList.remove('hidden');
+        }
+
+        function closeImpersonateModal() {
+            document.getElementById('impersonateModal').classList.add('hidden');
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeImpersonateModal();
+        });
+    </script>
 
     {{-- Stats Grid - Cyberpunk Cards --}}
     <div class="cyber-dashboard-stats">
@@ -302,7 +432,8 @@
         </div>
     </div>
 
-    {{-- Quick Actions - Cyberpunk Style --}}
+    {{-- Quick Actions - Cyberpunk Style (Admin Only) --}}
+    @if($isAdmin)
     <div class="cyber-quick-actions">
         <div class="cyber-section-header">
             <div class="cyber-section-icon">
@@ -382,8 +513,10 @@
             </a>
         </div>
     </div>
+    @endif
 
-    {{-- Database Utilities - Cyberpunk Style --}}
+    {{-- Database Utilities - Cyberpunk Style (Admin Only) --}}
+    @if($isAdmin)
     <div class="cyber-utilities-section">
         <div class="cyber-section-header">
             <div class="cyber-section-icon cyber-section-icon-special">
@@ -434,4 +567,5 @@
             @endif
         </div>
     </div>
+    @endif
 </x-admin.layouts.app>

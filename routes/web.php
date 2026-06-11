@@ -57,3 +57,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/signature', [App\Http\Controllers\PageController::class, 'getSignature'])->name('signature.get');
     Route::post('/signature', [App\Http\Controllers\PageController::class, 'saveSignature'])->name('signature.save');
 });
+
+// Impersonate (Stop) - accessible from anywhere when logged in
+Route::post('/impersonate/stop', [App\Http\Controllers\Admin\UserController::class, 'stopImpersonate'])->middleware('auth')->name('impersonate.stop');

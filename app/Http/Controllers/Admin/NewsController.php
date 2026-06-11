@@ -121,6 +121,7 @@ class NewsController extends Controller
             'categories' => $categories,
             'stats' => $stats,
             'canManage' => $this->userHasAccess($user),
+            'canCreate' => $this->userHasNewsAccess($user),
         ]);
     }
 
