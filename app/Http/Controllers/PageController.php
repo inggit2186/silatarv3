@@ -15,7 +15,7 @@ class PageController extends Controller
 {
     public function home()
     {
-        // Fetch slideshow news (is_slideshow = 1)
+        // Fetch slideshow news (is_slideshow = 1) - ONLY slideshow news, no fill
         $slideshowNews = DB::table('news')
             ->where('status', 'published')
             ->where('is_slideshow', 1)
@@ -23,12 +23,12 @@ class PageController extends Controller
             ->limit(5)
             ->get();
 
-        // Fetch featured news (is_featured = 1)
+        // Fetch featured news (is_featured = 1) - ONLY featured news, max 3
         $featuredNews = DB::table('news')
             ->where('status', 'published')
             ->where('is_featured', 1)
             ->orderByDesc('publish_date')
-            ->limit(4)
+            ->limit(3)
             ->get();
 
         // Fetch latest news - all published news from current year
@@ -38,29 +38,6 @@ class PageController extends Controller
             ->whereYear('publish_date', $currentYear)
             ->orderByDesc('publish_date')
             ->get();
-
-        // If not enough slideshow/featured, fill with latest published news
-        if ($slideshowNews->count() < 4) {
-            $excludeIds = $slideshowNews->pluck('id')->toArray();
-            $additionalSlides = DB::table('news')
-                ->where('status', 'published')
-                ->whereNotIn('id', $excludeIds)
-                ->orderByDesc('publish_date')
-                ->limit(4 - $slideshowNews->count())
-                ->get();
-            $slideshowNews = $slideshowNews->merge($additionalSlides);
-        }
-
-        if ($featuredNews->count() < 4) {
-            $excludeIds = $slideshowNews->pluck('id')->merge($featuredNews->pluck('id'))->toArray();
-            $additionalFeatured = DB::table('news')
-                ->where('status', 'published')
-                ->whereNotIn('id', $excludeIds)
-                ->orderByDesc('publish_date')
-                ->limit(4 - $featuredNews->count())
-                ->get();
-            $featuredNews = $featuredNews->merge($additionalFeatured);
-        }
 
         return view('welcome', [
             'slideshowNews' => $slideshowNews,
