@@ -23,6 +23,7 @@ class UserController extends Controller
                 'u.name',
                 'u.email',
                 'u.nomor_induk',
+                'u.pp',
                 'u.role',
                 'u.status',
                 'u.jk',
@@ -369,7 +370,7 @@ class UserController extends Controller
         auth()->loginUsingId($targetUser->id);
         session()->regenerate();
 
-        return redirect()->intended(route('pelayanan'))->with('success', 'Anda sekarang masuk sebagai <strong>' . $targetUser->name . '</strong>');
+        return redirect()->intended(route('pelayanan'))->with('success', 'Anda sekarang masuk sebagai ' . $targetUser->name);
     }
 
     /**
@@ -397,6 +398,6 @@ class UserController extends Controller
         // Clear impersonate session
         session()->forget('impersonate');
 
-        return redirect()->route('admin.dashboard')->with('success', 'Kembali ke akun admin: <strong>' . $impersonateData['name'] . '</strong>');
+        return redirect()->route('admin.dashboard')->with('success', 'Kembali ke akun admin: ' . $impersonateData['name']);
     }
 }

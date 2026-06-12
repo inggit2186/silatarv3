@@ -28,7 +28,15 @@
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="px-2 py-0.5 bg-cyan-500/20 border border-cyan-500/30 rounded text-[10px] font-bold text-cyan-400 uppercase tracking-wider">SUCCESS</span>
                             </div>
-                            <p class="text-white font-bold text-sm">Janji Temu Diajukan!</p>
+                            <p class="text-white font-bold text-sm">
+                                @if(str_contains(session('success'), 'masuk sebagai'))
+                                    Masuk Sebagai User
+                                @elseif(str_contains(session('success'), 'Janji Temu'))
+                                    {{ session('success_title', 'Janji Temu Diajukan!') }}
+                                @else
+                                    Berhasil
+                                @endif
+                            </p>
                             <p class="text-slate-400 text-xs mt-1 leading-relaxed">{{ session('success') }}</p>
                         </div>
 

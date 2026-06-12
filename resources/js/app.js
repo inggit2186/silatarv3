@@ -697,6 +697,7 @@ document.addEventListener('alpine:init', () => {
             : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
         yearCursor: null,
         popoverStyle: '',
+        noSubmit: !!config.noSubmit, // New option to disable auto-submit
         yearInputValue() {
             return this.yearCursor || new Date().getFullYear();
         },
@@ -819,12 +820,16 @@ document.addEventListener('alpine:init', () => {
         selectMonth(index) {
             this.value = this.formatValue(this.yearCursor, index);
             this.open = false;
-            this.submitForm();
+            if (!this.noSubmit) {
+                this.submitForm();
+            }
         },
         clearValue() {
             this.value = '';
             this.open = false;
-            this.submitForm();
+            if (!this.noSubmit) {
+                this.submitForm();
+            }
         },
         submitForm() {
             const form = this.$refs.trigger?.closest?.('form') || this.$el.closest('form');
@@ -1232,6 +1237,52 @@ document.addEventListener('alpine:init', () => {
             }
 
             this.editRows.splice(index, 1);
+        },
+        // Replace File Modal
+        replaceModalOpen: false,
+        replaceReportId: null,
+        replaceBulan: '',
+        selectedFile: null,
+        openReplaceModal(reportId, bulan) {
+            this.replaceReportId = reportId;
+            this.replaceBulan = bulan;
+            this.replaceModalOpen = true;
+            this.selectedFile = null;
+        },
+        closeReplaceModal() {
+            this.replaceModalOpen = false;
+            this.replaceReportId = null;
+            this.replaceBulan = '';
+            this.selectedFile = null;
+        },
+        handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                this.selectedFile = file;
+            } else {
+                alert('Hanya file PDF yang diperbolehkan.');
+                event.target.value = '';
+            }
+        },
+        // Upload Modal
+        uploadModalOpen: false,
+        selectedUploadFile: null,
+        openUploadModal() {
+            this.uploadModalOpen = true;
+            this.selectedUploadFile = null;
+        },
+        closeUploadModal() {
+            this.uploadModalOpen = false;
+            this.selectedUploadFile = null;
+        },
+        handleUploadFileSelect(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                this.selectedUploadFile = file;
+            } else {
+                alert('Hanya file PDF yang diperbolehkan.');
+                event.target.value = '';
+            }
         },
     }));
 

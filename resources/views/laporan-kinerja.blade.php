@@ -176,15 +176,15 @@
                     <input type="hidden" name="search" value="{{ $search }}">
                     <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
                         @if ($activeTab === 'bulanan')
-                            {{-- Year picker for bulanan tab - use component directly --}}
-                            <x-ui.yearpicker
+                            {{-- Year picker for bulanan tab - use cyber component --}}
+                            <x-ui.cyber-yearpicker
                                 name="year"
                                 :value="$selectedYear"
                                 placeholder="Pilih tahun"
                             />
                         @elseif ($activeTab === 'humas')
-                            {{-- Year picker for humas tab --}}
-                            <x-ui.yearpicker
+                            {{-- Year picker for humas tab - use cyber component --}}
+                            <x-ui.cyber-yearpicker
                                 name="humas_year"
                                 :value="$humasYear ?? date('Y')"
                                 placeholder="Pilih tahun"
@@ -409,6 +409,20 @@
                                     <p class="mt-2 font-mono text-2xl font-bold text-rose-400">{{ $bulananReports->where('status', 'DITOLAK')->count() }}</p>
                                 </div>
                             </div>
+
+                            {{-- Upload Button --}}
+                            <div class="mt-4 flex justify-end">
+                                <button
+                                    type="button"
+                                    @click="openUploadModal()"
+                                    class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 px-5 py-2.5 font-mono text-sm font-bold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(0,212,255,0.3)] transition-all hover:shadow-[0_0_30px_rgba(0,212,255,0.5)]"
+                                >
+                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                    </svg>
+                                    Upload Laporan
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -444,14 +458,26 @@
                                                 <td class="bulanan-cell font-mono text-cyan-300">{{ $report['bulan'] }}</td>
                                                 <td class="bulanan-cell text-center">
                                                     @if($report['filename'])
-                                                        <button
-                                                            type="button"
-                                                            @click="openPdfPreview('/storage/satker_ckh/{{ $report['user_id'] }}/{{ $report['filename'] }}', '{{ $report['bulan'] }}')"
-                                                            class="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 font-mono text-xs text-white hover:bg-cyan-500/20 hover:border-cyan-500/50 transition cursor-pointer"
-                                                        >
-                                                            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                                                            PDF
-                                                        </button>
+                                                        <div class="flex flex-col items-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                @click="openPdfPreview('/storage/satker_ckh/{{ $report['user_id'] }}/{{ $report['filename'] }}', '{{ $report['bulan'] }}')"
+                                                                class="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 font-mono text-xs text-white hover:bg-cyan-500/20 hover:border-cyan-500/50 transition cursor-pointer"
+                                                            >
+                                                                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                                                PDF
+                                                            </button>
+                                                            @if(in_array($report['status'], ['DIKIRIM', 'DITOLAK']))
+                                                                <button
+                                                                    type="button"
+                                                                    @click="openReplaceModal({{ $report['id'] }}, '{{ $report['bulan'] }}')"
+                                                                    class="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 font-mono text-xs text-amber-400 hover:bg-amber-500/20 hover:border-amber-500/50 transition cursor-pointer"
+                                                                >
+                                                                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                                                    Ganti File
+                                                                </button>
+                                                            @endif
+                                                        </div>
                                                     @else
                                                         <span class="inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 font-mono text-xs text-rose-400">
                                                             -
@@ -1162,6 +1188,291 @@
                         <p class="text-slate-400">Memuat PDF...</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Replace File Modal --}}
+    <div
+        x-show="replaceModalOpen"
+        x-cloak
+        class="fixed inset-0 z-[90] flex items-center justify-center p-4"
+        style="background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);"
+        @keydown.escape.window="closeReplaceModal()"
+    >
+        <div class="relative w-full max-w-lg rounded-2xl border border-amber-500/30 bg-gradient-to-b from-slate-900 to-slate-950 shadow-[0_0_60px_rgba(245,158,11,0.2)] overflow-hidden">
+            {{-- Glow effect --}}
+            <div class="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-transparent to-amber-500/10 pointer-events-none"></div>
+
+            {{-- Header --}}
+            <div class="relative flex items-center justify-between px-6 py-5 border-b border-amber-500/20">
+                <div class="flex items-center gap-4">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/20 border border-amber-500/30">
+                        <svg class="h-6 w-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-mono text-lg font-bold text-amber-400 uppercase tracking-wider">Ganti File PDF</h3>
+                        <p class="text-xs text-slate-400 mt-1" x-text="'Bulan: ' + replaceBulan"></p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    @click="closeReplaceModal()"
+                    class="rounded-full bg-slate-700/50 p-2 text-slate-400 hover:text-white hover:bg-slate-600 transition"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Content --}}
+            <div class="relative p-6">
+                <form
+                    method="POST"
+                    :action="'/laporan-kinerja/bulanan/' + replaceReportId + '/replace'"
+                    enctype="multipart/form-data"
+                    @submit="return confirm('Yakin ingin mengganti file laporan? Status akan berubah menjadi DIKIRIM.')"
+                >
+                    @csrf
+
+                    <div class="mb-5">
+                        <label class="block font-mono text-xs font-semibold uppercase tracking-wider text-amber-400/70 mb-3">
+                            Pilih File PDF Baru
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="file"
+                                name="file"
+                                id="replaceFile"
+                                accept=".pdf,application/pdf"
+                                @change="handleFileSelect($event)"
+                                class="hidden"
+                            >
+                            <label
+                                for="replaceFile"
+                                class="flex flex-col items-center justify-center w-full h-40 rounded-xl border-2 border-dashed border-amber-500/30 bg-slate-800/50 cursor-pointer transition-all hover:border-amber-400/50 hover:bg-slate-800"
+                            >
+                                <template x-if="!selectedFile">
+                                    <div class="text-center">
+                                        <svg class="w-12 h-12 mx-auto text-amber-500/50 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                        </svg>
+                                        <p class="font-mono text-sm text-amber-400/70">Klik untuk pilih file PDF</p>
+                                        <p class="font-mono text-xs text-slate-500 mt-1">Maksimal 10MB</p>
+                                    </div>
+                                </template>
+                                <template x-if="selectedFile">
+                                    <div class="text-center">
+                                        <svg class="w-12 h-12 mx-auto text-emerald-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <p class="font-mono text-sm text-emerald-400" x-text="selectedFile.name"></p>
+                                        <p class="font-mono text-xs text-slate-500 mt-1" x-text="(selectedFile.size / 1024 / 1024).toFixed(2) + ' MB'"></p>
+                                        <p class="font-mono text-xs text-amber-400/70 mt-2">Klik untuk ganti file</p>
+                                    </div>
+                                </template>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-5">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div>
+                                <p class="font-mono text-xs font-semibold text-amber-400 uppercase tracking-wider">Informasi</p>
+                                <ul class="mt-2 space-y-1.5 font-mono text-xs text-slate-400">
+                                    <li class="flex items-center gap-2">
+                                        <svg class="w-3 h-3 text-amber-500/70" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Hanya file PDF yang diperbolehkan
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <svg class="w-3 h-3 text-amber-500/70" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Ukuran maksimal 10MB
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <svg class="w-3 h-3 text-amber-500/70" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Status akan berubah menjadi DIKIRIM
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3">
+                        <button
+                            type="button"
+                            @click="closeReplaceModal()"
+                            class="rounded-xl border border-slate-600/50 bg-slate-800/50 px-5 py-2.5 font-mono text-sm text-slate-300 transition hover:bg-slate-700/50 hover:border-slate-500"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            :disabled="!selectedFile"
+                            class="rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 px-6 py-2.5 font-mono text-sm font-bold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+                        >
+                            <span class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                                Ganti File
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Upload Laporan Modal --}}
+    <div
+        x-show="uploadModalOpen"
+        x-cloak
+        class="fixed inset-0 z-[90] flex items-center justify-center p-4"
+        style="background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);"
+        @keydown.escape.window="closeUploadModal()"
+    >
+        <div class="relative w-full max-w-lg rounded-2xl border border-cyan-500/30 bg-gradient-to-b from-slate-900 to-slate-950 shadow-[0_0_60px_rgba(0,212,255,0.2)] overflow-hidden">
+            {{-- Glow effect --}}
+            <div class="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-cyan-500/10 via-transparent to-cyan-500/10 pointer-events-none"></div>
+
+            {{-- Header --}}
+            <div class="relative flex items-center justify-between px-6 py-5 border-b border-cyan-500/20">
+                <div class="flex items-center gap-4">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+                        <svg class="h-6 w-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-mono text-lg font-bold text-cyan-400 uppercase tracking-wider">Upload Laporan</h3>
+                        <p class="text-xs text-slate-400 mt-1">Upload file PDF laporan kinerja bulanan</p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    @click="closeUploadModal()"
+                    class="rounded-full bg-slate-700/50 p-2 text-slate-400 hover:text-white hover:bg-slate-600 transition"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Content --}}
+            <div class="relative p-6">
+                <form
+                    method="POST"
+                    action="{{ route('laporan-kinerja.upload') }}"
+                    enctype="multipart/form-data"
+                    @submit="return confirm('Yakin ingin mengupload laporan ini?')"
+                >
+                    @csrf
+
+                    <div class="mb-5">
+                        <label class="block font-mono text-xs font-semibold uppercase tracking-wider text-cyan-400/70 mb-3">
+                            Pilih Bulan & Tahun
+                        </label>
+                        <x-ui.cyber-monthpicker
+                            name="bulan"
+                            :value="date('Y-m')"
+                            placeholder="Pilih bulan"
+                        />
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="block font-mono text-xs font-semibold uppercase tracking-wider text-cyan-400/70 mb-3">
+                            Pilih File PDF
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="file"
+                                name="file"
+                                id="uploadFile"
+                                accept=".pdf,application/pdf"
+                                @change="handleUploadFileSelect($event)"
+                                class="hidden"
+                            >
+                            <label
+                                for="uploadFile"
+                                class="flex flex-col items-center justify-center w-full h-40 rounded-xl border-2 border-dashed border-cyan-500/30 bg-slate-800/50 cursor-pointer transition-all hover:border-cyan-400/50 hover:bg-slate-800"
+                            >
+                                <template x-if="!selectedUploadFile">
+                                    <div class="text-center">
+                                        <svg class="w-12 h-12 mx-auto text-cyan-500/50 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                        </svg>
+                                        <p class="font-mono text-sm text-cyan-400/70">Klik untuk pilih file PDF</p>
+                                        <p class="font-mono text-xs text-slate-500 mt-1">Maksimal 10MB</p>
+                                    </div>
+                                </template>
+                                <template x-if="selectedUploadFile">
+                                    <div class="text-center">
+                                        <svg class="w-12 h-12 mx-auto text-emerald-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <p class="font-mono text-sm text-emerald-400" x-text="selectedUploadFile.name"></p>
+                                        <p class="font-mono text-xs text-slate-500 mt-1" x-text="(selectedUploadFile.size / 1024 / 1024).toFixed(2) + ' MB'"></p>
+                                        <p class="font-mono text-xs text-cyan-400/70 mt-2">Klik untuk ganti file</p>
+                                    </div>
+                                </template>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-4 mb-5">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div>
+                                <p class="font-mono text-xs font-semibold text-cyan-400 uppercase tracking-wider">Informasi</p>
+                                <ul class="mt-2 space-y-1.5 font-mono text-xs text-slate-400">
+                                    <li class="flex items-center gap-2">
+                                        <svg class="w-3 h-3 text-cyan-500/70" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Hanya file PDF yang diperbolehkan
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <svg class="w-3 h-3 text-cyan-500/70" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Ukuran maksimal 10MB
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <svg class="w-3 h-3 text-cyan-500/70" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Laporan yang sudah DISETUJUI tidak bisa diupload ulang
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3">
+                        <button
+                            type="button"
+                            @click="closeUploadModal()"
+                            class="rounded-xl border border-slate-600/50 bg-slate-800/50 px-5 py-2.5 font-mono text-sm text-slate-300 transition hover:bg-slate-700/50 hover:border-slate-500"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            :disabled="!selectedUploadFile"
+                            class="rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 px-6 py-2.5 font-mono text-sm font-bold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(0,212,255,0.3)] transition-all hover:shadow-[0_0_30px_rgba(0,212,255,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+                        >
+                            <span class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                </svg>
+                                Upload
+                            </span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

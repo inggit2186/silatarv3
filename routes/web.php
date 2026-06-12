@@ -30,6 +30,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/laporan-kinerja/rekap', [PageController::class, 'rekapLaporanKinerja'])->name('laporan-kinerja.rekap');
 Route::post('/laporan-kinerja/rekap/supervisor', [PageController::class, 'submitSupervisor'])->name('laporan-kinerja.rekap.supervisor');
     Route::get('/laporan-kinerja/bulanan/{reportId}/pdf', [PageController::class, 'downloadLaporanKinerjaPdf'])->whereNumber('reportId')->name('laporan-kinerja.pdf');
+    Route::post('/laporan-kinerja/bulanan/{reportId}/replace', [PageController::class, 'replaceLaporanKinerjaFile'])->whereNumber('reportId')->name('laporan-kinerja.replace');
+    Route::post('/laporan-kinerja/bulanan/upload', [PageController::class, 'uploadLaporanKinerjaManual'])->name('laporan-kinerja.upload');
     Route::put('/laporan-kinerja/day', [PageController::class, 'updateLaporanKinerjaByDate'])->name('laporan-kinerja.update-day');
     Route::delete('/laporan-kinerja/day', [PageController::class, 'deleteLaporanKinerjaByDate'])->name('laporan-kinerja.delete-day');
     Route::put('/laporan-kinerja/{activityId}', [PageController::class, 'updateLaporanKinerja'])->whereNumber('activityId')->name('laporan-kinerja.update');

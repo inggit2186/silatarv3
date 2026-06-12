@@ -21,6 +21,7 @@
     'applyLabel' => $monthpickerConfig['apply_label'] ?? 'Pilih',
     'locale' => $monthpickerConfig['locale'] ?? 'en-US',
     'months' => $monthpickerConfig['months'] ?? [],
+    'noSubmit' => true,
 ]))" x-init="init()" @keydown.escape.window="closePicker()" class="silatar-monthpicker">
     @if ($label)
         <label for="{{ $fieldId }}" class="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">

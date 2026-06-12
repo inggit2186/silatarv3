@@ -1486,6 +1486,151 @@ class PageController extends Controller
         ]);
     }
 
+    public function replaceLaporanKinerjaFile(Request $request, int $reportId)
+    {
+        $user = $request->user();
+
+        abort_unless($user, 403);
+
+        $validator = Validator::make($request->all(), [
+            'file' => ['required', 'file', 'mimes:pdf', 'max:10240'], // max 10MB
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        // Get existing report
+        $report = DB::table('satker_ckh')
+            ->where('id', $reportId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($report, 404);
+
+        // Check if status allows replacement (only DIKIRIM or DITOLAK)
+        if (!in_array($report->status, ['DIKIRIM', 'DITOLAK'])) {
+            return back()->with('error', 'File hanya bisa diganti jika status laporan DIKIRIM atau DITOLAK.');
+        }
+
+        // Get uploaded file
+        $uploadedFile = $request->file('file');
+
+        // Delete old file if exists
+        if ($report->filename) {
+            $oldStoragePath = "satker_ckh/{$report->user_id}/{$report->filename}";
+            if (Storage::disk('public')->exists($oldStoragePath)) {
+                Storage::disk('public')->delete($oldStoragePath);
+            }
+        }
+
+        // Generate new filename
+        $filename = sprintf('%s.kinerja-%s.pdf', $user->id, $report->bulan);
+        $storagePath = "satker_ckh/{$user->id}/{$filename}";
+
+        // Store new file
+        Storage::disk('public')->put($storagePath, file_get_contents($uploadedFile->getRealPath()));
+
+        // Update record - set status to DIKIRIM
+        DB::table('satker_ckh')
+            ->where('id', $reportId)
+            ->update([
+                'filename' => $filename,
+                'status' => 'DIKIRIM',
+                'alasan' => null,
+                'sending' => now(),
+                'updated_at' => now(),
+            ]);
+
+        return redirect()
+            ->back()
+            ->with('success', 'File berhasil diganti. Status laporan diubah menjadi DIKIRIM.');
+    }
+
+    public function uploadLaporanKinerjaManual(Request $request)
+    {
+        $user = $request->user();
+
+        abort_unless($user, 403);
+
+        $validator = Validator::make($request->all(), [
+            'bulan' => ['required', 'string', 'regex:/^\d{4}-\d{2}$/'],
+            'file' => ['required', 'file', 'mimes:pdf', 'max:10240'],
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $data = $validator->validated();
+
+        // Parse bulan to get the date
+        $bulanDate = Carbon::createFromFormat('Y-m', $data['bulan'])->startOfMonth();
+
+        // Check if report already exists and is DISETUJUI (approved)
+        $existingReport = DB::table('satker_ckh')
+            ->where('user_id', $user->id)
+            ->where('bulan', $bulanDate->toDateString())
+            ->where('status', 'DISETUJUI')
+            ->first();
+
+        if ($existingReport) {
+            return back()->with('error', 'Tidak dapat mengupload laporan. Laporan sudah DISETUJUI oleh atasan.');
+        }
+
+        // Get uploaded file
+        $uploadedFile = $request->file('file');
+
+        // Delete old file if exists
+        $oldReport = DB::table('satker_ckh')
+            ->where('user_id', $user->id)
+            ->where('bulan', $bulanDate->toDateString())
+            ->first();
+
+        if ($oldReport && $oldReport->filename) {
+            $oldStoragePath = "satker_ckh/{$user->id}/{$oldReport->filename}";
+            if (Storage::disk('public')->exists($oldStoragePath)) {
+                Storage::disk('public')->delete($oldStoragePath);
+            }
+        }
+
+        // Generate filename
+        $filename = sprintf('%s.kinerja-%s.pdf', $user->id, $bulanDate->format('m-Y'));
+        $storagePath = "satker_ckh/{$user->id}/{$filename}";
+
+        // Store file
+        Storage::disk('public')->put($storagePath, file_get_contents($uploadedFile->getRealPath()));
+
+        // Update or insert record
+        $reportData = [
+            'item_id' => 1,
+            'dept_id' => $user->dept_id,
+            'user_id' => $user->id,
+            'bulan' => $bulanDate->toDateString(),
+            'filename' => $filename,
+            'status' => 'DIKIRIM',
+            'alasan' => null,
+            'petugas' => 777,
+            'sending' => now(),
+            'created_at' => $oldReport?->created_at ?? now(),
+            'updated_at' => now(),
+        ];
+
+        DB::table('satker_ckh')->updateOrInsert(
+            [
+                'user_id' => $user->id,
+                'bulan' => $bulanDate->toDateString(),
+            ],
+            $reportData
+        );
+
+        $bulanLabel = $this->indonesianMonthLabel($bulanDate);
+
+        return redirect()
+            ->back()
+            ->with('success', "Laporan {$bulanLabel} berhasil diupload.");
+    }
+
     public function storeLaporanKinerja(Request $request)
     {
         $user = $request->user();
