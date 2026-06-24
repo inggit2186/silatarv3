@@ -6,12 +6,29 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <link rel="icon" type="image/webp" href="{{ asset('favicon.webp') }}">
         <title>{{ config('app.name') }} {{ $title ? '| ' . $title : '' }}</title>
+
+        <!-- Open Graph / Social Media Sharing -->
+        <meta property="og:site_name" content="{{ config('app.name') }}">
+        <meta property="og:title" content="{{ $ogTitle ?? $title ?? config('app.name') }}">
+        <meta property="og:description" content="{{ $ogDescription ?? '' }}">
+        <meta property="og:image" content="{{ $ogImage ?? asset('favicon.webp') }}">
+        <meta property="og:url" content="{{ $ogUrl ?? url()->current() }}">
+        <meta property="og:type" content="{{ $ogType ?? 'website' }}">
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ $ogTitle ?? $title ?? config('app.name') }}">
+        <meta name="twitter:description" content="{{ $ogDescription ?? '' }}">
+        <meta name="twitter:image" content="{{ $ogImage ?? asset('favicon.webp') }}">
+
         @vite([
             'resources/css/app.css',
             'resources/css/cyberpunk.css',
             'resources/js/app.js',
             'resources/js/cyber-particles.js'
         ])
+
+        @stack('extraHead')
     </head>
     <body class="min-h-full bg-slate-950 text-white antialiased">
         <!-- Global Particles -->

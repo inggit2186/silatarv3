@@ -354,7 +354,7 @@ class NewsController extends Controller
 
         DB::table('news')->where('id', $id)->update([
             'title' => $validated['title'],
-            'slug' => Str::slug($validated['title']) . '-' . time(),
+            'slug' => $news->slug, // Keep original slug for permanent URL
             'meta_title' => $validated['meta_title'] ?? null,
             'meta_description' => $validated['meta_description'] ?? null,
             'meta_keywords' => $validated['meta_keywords'] ?? null,

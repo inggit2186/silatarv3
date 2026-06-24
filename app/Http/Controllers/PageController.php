@@ -31,12 +31,11 @@ class PageController extends Controller
             ->limit(3)
             ->get();
 
-        // Fetch latest news - all published news from current year
-        $currentYear = Carbon::now()->year;
+        // Fetch latest news - max 6 latest published news
         $latestNews = DB::table('news')
             ->where('status', 'published')
-            ->whereYear('publish_date', $currentYear)
             ->orderByDesc('publish_date')
+            ->limit(6)
             ->get();
 
         return view('welcome', [

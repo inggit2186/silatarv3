@@ -508,8 +508,17 @@
         let pendingImageFile = null;
         let currentImageSize = 'medium';
         let currentImageAlign = 'center';
+        let savedSelection = null;
 
         function openImageModal() {
+            // Save current cursor position before opening modal
+            const editor = document.getElementById('editor');
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0 && editor.contains(selection.anchorNode)) {
+                savedSelection = selection.getRangeAt(0).cloneRange();
+            } else {
+                savedSelection = null;
+            }
             document.getElementById('imageModal').classList.remove('hidden');
         }
 
@@ -575,9 +584,15 @@
                 if (btn.dataset.size === size) {
                     btn.classList.add('border-cyan-400', 'bg-cyan-500/20', 'text-cyan-400');
                     btn.classList.remove('text-slate-300');
+                    btn.style.borderColor = '#22d3ee';
+                    btn.style.backgroundColor = 'rgba(6, 182, 212, 0.2)';
+                    btn.style.color = '#22d3ee';
                 } else {
                     btn.classList.remove('border-cyan-400', 'bg-cyan-500/20', 'text-cyan-400');
                     btn.classList.add('text-slate-300');
+                    btn.style.borderColor = '';
+                    btn.style.backgroundColor = '';
+                    btn.style.color = '';
                 }
             });
         }
@@ -588,25 +603,18 @@
                 if (btn.dataset.align === align) {
                     btn.classList.add('border-cyan-400', 'bg-cyan-500/10', 'text-cyan-400');
                     btn.classList.remove('text-slate-300');
+                    btn.style.borderColor = '#22d3ee';
+                    btn.style.backgroundColor = 'rgba(6, 182, 212, 0.1)';
+                    btn.style.color = '#22d3ee';
                 } else {
                     btn.classList.remove('border-cyan-400', 'bg-cyan-500/10', 'text-cyan-400');
                     btn.classList.add('text-slate-300');
+                    btn.style.borderColor = '';
+                    btn.style.backgroundColor = '';
+                    btn.style.color = '';
                 }
             });
         }
-
-        // Event delegation for size and align buttons
-        document.addEventListener('click', function(e) {
-            const sizeBtn = e.target.closest('.size-btn');
-            const alignBtn = e.target.closest('.align-btn');
-
-            if (sizeBtn) {
-                setImageSize(sizeBtn.dataset.size);
-            }
-            if (alignBtn) {
-                setImageAlign(alignBtn.dataset.align);
-            }
-        });
 
         function insertContentImage() {
             const urlInput = document.getElementById('imageUrlInput').value;
@@ -648,8 +656,6 @@
         }
 
         function insertImageElement(src, caption) {
-            console.log('insertImageElement - currentImageSize:', currentImageSize, 'currentImageAlign:', currentImageAlign);
-
             const sizes = {
                 'small': '300px',
                 'medium': '500px',
@@ -657,50 +663,120 @@
                 'full': '100%'
             };
 
-            const alignStyles = {
-                'left': 'text-align: left; margin-right: 1rem;',
-                'center': 'text-align: center; margin: 0 auto;',
-                'right': 'text-align: right; margin-left: 1rem;',
-                'none': 'text-align: justify;'
-            };
-
             const maxWidth = sizes[currentImageSize] || '500px';
-            const alignStyle = alignStyles[currentImageAlign] || alignStyles['center'];
+            const align = currentImageAlign === 'none' ? 'justify' : currentImageAlign;
 
-            let imgHtml = `<div style="${alignStyle}; margin: 1rem 0;">`;
-            imgHtml += `<img src="${src}" alt="${caption || 'Image'}" style="max-width: ${maxWidth}; width: 100%; height: auto; border-radius: 8px;">`;
-
-            if (caption) {
-                imgHtml += `<div style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem; font-style: italic; text-align: center;">${caption}</div>`;
-            }
-
-            imgHtml += `</div>`;
-
-            console.log('Generated HTML:', imgHtml);
+            const figure = document.createElement('figure');
+            figure.style.cssText = `margin: 1rem 0; text-align: ${align};`;
+            figure.innerHTML = `
+                <img src="${src}" alt="${caption || 'Image'}" style="max-width: ${maxWidth}; width: 100%; height: auto; border-radius: 8px; display: block; margin: 0 auto;">
+                ${caption ? `<figcaption style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem; font-style: italic;">${caption}</figcaption>` : ''}
+            `;
 
             const editor = document.getElementById('editor');
-            console.log('Editor found:', !!editor);
-            console.log('Editor exists:', editor ? 'yes' : 'no');
-
             if (editor) {
-                try {
-                    editor.innerHTML = editor.innerHTML + imgHtml;
-                    console.log('HTML appended successfully');
-                } catch (e) {
-                    console.error('Error appending HTML:', e);
+                // Parse HTML to get the figure element
+                const temp = document.createElement('div');
+                temp.innerHTML = `<figure style="margin: 1rem 0; text-align: ${align};">
+                    <img src="${src}" alt="${caption || 'Image'}" style="max-width: ${maxWidth}; width: 100%; height: auto; border-radius: 8px; display: block; margin: 0 auto;">
+                    ${caption ? `<figcaption style="font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem; font-style: italic;">${caption}</figcaption>` : ''}
+                </figure>`;
+                const imgElement = temp.firstChild;
+
+                // Try saved selection first (from before modal opened)
+                if (savedSelection) {
+                    try {
+                        const range = savedSelection.cloneRange();
+                        range.deleteContents();
+
+                        // Insert a paragraph break first if we're in the middle of text
+                        const parent = range.startContainer;
+                        if (parent.nodeType === Node.TEXT_NODE && range.startOffset > 0) {
+                            const textBefore = parent.textContent.substring(0, range.startOffset);
+                            const textAfter = parent.textContent.substring(range.startOffset);
+                            const parentP = parent.parentElement;
+
+                            if (textBefore.trim()) {
+                                parent.textContent = textBefore;
+                                const afterSpan = document.createElement('span');
+                                afterSpan.textContent = textAfter;
+                                parentP.appendChild(afterSpan);
+                                range.setStart(afterSpan, 0);
+                                range.collapse(true);
+                            }
+                        }
+
+                        // Insert paragraph breaks and the image
+                        const pBefore = document.createElement('p');
+                        pBefore.innerHTML = '<br>';
+                        const pAfter = document.createElement('p');
+                        pAfter.innerHTML = '<br>';
+
+                        range.insertNode(pBefore);
+                        range.insertNode(imgElement);
+                        range.insertNode(pAfter);
+
+                        // Move cursor after the image
+                        const newRange = document.createRange();
+                        newRange.setStartAfter(pAfter);
+                        newRange.collapse(true);
+                        const sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(newRange);
+
+                        editor.focus();
+                        updateHiddenInput();
+                        savedSelection = null;
+                        return;
+                    } catch (e) {
+                        console.error('Insert error:', e);
+                        savedSelection = null;
+                    }
+                }
+
+                // Try current cursor position
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0 && editor.contains(selection.anchorNode)) {
+                    const range = selection.getRangeAt(0);
+                    range.deleteContents();
+
+                    const pBefore = document.createElement('p');
+                    pBefore.innerHTML = '<br>';
+                    const pAfter = document.createElement('p');
+                    pAfter.innerHTML = '<br>';
+
+                    range.insertNode(pBefore);
+                    range.insertNode(imgElement);
+                    range.insertNode(pAfter);
+
+                    const newRange = document.createRange();
+                    newRange.setStartAfter(pAfter);
+                    newRange.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(newRange);
+
+                    editor.focus();
+                } else {
+                    // Fallback: insert at end
+                    const pBefore = document.createElement('p');
+                    pBefore.innerHTML = '<br>';
+                    const pAfter = document.createElement('p');
+                    pAfter.innerHTML = '<br>';
+                    editor.appendChild(pBefore);
+                    editor.appendChild(imgElement);
+                    editor.appendChild(pAfter);
+
+                    const newRange = document.createRange();
+                    newRange.setStartAfter(pAfter);
+                    newRange.collapse(true);
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(newRange);
+
+                    editor.focus();
                 }
             }
-        }
-
-        // Quick test function
-        function testInsert() {
-            const editor = document.getElementById('editor');
-            if (editor) {
-                editor.innerHTML = '<p>TEST</p><img src="https://via.placeholder.com/200x100">';
-                console.log('Test img added');
-            } else {
-                console.log('Editor not found');
-            }
+            updateHiddenInput();
         }
         console.log('Script loaded, editor ID:', document.getElementById('editor')?.id);
 
