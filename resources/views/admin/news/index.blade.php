@@ -26,7 +26,7 @@
         </div>
 
         <!-- Stats Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
             <div class="rounded-xl border border-cyan-500/30 bg-slate-900/80 p-5">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/20">
@@ -70,6 +70,17 @@
                     <span class="text-xs font-mono uppercase tracking-wider text-slate-400">Archived</span>
                 </div>
                 <p class="font-mono text-3xl font-black text-purple-400">{{ $stats['archived'] }}</p>
+            </div>
+            <div class="rounded-xl border border-rose-500/30 bg-slate-900/80 p-5">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-500/20">
+                        <svg class="h-5 w-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                    </div>
+                    <span class="text-xs font-mono uppercase tracking-wider text-slate-400">Total View</span>
+                </div>
+                <p class="font-mono text-3xl font-black text-rose-400">{{ number_format($stats['total_views'] ?? 0) }}</p>
             </div>
         </div>
 
@@ -182,9 +193,17 @@
                                 @if($item->publish_date)
                                 <span class="flex items-center gap-1.5">
                                     <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    Published {{ \Carbon\Carbon::parse($item->publish_date)->format('d M Y') }}
+                                    {{ \Carbon\Carbon::parse($item->publish_date)->format('d M Y') }}
                                 </span>
                                 @endif
+                                <span class="flex items-center gap-1.5 text-cyan-400/70">
+                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    {{ number_format($item->view_count ?? 0) }} view
+                                </span>
+                                <span class="flex items-center gap-1.5 text-emerald-400/70">
+                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    {{ number_format($item->unique_view_count ?? 0) }} pembaca
+                                </span>
                             </div>
                             @if($canCreate)
                             <div class="flex items-center gap-2">

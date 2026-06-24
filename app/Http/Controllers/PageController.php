@@ -85,6 +85,9 @@ class PageController extends Controller
             abort(404);
         }
 
+        // Track view
+        $this->trackNewsView($news->id);
+
         // Get related news (same category, excluding current)
         $relatedNews = DB::table('news')
             ->where('status', 'published')
@@ -94,10 +97,51 @@ class PageController extends Controller
             ->limit(3)
             ->get();
 
+        // Get updated view counts
+        $newsStats = DB::table('news')->where('id', $news->id)->first(['view_count', 'unique_view_count']);
+
         return view('news.show', [
             'news' => $news,
             'relatedNews' => $relatedNews,
+            'viewCount' => $newsStats->view_count ?? 0,
+            'uniqueViewCount' => $newsStats->unique_view_count ?? 0,
         ]);
+    }
+
+    /**
+     * Track news view.
+     */
+    private function trackNewsView(int $newsId): void
+    {
+        $ipAddress = request()->ip();
+        $sessionId = session()->getId();
+        $userAgent = request()->userAgent();
+        $viewedAt = now();
+
+        // Check if this IP/session already viewed this news today
+        $alreadyViewed = DB::table('news_views')
+            ->where('news_id', $newsId)
+            ->where('ip_address', $ipAddress)
+            ->whereDate('viewed_at', $viewedAt->toDateString())
+            ->exists();
+
+        if ($alreadyViewed) {
+            // Only increment total view count
+            DB::table('news')->where('id', $newsId)->increment('view_count');
+        } else {
+            // Increment both view counts
+            DB::table('news')->where('id', $newsId)->increment('view_count');
+            DB::table('news')->where('id', $newsId)->increment('unique_view_count');
+
+            // Log the unique view
+            DB::table('news_views')->insert([
+                'news_id' => $newsId,
+                'ip_address' => $ipAddress,
+                'session_id' => $sessionId,
+                'user_agent' => $userAgent,
+                'viewed_at' => $viewedAt,
+            ]);
+        }
     }
 
     public function pelayanan()

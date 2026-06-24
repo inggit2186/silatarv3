@@ -109,6 +109,7 @@ class NewsController extends Controller
             'published' => DB::table('news')->where('status', 'published')->count(),
             'draft' => DB::table('news')->where('status', 'draft')->count(),
             'archived' => DB::table('news')->where('status', 'archived')->count(),
+            'total_views' => DB::table('news')->sum('view_count') ?? 0,
         ];
 
         return view('admin.news.index', [
@@ -216,9 +217,25 @@ class NewsController extends Controller
             }
         }
 
+        // Generate short unique slug (max 40 chars from title)
+        $baseSlug = Str::slug($validated['title']);
+        if (strlen($baseSlug) > 40) {
+            $baseSlug = substr($baseSlug, 0, 40);
+            // Remove trailing dash if cut in the middle
+            $baseSlug = rtrim($baseSlug, '-');
+        }
+        $slug = $baseSlug;
+        $counter = 1;
+
+        // Ensure slug is unique
+        while (DB::table('news')->where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+
         $newsId = DB::table('news')->insertGetId([
             'title' => $validated['title'],
-            'slug' => Str::slug($validated['title']) . '-' . time(),
+            'slug' => $slug,
             'meta_title' => $validated['meta_title'] ?? null,
             'meta_description' => $validated['meta_description'] ?? null,
             'meta_keywords' => $validated['meta_keywords'] ?? null,

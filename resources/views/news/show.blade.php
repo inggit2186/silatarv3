@@ -70,18 +70,31 @@
 
                 <!-- Main Content Card -->
                 <div class="bg-slate-900/95 backdrop-blur-sm rounded-2xl border border-slate-800 p-6 md:p-10">
-                    <!-- Category & Date -->
-                    <div class="flex flex-wrap items-center gap-3 mb-6">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/20 border border-cyan-500/30 rounded-full text-cyan-400 text-xs font-bold">
-                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-                            {{ $news->category }}
-                        </span>
-                        @if($news->publish_date)
-                        <span class="inline-flex items-center gap-1.5 text-slate-400 text-xs">
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                            {{ \Carbon\Carbon::parse($news->publish_date)->format('d F Y, H:i') }} WIB
-                        </span>
-                        @endif
+                    <!-- Category, Date & View Counts -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/20 border border-cyan-500/30 rounded-full text-cyan-400 text-xs font-bold">
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                                {{ $news->category }}
+                            </span>
+                            @if($news->publish_date)
+                            <span class="inline-flex items-center gap-1.5 text-slate-400 text-xs">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                {{ \Carbon\Carbon::parse($news->publish_date)->format('d F Y, H:i') }} WIB
+                            </span>
+                            @endif
+                        </div>
+                        <!-- View Counts -->
+                        <div class="flex items-center gap-4 text-xs text-slate-400">
+                            <span class="flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                <span class="font-semibold text-rose-300">{{ number_format($viewCount) }}</span> dilihat
+                            </span>
+                            <span class="flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>
+                                <span class="font-semibold text-emerald-300">{{ number_format($uniqueViewCount) }}</span> pembaca
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Title -->
