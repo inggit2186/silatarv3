@@ -2,6 +2,7 @@
     title="{{ $news->title }}"
 >
     @php
+        $siteName = 'Kankemenag Tanah Datar';
         $ogDescription = $news->excerpt ?? strip_tags($news->content);
         if (strlen($ogDescription) > 160) {
             $ogDescription = substr($ogDescription, 0, 157) . '...';
@@ -11,16 +12,18 @@
     @endphp
 
     @push('extraHead')
-        <meta property="og:title" content="{{ $news->title }}">
+        <meta property="og:site_name" content="{{ $siteName }}">
+        <meta property="og:title" content="{{ $news->title }} - {{ $siteName }}">
         <meta property="og:description" content="{{ $ogDescription }}">
         <meta property="og:image" content="{{ $ogImage }}">
         <meta property="og:url" content="{{ $newsUrl }}">
         <meta property="og:type" content="article">
         <meta property="article:published_time" content="{{ $news->publish_date }}">
         <meta property="article:author" content="{{ $news->writer ?? config('app.name') }}">
+        <meta property="article:section" content="{{ $news->category ?? 'Berita' }}">
 
         <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:title" content="{{ $news->title }}">
+        <meta name="twitter:title" content="{{ $news->title }} - {{ $siteName }}">
         <meta name="twitter:description" content="{{ $ogDescription }}">
         <meta name="twitter:image" content="{{ $ogImage }}">
     @endpush
