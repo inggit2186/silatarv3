@@ -14,7 +14,6 @@
     @push('extraHead')
         <meta property="og:site_name" content="{{ $siteName }}">
         <meta property="og:title" content="{{ $news->title }} - {{ $siteName }}">
-        <meta property="og:description" content="{{ $ogDescription }}">
         <meta property="og:image" content="{{ $ogImage }}">
         <meta property="og:url" content="{{ $newsUrl }}">
         <meta property="og:type" content="article">
@@ -24,7 +23,6 @@
 
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="{{ $news->title }} - {{ $siteName }}">
-        <meta name="twitter:description" content="{{ $ogDescription }}">
         <meta name="twitter:image" content="{{ $ogImage }}">
     @endpush
 
