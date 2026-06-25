@@ -209,6 +209,14 @@
             </div>
         </section>
 
+        <!-- Profil Menu - Component (Fixed Sidebar) -->
+        <x-profil-menu
+            profil-url="{{ route('profil-kantor') }}"
+            sejarah-url="{{ route('sejarah') }}"
+            struktur-url="{{ route('struktur-organisasi') }}"
+            unit-url="{{ route('satuan-kerja') }}?tab=kua"
+        />
+
         <!-- Featured News Hero -->
         @if($featuredNews->count() > 0)
         <section class="relative py-8">

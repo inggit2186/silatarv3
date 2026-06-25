@@ -41,6 +41,11 @@ Route::post('/laporan-kinerja/rekap/supervisor', [PageController::class, 'submit
 Route::get('/satuan-kerja', [PageController::class, 'satuanKerja'])->name('satuan-kerja');
 Route::get('/satuan-kerja/{department}', [PageController::class, 'satuanKerjaDetail'])->name('unit-kerja.detail');
 
+// Profil Kantor Pages
+Route::get('/profil-kantor', [PageController::class, 'profilKantor'])->name('profil-kantor');
+Route::get('/sejarah', [PageController::class, 'sejarah'])->name('sejarah');
+Route::get('/struktur-organisasi', [PageController::class, 'strukturOrganisasi'])->name('struktur-organisasi');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');

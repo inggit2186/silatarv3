@@ -3477,4 +3477,28 @@ class PageController extends Controller
 
         return false;
     }
+
+    /**
+     * Profil Kantor page.
+     */
+    public function profilKantor()
+    {
+        return view('pages.profil-kantor');
+    }
+
+    /**
+     * Sejarah page.
+     */
+    public function sejarah()
+    {
+        return view('pages.sejarah');
+    }
+
+    /**
+     * Struktur Organisasi page.
+     */
+    public function strukturOrganisasi()
+    {
+        return view('pages.struktur-organisasi');
+    }
 }
