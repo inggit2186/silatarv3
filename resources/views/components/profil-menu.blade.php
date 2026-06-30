@@ -51,7 +51,7 @@
                 <path d="M6 12v4a2 2 0 002 2h8a2 2 0 002-2v-4"/>
             </svg>
             <div class="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 border border-purple-500/30 rounded-lg shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 whitespace-nowrap">
-                <span class="font-mono text-xs font-bold uppercase tracking-wider text-white">Struktur Organisasi</span>
+                <span class="font-mono text-xs font-bold uppercase tracking-wider text-white">Struktur Organisasi                           </span>
                 <div class="absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent border-r-purple-500/30"></div>
             </div>
         </a>

@@ -7,6 +7,11 @@
         <link rel="icon" type="image/webp" href="{{ asset('favicon.webp') }}">
         <title>{{ config('app.name') }} {{ $title ? '| ' . $title : '' }}</title>
 
+        <!-- Google Fonts - NEO MIRAI Style -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@300;400;500;600;700&family=Chakra+Petch:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
         <!-- Open Graph / Social Media Sharing -->
         <meta property="og:site_name" content="{{ config('app.name') }}">
         <meta property="og:title" content="{{ $ogTitle ?? $title ?? config('app.name') }}">
@@ -24,29 +29,16 @@
         @vite([
             'resources/css/app.css',
             'resources/css/cyberpunk.css',
+            'resources/css/neo-mirai-home.css',
             'resources/js/app.js',
             'resources/js/cyber-particles.js'
         ])
 
         @stack('extraHead')
     </head>
-    <body class="min-h-full bg-slate-950 text-white antialiased">
-        <!-- Global Particles -->
-        <div class="fixed inset-0 pointer-events-none z-0">
-            <canvas
-                id="globalParticles"
-                data-particle-canvas
-                data-particle-count="60"
-                data-mouse-influence="true"
-                class="w-full h-full"
-            ></canvas>
-        </div>
-
+    <body class="neo-mirai min-h-full text-slate-900 antialiased">
         <!-- Page Content -->
         <div class="relative">
-            @if(!request()->routeIs('home'))
-                <x-layouts.site-header />
-            @endif
             {{ $slot }}
         </div>
 
@@ -62,5 +54,8 @@
             window.appUiConfig = {!! json_encode($uiConfig) !!};
             window.livewireScriptConfig = {!! json_encode($livewireConfig) !!};
         </script>
-    </body>
+    <!-- impeccable-live-start -->
+<script src="http://localhost:8400/live.js"></script>
+<!-- impeccable-live-end -->
+</body>
 </html>

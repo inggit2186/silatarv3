@@ -1,68 +1,91 @@
 <x-layouts.app title="Semua Berita - SILATAR">
-    <main class="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6">
-            <!-- Header -->
-            <div class="mb-8">
-                <div class="flex items-center gap-3 mb-2">
-                    <a href="{{ route('home') }}" class="flex items-center gap-2 px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-400 font-mono text-xs hover:bg-cyan-500/20 transition-all">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-                        Kembali
+    <main class="neo-mirai">
+        <x-layouts.site-header />
+
+        <!-- Hero Section -->
+        <section class="hero-page" style="background-image: url('/assets/img/template/news-bg.webp'); background-size: cover; background-position: center top; padding: 120px 2rem 4rem; min-height: 350px;">
+            <div style="max-width: 36rem; margin: 0 auto; text-align: center;">
+                <p style="color: var(--gold); font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; margin: 0 0 0.5rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V9a2 2 0 012-2h2a2 2 0 012 2v9a2 2 0 01-2 2h-2z"/></svg>
+                    Arsip Berita
+                </p>
+                <h1 style="font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 400; color: var(--ink); margin: 0 0 1rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    Semua Berita
+                </h1>
+                <p style="color: var(--ink-soft); font-size: 1rem; max-width: 28rem; margin: 0 auto;">Berita dan informasi terkini dari Kementerian Agama Tanah Datar tentang kegiatan, pengumuman, dan informasi layanan untuk masyarakat.</p>
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-top: 1.5rem;">
+                    <a href="{{ url('/') }}" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.25rem; background: transparent; color: var(--ink); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; text-decoration: none; border: 1px solid var(--line);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+                        Beranda
+                    </a>
+                    <a href="{{ route('pelayanan') }}" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.25rem; background: var(--gold); color: var(--night); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; text-decoration: none;">
+                        Ajukan Layanan
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h12m-5-5 5 5-5 5"/></svg>
                     </a>
                 </div>
-                <div class="flex items-center gap-4">
-                    <div class="w-1 h-12 bg-gradient-to-b from-cyan-400 to-cyan-600 rounded-full"></div>
-                    <div>
-                        <h1 class="font-mono text-3xl font-black uppercase tracking-wider text-white">Semua Berita</h1>
-                        <p class="font-mono text-sm text-slate-400 mt-1">Arsip berita dan informasi terkini</p>
-                    </div>
-                </div>
             </div>
+        </section>
 
+        <!-- Section Divider -->
+        <div class="section-divider wave-rounded"></div>
+
+        <!-- Content Section -->
+        <section class="page-content">
             <!-- Category Filter -->
             @if($categories->count() > 0)
-            <div class="mb-8 flex flex-wrap items-center gap-3">
+            <div class="neo-tabs" style="margin-bottom: 2rem;">
                 <a href="{{ route('news.index') }}"
-                   class="px-4 py-2 rounded-full font-mono text-xs font-bold uppercase tracking-wider transition-all {{ !$selectedCategory ? 'bg-cyan-500 text-slate-900' : 'bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700 hover:text-white' }}">
+                   class="neo-tab {{ !$selectedCategory ? 'is-active' : '' }}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                     Semua
                 </a>
                 @foreach($categories as $category)
                 <a href="{{ route('news.index', ['category' => $category]) }}"
-                   class="px-4 py-2 rounded-full font-mono text-xs font-bold uppercase tracking-wider transition-all {{ $selectedCategory === $category ? 'bg-cyan-500 text-slate-900' : 'bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700 hover:text-white' }}">
+                   class="neo-tab {{ $selectedCategory === $category ? 'is-active' : '' }}">
                     {{ $category }}
                 </a>
                 @endforeach
             </div>
             @endif
 
-            <!-- News Grid -->
             @if($news->count() > 0)
-            <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                 @foreach($news as $item)
-                <article class="group relative rounded-xl border border-cyan-500/20 bg-slate-900/80 overflow-hidden hover:border-cyan-400/50 hover:shadow-[0_0_30px_rgba(0,212,255,0.15)] transition-all duration-300">
-                    <a href="{{ route('news.show', $item->slug ?? $item->id) }}">
-                        <div class="relative aspect-[16/9] overflow-hidden">
+                <article>
+                    <a href="{{ route('news.show', $item->slug ?? $item->id) }}" style="display: flex; flex-direction: row; gap: 1.5rem; background: var(--paper-soft); border: 1px solid var(--line); text-decoration: none; color: var(--ink); transition: border-color 180ms, box-shadow 240ms; overflow: hidden; border-radius: 0.5rem;" onmouseover="this.style.borderColor='var(--gold)'; this.style.boxShadow='0 8px 30px oklch(18% 0.03 76 / 0.08)'" onmouseout="this.style.borderColor='var(--line)'; this.style.boxShadow='none'">
+                        <!-- Image -->
+                        <div style="width: 280px; min-width: 280px; aspect-ratio: 16/10; overflow: hidden; flex-shrink: 0; position: relative;">
                             @if($item->image)
-                            <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->title }}" class="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                            <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->title }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 520ms;">
                             @else
-                            <img src="{{ asset('assets/img/template/banner-02.png') }}" alt="{{ $item->title }}" class="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                            <img src="{{ asset('assets/img/template/banner-02.webp') }}" alt="{{ $item->title }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 520ms;">
                             @endif
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent"></div>
-                            <div class="absolute top-3 left-3 flex items-center gap-2">
-                                <span class="px-2.5 py-1 bg-cyan-500/90 text-slate-900 font-mono text-[10px] font-bold uppercase tracking-wider rounded flex items-center gap-1.5">
-                                    {{ $item->category }}
-                                </span>
+                            <!-- Category Icon Overlay -->
+                            <div style="position: absolute; top: 0.75rem; right: 0.75rem; background: var(--gold); color: var(--night); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 0 1 0 2.828l-7 7a2 2 0 0 1-2.828 0l-7-7A1.994 1.994 0 0 1 3 12V7a4 4 0 0 1 4-4z"/></svg>
                             </div>
                         </div>
-                        <div class="p-4">
-                            <div class="flex items-center gap-2 mb-2">
-                                <svg class="w-3.5 h-3.5 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                <span class="font-mono text-[11px] text-slate-400">{{ $item->publish_date ? \Carbon\Carbon::parse($item->publish_date)->format('d M Y') : '' }}</span>
-                            </div>
-                            <h3 class="font-mono text-sm font-bold uppercase tracking-wider text-white group-hover:text-cyan-300 transition-colors line-clamp-2 leading-snug">{{ $item->title }}</h3>
-                            <p class="mt-2 text-xs text-slate-400 line-clamp-2 leading-relaxed">{{ $item->excerpt }}</p>
-                            <div class="mt-3 flex items-center gap-1 text-cyan-400 font-mono text-xs font-semibold uppercase tracking-wider">
-                                Baca Selengkapnya
-                                <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        <!-- Content -->
+                        <div style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: center; flex: 1;">
+                            <span style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.2rem 0.6rem; background: var(--gold); color: var(--night); font-family: var(--font-mono); font-size: 0.55rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.75rem; width: fit-content;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                                {{ $item->category }}
+                            </span>
+                            <h3 style="font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; color: var(--ink); margin: 0 0 0.5rem; line-height: 1.3; display: flex; align-items: flex-start; gap: 0.5rem;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" style="flex-shrink: 0; margin-top: 0.1rem;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+                                {{ $item->title }}
+                            </h3>
+                            <p style="font-size: 0.9rem; color: var(--ink-soft); margin: 0 0 1rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ $item->excerpt }}</p>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: auto;">
+                                <span style="display: flex; align-items: center; gap: 0.4rem; font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-soft);">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                    {{ $item->publish_date ? \Carbon\Carbon::parse($item->publish_date)->format('d M Y') : '' }}
+                                </span>
+                                <span style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--gold); color: var(--night); font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; text-transform: uppercase;">
+                                    Baca
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h12m-5-5 5 5-5 5"/></svg>
+                                </span>
                             </div>
                         </div>
                     </a>
@@ -72,58 +95,78 @@
 
             <!-- Pagination -->
             @if($news->hasPages())
-            <div class="mt-10 flex justify-center">
-                <nav class="flex items-center gap-2">
+            <div style="margin-top: 3rem; display: flex; justify-content: center;">
+                <div class="neo-tabs">
                     @if($news->onFirstPage())
-                    <span class="flex items-center gap-2 px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-slate-500 font-mono text-sm cursor-not-allowed">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-                        Prev
-                    </span>
+                        <span class="neo-tab" style="opacity: 0.5; cursor: not-allowed;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>
+                            Prev
+                        </span>
                     @else
-                    <a href="{{ $news->previousPageUrl() }}" class="flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-lg text-cyan-400 font-mono text-sm hover:bg-cyan-500/20 transition-all">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-                        Prev
-                    </a>
+                        <a href="{{ $news->previousPageUrl() }}" class="neo-tab">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>
+                            Prev
+                        </a>
                     @endif
 
-                    <div class="flex items-center gap-1">
-                        @foreach($news->getUrlRange(1, $news->lastPage()) as $page => $url)
-                            @if($page == $news->currentPage())
-                            <span class="w-10 h-10 flex items-center justify-center bg-cyan-500 text-slate-900 font-mono text-sm font-bold rounded-lg">{{ $page }}</span>
-                            @elseif($page <= 3 || $page > $news->lastPage() - 2 || abs($page - $news->currentPage()) <= 1)
-                            <a href="{{ $url }}" class="w-10 h-10 flex items-center justify-center bg-slate-800 border border-slate-700 text-slate-400 font-mono text-sm hover:bg-slate-700 hover:text-white rounded-lg transition-all">{{ $page }}</a>
-                            @elseif($page == 4 || $page == $news->lastPage() - 3)
-                            <span class="text-slate-500 font-mono text-sm">...</span>
-                            @endif
-                        @endforeach
-                    </div>
+                    @foreach($news->getUrlRange(1, $news->lastPage()) as $page => $url)
+                        @if($page == $news->currentPage())
+                            <span class="neo-tab is-active">{{ $page }}</span>
+                        @elseif($page <= 3 || $page > $news->lastPage() - 2 || abs($page - $news->currentPage()) <= 1)
+                            <a href="{{ $url }}" class="neo-tab">{{ $page }}</a>
+                        @elseif($page == 4 || $page == $news->lastPage() - 3)
+                            <span class="neo-tab" style="cursor: default;">...</span>
+                        @endif
+                    @endforeach
 
                     @if($news->hasMorePages())
-                    <a href="{{ $news->nextPageUrl() }}" class="flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-lg text-cyan-400 font-mono text-sm hover:bg-cyan-500/20 transition-all">
-                        Next
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-                    </a>
+                        <a href="{{ $news->nextPageUrl() }}" class="neo-tab">
+                            Next
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+                        </a>
                     @else
-                    <span class="flex items-center gap-2 px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-slate-500 font-mono text-sm cursor-not-allowed">
-                        Next
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-                    </span>
+                        <span class="neo-tab" style="opacity: 0.5; cursor: not-allowed;">
+                            Next
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+                        </span>
                     @endif
-                </nav>
+                </div>
             </div>
             @endif
 
             @else
-            <div class="text-center py-16 rounded-xl border border-slate-700/30 bg-slate-900/40">
-                <svg class="w-20 h-20 mx-auto text-slate-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V9a2 2 0 012-2h2a2 2 0 012 2v9a2 2 0 01-2 2h-2z"/></svg>
-                <h3 class="font-mono text-xl font-bold text-slate-400 mb-2">Belum Ada Berita</h3>
-                <p class="font-mono text-sm text-slate-500">Tidak ada berita yang ditemukan</p>
-                <a href="{{ route('home') }}" class="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400 font-mono text-sm hover:bg-cyan-500/20 transition-all">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            <div class="neo-empty" style="padding: 4rem 1rem;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="opacity: 0.3;">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14,2 14,8 20,8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10,9 9,9 8,9"/>
+                </svg>
+                <p class="neo-empty-title">Belum Ada Berita</p>
+                <p class="neo-empty-text">Tidak ada berita yang ditemukan</p>
+                <a href="{{ route('home') }}" class="neo-btn" style="margin-top: 1.5rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                     Kembali ke Beranda
                 </a>
             </div>
             @endif
-        </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+            <a class="brand-lockup brand-lockup-small" href="{{ url("/") }}" aria-label="SILATAR home">
+                <span class="brand-mark" aria-hidden="true"><span></span></span>
+                <span class="brand-word"><span>SILATAR</span><span>V2</span></span>
+            </a>
+            <p>Portal Layanan Digital Kementerian Agama Tanah Datar</p>
+            <nav aria-label="Footer navigation">
+                <a href="{{ url("/") }}">Beranda</a>
+                <a href="{{ route('pelayanan') }}">Pelayanan</a>
+                <a href="{{ route('satuan-kerja') }}">Unit Kerja</a>
+                <a href="{{ route('news.index') }}">Berita</a>
+            </nav>
+            <div class="footer-copyright"><span>&copy; {{ date("Y") }} SILATAR - Kementerian Agama Tanah Datar</span></div>
+        </footer>
     </main>
 </x-layouts.app>

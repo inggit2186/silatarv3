@@ -580,5 +580,8 @@
             $pdf->page_text(500, 815, "Halaman {PAGE_NUM} / {PAGE_COUNT}", $font, 7, [100, 116, 139]);
         }
     </script>
+<!-- impeccable-live-start -->
+<script src="http://localhost:8400/live.js"></script>
+<!-- impeccable-live-end -->
 </body>
 </html>

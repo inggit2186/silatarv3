@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PpidController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
@@ -28,7 +29,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/laporan-kinerja/humas/{id}', [PageController::class, 'destroyHumas'])->name('laporan-humas.destroy');
     Route::post('/laporan-kinerja/harian', [PageController::class, 'storeLaporanKinerja'])->name('laporan-kinerja.store');
     Route::get('/laporan-kinerja/rekap', [PageController::class, 'rekapLaporanKinerja'])->name('laporan-kinerja.rekap');
-Route::post('/laporan-kinerja/rekap/supervisor', [PageController::class, 'submitSupervisor'])->name('laporan-kinerja.rekap.supervisor');
+    Route::post('/laporan-kinerja/rekap/supervisor', [PageController::class, 'submitSupervisor'])->name('laporan-kinerja.rekap.supervisor');
     Route::get('/laporan-kinerja/bulanan/{reportId}/pdf', [PageController::class, 'downloadLaporanKinerjaPdf'])->whereNumber('reportId')->name('laporan-kinerja.pdf');
     Route::post('/laporan-kinerja/bulanan/{reportId}/replace', [PageController::class, 'replaceLaporanKinerjaFile'])->whereNumber('reportId')->name('laporan-kinerja.replace');
     Route::post('/laporan-kinerja/bulanan/upload', [PageController::class, 'uploadLaporanKinerjaManual'])->name('laporan-kinerja.upload');
@@ -36,6 +37,11 @@ Route::post('/laporan-kinerja/rekap/supervisor', [PageController::class, 'submit
     Route::delete('/laporan-kinerja/day', [PageController::class, 'deleteLaporanKinerjaByDate'])->name('laporan-kinerja.delete-day');
     Route::put('/laporan-kinerja/{activityId}', [PageController::class, 'updateLaporanKinerja'])->whereNumber('activityId')->name('laporan-kinerja.update');
     Route::delete('/laporan-kinerja/{activityId}', [PageController::class, 'deleteLaporanKinerja'])->whereNumber('activityId')->name('laporan-kinerja.delete');
+    Route::get('/madrasah/profil', [PageController::class, 'profilMadrasah'])->name('madrasah.profil');
+    Route::get('/madrasah/pegawai', [PageController::class, 'pegawaiMadrasah'])->name('madrasah.pegawai');
+    Route::get('/madrasah/guru', [PageController::class, 'guruMadrasah'])->name('madrasah.guru');
+    Route::get('/madrasah/laporan-semester', [PageController::class, 'laporanSemesterMadrasah'])->name('madrasah.laporan-semester');
+    Route::post('/madrasah/laporan-semester/save', [PageController::class, 'saveLaporanSemesterMadrasah'])->name('madrasah.laporan-semester.save');
 });
 
 Route::get('/satuan-kerja', [PageController::class, 'satuanKerja'])->name('satuan-kerja');
@@ -67,3 +73,42 @@ Route::middleware('auth')->group(function () {
 
 // Impersonate (Stop) - accessible from anywhere when logged in
 Route::post('/impersonate/stop', [App\Http\Controllers\Admin\UserController::class, 'stopImpersonate'])->middleware('auth')->name('impersonate.stop');
+
+// PPID Routes
+Route::prefix('ppid')->group(function () {
+    // Beranda
+    Route::get('/', [PpidController::class, 'index'])->name('ppid');
+
+    // Profil PPID
+    Route::get('/profil-singkat', [PpidController::class, 'profilSingkat'])->name('ppid.profil-singkat');
+    Route::get('/visi-misi', [PpidController::class, 'visiMisi'])->name('ppid.visi-misi');
+    Route::get('/tugas-fungsi', [PpidController::class, 'tugasFungsi'])->name('ppid.tugas-fungsi');
+    Route::get('/struktur', [PpidController::class, 'struktur'])->name('ppid.struktur');
+
+    // Regulasi
+    Route::get('/regulasi', [PpidController::class, 'regulasi'])->name('ppid.regulasi');
+
+    // Standar Layanan
+    Route::get('/maklumat', [PpidController::class, 'maklumat'])->name('ppid.maklumat');
+    Route::get('/jadwal', [PpidController::class, 'jadwal'])->name('ppid.jadwal');
+    Route::get('/biaya', [PpidController::class, 'biaya'])->name('ppid.biaya');
+    Route::get('/laporan-layanan', [PpidController::class, 'laporanLayanan'])->name('ppid.laporan-layanan');
+
+    // Layanan Informasi
+    Route::get('/prosedur-permohonan', [PpidController::class, 'prosedurPermohonan'])->name('ppid.prosedur-permohonan');
+    Route::get('/prosedur-keberatan', [PpidController::class, 'prosedurKeberatan'])->name('ppid.prosedur-keberatan');
+    Route::get('/prosedur-sengketa', [PpidController::class, 'prosedurSengketa'])->name('ppid.prosedur-sengketa');
+    Route::get('/formulir-permohonan', [PpidController::class, 'formulirPermohonan'])->name('ppid.formulir-permohonan');
+    Route::get('/formulir-keberatan', [PpidController::class, 'formulirKeberatan'])->name('ppid.formulir-keberatan');
+    Route::get('/informasi-berkala', [PpidController::class, 'informasiBerkala'])->name('ppid.informasi-berkala');
+    Route::get('/informasi-serta-merta', [PpidController::class, 'informasiSertaMerta'])->name('ppid.informasi-serta-merta');
+    Route::get('/informasi-setiap-saat', [PpidController::class, 'informasiSetiapSaat'])->name('ppid.informasi-setiap-saat');
+    Route::get('/pengaduan', [PpidController::class, 'pengaduan'])->name('ppid.pengaduan');
+
+    // Gallery
+    Route::get('/gallery-fasilitas', [PpidController::class, 'galleryFasilitas'])->name('ppid.gallery-fasilitas');
+    Route::get('/gallery-kegiatan', [PpidController::class, 'galleryKegiatan'])->name('ppid.gallery-kegiatan');
+
+    // Tentang Kami
+    Route::get('/tentang-kami', [PpidController::class, 'tentangKami'])->name('ppid.tentang-kami');
+});

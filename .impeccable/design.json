@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-29T00:00:00Z",
+  "title": "SILATAR V2 Design System",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Violet Authority",
+        "canonical": "#7c3aed",
+        "tonalRamp": ["#4c1d95", "#5b21b6", "#6d28d9", "#7c3aed", "#8b5cf6", "#a78bfa", "#c4b5fd", "#ede9fe"]
+      },
+      "accent-cyan": {
+        "role": "secondary",
+        "displayName": "Cyan Professional",
+        "canonical": "#0891b2",
+        "tonalRamp": ["#0c4a6e", "#0e7490", "#0891b2", "#06b6d4", "#22d3ee", "#67e8f9", "#a5f3fc", "#cffafe"]
+      },
+      "glass-bg": {
+        "role": "surface",
+        "displayName": "Glass Background",
+        "canonical": "rgba(255, 255, 255, 0.8)"
+      },
+      "ink-primary": {
+        "role": "neutral",
+        "displayName": "Ink Primary",
+        "canonical": "#0f172a"
+      },
+      "ink-secondary": {
+        "role": "neutral",
+        "displayName": "Ink Secondary",
+        "canonical": "#475569"
+      },
+      "surface-white": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "#ffffff"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page titles and hero headings only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings, card titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "General content with max 65-75ch line length."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, form labels, badges."
+      }
+    },
+    "shadows": [
+      {
+        "name": "hover",
+        "value": "0 4px 12px rgba(0,0,0,0.08)",
+        "purpose": "Cards lift slightly on hover."
+      },
+      {
+        "name": "focus",
+        "value": "0 0 0 3px rgba(124, 58, 237, 0.2)",
+        "purpose": "Purple focus ring for keyboard navigation."
+      },
+      {
+        "name": "modal",
+        "value": "0 25px 50px rgba(0,0,0,0.15)",
+        "purpose": "Heavy shadow for overlaid elements."
+      },
+      {
+        "name": "glass",
+        "value": "0 4px 16px rgba(0,0,0,0.05)",
+        "purpose": "Subtle shadow for glass cards."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default easing for state transitions."
+      },
+      {
+        "name": "duration-fast",
+        "value": "150ms",
+        "purpose": "Quick state changes."
+      },
+      {
+        "name": "duration-normal",
+        "value": "250ms",
+        "purpose": "Standard transitions."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main action button with violet background.",
+      "html": "<button class=\"ds-btn-primary\">Tambah User</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.625rem 1.25rem; background: #7c3aed; color: #ffffff; font-family: Instrument Sans, system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; border: none; border-radius: 0.75rem; min-height: 44px; cursor: pointer; transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease; } .ds-btn-primary:hover { background: #6d28d9; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Outlined button for secondary actions.",
+      "html": "<button class=\"ds-btn-secondary\">Batal</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.625rem 1.25rem; background: transparent; color: #7c3aed; font-family: Instrument Sans, system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; border: 1px solid #7c3aed; border-radius: 0.75rem; min-height: 44px; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; } .ds-btn-secondary:hover { background: rgba(124, 58, 237, 0.05); border-color: #6d28d9; } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2); }"
+    },
+    {
+      "name": "Glass Card",
+      "kind": "card",
+      "refersTo": "glass-card",
+      "description": "Floating card with glass effect for elevated surfaces.",
+      "html": "<div class=\"ds-glass-card\"><h3>Stat Card</h3><p>Content here</p></div>",
+      "css": ".ds-glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 1.5rem; padding: 1.5rem; box-shadow: 0 4px 16px rgba(0,0,0,0.05); transition: box-shadow 0.15s ease, transform 0.15s ease; } .ds-glass-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.1); transform: translateY(-2px); }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Text input with violet focus state.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Masukkan nama\">",
+      "css": ".ds-input { width: 100%; height: 44px; padding: 0.625rem 1rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.75rem; font-family: Instrument Sans, system-ui, sans-serif; font-size: 1rem; color: #0f172a; transition: border-color 0.15s ease, box-shadow 0.15s ease; } .ds-input::placeholder { color: #94a3b8; } .ds-input:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2); } .ds-input:disabled { background: #f1f5f9; color: #94a3b8; cursor: not-allowed; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Pill-shaped status indicator.",
+      "html": "<span class=\"ds-badge ds-badge-success\">Diterima</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; padding: 0.25rem 0.75rem; border-radius: 9999px; font-family: Instrument Sans, system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; } .ds-badge-success { background: rgba(16, 185, 129, 0.1); color: #10b981; } .ds-badge-warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; } .ds-badge-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; } .ds-badge-info { background: rgba(8, 145, 178, 0.1); color: #0891b2; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Glass Pavilion",
+    "overview": "A government service portal that feels like a modern civic building — clean, trustworthy, and welcoming. The Glass Pavilion metaphor guides every decision: transparent surfaces that invite interaction, subtle depth that suggests competence, and warm accents that soften the formality of government. The design balances official authority with approachable accessibility. This system serves two distinct surfaces with unified visual language: Public Portal for citizens seeking services, and Admin Portal for government employees managing requests.",
+    "keyCharacteristics": [
+      "Soft glass surfaces with subtle backdrop blur",
+      "Purple/violet as primary accent color",
+      "Cyan as secondary accent for status and CTAs",
+      "Generous whitespace and clear hierarchy",
+      "Touch targets minimum 44px for accessibility",
+      "Light backgrounds throughout"
+    ],
+    "rules": [
+      {
+        "name": "The Glass Card Rule",
+        "body": "Glass surfaces use backdrop-filter: blur(12px) with rgba(255,255,255,0.8) backgrounds. Never use blur on content-heavy areas; reserve it for floating elements.",
+        "section": "colors"
+      },
+      {
+        "name": "The Purple Accent Rule",
+        "body": "Violet is the primary accent and should appear on ≤15% of any given screen. Its restraint is intentional — it marks important actions and brand moments, not decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Surfaces are flat at rest. Shadows appear only on interaction or when an element needs to float above others.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Contrast Rule",
+        "body": "Never use Ink Secondary (#475569) for body text. Only Ink Primary (#0f172a) for readable content.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Do use glass effects for floating elements (cards, modals, dropdowns)",
+      "Do maintain minimum 44px touch targets for all interactive elements",
+      "Do use violet as the primary accent and cyan for functional feedback",
+      "Do keep shadows subtle — they enhance affordance, not create decoration",
+      "Do use generous whitespace to create clear hierarchy"
+    ],
+    "donts": [
+      "Don't use cyberpunk aesthetic — neon colors, grid backgrounds, glowing borders, glitch animations",
+      "Don't use dark backgrounds for the admin panel",
+      "Don't use glassmorphism on content-heavy areas",
+      "Don't use gradient text for headings or body",
+      "Don't use border-left or border-right as colored accent stripes on cards",
+      "Don't use muted gray (#94a3b8) for body text"
+    ]
+  }
+}

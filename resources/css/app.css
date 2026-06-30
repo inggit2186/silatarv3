@@ -5,9 +5,37 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+/* NEO MIRAI Style Variables */
+:root {
+  --paper: oklch(94% 0.035 78);
+  --paper-soft: oklch(91% 0.045 78);
+  --paper-deep: oklch(84% 0.06 73);
+  --ink: oklch(18% 0.035 82);
+  --ink-soft: oklch(32% 0.045 80);
+  --ash: oklch(54% 0.04 80);
+  --line: oklch(73% 0.055 77);
+  --gold: oklch(68% 0.145 74);
+  --gold-bright: oklch(76% 0.165 80);
+  --sun: oklch(64% 0.19 43);
+  --sun-deep: oklch(52% 0.17 38);
+  --night: oklch(17% 0.035 185);
+  --night-soft: oklch(24% 0.04 170);
+  --rice: oklch(97% 0.02 82);
+  --focus: oklch(58% 0.18 42);
+  --shadow: 0 28px 90px oklch(24% 0.05 75 / 0.22);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --font-display: "Chakra Petch", "Noto Sans JP", sans-serif;
+  --font-serif: "Zen Old Mincho", "Hiragino Mincho ProN", serif;
+  --font-mono: "Azeret Mono", "SFMono-Regular", monospace;
+}
+
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Chakra Petch', 'Space Grotesk', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-serif: 'Zen Old Mincho', 'Noto Serif JP', Georgia, serif;
+    --font-mono: 'Azeret Mono', 'Fira Code', monospace;
 }
 
 @layer components {
@@ -900,3 +928,360 @@
 .silatar-yearpicker-select {
     -moz-appearance: textfield;
 }
+
+/* ==================== NEO MIRAI HOMEPAGE STYLES ==================== */
+
+/* Background */
+body {
+    font-family: 'Chakra Petch', sans-serif;
+    background-image: url('/assets/img/template/bg.webp');
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
+}
+
+/* Header */
+.neom-header {
+    @apply fixed top-0 left-0 right-0 z-50 p-4;
+}
+
+.neom-header-inner {
+    @apply max-w-[1200px] mx-auto flex items-center justify-between;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    @apply rounded-xl px-6 py-3;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.08);
+}
+
+.neom-brand {
+    @apply flex items-center gap-3;
+}
+
+.neom-brand-mark {
+    @apply w-11 h-11 flex items-center justify-center rounded-lg;
+    background: linear-gradient(135deg, #d4a853, #ea580c);
+}
+
+.neom-brand-mark::after {
+    @apply block w-6 h-6 rounded;
+    background: white;
+    content: '';
+}
+
+.neom-brand-text {
+    @apply font-bold text-lg;
+}
+
+.neom-brand-text span {
+    @apply block;
+}
+
+.neom-brand-text span:first-child {
+    @apply text-[#b8923f];
+}
+
+.neom-brand-text span:last-child {
+    @apply text-xs uppercase tracking-widest text-gray-500;
+}
+
+/* Navigation */
+.neom-nav {
+    @apply flex items-center gap-8;
+}
+
+.neom-nav a {
+    @apply text-sm font-medium;
+    @apply text-gray-800;
+    transition: color 0.2s;
+}
+
+.neom-nav a:hover {
+    @apply text-[#b8923f];
+}
+
+/* Hero */
+.neom-hero {
+    @apply min-h-screen flex flex-col items-center justify-center;
+    @apply px-8 py-32;
+}
+
+.neom-hero-content {
+    @apply text-center max-w-[900px];
+}
+
+.neom-hero-eyebrow {
+    font-family: 'Azeret Mono', monospace;
+    @apply text-xs font-semibold tracking-widest uppercase;
+    @apply text-[#b8923f] mb-4;
+}
+
+.neom-hero-title {
+    @apply text-6xl font-black leading-tight tracking-tight mb-4;
+}
+
+.neom-hero-title span {
+    @apply block;
+}
+
+.neom-hero-title span:nth-child(1) { @apply text-[#b8923f]; }
+.neom-hero-title span:nth-child(2) { @apply text-gray-900; }
+.neom-hero-title span:nth-child(3) { @apply text-orange-600; }
+
+.neom-hero-subtitle {
+    font-family: 'Azeret Mono', monospace;
+    @apply text-sm tracking-widest uppercase text-gray-500 mb-2;
+}
+
+.neom-hero-tagline {
+    @apply text-xl font-light text-gray-800 mb-8;
+}
+
+/* Portal Grid */
+.neom-portal-grid {
+    @apply grid grid-cols-2 gap-8 max-w-[900px] mt-8;
+}
+
+.neom-portal-card {
+    @apply bg-white border-2 border-gray-200 rounded-2xl overflow-hidden;
+    transition: all 0.4s ease;
+}
+
+.neom-portal-card:hover {
+    @apply border-[#d4a853];
+    transform: translateY(-8px);
+    box-shadow: 0 20px 50px rgba(212, 168, 83, 0.2);
+}
+
+.neom-portal-cover {
+    @apply relative h-40 overflow-hidden;
+}
+
+.neom-portal-cover img {
+    @apply w-full h-full object-cover transition-transform duration-500;
+}
+
+.neom-portal-card:hover .neom-portal-cover img {
+    transform: scale(1.05);
+}
+
+.neom-portal-badge {
+    @apply absolute bottom-4 left-4;
+    @apply bg-white text-[#b8923f] text-xs font-bold tracking-wider uppercase px-3 py-1.5 rounded-md;
+}
+
+.neom-portal-body {
+    @apply p-5 text-center;
+}
+
+.neom-portal-title {
+    @apply text-xl font-bold mb-2;
+}
+
+.neom-portal-card.silatra .neom-portal-title { @apply text-[#b8923f]; }
+.neom-portal-card.berita .neom-portal-title { @apply text-orange-600; }
+
+.neom-portal-desc {
+    @apply text-sm text-gray-500 mb-4 leading-relaxed;
+}
+
+/* Sections */
+.neom-section {
+    @apply max-w-[1200px] mx-auto px-8 py-16;
+}
+
+.neom-section-header {
+    @apply flex items-end justify-between flex-wrap gap-4 mb-8;
+}
+
+.neom-section-label {
+    font-family: 'Azeret Mono', monospace;
+    @apply text-xs font-semibold tracking-widest uppercase mb-1 text-amber-500;
+}
+
+.neom-section-title {
+    @apply text-3xl font-bold text-gray-800;
+}
+
+.neom-section-title-light { @apply text-white; }
+
+.neom-dark { @apply bg-gray-900; }
+
+.neom-text-link {
+    @apply font-semibold text-sm text-[#b8923f] flex items-center gap-2;
+}
+
+/* Services Grid */
+.neom-services-grid {
+    @apply grid grid-cols-2 lg:grid-cols-4 gap-4;
+}
+
+.neom-service-card {
+    @apply flex items-center gap-4 bg-white border border-gray-200 rounded-xl p-5;
+    transition: all 0.3s ease;
+}
+
+.neom-service-card:hover {
+    @apply border-[#d4a853];
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.neom-service-icon {
+    @apply w-12 h-12 flex items-center justify-center rounded-lg shrink-0;
+    background: linear-gradient(135deg, #d4a853, #ea580c);
+    @apply text-white;
+}
+
+.neom-service-icon i { @apply text-xl; }
+
+.neom-service-title {
+    @apply text-sm font-bold text-gray-900 mb-0.5;
+}
+
+.neom-service-desc { @apply text-xs text-gray-500; }
+
+/* News Grid */
+.neom-news-grid {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+}
+
+.neom-news-card {
+    @apply bg-white/5 border border-white/10 rounded-xl overflow-hidden;
+    transition: all 0.4s ease;
+}
+
+.neom-news-card:hover {
+    @apply border-amber-500;
+    transform: translateY(-6px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+}
+
+.neom-news-cover {
+    @apply relative h-40 overflow-hidden;
+}
+
+.neom-news-cover img {
+    @apply w-full h-full object-cover;
+    filter: brightness(0.85);
+}
+
+.neom-news-badge {
+    @apply absolute top-3 left-3;
+    @apply bg-amber-500 text-black text-xs font-bold tracking-wider uppercase px-2 py-1 rounded;
+}
+
+.neom-news-body { @apply p-5; }
+
+.neom-news-date {
+    font-family: 'Azeret Mono', monospace;
+    @apply text-xs text-gray-400 mb-2;
+}
+
+.neom-news-title {
+    @apply text-sm font-bold text-white leading-relaxed mb-2 line-clamp-2;
+}
+
+.neom-news-excerpt {
+    @apply text-sm text-gray-400 line-clamp-2;
+}
+
+/* Contact */
+.neom-contact {
+    @apply bg-gray-900 px-8 py-12;
+    border-top: 1px solid rgba(212,168,83,0.2);
+    border-bottom: 1px solid rgba(212,168,83,0.2);
+}
+
+.neom-contact-inner {
+    @apply max-w-[900px] mx-auto flex flex-wrap justify-center gap-12;
+}
+
+.neom-contact-item {
+    @apply flex items-center gap-3;
+}
+
+.neom-contact-icon {
+    @apply w-11 h-11 shrink-0 rounded-lg flex items-center justify-center;
+    background: linear-gradient(135deg, #d4a853, #ea580c);
+}
+
+.neom-contact-icon i { @apply text-xl; }
+
+.neom-contact-label {
+    font-family: 'Azeret Mono', monospace;
+    @apply text-xs tracking-widest uppercase text-gray-400 mb-0.5;
+}
+
+.neom-contact-value { @apply font-semibold text-white; }
+
+/* Footer */
+.neom-footer {
+    @apply bg-gray-900 py-10 text-center;
+}
+
+.neom-footer-brand {
+    @apply inline-flex items-center gap-3 mb-4;
+}
+
+.neom-footer-brand .neom-brand-mark {
+    @apply w-9 h-9;
+}
+
+.neom-footer-links {
+    @apply flex justify-center flex-wrap gap-6 mb-6;
+}
+
+.neom-footer-links a {
+    @apply text-sm text-gray-400 transition-colors;
+}
+
+.neom-footer-links a:hover {
+    @apply text-amber-500;
+}
+
+.neom-footer-copy {
+    @apply text-xs text-gray-500;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .neom-portal-grid { @apply grid-cols-1; }
+    .neom-services-grid { grid-template-columns: 1fr; }
+    .neom-hero { @apply px-4 py-24; }
+}
+
+/* Hero Card Glass Effect */
+.hero-card {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(212, 168, 83, 0.25);
+    border-radius: 1.5rem;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(212, 168, 83, 0.5);
+    transform: translateY(-8px);
+    box-shadow: 0 25px 60px rgba(212, 168, 83, 0.25);
+}
+
+.hero-card .portal-cover img {
+    transition: transform 0.6s ease;
+}
+
+.hero-card:hover .portal-cover img {
+    transform: scale(1.08);
+}
+
+.portal-label {
+    background: rgba(212, 168, 83, 0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(212, 168, 83, 0.3);
+    color: #d4a853;
+}
+
+.portal-title-silatar { color: #d4a853; }
+.portal-title-berita { color: #ea580c; }
+.portal-cta-berita { color: #ea580c; }

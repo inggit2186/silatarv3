@@ -1,0 +1,12 @@
+{
+  "files": [
+    "resources/views/**/*.blade.php"
+  ],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "devServer": {
+    "port": 5173,
+    "url": "http://localhost:5173"
+  },
+  "cspChecked": true
+}

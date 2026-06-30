@@ -94,6 +94,17 @@
     @apply -translate-x-full lg:translate-x-0 lg:w-16;
 }
 
+/* Icon in collapsed mode - center the icon */
+.admin-sidebar.collapsed .sidebar-nav-icon-wrap {
+    margin: 0 auto;
+}
+
+.admin-sidebar.collapsed .sidebar-nav-item {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
 .sidebar-logo {
     @apply flex h-16 items-center gap-3 px-4;
     border-bottom: 1px solid rgba(0, 212, 255, 0.15);
@@ -115,8 +126,144 @@
 
 .sidebar-nav-item.active {
     color: #00f0ff;
-    background: rgba(0, 212, 255, 0.15);
-    box-shadow: inset 3px 0 0 0 #00d4ff, 0 0 20px rgba(0, 212, 255, 0.2);
+    background: rgba(0, 212, 255, 0.12);
+    border-left: 3px solid #00d4ff;
+    box-shadow: inset 0 0 30px rgba(0, 212, 255, 0.1);
+}
+
+.sidebar-nav-item.active .sidebar-nav-icon-wrap {
+    animation: iconGlow 2s ease-in-out infinite;
+    transform: scale(1.05);
+}
+
+@keyframes iconGlow {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.15); }
+}
+
+/* Sidebar Nav Icon Wrappers - Colorful & Prominent */
+.sidebar-nav-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.75rem;
+    flex-shrink: 0;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar-nav-icon-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-nav-item:hover .sidebar-nav-icon-wrap::before {
+    opacity: 1;
+}
+
+/* Icon inner - the actual SVG */
+.sidebar-nav-icon-inner {
+    width: 1.125rem;
+    height: 1.125rem;
+    transition: all 0.3s ease;
+}
+
+/* Color variants */
+.sidebar-nav-icon-wrap.cyan {
+    background: linear-gradient(135deg, #06b6d4, #22d3ee);
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+    color: #0a0a0f;
+}
+.sidebar-nav-icon-wrap.cyan:hover {
+    box-shadow: 0 0 25px rgba(6, 182, 212, 0.6);
+    transform: scale(1.1);
+}
+
+.sidebar-nav-icon-wrap.emerald {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    color: #0a0a0f;
+}
+.sidebar-nav-icon-wrap.emerald:hover {
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
+    transform: scale(1.1);
+}
+
+.sidebar-nav-icon-wrap.amber {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+    color: #0a0a0f;
+}
+.sidebar-nav-icon-wrap.amber:hover {
+    box-shadow: 0 0 25px rgba(245, 158, 11, 0.6);
+    transform: scale(1.1);
+}
+
+.sidebar-nav-icon-wrap.rose {
+    background: linear-gradient(135deg, #f43f5e, #fb7185);
+    box-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+    color: white;
+}
+.sidebar-nav-icon-wrap.rose:hover {
+    box-shadow: 0 0 25px rgba(244, 63, 94, 0.6);
+    transform: scale(1.1);
+}
+
+.sidebar-nav-icon-wrap.violet {
+    background: linear-gradient(135deg, #a855f7, #c084fc);
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+    color: white;
+}
+.sidebar-nav-icon-wrap.violet:hover {
+    box-shadow: 0 0 25px rgba(168, 85, 247, 0.6);
+    transform: scale(1.1);
+}
+
+.sidebar-nav-icon-wrap.blue {
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    color: white;
+}
+.sidebar-nav-icon-wrap.blue:hover {
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.6);
+    transform: scale(1.1);
+}
+
+.sidebar-nav-icon-wrap.indigo {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+    color: white;
+}
+.sidebar-nav-icon-wrap.indigo:hover {
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.6);
+    transform: scale(1.1);
+}
+
+.sidebar-nav-icon-wrap.slate {
+    background: linear-gradient(135deg, #475569, #64748b);
+    box-shadow: 0 0 15px rgba(71, 85, 105, 0.4);
+    color: white;
+}
+.sidebar-nav-icon-wrap.slate:hover {
+    box-shadow: 0 0 25px rgba(71, 85, 105, 0.6);
+    transform: scale(1.1);
+}
+
+/* Active state - enhanced glow */
+.sidebar-nav-item.active .sidebar-nav-icon-wrap {
+    animation: iconGlow 2s ease-in-out infinite;
+}
+
+@keyframes iconGlow {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.2); }
 }
 
 .sidebar-nav-icon {

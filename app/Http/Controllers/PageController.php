@@ -3481,10 +3481,6 @@ class PageController extends Controller
     /**
      * Profil Kantor page.
      */
-    public function profilKantor()
-    {
-        return view('pages.profil-kantor');
-    }
 
     /**
      * Sejarah page.
@@ -3500,5 +3496,615 @@ class PageController extends Controller
     public function strukturOrganisasi()
     {
         return view('pages.struktur-organisasi');
+    }
+
+    /**
+     * Profil Madrasah page.
+     */
+    public function profilMadrasah()
+    {
+        $user = auth()->user();
+        $formData = [
+            'nama' => '',
+            'nsm' => '',
+            'npsm' => '',
+            'status_lembaga' => '',
+            'is_status_readonly' => false,
+            'is_nama_readonly' => false,
+            'jalan' => '',
+            'jorong' => '',
+            'nagari' => '',
+            'kecamatan' => '',
+            'koordinat' => '',
+            'telepon' => '',
+            'email' => '',
+            'website' => '',
+            'waktu_belajar' => '',
+            'visi' => '',
+            'sk_pendirian' => '',
+            'tanggal_sk' => '',
+            'komite_lembaga' => '',
+            'akreditasi' => '',
+            'tanggal_akreditasi' => '',
+            'status_kkm' => '',
+            'jarak_pusat_provinsi' => '',
+            'jarak_pusat_kabupaten' => '',
+            'jarak_kecamatan' => '',
+            'jarak_kanwil_kemenag' => '',
+            'jarak_kemenag_kab' => '',
+            'jarak_kua' => '',
+            'jarak_ra_terdekat' => '',
+            'jarak_mi_terdekat' => '',
+            'jarak_mts_terdekat' => '',
+            'jarak_ma_terdekat' => '',
+            'jarak_pontren_terdekat' => '',
+            'jarak_tk_terdekat' => '',
+            'jarak_sd_terdekat' => '',
+            'jarak_smp_terdekat' => '',
+            'jarak_sma_terdekat' => '',
+        ];
+
+        // Get department data based on user's dept_id
+        if ($user && $user->dept_id) {
+            $dept = DB::table('ktd_department')->where('id', $user->dept_id)->first();
+
+            if ($dept) {
+                // Nama Madrasah selalu read-only (dari ktd_department)
+                $formData['is_nama_readonly'] = true;
+                $formData['nama'] = $dept->nama ?? '';
+
+                // Map ktd_department columns to form fields
+                $formData['status_lembaga'] = $dept->status ?? '';
+                $formData['jarak_kecamatan'] = $dept->jarak_kecamatan ?? '';
+                $formData['jarak_kua'] = $dept->jarak_kua ?? '';
+                $formData['jarak_kemenag_kab'] = $dept->jarak_kemenag_kab ?? '';
+                $formData['jarak_kanwil_kemenag'] = $dept->jarak_kanwil_kemenag ?? '';
+
+                // Handle alamat field (might contain multiple parts)
+                if (!empty($dept->alamat)) {
+                    $alamatParts = explode(',', $dept->alamat);
+                    $formData['jalan'] = trim($alamatParts[0] ?? '');
+                    $formData['jorong'] = trim($alamatParts[1] ?? '');
+                    $formData['nagari'] = trim($alamatParts[2] ?? '');
+                    $formData['kecamatan'] = trim($alamatParts[3] ?? '');
+                }
+
+                // Map telepon if available
+                if (!empty($dept->telepon)) {
+                    $formData['telepon'] = $dept->telepon;
+                }
+
+                // Map email if available
+                if (!empty($dept->email)) {
+                    $formData['email'] = $dept->email;
+                }
+
+                // Map website if available
+                if (!empty($dept->website)) {
+                    $formData['website'] = $dept->website;
+                }
+
+                // Map koordinat if available
+                if (!empty($dept->koordinat)) {
+                    $formData['koordinat'] = $dept->koordinat;
+                }
+
+                // Map akreditasi if available
+                if (!empty($dept->akreditasi)) {
+                    $formData['akreditasi'] = $dept->akreditasi;
+                }
+
+                // Map waktu_belajar if available
+                if (!empty($dept->waktu_belajar)) {
+                    $formData['waktu_belajar'] = $dept->waktu_belajar;
+                }
+
+                // Map nsm if available
+                if (!empty($dept->nsm)) {
+                    $formData['nsm'] = $dept->nsm;
+                }
+
+                // Map npsm if available
+                if (!empty($dept->npsm)) {
+                    $formData['npsm'] = $dept->npsm;
+                }
+
+                // Check kategori: jika MAN/MIN/MTSN, status lembaga = NEGERI dan read-only
+                $kategoriLower = strtolower($dept->kategori ?? '');
+                if (in_array($kategoriLower, ['man', 'min', 'mtsn'])) {
+                    $formData['status_lembaga'] = 'NEGERI';
+                    $formData['is_status_readonly'] = true;
+                }
+            }
+        }
+
+        return view('madrasah.profilmadrasah', [
+            'formData' => $formData,
+        ]);
+    }
+
+    /**
+     * Pegawai Madrasah page - daftar pegawai berdasarkan dept_id user.
+     */
+    public function pegawaiMadrasah(Request $request)
+    {
+        $user = auth()->user();
+        $deptId = $user->dept_id ?? null;
+        $deptName = 'Madrasah';
+        $isMadrasahType = false;
+
+        // Get department info
+        if ($deptId) {
+            $dept = DB::table('ktd_department')->where('id', $deptId)->first();
+            if ($dept) {
+                $deptName = $dept->nama ?? 'Madrasah';
+                $kategoriLower = strtolower($dept->kategori ?? '');
+                $isMadrasahType = in_array($kategoriLower, ['man', 'min', 'mtsn', 'ra']);
+            }
+        }
+
+        // Get users based on dept_id
+        $usersQuery = DB::table('users')
+            ->where('dept_id', $deptId)
+            ->whereNotIn('role', ['other', 'pensiun', 'pindah'])
+            ->select([
+                'id',
+                'name',
+                'nomor_induk',
+                'kat_jabatan',
+                'pekerjaan',
+                'satker',
+                'email',
+                'telp',
+                'jk',
+                'pp',
+                'status',
+                'npwp',
+                'tempat_lahir',
+                'tanggal_lahir',
+                'alamat',
+                'tmt_cpns',
+                'tmt_pns',
+                'tmt_tugas',
+                'kgb',
+                'asn',
+                'gol',
+                'jabatan',
+                'masa_kerja_tahun',
+                'masa_kerja_bulan',
+                'ijazah_jurusan',
+                'ijazah_fakultas',
+                'ijazah_universitas',
+                'ijazah_pendidikan',
+                'ijazah_tahun_lulus',
+            ])
+            ->orderByRaw("FIELD(kat_jabatan, 'kepala', 'kasubag', 'kasi', 'kaur', 'pelaksana', 'staf', 'honorer', 'guru', '')")
+            ->orderBy('name');
+
+        $pegawaiList = $usersQuery->paginate(15);
+
+        // Add profile photo URLs
+        $pegawaiList->getCollection()->transform(function ($item) {
+            if ($item->pp && $item->nomor_induk) {
+                $item->photo_url = asset('assets/img/users/' . $item->nomor_induk . '/' . $item->pp);
+            } else {
+                $item->photo_url = null;
+            }
+            $item->initials = $item->name ? strtoupper(substr($item->name, 0, 2)) : 'NA';
+            return $item;
+        });
+
+        // Summary stats - ASN: cpns/pns/pppk, Non ASN: Honor/GTT/PTT/dll
+        $stats = [
+            'total' => $pegawaiList->total(),
+            'asn' => DB::table('users')->where('dept_id', $deptId)->whereIn('asn', ['cpns', 'pns', 'pppk'])->count(),
+            'honorer' => DB::table('users')->where('dept_id', $deptId)->whereNotIn('asn', ['cpns', 'pns', 'pppk'])->count(),
+        ];
+
+        return view('madrasah.pegawaimadrasah', [
+            'pegawaiList' => $pegawaiList,
+            'deptName' => $deptName,
+            'isMadrasahType' => $isMadrasahType,
+            'stats' => $stats,
+        ]);
+    }
+
+    /**
+     * Guru Madrasah page - daftar guru berdasarkan dept_id user.
+     */
+    public function guruMadrasah(Request $request)
+    {
+        $user = auth()->user();
+        $deptId = $user->dept_id ?? null;
+        $deptName = 'Madrasah';
+
+        // Get department info
+        if ($deptId) {
+            $dept = DB::table('ktd_department')->where('id', $deptId)->first();
+            if ($dept) {
+                $deptName = $dept->nama ?? 'Madrasah';
+            }
+        }
+
+        // Get only guru based on dept_id
+        $guruQuery = DB::table('users')
+            ->where('dept_id', $deptId)
+            ->where('kat_jabatan', 'guru')
+            ->whereNotIn('role', ['other', 'pensiun', 'pindah'])
+            ->select([
+                'id',
+                'name',
+                'nomor_induk',
+                'kat_jabatan',
+                'pekerjaan',
+                'satker',
+                'email',
+                'telp',
+                'jk',
+                'pp',
+                'status',
+                'npwp',
+                'tempat_lahir',
+                'tanggal_lahir',
+                'alamat',
+                'jabatan',
+                'nuptk',
+                'nrg',
+                'serdik',
+                'bidang_studi_diajar',
+            ])
+            ->orderBy('name');
+
+        $guruList = $guruQuery->paginate(15);
+
+        // Add profile photo URLs
+        $guruList->getCollection()->transform(function ($item) {
+            if ($item->pp && $item->nomor_induk) {
+                $item->photo_url = asset('assets/img/users/' . $item->nomor_induk . '/' . $item->pp);
+            } else {
+                $item->photo_url = null;
+            }
+            $item->initials = $item->name ? strtoupper(substr($item->name, 0, 2)) : 'NA';
+            return $item;
+        });
+
+        // Summary stats - serdik: sertifikasi / non-sertifikasi / non-guru / unknown
+        $stats = [
+            'total' => $guruList->total(),
+            'sertifikasi' => DB::table('users')->where('dept_id', $deptId)->where('kat_jabatan', 'guru')->where('serdik', 'sertifikasi')->count(),
+            'belum_sertifikasi' => DB::table('users')->where('dept_id', $deptId)->where('kat_jabatan', 'guru')->whereIn('serdik', ['non-sertifikasi', 'non-guru', 'unknown'])->count(),
+        ];
+
+        return view('madrasah.gurumadrasah', [
+            'guruList' => $guruList,
+            'deptName' => $deptName,
+            'stats' => $stats,
+        ]);
+    }
+
+    /**
+     * Laporan Semester Madrasah page.
+     */
+    public function laporanSemesterMadrasah(Request $request)
+    {
+        $user = auth()->user();
+        $deptId = $user->dept_id ?? null;
+        $deptName = 'Madrasah';
+
+        // Get department info
+        if ($deptId) {
+            $dept = DB::table('ktd_department')->where('id', $deptId)->first();
+            if ($dept) {
+                $deptName = $dept->nama ?? 'Madrasah';
+            }
+        }
+
+        // Get selected semester and tahun ajaran
+        $selectedSemester = $request->input('semester', 'genap');
+        $tahunAjaran = $request->input('tahun_ajaran', $this->getDefaultAcademicYear());
+
+        // Get existing report if any
+        $existingReport = null;
+        if ($deptId) {
+            $existingReport = DB::table('ktd_laporan_semester_madrasah')
+                ->where('dept_id', $deptId)
+                ->where('semester', $selectedSemester)
+                ->where('tahun_ajaran', $tahunAjaran)
+                ->first();
+        }
+
+        // Generate academic year options
+        $academicYearOptions = $this->generateAcademicYearOptions();
+
+        // Default form data structure
+        $formData = [
+            'keadaanGedung' => $existingReport ? json_decode($existingReport->keadaan_gedung ?? '{}', true) : $this->getDefaultKeadaanGedung(),
+            'saranaPendidikan' => $existingReport ? json_decode($existingReport->sarana_pendidikan ?? '{}', true) : $this->getDefaultSaranaPendidikan(),
+            'bantuanPemerintah' => $existingReport ? json_decode($existingReport->bantuan_pemerintah ?? '{}', true) : $this->getDefaultBantuanPemerintah(),
+            'bantuanNonPemerintah' => $existingReport ? json_decode($existingReport->bantuan_non_pemerintah ?? '{}', true) : $this->getDefaultBantuanNonPemerintah(),
+            'dataGuruPegawai' => $existingReport ? json_decode($existingReport->data_guru_pegawai ?? '{}', true) : $this->getDefaultDataGuruPegawai(),
+            'tingkatPendidikan' => $existingReport ? json_decode($existingReport->tingkat_pendidikan ?? '{}', true) : $this->getDefaultTingkatPendidikan(),
+            'sertifikasi' => $existingReport ? json_decode($existingReport->sertifikasi ?? '{}', true) : $this->getDefaultSertifikasi(),
+            'banyakHariSekolah' => $existingReport?->banyak_hari_sekolah ?? 0,
+            'absensiSiswa' => $existingReport ? json_decode($existingReport->absensi_siswa ?? '{}', true) : $this->getDefaultAbsensiSiswa(),
+            'luasTanah' => $existingReport ? json_decode($existingReport->luas_tanah ?? '{}', true) : $this->getDefaultLuasTanah(),
+            'sertifikatTanah' => $existingReport ? json_decode($existingReport->sertifikat_tanah ?? '{}', true) : $this->getDefaultSertifikatTanah(),
+        ];
+
+        $reportStatus = $existingReport?->status ?? 'draft';
+        $submittedAt = $existingReport?->submitted_at;
+        $catatanAdmin = $existingReport?->catatan_admin;
+
+        return view('madrasah.laporansemester', [
+            'deptName' => $deptName,
+            'deptId' => $deptId,
+            'selectedSemester' => $selectedSemester,
+            'tahunAjaran' => $tahunAjaran,
+            'academicYearOptions' => $academicYearOptions,
+            'formData' => $formData,
+            'reportStatus' => $reportStatus,
+            'submittedAt' => $submittedAt,
+            'catatanAdmin' => $catatanAdmin,
+        ]);
+    }
+
+    /**
+     * Get default academic year (e.g., 2025/2026).
+     */
+    private function getDefaultAcademicYear(): string
+    {
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+        $startYear = $currentMonth >= 7 ? $currentYear : $currentYear - 1;
+        return $startYear . '/' . ($startYear + 1);
+    }
+
+    /**
+     * Generate academic year options.
+     */
+    private function generateAcademicYearOptions(): array
+    {
+        $defaultYear = $this->getDefaultAcademicYear();
+        [$startYear] = explode('/', $defaultYear);
+        $startYear = (int) $startYear;
+        $options = [];
+
+        for ($year = $startYear - 2; $year <= $startYear + 2; $year++) {
+            $options[] = ($year) . '/' . ($year + 1);
+        }
+
+        return $options;
+    }
+
+    /**
+     * Get default keadaan gedung data.
+     */
+    private function getDefaultKeadaanGedung(): array
+    {
+        $labels = [
+            'Ruang Kelas', 'Ruang Kamad', 'Ruang Guru', 'Ruang TU',
+            'Ruang Lab. IPA', 'Ruang Lab. Komputer', 'Ruang Perpustakaan',
+            'Ruang Keterampilan', 'Ruang Seni', 'Ruang UKS', 'Aula',
+            'Musholla / Ibadah', 'WC', 'Kamar Mandi', 'Kantin'
+        ];
+
+        return array_map(fn($label) => [
+            'label' => $label,
+            'baik' => 0,
+            'ringan' => 0,
+            'sedang' => 0,
+            'berat' => 0,
+            'isCustom' => false,
+        ], $labels);
+    }
+
+    /**
+     * Get default sarana pendidikan data.
+     */
+    private function getDefaultSaranaPendidikan(): array
+    {
+        $labels = [
+            'Bangku Uk. 1 Siswa', 'Bangku Uk. 2 Siswa', 'Kursi Siswa',
+            'Lemari', 'Rak Buku', 'Papan Tulis', 'Komputer Kantor',
+            'Komputer Siswa', 'Alat Peraga', 'PKn', 'Bahasa Indonesia',
+            'Matematika', 'IPA', 'IPS', 'Atlas', 'Globe'
+        ];
+
+        return array_map(fn($label) => [
+            'label' => $label,
+            'baik' => 0,
+            'ringan' => 0,
+            'sedang' => 0,
+            'berat' => 0,
+            'isCustom' => false,
+        ], $labels);
+    }
+
+    /**
+     * Get default bantuan pemerintah data.
+     */
+    private function getDefaultBantuanPemerintah(): array
+    {
+        return array_map(fn($label) => [
+            'label' => $label,
+            'diterima' => 0,
+            'terserap' => 0,
+            'isCustom' => false,
+        ], ['BOS', 'BSM', 'Block Grant']);
+    }
+
+    /**
+     * Get default bantuan non pemerintah data.
+     */
+    private function getDefaultBantuanNonPemerintah(): array
+    {
+        return array_map(fn($label) => [
+            'label' => $label,
+            'diterima' => 0,
+            'terserap' => 0,
+            'isCustom' => false,
+        ], ['Sumbangan']);
+    }
+
+    /**
+     * Get default data guru pegawai.
+     */
+    private function getDefaultDataGuruPegawai(): array
+    {
+        $labels = [
+            'Kepala Madrasah', 'Wakil Kepala Madrasah', 'Guru Mapel Umum',
+            'Guru Penjaskes', 'Guru Agama', 'Guru BK', 'Guru B. Inggris',
+            'Ka TU', 'Staf TU', 'Bendahara', 'Personel Lainnya'
+        ];
+
+        return array_map(fn($label) => [
+            'label' => $label,
+            'l' => 0,
+            'p' => 0,
+            'isCustom' => false,
+        ], $labels);
+    }
+
+    /**
+     * Get default tingkat pendidikan.
+     */
+    private function getDefaultTingkatPendidikan(): array
+    {
+        $labels = ['< SLTA', 'Diploma I (D1)', 'Diploma II (D2)', 'Diploma III (D3)', 'Strata I (S1)', 'Strata II (S2)', 'Strata III (S3)'];
+
+        return array_map(fn($label) => [
+            'label' => $label,
+            'l' => 0,
+            'p' => 0,
+            'isCustom' => false,
+        ], $labels);
+    }
+
+    /**
+     * Get default sertifikasi.
+     */
+    private function getDefaultSertifikasi(): array
+    {
+        $labels = ['PNS Kemenag', 'PNS Diknas', 'GTT / GTY', 'PPPK', 'PPPK Paruh Waktu', 'Belum Sertifikasi'];
+
+        return array_map(fn($label) => [
+            'label' => $label,
+            'l' => 0,
+            'p' => 0,
+            'isCustom' => false,
+        ], $labels);
+    }
+
+    /**
+     * Get default absensi siswa.
+     */
+    private function getDefaultAbsensiSiswa(): array
+    {
+        $labels = ['Sakit', 'Ijin', 'Alpa / Tanpa Keterangan'];
+
+        return array_map(fn($label) => [
+            'label' => $label,
+            'l' => 0,
+            'p' => 0,
+            'isCustom' => false,
+        ], $labels);
+    }
+
+    /**
+     * Get default luas tanah.
+     */
+    private function getDefaultLuasTanah(): array
+    {
+        return [
+            'total' => 0,
+            'perkaranganLuas' => 0,
+            'perkaranganTerbangun' => 0,
+            'kebun' => 0,
+            'lapanganOlahraga' => 0,
+            'masjidMusholla' => 0,
+            'wc' => 0,
+            'perpustakaan' => 0,
+        ];
+    }
+
+    /**
+     * Get default sertifikat tanah.
+     */
+    private function getDefaultSertifikatTanah(): array
+    {
+        return [
+            'statusKepemilikan' => '',
+            'nomor' => '',
+            'tanggal' => '',
+            'luas' => 0,
+        ];
+    }
+
+    /**
+     * Save Laporan Semester Madrasah.
+     */
+    public function saveLaporanSemesterMadrasah(Request $request)
+    {
+        $user = auth()->user();
+        $deptId = $user->dept_id ?? $request->input('dept_id');
+
+        if (!$deptId) {
+            return response()->json(['success' => false, 'message' => 'Dept ID diperlukan'], 400);
+        }
+
+        $validated = $request->validate([
+            'semester' => 'required|in:ganjil,genap',
+            'tahun_ajaran' => 'required|string',
+            'status' => 'required|in:draft,submitted',
+        ]);
+
+        $data = [
+            'dept_id' => $deptId,
+            'semester' => $validated['semester'],
+            'tahun_ajaran' => $validated['tahun_ajaran'],
+            'status' => $validated['status'],
+            'keadaan_gedung' => json_encode($request->input('keadaanGedung', [])),
+            'sarana_pendidikan' => json_encode($request->input('saranaPendidikan', [])),
+            'bantuan_pemerintah' => json_encode($request->input('bantuanPemerintah', [])),
+            'bantuan_non_pemerintah' => json_encode($request->input('bantuanNonPemerintah', [])),
+            'data_guru_pegawai' => json_encode($request->input('dataGuruPegawai', [])),
+            'tingkat_pendidikan' => json_encode($request->input('tingkatPendidikan', [])),
+            'sertifikasi' => json_encode($request->input('sertifikasi', [])),
+            'banyak_hari_sekolah' => $request->input('banyakHariSekolah', 0),
+            'absensi_siswa' => json_encode($request->input('absensiSiswa', [])),
+            'luas_tanah' => json_encode($request->input('luasTanah', [])),
+            'sertifikat_tanah' => json_encode($request->input('sertifikatTanah', [])),
+        ];
+
+        if ($validated['status'] === 'submitted') {
+            $data['submitted_at'] = now();
+        }
+
+        // Check if record exists
+        $existing = DB::table('ktd_laporan_semester_madrasah')
+            ->where('dept_id', $deptId)
+            ->where('semester', $validated['semester'])
+            ->where('tahun_ajaran', $validated['tahun_ajaran'])
+            ->first();
+
+        if ($existing) {
+            $data['updated_at'] = now();
+            DB::table('ktd_laporan_semester_madrasah')
+                ->where('id', $existing->id)
+                ->update($data);
+            $reportId = $existing->id;
+        } else {
+            $data['created_at'] = now();
+            $data['updated_at'] = now();
+            $reportId = DB::table('ktd_laporan_semester_madrasah')->insertGetId($data);
+        }
+
+        $report = DB::table('ktd_laporan_semester_madrasah')->where('id', $reportId)->first();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Laporan berhasil disimpan',
+            'data' => $report,
+        ]);
     }
 }
