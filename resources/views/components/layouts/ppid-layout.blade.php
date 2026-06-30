@@ -30,7 +30,6 @@
         'resources/css/app.css',
         'resources/css/cyberpunk.css',
         'resources/css/neo-mirai-home.css',
-        'resources/css/ppid.css',
         'resources/js/app.js',
         'resources/js/cyber-particles.js'
     ])
@@ -45,6 +44,18 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Header scroll effect
+            var header = document.querySelector('.ppid-header');
+            if (header) {
+                window.addEventListener('scroll', function() {
+                    if (window.pageYOffset > 50) {
+                        header.classList.add('is-scrolled');
+                    } else {
+                        header.classList.remove('is-scrolled');
+                    }
+                });
+            }
+
             // Reveal animations
             var revealElements = document.querySelectorAll('[data-reveal]');
             var observer = new IntersectionObserver(function(entries) {

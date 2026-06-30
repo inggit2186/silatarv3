@@ -1,15 +1,5 @@
 <x-layouts.ppid-layout title="Biaya Layanan - PPID">
-    <header class="site-header ppid-header">
-        <div class="ppid-header-top">
-            <a class="brand-lockup" href="{{ url("/") }}"><span class="brand-mark"><span></span></span><span class="brand-word"><span>SILATAR</span><span>V2</span></span></a>
-            <div class="ppid-header-actions">
-                <a href="{{ route('ppid.formulir-permohonan') }}" class="ppid-header-badge">Ajukan Permohonan</a>
-                <button class="ppid-nav-toggle-btn" type="button" id="mobileMenuToggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg></button>
-            </div>
-        </div>
-        <x-ppid.nav />
-    </header>
-    <div class="ppid-mobile-menu" id="ppidMobileMenu"><ul class="ppid-mobile-nav"><li class="ppid-mobile-nav-item"><a href="{{ route('ppid') }}" class="ppid-mobile-nav-link">Beranda</a></li></ul></div>
+    <x-ppid.nav />
 
     <main class="ppid-content">
         <div class="ppid-page">
@@ -50,12 +40,4 @@
             </section>
         </div>
         @include('ppid.partials.footer')
-    </main>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var mobileToggle = document.getElementById('mobileMenuToggle');
-            var mobileMenu = document.getElementById('ppidMobileMenu');
-            if (mobileToggle && mobileMenu) { mobileToggle.addEventListener('click', function() { mobileMenu.classList.toggle('is-open'); }); }
-        });
-    </script>
-</x-layouts.ppid-layout>
+    </main></x-layouts.ppid-layout>

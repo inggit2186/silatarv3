@@ -1,74 +1,6 @@
 <x-layouts.ppid-layout title="PPID - Pejabat Pengelola Informasi dan Dokumentasi">
-    <!-- Header -->
-    <header class="site-header ppid-header">
-        <div class="ppid-header-top">
-            <a class="brand-lockup" href="{{ url("/") }}" aria-label="SILATAR home">
-                <span class="brand-mark" aria-hidden="true"><span></span></span>
-                <span class="brand-word"><span>SILATAR</span><span>V2</span></span>
-            </a>
-
-            <div class="ppid-header-actions">
-                <a href="{{ route('ppid.formulir-permohonan') }}" class="ppid-header-badge">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="12" y1="18" x2="12" y2="12"/>
-                        <line x1="9" y1="15" x2="15" y2="15"/>
-                    </svg>
-                    Ajukan Permohonan
-                </a>
-                <button class="ppid-nav-toggle-btn" type="button" id="mobileMenuToggle" aria-label="Toggle menu">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="3" y1="12" x2="21" y2="12"/>
-                        <line x1="3" y1="6" x2="21" y2="6"/>
-                        <line x1="3" y1="18" x2="21" y2="18"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-
-        <!-- Horizontal Navigation -->
-        <x-ppid.nav />
-    </header>
-
-    <!-- Mobile Menu -->
-    <div class="ppid-mobile-menu" id="ppidMobileMenu">
-        <ul class="ppid-mobile-nav">
-            <li class="ppid-mobile-nav-item">
-                <a href="{{ route('ppid') }}" class="ppid-mobile-nav-link {{ request()->routeIs('ppid') && !request()->routeIs('ppid.*') ? 'is-active' : '' }}">Beranda</a>
-            </li>
-            <li class="ppid-mobile-nav-item">
-                <a href="{{ route('ppid.profil-singkat') }}" class="ppid-mobile-nav-link">Profil Singkat</a>
-            </li>
-            <li class="ppid-mobile-nav-item">
-                <a href="{{ route('ppid.visi-misi') }}" class="ppid-mobile-nav-link">Visi Misi</a>
-            </li>
-            <li class="ppid-mobile-nav-item">
-                <a href="{{ route('ppid.tugas-fungsi') }}" class="ppid-mobile-nav-link">Tugas, Fungsi & Wewenang</a>
-            </li>
-            <li class="ppid-mobile-nav-item">
-                <a href="{{ route('ppid.struktur') }}" class="ppid-mobile-nav-link">Struktur Kelembagaan</a>
-            </li>
-            <li class="ppid-mobile-nav-item">
-                <a href="{{ route('ppid.regulasi') }}" class="ppid-mobile-nav-link">Regulasi</a>
-            </li>
-            <li class="ppid-mobile-nav-item">
-                <a href="{{ route('ppid.maklumat') }}" class="ppid-mobile-nav-link">Maklumat</a>
-            </li>
-            <li class="ppid-mobile-nav-item">
-                <a href="{{ route('ppid.jadwal') }}" class="ppid-mobile-nav-link">Jadwal</a>
-            </li>
-            <li class="ppid-mobile-nav-item">
-                <a href="{{ route('ppid.prosedur-permohonan') }}" class="ppid-mobile-nav-link">Prosedur</a>
-            </li>
-            <li class="ppid-mobile-nav-item">
-                <a href="{{ route('ppid.formulir-permohonan') }}" class="ppid-mobile-nav-link">Formulir</a>
-            </li>
-            <li class="ppid-mobile-nav-item">
-                <a href="{{ route('ppid.tentang-kami') }}" class="ppid-mobile-nav-link">Tentang Kami</a>
-            </li>
-        </ul>
-    </div>
+    <!-- Navigation -->
+    <x-ppid.nav />
 
     <!-- Content -->
     <main class="ppid-content">
@@ -322,16 +254,4 @@
         </footer>
     </main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var mobileToggle = document.getElementById('mobileMenuToggle');
-            var mobileMenu = document.getElementById('ppidMobileMenu');
-
-            if (mobileToggle && mobileMenu) {
-                mobileToggle.addEventListener('click', function() {
-                    mobileMenu.classList.toggle('is-open');
-                });
-            }
-        });
-    </script>
-</x-layouts.ppid-layout>
+    </x-layouts.ppid-layout>

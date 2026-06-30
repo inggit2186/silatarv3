@@ -11,7 +11,6 @@ export default defineConfig({
                 'resources/css/cyberpunk.css',
                 'resources/css/neo-mirai-home.css',
                 'resources/css/admin.css',
-                'resources/css/ppid.css',
                 'resources/js/app.js',
                 'resources/js/cyber-particles.js',
             ],
