@@ -15,15 +15,13 @@ html {
   color: var(--ink);
   background-color: var(--paper);
   background-image: url('/assets/img/template/bg.webp');
-  background-size: cover;
+  background-size:cover;
   background-position: center;
   background-repeat: no-repeat;
   font-family: var(--font-serif);
   line-height: 1.55;
   overflow-x: clip;
-  /* Transparansi background image - ubah nilai 0.0-1.0 */
-  /* 1 = solid (image tersembunyi), 0 = transparan (image terlihat) */
-  --bg-opacity: 0.95;
+  background-blend-mode: overlay;
 }
 .neo-mirai::before {
   content: '';
@@ -31,7 +29,7 @@ html {
   inset: 0;
   z-index: -1;
   background-color: oklch(94% 0.035 78);
-  opacity: var(--bg-opacity);
+  opacity: 0.5;
   pointer-events: none;
 }
 
@@ -50,7 +48,7 @@ html {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center top, oklch(94% 0.035 78 / 0.5) 0%, oklch(94% 0.035 78 / 0.8) 100%);
+  background: radial-gradient(ellipse at center top, oklch(94% 0.035 78 / 0.2) 0%, oklch(94% 0.035 78 / 0.8) 100%);
   pointer-events: none;
 }
 .hero-page > * {
