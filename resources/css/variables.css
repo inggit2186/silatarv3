@@ -1,0 +1,25 @@
+/* CSS Variables - Using RGB for better browser compatibility */
+:root {
+    --paper: #f5f0e6;
+    --paper-soft: #faf8f4;
+    --paper-deep: #e8e2d8;
+    --ink: #2a2520;
+    --ink-soft: #4a4540;
+    --ash: #8a8580;
+    --line: #c5c0b8;
+    --gold: #c9a55a;
+    --gold-bright: #d4b870;
+    --sun: #c08040;
+    --sun-deep: #a06830;
+    --night: #1a2530;
+    --night-soft: #2a3540;
+    --rice: #f8f6f0;
+    --focus: #c09040;
+    --shadow: rgba(40, 35, 30, 0.15);
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-quart: cubic-bezier(0.25, 1, 0.5, 1);
+    --ease-quint: cubic-bezier(0.22, 1, 0.36, 1);
+    --font-display: 'Chakra Petch', 'Noto Sans JP', sans-serif;
+    --font-serif: 'Zen Old Mincho', 'Hiragino Mincho ProN', serif;
+    --font-mono: 'Azeret Mono', 'SFMono-Regular', monospace;
+}

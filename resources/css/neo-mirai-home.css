@@ -11,6 +11,7 @@ html {
 
 /* NEO MIRAI Styles */
 .neo-mirai {
+  position: relative;
   color: var(--ink);
   background-color: var(--paper);
   background-image: url('/assets/img/template/bg.webp');
@@ -20,6 +21,18 @@ html {
   font-family: var(--font-serif);
   line-height: 1.55;
   overflow-x: clip;
+  /* Transparansi background image - ubah nilai 0.0-1.0 */
+  /* 1 = solid (image tersembunyi), 0 = transparan (image terlihat) */
+  --bg-opacity: 0.95;
+}
+.neo-mirai::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: oklch(94% 0.035 78);
+  opacity: var(--bg-opacity);
+  pointer-events: none;
 }
 
 /* Hero Page - For sub-pages with background */
