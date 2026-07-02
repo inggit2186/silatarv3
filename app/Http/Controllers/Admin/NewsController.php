@@ -435,12 +435,11 @@ class NewsController extends Controller
         }
 
         $request->validate([
-            'image' => ['required', 'image', 'max:10240'], // 10MB max input, will compress
+            'image' => ['required', 'image', 'max:10240'], // 10MB max input
         ]);
 
         if ($request->hasFile('image')) {
             $image = $request->file('image');
-            $extension = strtolower($image->getClientOriginalExtension());
 
             // Generate unique filename
             $filename = 'content_' . Str::random(12) . '_' . time();
@@ -456,32 +455,51 @@ class NewsController extends Controller
                 $originalWidth = $img->width();
                 $originalHeight = $img->height();
 
-                // Max dimensions - only resize if exceeds
-                $maxWidth = 1920;
-                $maxHeight = 1080;
+                // Configuration for content images
+                $config = [
+                    'max_width' => 1200,       // Max width for content
+                    'max_height' => 1200,      // Max height for safety
+                    'quality' => 85,           // Quality 85% (good balance)
+                    'format' => 'webp',        // Convert to WebP
+                    'strip_exif' => true,      // Remove EXIF for privacy
+                    'progressive' => true,     // Progressive JPEG
+                ];
 
-                // Resize only if exceeds max - maintain aspect ratio explicitly
-                if ($originalWidth > $maxWidth) {
-                    $newHeight = (int) round(($maxWidth / $originalWidth) * $originalHeight);
-                    if ($newHeight > $maxHeight) {
-                        $newHeight = $maxHeight;
-                        $newWidth = (int) round(($maxHeight / $originalHeight) * $originalWidth);
-                        $img->resize($newWidth, $maxHeight);
-                    } else {
-                        $img->resize($maxWidth, $newHeight);
+                // Resize only if exceeds max - maintain aspect ratio
+                $needsResize = false;
+                $newWidth = $originalWidth;
+                $newHeight = $originalHeight;
+
+                if ($originalWidth > $config['max_width']) {
+                    $needsResize = true;
+                    $ratio = $config['max_width'] / $originalWidth;
+                    $newWidth = $config['max_width'];
+                    $newHeight = (int) round($originalHeight * $ratio);
+
+                    // Check if new height exceeds max
+                    if ($newHeight > $config['max_height']) {
+                        $ratio = $config['max_height'] / $newHeight;
+                        $newHeight = $config['max_height'];
+                        $newWidth = (int) round($newWidth * $ratio);
                     }
-                } elseif ($originalHeight > $maxHeight) {
-                    $newWidth = (int) round(($maxHeight / $originalHeight) * $originalWidth);
-                    $img->resize($newWidth, $maxHeight);
+                } elseif ($originalHeight > $config['max_height']) {
+                    $needsResize = true;
+                    $ratio = $config['max_height'] / $originalHeight;
+                    $newHeight = $config['max_height'];
+                    $newWidth = (int) round($originalWidth * $ratio);
                 }
-                // If smaller than max, keep original dimensions
 
-                // Quality settings - higher quality (90) for content images
-                $quality = 90;
+                // Resize if needed
+                if ($needsResize) {
+                    $img->resize($newWidth, $newHeight);
+                }
 
-                // Determine output format - convert to WebP for better compression
+                // Strip EXIF data (for privacy and smaller file size)
+                // Note: GD driver strips EXIF by default when reencoding
+
+                // Encode with WebP format for better compression
                 $outputFilename = $filename . '.webp';
-                $encoded = $img->encodeUsingFormat(Format::WEBP, quality: $quality);
+                $encoded = $img->encodeUsingFormat(Format::WEBP, quality: $config['quality']);
 
                 // Save to storage
                 $path = 'news/content/' . $outputFilename;
@@ -492,19 +510,22 @@ class NewsController extends Controller
                 $originalSize = $image->getSize();
                 $savedPercent = $originalSize > 0 ? round((1 - ($fileSize / $originalSize)) * 100, 1) : 0;
 
+                // Return success with metadata
                 return response()->json([
                     'success' => true,
                     'url' => asset('storage/' . $path),
                     'filename' => $outputFilename,
-                    'stats' => [
+                    'meta' => [
                         'original_size' => $this->formatBytes($originalSize),
                         'compressed_size' => $this->formatBytes($fileSize),
                         'saved_percent' => $savedPercent > 0 ? $savedPercent . '%' : '0%',
                         'dimensions' => $img->width() . 'x' . $img->height(),
+                        'format' => 'webp',
                     ]
                 ]);
             } catch (\Exception $e) {
-                // Fallback: save original file if compression fails
+                // Fallback: save original file if processing fails
+                $extension = strtolower($image->getClientOriginalExtension());
                 $fallbackFilename = $filename . '.' . $extension;
                 $path = $image->storeAs('news/content', $fallbackFilename, 'public');
 
@@ -512,7 +533,8 @@ class NewsController extends Controller
                     'success' => true,
                     'url' => asset('storage/' . $path),
                     'filename' => $fallbackFilename,
-                    'warning' => 'Image saved without compression'
+                    'warning' => 'Image saved without processing',
+                    'error' => $e->getMessage()
                 ]);
             }
         }

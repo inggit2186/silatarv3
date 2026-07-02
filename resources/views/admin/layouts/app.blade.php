@@ -15,6 +15,7 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
     <link rel="stylesheet" href="{{ asset('build/assets/fonts-DkuEHybc.css') }}">
     @vite(['resources/css/app.css', 'resources/css/admin.css', 'resources/css/neo-mirai-home.css', 'resources/js/app.js'])
     <style>[x-cloak] { display: none !important; }</style>
+    @stack('styles')
 </head>
 <body class="admin-layout" x-data="{ open: false, collapsed: false }">
 
@@ -457,5 +458,7 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
             </div>
         </template>
     </div>
+
+    @stack('scripts')
 </body>
 </html>

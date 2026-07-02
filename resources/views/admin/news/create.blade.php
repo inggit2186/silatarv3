@@ -54,92 +54,15 @@
                     </div>
                 </div>
 
-                {{-- Content --}}
+                {{-- Content with Quill Editor --}}
                 <div class="neo-card">
                     <div class="neo-card-body">
-                        <label class="neo-form-label">
-                            <svg class="inline h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/>
-                            </svg>
-                            Konten Berita
-                        </label>
-
-                        {{-- Toolbar --}}
-                        <div class="neo-editor-toolbar">
-                            <div class="neo-editor-group">
-                                <select id="fontSelect" onchange="execCmd('fontName', this.value)" class="neo-editor-select">
-                                    <option value="Arial">Arial</option>
-                                    <option value="Courier New">Courier New</option>
-                                    <option value="Georgia">Georgia</option>
-                                    <option value="Times New Roman">Times New Roman</option>
-                                    <option value="Verdana">Verdana</option>
-                                </select>
-                                <select id="fontSizeSelect" onchange="execCmd('fontSize', this.value)" class="neo-editor-select w-16">
-                                    <option value="1">10px</option>
-                                    <option value="2">12px</option>
-                                    <option value="3">14px</option>
-                                    <option value="4" selected>16px</option>
-                                    <option value="5">18px</option>
-                                    <option value="6">24px</option>
-                                    <option value="7">36px</option>
-                                </select>
-                            </div>
-
-                            <div class="neo-editor-group">
-                                <button type="button" onclick="execCmd('bold')" class="neo-editor-btn" title="Bold (Ctrl+B)">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z"/><path d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"/></svg>
-                                </button>
-                                <button type="button" onclick="execCmd('italic')" class="neo-editor-btn" title="Italic (Ctrl+I)">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 4h-9M14 20H5M15 4L9 20"/></svg>
-                                </button>
-                                <button type="button" onclick="execCmd('underline')" class="neo-editor-btn" title="Underline (Ctrl+U)">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 3v7a6 6 0 006 6 6 6 0 006-6V3"/><path d="M4 21h16"/></svg>
-                                </button>
-                            </div>
-
-                            <div class="neo-editor-group">
-                                <button type="button" onclick="execCmd('justifyLeft')" class="neo-editor-btn" title="Align Left">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h12M3 18h18"/></svg>
-                                </button>
-                                <button type="button" onclick="execCmd('justifyCenter')" class="neo-editor-btn" title="Align Center">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 6h18M6 12h12M3 18h18"/></svg>
-                                </button>
-                                <button type="button" onclick="execCmd('justifyRight')" class="neo-editor-btn" title="Align Right">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 6h18M9 12h12M3 18h18"/></svg>
-                                </button>
-                            </div>
-
-                            <div class="neo-editor-group">
-                                <button type="button" onclick="execCmd('insertUnorderedList')" class="neo-editor-btn" title="Bullet List">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-                                </button>
-                                <button type="button" onclick="execCmd('insertOrderedList')" class="neo-editor-btn" title="Numbered List">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M10 6h11M10 12h11M10 18h11M4 6h1v4M4 10h2M4 14h2l1 2v2h-2M7 18v-4"/></svg>
-                                </button>
-                            </div>
-
-                            <div class="neo-editor-group">
-                                <button type="button" onclick="execCmd('formatBlock', 'h1')" class="neo-editor-btn neo-editor-btn-text" title="Heading 1">H1</button>
-                                <button type="button" onclick="execCmd('formatBlock', 'h2')" class="neo-editor-btn neo-editor-btn-text" title="Heading 2">H2</button>
-                                <button type="button" onclick="execCmd('formatBlock', 'h3')" class="neo-editor-btn neo-editor-btn-text" title="Heading 3">H3</button>
-                            </div>
-
-                            <div class="neo-editor-group">
-                                <button type="button" onclick="insertLink()" class="neo-editor-btn" title="Insert Link">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-                                </button>
-                                <button type="button" onclick="openImageModal()" class="neo-editor-btn" title="Insert Image">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div id="editor" contenteditable="true" class="neo-editor">{{ old('content') }}</div>
-                        <input type="hidden" name="content" id="contentInput" value="{{ old('content') }}">
-
-                        @error('content')
-                        <p class="neo-form-error">{{ $message }}</p>
-                        @enderror
+                        <x-ui.quill-editor
+                            :name="'content'"
+                            :id="'quill-editor'"
+                            :label="'Konten Berita'"
+                            :content="old('content')"
+                        />
                     </div>
                 </div>
 
@@ -313,56 +236,9 @@
         </div>
     </form>
 
-    {{-- Image Modal --}}
-    <div id="imageModal" class="neo-modal-backdrop">
-        <div class="neo-modal">
-            <div class="neo-modal-header">
-                <h3 class="neo-modal-title">Insert Gambar</h3>
-                <button type="button" onclick="closeImageModal()" class="neo-modal-close">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="neo-modal-body">
-                <input type="file" id="contentImageInput" accept="image/*" class="hidden" onchange="handleContentImageSelect(this)">
-                <label for="contentImageInput" class="neo-image-upload">
-                    <div id="contentImagePreview" class="hidden w-full h-full absolute inset-0 p-2">
-                        <img id="contentPreviewImg" class="w-full h-full object-contain rounded-lg">
-                    </div>
-                    <div id="contentImagePlaceholder" class="neo-image-upload-placeholder">
-                        <svg class="w-12 h-12 mb-3" style="color: var(--ink-soft);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        <p class="text-sm" style="color: var(--ink-soft);">Klik untuk upload gambar</p>
-                        <p class="text-xs mt-1" style="color: var(--ink-soft);">JPG, PNG, GIF, WebP (Maks 5MB)</p>
-                    </div>
-                </label>
-                <p id="uploadError" class="neo-form-error hidden"></p>
-
-                <div class="neo-form-group mt-4">
-                    <label class="neo-form-label">URL Gambar (alternatif)</label>
-                    <input type="url" id="imageUrlInput" class="neo-form-input" placeholder="https://example.com/image.jpg" oninput="previewUrlImage()">
-                </div>
-
-                <div class="neo-form-group mt-4">
-                    <label class="neo-form-label">Caption</label>
-                    <input type="text" id="imageCaption" class="neo-form-input" placeholder="Caption gambar (opsional)">
-                </div>
-            </div>
-            <div class="neo-modal-footer" style="justify-content: flex-end;">
-                <button type="button" onclick="closeImageModal()" class="neo-btn-secondary">Batal</button>
-                <button type="button" onclick="insertContentImage()" class="neo-btn">
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Insert
-                </button>
-            </div>
-        </div>
-    </div>
-
+    @push('scripts')
     <script>
+        // Image preview for main featured image
         function previewImage(input) {
             if (input.files && input.files[0]) {
                 var reader = new FileReader();
@@ -375,120 +251,7 @@
             }
         }
 
-        function execCmd(command, value = null) {
-            document.execCommand(command, false, value);
-            document.getElementById('editor').focus();
-            updateHiddenInput();
-        }
-
-        function updateHiddenInput() {
-            document.getElementById('contentInput').value = document.getElementById('editor').innerHTML;
-        }
-
-        function insertLink() {
-            var url = prompt('Masukkan URL:', 'https://');
-            if (url) execCmd('createLink', url);
-        }
-
-        let pendingImageUrl = null;
-        let pendingImageFile = null;
-        let savedSelection = null;
-
-        function openImageModal() {
-            const editor = document.getElementById('editor');
-            const selection = window.getSelection();
-            if (selection.rangeCount > 0 && editor.contains(selection.anchorNode)) {
-                savedSelection = selection.getRangeAt(0).cloneRange();
-            }
-            document.getElementById('imageModal').classList.add('active');
-        }
-
-        function closeImageModal() {
-            document.getElementById('imageModal').classList.remove('active');
-        }
-
-        function handleContentImageSelect(input) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                const maxSize = 5 * 1024 * 1024;
-                if (file.size > maxSize) {
-                    document.getElementById('uploadError').textContent = 'Ukuran file terlalu besar. Maksimal 5MB.';
-                    document.getElementById('uploadError').classList.remove('hidden');
-                    return;
-                }
-                document.getElementById('uploadError').classList.add('hidden');
-                pendingImageFile = file;
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('contentPreviewImg').src = e.target.result;
-                    document.getElementById('contentImagePreview').classList.remove('hidden');
-                    document.getElementById('contentImagePlaceholder').classList.add('hidden');
-                }
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function previewUrlImage() {
-            const url = document.getElementById('imageUrlInput').value;
-            if (url) {
-                document.getElementById('contentPreviewImg').src = url;
-                document.getElementById('contentImagePreview').classList.remove('hidden');
-                document.getElementById('contentImagePlaceholder').classList.add('hidden');
-                pendingImageUrl = url;
-                pendingImageFile = null;
-            }
-        }
-
-        function insertContentImage() {
-            const urlInput = document.getElementById('imageUrlInput').value;
-            const caption = document.getElementById('imageCaption').value;
-
-            if (pendingImageFile) {
-                const formData = new FormData();
-                formData.append('image', pendingImageFile);
-                fetch('{{ route("admin.news.upload-image") }}', {
-                    method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => { if (data.success) insertImageElement(data.url, caption); else alert('Upload gagal'); })
-                .catch(error => alert('Error: ' + error.message));
-            } else if (urlInput) {
-                insertImageElement(urlInput, caption);
-            } else {
-                alert('Silakan upload gambar atau masukkan URL.');
-                return;
-            }
-            closeImageModal();
-        }
-
-        function insertImageElement(src, caption) {
-            const figure = document.createElement('figure');
-            figure.style.cssText = 'margin: 1rem 0; text-align: center;';
-            figure.innerHTML = `<img src="${src}" alt="${caption || 'Image'}" style="max-width: 100%; height: auto; border-radius: 8px;"><figcaption style="font-size: 0.875rem; color: var(--ink-soft); margin-top: 0.5rem; font-style: italic;">${caption || ''}</figcaption>`;
-
-            const editor = document.getElementById('editor');
-            if (savedSelection) {
-                try {
-                    const range = savedSelection.cloneRange();
-                    range.deleteContents();
-                    range.insertNode(figure);
-                    editor.focus();
-                    updateHiddenInput();
-                    savedSelection = null;
-                    return;
-                } catch (e) { savedSelection = null; }
-            }
-            editor.appendChild(figure);
-            updateHiddenInput();
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            updateHiddenInput();
-            initSEOPreview();
-        });
-
+        // SEO Preview
         function initSEOPreview() {
             const titleInput = document.querySelector('input[name="title"]');
             const metaTitleInput = document.getElementById('meta_title');
@@ -511,5 +274,11 @@
             if (previewUrl) previewUrl.textContent = 'tanahdatar.kemenag.go.id/berita/' + (slug || 'judul-berita');
             if (previewDesc) previewDesc.textContent = metaDesc.substring(0, 160) || 'Deskripsi meta akan muncul di sini...';
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initSEOPreview();
+        });
     </script>
+    @endpush
+
 </x-admin.layouts.app>

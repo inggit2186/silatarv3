@@ -3426,8 +3426,38 @@ select {
         padding: 0.75rem 0.5rem;
         font-size: 0.7rem;
     }
-    
+
     .neo-pagination {
         flex-wrap: wrap;
+    }
+}
+
+/* ================================================
+   TinyMCE Editor Styles
+   ================================================ */
+
+.neo-tinymce-wrapper {
+    width: 100%;
+}
+
+.neo-tinymce-container {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Responsive TinyMCE */
+@media (max-width: 768px) {
+    .tox .tox-toolbar__group {
+        padding: 4px 2px !important;
+    }
+
+    .tox .tox-tbtn {
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    .tox .tox-tbtn__icon-wrap svg {
+        width: 16px !important;
+        height: 16px !important;
     }
 }
