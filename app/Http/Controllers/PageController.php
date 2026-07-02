@@ -664,19 +664,19 @@ class PageController extends Controller
             'latest_update' => $latestUpdate,
         ];
 
-        $activityUnits = DB::table('satker_kegiatan')
-            ->where('user_id', $user->id)
-            ->whereNotNull('satuan')
-            ->whereRaw("TRIM(satuan) <> ''")
-            ->distinct()
-            ->orderBy('satuan')
-            ->pluck('satuan')
-            ->filter()
-            ->values();
-
-        if ($activityUnits->isEmpty()) {
-            $activityUnits = collect(['Kegiatan', 'Dokumen', 'Jam']);
-        }
+        // Default activity units - not from database
+        $activityUnits = collect([
+            'Kegiatan',
+            'Dokumen',
+            'Modul',
+            'Jam',
+            'Berkas',
+            'Orang',
+            'Paket',
+            'Unit',
+            'Lembar',
+            'Buah',
+        ]);
 
         $monthlyActivityStats = DB::table('satker_kegiatan')
             ->where('user_id', $user->id)

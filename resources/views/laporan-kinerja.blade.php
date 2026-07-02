@@ -10,7 +10,17 @@
         $bulananReports = $bulananReports ?? collect([]);
         $monthlySummary = $monthlySummary ?? ['months' => 0, 'days' => 0, 'entries' => 0, 'volume' => 0, 'latest_update' => null];
         $printMode = $printMode ?? false;
-        $activityUnits = isset($activityUnits) ? collect($activityUnits)->filter()->values()->all() : ['Kegiatan', 'Dokumen', 'Jam'];
+        $activityUnits = isset($activityUnits) ? collect($activityUnits)->filter()->values()->all() : [
+            'Kegiatan',
+            'Dokumen',
+            'Jam',
+            'Berkas',
+            'Orang',
+            'Paket',
+            'Unit',
+            'Lembar',
+            'Buah',
+        ];
         $defaultActivityDate = \Illuminate\Support\Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth()->format('Y-m-d');
         $addModalOpen = (bool) session('open_add_modal', false);
         $editModalOpen = (bool) session('open_edit_modal', false);
