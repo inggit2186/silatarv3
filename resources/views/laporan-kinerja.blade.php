@@ -88,77 +88,55 @@
             'editInitialRows' => $editingInitialRows,
             'humasData' => $humasData ?? [],
         ]))"
-        class="silatar-report-page space-y-6 {{ $printMode ? 'silatar-report-print-mode' : '' }}"
+        class="neo-mirai silatar-report-page {{ $printMode ? 'silatar-report-print-mode' : '' }}"
     >
-        <!-- Page Header -->
-        <div class="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 py-8">
-            <div class="mx-auto max-w-6xl px-6 lg:px-8 text-center">
-                <span class="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 font-mono text-xs font-semibold uppercase tracking-widest text-cyan-400">
-                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <x-layouts.site-header />
+
+        <!-- Hero Section -->
+        <section class="hero-page" style="background-image: url('/assets/img/template/ckh-bg.webp'); background-size: cover; background-position: center center; padding: 2rem 2rem 4rem; min-height: 280px;">
+            <div style="max-width: 36rem; margin: 0 auto; text-align: center; padding-top: 80px;">
+                <p style="color: var(--gold); font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; margin: 0 0 0.5rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Sistem Laporan
+                </p>
+                <h1 style="font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 400; color: var(--ink); margin: 0 0 1rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     Laporan Kinerja
-                </span>
-                <h1 class="mt-4 font-mono text-3xl font-black uppercase tracking-wider text-white lg:text-4xl">
-                    Sistem Pelaporan Digital
                 </h1>
-                <p class="mt-2 text-sm text-slate-400">Kelola dan pantau laporan kinerja dengan mudah</p>
-            </div>
-        </div>
-
-        <section class="silatar-report-tabs">
-            <div class="silatar-report-tab-list">
-                @foreach ($tabLabels as $tabKey => $tab)
-                    @php
-                        $tabQuery = ['tab' => $tabKey, 'search' => $search];
-                        if ($tabKey === 'bulanan') {
-                            $tabQuery['year'] = $selectedYear;
-                        } else {
-                            $tabQuery['month'] = $selectedMonth;
-                        }
-                    @endphp
-                    <a
-                        href="{{ route('laporan-kinerja', $tabQuery) }}"
-                        class="silatar-report-tab {{ $activeTab === $tabKey ? 'silatar-report-tab-active' : 'silatar-report-tab-inactive' }}"
-                    >
-                        @if ($tabKey === 'harian')
-                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 4.5h10A1.5 1.5 0 0 1 16.5 6v8A1.5 1.5 0 0 1 15 15.5H5A1.5 1.5 0 0 1 3.5 14V6A1.5 1.5 0 0 1 5 4.5Z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h6M7 11h5" />
-                            </svg>
-                        @elseif ($tabKey === 'bulanan')
-                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 4.5h10A1.5 1.5 0 0 1 16.5 6v8A1.5 1.5 0 0 1 15 15.5H5A1.5 1.5 0 0 1 3.5 14V6A1.5 1.5 0 0 1 5 4.5Z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.5 8.5h7M6.5 11.5h4.5" />
-                            </svg>
-                        @else
-                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 11.5c2-4 4.8-6 6-6s4 2 6 6" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 8.5h10" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.5 13.5c1.2 1 2.6 1.5 3.5 1.5s2.3-.5 3.5-1.5" />
-                            </svg>
-                        @endif
-                        {{ $tab['label'] }}
+                <p style="color: var(--ink-soft); font-size: 1rem; max-width: 28rem; margin: 0 auto;">Kelola dan pantau laporan kinerja harian, bulanan, dan kehumasan dengan mudah.</p>
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-top: 1.5rem;">
+                    <a href="{{ url('/') }}" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.25rem; background: transparent; color: var(--ink); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; text-decoration: none; border: 1px solid var(--line);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                        Beranda
                     </a>
-                @endforeach
-
-                {{-- Laporan Bawahan Tab - only for kepala, kasubbag, kasi --}}
-                @if(in_array(strtolower(auth()->user()->kat_jabatan ?? ''), ['kepala', 'kasubbag', 'kasi']))
-                    <a
-                        href="{{ route('laporan-kinerja.bawahan') }}"
-                        class="silatar-report-tab silatar-report-tab-inactive"
-                    >
-                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        Laporan Bawahan
+                    <a href="{{ route('pelayanan') }}" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.25rem; background: var(--gold); color: var(--night); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; text-decoration: none;">
+                        Ajukan Layanan
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h12m-5-5 5 5-5 5"/></svg>
                     </a>
-                @endif
+                </div>
             </div>
         </section>
+
+        <!-- Section Divider -->
+        <div class="section-divider wave-rounded"></div>
+
+        <!-- Content Section -->
+        <section class="page-content">
+
+        <!-- Tabs Navigation -->
+        <x-laporan-kinerja.tabs
+            :active-tab="$activeTab"
+            :tab-labels="$tabLabels"
+            :selected-month="$selectedMonth"
+            :selected-year="$selectedYear"
+            :search="$search"
+            :show-bawahan="in_array(strtolower(auth()->user()->kat_jabatan ?? ''), ['kepala', 'kasubbag', 'kasi'])"
+        />
 
         <section class="silatar-report-shell">
             <div class="silatar-report-shell-header">
                 <div class="min-w-0">
-                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-cyan-400">
+                    <p class="font-mono text-xs font-semibold uppercase tracking-widest" style="color: var(--gold);">
                         {{ $tabLabels[$activeTab]['label'] ?? 'Laporan Kinerja' }}
                     </p>
                     <h1 class="silatar-report-title">
@@ -285,9 +263,9 @@
                     <div id="daftar-kegiatan" class="silatar-report-table-shell">
                         @if ($dailyGroups->isEmpty())
                             <div class="silatar-report-empty">
-                                <p class="font-mono text-sm font-semibold uppercase tracking-widest text-cyan-400/50">Kosong</p>
-                                <p class="mt-2 font-mono text-base font-semibold text-white">Belum ada kegiatan pada bulan ini.</p>
-                                <p class="mt-2 text-sm leading-6 text-cyan-100">
+                                <p class="font-mono text-sm font-semibold uppercase tracking-widest" style="color: var(--ink-soft);">Kosong</p>
+                                <p class="mt-2 font-mono text-base font-semibold" style="color: var(--ink);">Belum ada kegiatan pada bulan ini.</p>
+                                <p class="mt-2 text-sm leading-6" style="color: var(--ink-soft);">
                                     Silakan pilih bulan lain atau lanjutkan input kegiatan bila modul tambah sudah dipakai.
                                 </p>
                             </div>
@@ -302,19 +280,19 @@
                                     </thead>
                                     <tbody>
                                         @foreach ($dailyGroups as $group)
-                                            <tr>
+                                            <tr class="neo-table-row">
                                                 <td class="silatar-report-td text-center">
                                                     <p class="silatar-report-date">{{ $group['label'] }}</p>
-                                                    <p class="mt-2 text-xs uppercase tracking-[0.2em] text-cyan-100">
+                                                    <p class="mt-2 text-sm uppercase tracking-[0.2em]" style="color: var(--ink-soft);">
                                                         {{ $group['entries'] }} entri
                                                     </p>
                                                     <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
                                                         @if (! empty($group['date']))
                                                             <a
                                                                 href="{{ route('laporan-kinerja', ['tab' => 'harian', 'month' => $selectedMonth, 'search' => $search, 'edit_date' => $group['date']]) }}"
-                                                                class="silatar-report-action-button silatar-report-action-edit"
+                                                                class="neo-btn-action neo-btn-edit"
                                                             >
-                                                                <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 13.5 13 5l2.5 2.5-8.5 8.5H4.5v-2.5z" />
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6l2 2" />
                                                                 </svg>
@@ -331,13 +309,13 @@
                                                                 <input type="hidden" name="month" value="{{ $selectedMonth }}">
                                                                 <input type="hidden" name="search" value="{{ $search }}">
                                                                 <input type="hidden" name="tanggal" value="{{ $group['date'] }}">
-                                                                <button type="submit" class="silatar-report-action-button silatar-report-action-delete">
-                                                                    <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                                <button type="submit" class="neo-btn-action neo-btn-delete">
+                                                                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 6.5h10" />
                                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8 6.5V5.25A1.25 1.25 0 0 1 9.25 4h1.5A1.25 1.25 0 0 1 12 5.25V6.5" />
                                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M7 6.5l.5 9A1.5 1.5 0 0 0 9 17h2a1.5 1.5 0 0 0 1.5-1.5l.5-9" />
                                                                     </svg>
-                                                                    Delete
+                                                                    Hapus
                                                                 </button>
                                                             </form>
                                                         @endif
@@ -349,9 +327,9 @@
                                                             <div class="silatar-report-activity-item">
                                                                 <div class="silatar-report-activity-row">
                                                                     <div class="min-w-0 flex-1 text-center sm:text-left">
-                                                                        <p class="leading-6 text-cyan-200">{{ $activity['kegiatan'] }}</p>
+                                                                        <p class="leading-6" style="color: var(--ink);">{{ $activity['kegiatan'] }}</p>
                                                                         @if (! empty($activity['meta']))
-                                                                            <p class="mt-1 font-mono text-xs text-cyan-100">{{ $activity['meta'] }}</p>
+                                                                            <p class="mt-1 font-mono text-sm" style="color: var(--ink-soft);">{{ $activity['meta'] }}</p>
                                                                         @endif
                                                                     </div>
                                                                 </div>
@@ -856,6 +834,9 @@
                 </div>
             @endif
         </section>
+        </section>
+
+    {{-- Add Modal --}}
     <div
         x-show="addModalOpen"
         x-cloak

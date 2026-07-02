@@ -148,32 +148,57 @@
                     <span class="neo-card-badge">{{ $kantorUnits->count() }} unit aktif</span>
                 </div>
 
-                <div class="neo-grid neo-grid-3" style="margin-top: 1.5rem;">
+                <div class="neo-grid neo-grid-unit-lg" style="margin-top: 1.5rem;">
                     @forelse ($kantorUnits as $card)
-                        <button type="button" @click="selectUnit({{ $card['id'] }})" class="neo-service-card" style="cursor: pointer;">
-                            <div class="neo-service-cover">
+                        <button type="button" @click="selectUnit({{ $card['id'] }})" class="neo-unit-card" style="cursor: pointer;">
+                            <div class="neo-unit-card-visual">
                                 @if($card['cover_path'])
-                                    <img src="{{ $card['cover_path'] }}" alt="{{ $card['title'] }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'">
+                                    <img src="{{ $card['cover_path'] }}" alt="{{ $card['title'] }}" class="neo-unit-card-img">
+                                @else
+                                    <div class="neo-unit-card-placeholder">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z"/>
+                                        </svg>
+                                    </div>
                                 @endif
-                                <div class="neo-service-cover-overlay"></div>
-                                <span class="neo-service-tag">Unit Kerja</span>
+                                <div class="neo-unit-card-overlay"></div>
+                                <div class="neo-unit-card-header">
+                                    <span class="neo-unit-card-badge">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M19 21V5a2 2 0 00-2-2H3a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-2M5 21h2m-2 0H3m14 0h2m-2 0h-2M7 7h10M7 11h10M7 15h6"/></svg>
+                                        Unit Kerja
+                                    </span>
+                                </div>
+                                <div class="neo-unit-card-footer">
+                                    <h3 class="neo-unit-card-title">{{ $card['title'] }}</h3>
+                                </div>
                             </div>
-                            <div class="neo-service-body">
-                                <h3 class="neo-service-title">{{ $card['title'] }}</h3>
-                                @if(!empty($card['head_value']))
-                                    <p style="font-size: 0.75rem; color: var(--ink-soft); margin: 0.5rem 0;">
-                                        {{ $card['head_label'] }}: {{ $card['head_value'] }}
-                                    </p>
-                                @endif
-                                <div class="neo-service-meta">
-                                    <div class="neo-service-meta-item">
-                                        <span class="neo-service-meta-label">Pegawai</span>
-                                        <span class="neo-service-meta-value">{{ $card['extra_value'] }}</span>
+                            <div class="neo-unit-card-leader-section">
+                                <div class="neo-unit-card-leader-photo">
+                                    @if(!empty($card['head_photo']))
+                                        <img src="{{ $card['head_photo'] }}" alt="{{ $card['head_value'] }}" class="neo-unit-card-leader-img">
+                                    @else
+                                        <div class="neo-unit-card-leader-initials">{{ $card['head_initials'] ?? '' }}</div>
+                                    @endif
+                                </div>
+                                <div class="neo-unit-card-leader-info">
+                                    <span class="neo-unit-card-leader-jabatan">{{ $card['head_label'] }}</span>
+                                    <span class="neo-unit-card-leader-name">{{ $card['head_value'] ?? 'Vacant' }}</span>
+                                </div>
+                            </div>
+                            <div class="neo-unit-card-stats">
+                                <div class="neo-unit-card-stat">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                                    </svg>
+                                    <div>
+                                        <span class="neo-unit-card-stat-value">{{ $card['extra_value'] }}</span>
+                                        <span class="neo-unit-card-stat-label">Pegawai Aktif</span>
                                     </div>
                                 </div>
-                                <span class="neo-btn" style="margin-top: 1rem; width: 100%; justify-content: center;">
-                                    Pilih unit ini →
-                                </span>
+                                <div class="neo-unit-card-action">
+                                    <span>Pilih Unit</span>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"/></svg>
+                                </div>
                             </div>
                         </button>
                     @empty

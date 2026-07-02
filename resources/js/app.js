@@ -691,13 +691,13 @@ document.addEventListener('alpine:init', () => {
         placeholder: config.placeholder || 'Pilih bulan',
         clearLabel: config.clearLabel || 'Hapus',
         applyLabel: config.applyLabel || 'Pilih',
-        locale: config.locale || 'en-US',
+        locale: config.locale || 'id-ID',
         months: Array.isArray(config.months) && config.months.length
             ? config.months
-            : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+            : ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
         yearCursor: null,
         popoverStyle: '',
-        noSubmit: !!config.noSubmit, // New option to disable auto-submit
+        noSubmit: !!config.noSubmit,
         yearInputValue() {
             return this.yearCursor || new Date().getFullYear();
         },

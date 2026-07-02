@@ -1287,3 +1287,716 @@ body {
 .portal-title-silatar { color: #d4a853; }
 .portal-title-berita { color: #ea580c; }
 .portal-cta-berita { color: #ea580c; }
+
+/* NEO MIRAI overrides for silatar-report components */
+.neo-mirai .silatar-report-tabs {
+    background: var(--paper);
+    border: 1px solid var(--line);
+}
+
+.neo-mirai .silatar-report-tab-active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--night);
+}
+
+.neo-mirai .silatar-report-tab-inactive {
+    background: var(--paper);
+    border-color: var(--line);
+    color: var(--ink-soft);
+}
+
+.neo-mirai .silatar-report-tab-inactive:hover {
+    border-color: var(--gold);
+    color: var(--ink);
+}
+
+.neo-mirai .silatar-report-shell {
+    background: var(--paper);
+    border: 1px solid var(--line);
+}
+
+.neo-mirai .silatar-report-shell-header {
+    border-color: var(--line);
+}
+
+.neo-mirai .silatar-report-title {
+    color: var(--ink);
+}
+
+.neo-mirai .silatar-report-subtitle {
+    color: var(--ink-soft);
+}
+
+.neo-mirai .silatar-report-summary {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+}
+
+.neo-mirai .silatar-report-summary-badge-ready {
+    background: var(--gold);
+    color: var(--night);
+}
+
+.neo-mirai .silatar-report-summary-badge-pending {
+    background: oklch(58% 0.15 30 / 0.15);
+    color: oklch(45% 0.15 30);
+}
+
+.neo-mirai .silatar-report-summary-icon {
+    background: var(--gold);
+    color: var(--night);
+}
+
+.neo-mirai .silatar-report-add-button {
+    background: var(--gold);
+    color: var(--night);
+}
+
+.neo-mirai .silatar-report-add-button:hover {
+    background: var(--gold-bright);
+}
+
+.neo-mirai .silatar-report-rekap-button {
+    background: var(--gold);
+    color: var(--night);
+}
+
+.neo-mirai .silatar-report-rekap-button:hover {
+    background: var(--gold-bright);
+}
+
+.neo-mirai .silatar-report-table-shell {
+    background: var(--paper);
+    border: 1px solid var(--line);
+}
+
+.neo-mirai .silatar-report-th {
+    background: var(--paper-deep);
+    border-color: var(--line);
+    color: var(--ink);
+}
+
+.neo-mirai .silatar-report-td {
+    border-color: var(--line);
+    color: var(--ink);
+}
+
+.neo-mirai .silatar-report-date {
+    color: var(--ink);
+}
+
+.neo-mirai .silatar-report-empty {
+    background: var(--paper-soft);
+    color: var(--ink-soft);
+}
+
+.neo-mirai .bulanan-cell {
+    border-color: var(--line);
+}
+
+.neo-mirai .cyber-status-disetujui {
+    background: oklch(72% 0.15 145 / 0.15);
+    color: oklch(45% 0.15 145);
+}
+
+.neo-mirai .cyber-status-dikirim {
+    background: oklch(72% 0.15 80 / 0.15);
+    color: oklch(55% 0.15 65);
+}
+
+.neo-mirai .cyber-status-ditolak {
+    background: oklch(65% 0.15 25 / 0.15);
+    color: oklch(45% 0.15 25);
+}
+
+.neo-mirai .cyber-status-belum {
+    background: var(--paper-deep);
+    color: var(--ink-soft);
+}
+
+.neo-mirai .silatar-report-action-button {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    color: var(--ink);
+}
+
+.neo-mirai .silatar-report-action-edit:hover {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--night);
+}
+
+.neo-mirai .silatar-report-action-delete:hover {
+    background: oklch(65% 0.15 25 / 0.15);
+    border-color: oklch(65% 0.15 25);
+    color: oklch(45% 0.15 25);
+}
+
+/* Full width overrides for neo-mirai */
+.neo-mirai.silatar-report-page {
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.neo-mirai.silatar-report-page .page-content {
+    max-width: 100% !important;
+    padding: 2rem !important;
+}
+
+.neo-mirai.silatar-report-page .silatar-report-tabs {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    background: var(--paper) !important;
+}
+
+.neo-mirai.silatar-report-page .silatar-report-shell {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+}
+
+.neo-mirai.silatar-report-page .silatar-report-table-shell {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+}
+
+/* Hero section adjustments for full width */
+.neo-mirai.silatar-report-page .hero-page {
+    border-radius: 0 !important;
+}
+
+/* Section divider for full width */
+.neo-mirai.silatar-report-page .section-divider {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Page content padding for neo-mirai */
+.neo-mirai .page-content {
+    padding: clamp(1rem, 3vw, 2rem) clamp(1rem, 3vw, 2rem) !important;
+}
+
+/* ========================================
+   NEO MIRAI TABLE STYLING - Light Theme
+   ======================================== */
+
+.neo-mirai .silatar-report-table {
+    font-size: 1rem !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+.neo-mirai .silatar-report-table th {
+    background: var(--paper-deep) !important;
+    color: var(--ink) !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    padding: 1rem 1.25rem !important;
+    border-bottom: 2px solid var(--line) !important;
+}
+
+.neo-mirai .silatar-report-table td {
+    background: var(--paper) !important;
+    color: var(--ink) !important;
+    padding: 1.25rem !important;
+    border-bottom: 1px solid var(--line) !important;
+    vertical-align: top !important;
+}
+
+.neo-mirai .neo-table-row:hover td {
+    background: var(--paper-soft) !important;
+}
+
+.neo-mirai .silatar-report-date {
+    color: var(--ink) !important;
+    font-weight: 600 !important;
+    font-size: 1.1rem !important;
+}
+
+.neo-mirai .silatar-report-activity-item {
+    background: var(--paper-soft) !important;
+    border: 1px solid var(--line) !important;
+    padding: 1rem !important;
+    margin-bottom: 0.5rem !important;
+    border-radius: 0.5rem !important;
+}
+
+.neo-mirai .silatar-report-activity-item:last-child {
+    margin-bottom: 0 !important;
+}
+
+.neo-mirai .silatar-report-activity-item p {
+    color: var(--ink) !important;
+    font-size: 1rem !important;
+    line-height: 1.6 !important;
+}
+
+/* Action buttons for neo-mirai */
+.neo-mirai .neo-btn-action {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    padding: 0.6rem 1.25rem !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    border-radius: 0.5rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.neo-mirai .neo-btn-action svg {
+    width: 1rem !important;
+    height: 1rem !important;
+}
+
+.neo-mirai .neo-btn-edit {
+    background: var(--gold) !important;
+    color: var(--night) !important;
+    border: 1px solid var(--gold) !important;
+}
+
+.neo-mirai .neo-btn-edit:hover {
+    background: var(--gold-bright) !important;
+    border-color: var(--gold-bright) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px oklch(68% 0.145 74 / 0.3) !important;
+}
+
+.neo-mirai .neo-btn-delete {
+    background: transparent !important;
+    color: oklch(45% 0.12 25) !important;
+    border: 1px solid oklch(70% 0.1 25) !important;
+}
+
+.neo-mirai .neo-btn-delete:hover {
+    background: oklch(65% 0.12 25 / 0.1) !important;
+    border-color: oklch(45% 0.12 25) !important;
+}
+
+.neo-mirai .neo-btn-delete svg {
+    stroke: oklch(45% 0.12 25) !important;
+}
+
+/* Empty state styling */
+.neo-mirai .silatar-report-empty {
+    background: var(--paper-soft) !important;
+    color: var(--ink-soft) !important;
+    padding: 3rem 2rem !important;
+    text-align: center !important;
+}
+
+.neo-mirai .silatar-report-empty svg {
+    stroke: var(--ink-soft) !important;
+}
+
+/* Summary cards styling */
+.neo-mirai .silatar-report-summary {
+    background: var(--paper-soft) !important;
+    border: 1px solid var(--line) !important;
+    padding: 2rem !important;
+    margin-bottom: 1.5rem !important;
+    border-radius: 0 !important;
+}
+
+.neo-mirai .silatar-report-summary-icon {
+    background: var(--gold) !important;
+    color: var(--night) !important;
+}
+
+.neo-mirai .silatar-report-summary-icon svg {
+    stroke: var(--night) !important;
+}
+
+.neo-mirai .silatar-report-summary-badge-ready {
+    background: var(--gold) !important;
+    color: var(--night) !important;
+}
+
+.neo-mirai .silatar-report-summary .text-cyan-400 {
+    color: var(--gold) !important;
+}
+
+.neo-mirai .silatar-report-summary .text-cyan-100 {
+    color: var(--ink-soft) !important;
+}
+
+.neo-mirai .silatar-report-summary .bg-cyan-500\/20 {
+    background-color: oklch(68% 0.145 74 / 0.2) !important;
+}
+
+.neo-mirai .silatar-report-summary .bg-cyan-900\/80 {
+    background-color: var(--paper-deep) !important;
+}
+
+.neo-mirai .silatar-report-summary .border-cyan-500\/20 {
+    border-color: var(--line) !important;
+}
+
+/* Action buttons styling */
+.neo-mirai .silatar-report-add-button {
+    background: var(--gold) !important;
+    color: var(--night) !important;
+    padding: 0.75rem 1.5rem !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+}
+
+.neo-mirai .silatar-report-add-button:hover {
+    background: var(--gold-bright) !important;
+}
+
+.neo-mirai .silatar-report-add-button svg {
+    stroke: var(--night) !important;
+}
+
+.neo-mirai .silatar-report-rekap-button {
+    background: var(--gold) !important;
+    color: var(--night) !important;
+    padding: 0.75rem 1.5rem !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+}
+
+.neo-mirai .silatar-report-rekap-button:hover {
+    background: var(--gold-bright) !important;
+}
+
+.neo-mirai .silatar-report-rekap-button svg {
+    stroke: var(--night) !important;
+}
+
+/* Search input styling */
+.neo-mirai .silatar-report-search-input {
+    background: var(--paper) !important;
+    border: 2px solid var(--line) !important;
+    color: var(--ink) !important;
+    padding: 0.75rem 1.25rem !important;
+    font-size: 1rem !important;
+    border-radius: 0.5rem !important;
+}
+
+.neo-mirai .silatar-report-search-input:focus {
+    border-color: var(--gold) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.2) !important;
+}
+
+.neo-mirai .silatar-report-search-input::placeholder {
+    color: var(--ink-soft) !important;
+}
+
+/* Tab styling */
+.neo-mirai .silatar-report-tab {
+    padding: 1rem 1.5rem !important;
+    font-size: 1rem !important;
+}
+
+.neo-mirai .silatar-report-tab svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Shell header styling */
+.neo-mirai .silatar-report-shell-header {
+    background: var(--paper-soft) !important;
+    padding: 1.5rem !important;
+    border-bottom: 1px solid var(--line) !important;
+}
+
+/* Filter styling */
+.neo-mirai .silatar-report-filter {
+    margin-top: 1rem !important;
+}
+
+/* NEO MIRAI overrides for modals */
+.neo-mirai .silatar-report-create-overlay {
+    background: rgba(42, 37, 32, 0.85);
+    backdrop-filter: blur(8px);
+}
+
+.neo-mirai .silatar-report-create-modal {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+}
+
+.neo-mirai .silatar-report-create-header {
+    background: var(--paper-soft);
+    border-color: var(--line);
+}
+
+.neo-mirai .silatar-report-create-title {
+    color: var(--ink);
+}
+
+.neo-mirai .silatar-report-create-subtitle {
+    color: var(--ink-soft);
+}
+
+.neo-mirai .silatar-report-create-row-head {
+    background: var(--paper-soft);
+    border-color: var(--line);
+}
+
+.neo-mirai .silatar-report-create-row-badge {
+    background: var(--gold);
+    color: var(--night);
+}
+
+.neo-mirai .silatar-report-edit-field {
+    background: var(--paper);
+    border-color: var(--line);
+    color: var(--ink);
+}
+
+.neo-mirai .silatar-report-edit-field:focus {
+    border-color: var(--gold);
+    outline: none;
+    box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.2);
+}
+
+.neo-mirai .silatar-report-edit-field::placeholder {
+    color: var(--ink-soft);
+}
+
+.neo-mirai .silatar-report-create-add {
+    background: var(--gold);
+    color: var(--night);
+}
+
+.neo-mirai .silatar-report-create-add:hover {
+    background: var(--gold-bright);
+}
+
+.neo-mirai .silatar-report-create-remove {
+    background: oklch(65% 0.15 25 / 0.15);
+    color: oklch(45% 0.15 25);
+}
+
+.neo-mirai .silatar-report-create-remove:hover {
+    background: oklch(65% 0.15 25 / 0.3);
+}
+
+.neo-mirai .silatar-report-edit-cancel {
+    background: var(--paper-deep);
+    border: 1px solid var(--line);
+    color: var(--ink);
+}
+
+.neo-mirai .silatar-report-edit-cancel:hover {
+    border-color: var(--gold);
+}
+
+.neo-mirai .silatar-report-edit-primary {
+    background: var(--gold);
+    color: var(--night);
+}
+
+.neo-mirai .silatar-report-edit-primary:hover {
+    background: var(--gold-bright);
+}
+
+.neo-mirai .silatar-report-create-body label {
+    color: var(--ink);
+}
+
+.neo-mirai .silatar-report-create-body input,
+.neo-mirai .silatar-report-create-body select {
+    background: var(--paper);
+    border-color: var(--line);
+    color: var(--ink);
+}
+
+.neo-mirai .silatar-report-create-body input:focus,
+.neo-mirai .silatar-report-create-body select:focus {
+    border-color: var(--gold);
+    outline: none;
+    box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.2);
+}
+
+/* Color overrides: cyan to gold for neo-mirai theme */
+.neo-mirai .silatar-report-summary .text-cyan-400 {
+    color: var(--gold) !important;
+}
+
+.neo-mirai .silatar-report-summary .text-cyan-100 {
+    color: var(--gold-bright) !important;
+}
+
+.neo-mirai .silatar-report-empty .text-cyan-400 {
+    color: var(--ink-soft) !important;
+}
+
+.neo-mirai .silatar-report-td.text-cyan-400 {
+    color: var(--gold) !important;
+}
+
+.neo-mirai .silatar-report-action-button .text-cyan-100 {
+    color: var(--gold-bright) !important;
+}
+
+.neo-mirai .silatar-report-tab .text-cyan-400 {
+    color: var(--gold) !important;
+}
+
+.neo-mirai .bulanan-cell.text-cyan-400 {
+    color: var(--gold) !important;
+}
+
+/* Background overrides for summary cards */
+.neo-mirai .silatar-report-summary .bg-cyan-500\/20 {
+    background-color: oklch(68% 0.145 74 / 0.2) !important;
+}
+
+.neo-mirai .silatar-report-summary .bg-cyan-900\/80 {
+    background-color: var(--paper-deep) !important;
+}
+
+.neo-mirai .silatar-report-summary .border-cyan-500\/20 {
+    border-color: var(--line) !important;
+}
+
+/* Modal text color overrides */
+.neo-mirai .text-cyan-400 {
+    color: var(--gold) !important;
+}
+
+.neo-mirai .text-cyan-300 {
+    color: var(--gold-bright) !important;
+}
+
+.neo-mirai .text-cyan-100 {
+    color: var(--gold) !important;
+}
+
+.neo-mirai .hover\:text-cyan-300:hover {
+    color: var(--gold-bright) !important;
+}
+
+/* Background color overrides */
+.neo-mirai .bg-cyan-500\/10 {
+    background-color: oklch(68% 0.145 74 / 0.1) !important;
+}
+
+.neo-mirai .bg-cyan-500\/20 {
+    background-color: oklch(68% 0.145 74 / 0.2) !important;
+}
+
+.neo-mirai .border-cyan-500\/30 {
+    border-color: var(--gold) !important;
+}
+
+.neo-mirai .border-cyan-500\/40 {
+    border-color: var(--gold) !important;
+}
+
+/* Button overrides */
+.neo-mirai .bg-gradient-to-r\.from-cyan-600\.to-cyan-500,
+.neo-mirai [class*="from-cyan-600"] {
+    background: var(--gold) !important;
+}
+
+.neo-mirai .from-cyan-600 {
+    --tw-gradient-from: var(--gold) !important;
+    --tw-gradient-to: var(--gold-bright) !important;
+}
+
+/* SVG icon color overrides */
+.neo-mirai .silatar-report-summary svg {
+    stroke: var(--night) !important;
+}
+
+.neo-mirai .text-cyan-400 svg {
+    stroke: var(--gold) !important;
+}
+
+/* Override inline cyan colors */
+.neo-mirai .font-mono.text-2xl.font-bold.text-cyan-400 {
+    color: var(--gold) !important;
+}
+
+.neo-mirai .uppercase.tracking-widest.text-cyan-400\/50 {
+    color: var(--ink-soft) !important;
+}
+
+/* Cyber component overrides */
+.neo-mirai .cyber-yearpicker-input,
+.neo-mirai .cyber-monthpicker-input {
+    background: var(--paper) !important;
+    border-color: var(--line) !important;
+    color: var(--ink) !important;
+}
+
+.neo-mirai .cyber-yearpicker-input:focus,
+.neo-mirai .cyber-monthpicker-input:focus {
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.2) !important;
+}
+
+/* Modal styling for neo-mirai */
+.neo-mirai .fixed.inset-0.z-50 .bg-gradient-to-b,
+.neo-mirai .fixed.inset-0.z-\[60\] .bg-gradient-to-b {
+    background: var(--paper) !important;
+    border-color: var(--line) !important;
+}
+
+.neo-mirai .rounded-2xl.border.border-cyan-500\/30 {
+    border-color: var(--line) !important;
+    background: var(--paper) !important;
+}
+
+/* Input field overrides in modals */
+.neo-mirai .rounded-lg.border.border-cyan-500\/30.bg-slate-800,
+.neo-mirai input[class*="border-cyan-500\/30"][class*="bg-slate-800"] {
+    background: var(--paper) !important;
+    border-color: var(--line) !important;
+    color: var(--ink) !important;
+}
+
+.neo-mirai .border-cyan-500\/30.bg-slate-800\/50 {
+    background: var(--paper-soft) !important;
+    border-color: var(--line) !important;
+}
+
+/* Text color for modal content */
+.neo-mirai .text-slate-400 {
+    color: var(--ink-soft) !important;
+}
+
+.neo-mirai .text-slate-500 {
+    color: var(--ink-soft) !important;
+}
+
+.neo-mirai .text-white {
+    color: var(--ink) !important;
+}
+
+.neo-mirai .text-slate-300 {
+    color: var(--ink-soft) !important;
+}
+
+/* Placeholder text */
+.neo-mirai input::placeholder,
+.neo-mirai textarea::placeholder {
+    color: var(--ink-soft) !important;
+}
+
+/* Border color overrides */
+.neo-mirai .border-cyan-500\/20 {
+    border-color: var(--line) !important;
+}
+
+.neo-mirai .border-slate-600 {
+    border-color: var(--ash) !important;
+}
+
+.neo-mirai .border-slate-700 {
+    border-color: var(--ink-soft) !important;
+}
+
+
+
+

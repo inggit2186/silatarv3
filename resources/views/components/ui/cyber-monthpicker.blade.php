@@ -20,8 +20,8 @@
     'clearLabel' => $monthpickerConfig['clear_label'] ?? 'Hapus',
     'applyLabel' => $monthpickerConfig['apply_label'] ?? 'Pilih',
     'locale' => $monthpickerConfig['locale'] ?? 'id-ID',
-    'months' => $monthpickerConfig['months'] ?? [],
-    'noSubmit' => true,
+    'months' => $monthpickerConfig['months'] ?? ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+    'noSubmit' => false,
 ]))" x-init="init()" @keydown.escape.window="closePicker()" class="relative">
     @if ($label)
         <label for="{{ $fieldId }}" class="mb-2 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-cyan-400/70">

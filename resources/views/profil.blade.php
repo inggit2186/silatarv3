@@ -3,8 +3,8 @@
         <x-layouts.site-header />
 
         <!-- Hero Section -->
-        <section class="hero-page" style="background-image: url('/assets/img/template/bg2.webp'); background-size: cover; background-position: center top; padding: 120px 2rem 4rem;">
-            <div style="max-width: 28rem; margin: 0 auto;">
+        <section class="hero-page" style="background-image: url('/assets/img/template/bg2.webp'); background-size: cover; background-position: center center; padding: 2rem 2rem 4rem;">
+            <div style="max-width: 28rem; margin: 0 auto; text-align: center; padding-top: 80px;">
                 <!-- Avatar -->
                 <div style="width: 6rem; height: 6rem; margin: 0 auto 1.5rem; border-radius: 0.75rem; overflow: hidden; border: 2px solid var(--gold); display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--gold) 0 38%, var(--sun) 38% 58%, var(--night-soft) 58%);">
                     @if($user->pp && $user->nomor_induk)
@@ -30,17 +30,17 @@
 
         <!-- Menu Section -->
         <section class="page-content" style="padding-top: 0;">
-            <div class="neo-grid neo-grid-3" style="max-width: 60rem; margin: 0 auto;">
+            <div style="max-width: 60rem; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
                 @foreach($menuItems as $item)
-                    <a href="{{ $item['route'] ? route($item['route']) : '#' }}" class="neo-service-card" style="text-decoration: none;">
-                        <div class="neo-service-cover" style="aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; background: var(--paper-soft);">
+                    <a href="{{ $item['route'] ? route($item['route']) : '#' }}" class="neo-card" style="text-decoration: none; display: flex; flex-direction: column; overflow: hidden; padding: 0; transition: border-color 180ms, box-shadow 240ms;" onmouseover="this.style.borderColor='var(--gold)'; this.style.boxShadow='0 8px 30px oklch(18% 0.03 76 / 0.08)'" onmouseout="this.style.borderColor='var(--line)'; this.style.boxShadow='none'">
+                        <div style="aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; background: var(--paper-soft);">
                             <img src="{{ asset('assets/img/ikon/' . $item['icon']) }}" alt="" style="width: 4rem; height: 4rem; object-fit: contain; opacity: 0.6;" onerror="this.style.display='none'">
-                            <div class="neo-service-cover-overlay"></div>
                         </div>
-                        <div class="neo-service-body" style="text-align: center;">
-                            <h3 class="neo-service-title">{{ $item['title'] }}</h3>
-                            <span class="neo-btn" style="margin-top: 1rem; width: 100%; justify-content: center;">
-                                Lihat Detail →
+                        <div style="padding: 1.5rem; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                            <h3 style="font-family: var(--font-display); font-size: 1rem; font-weight: 600; color: var(--ink); margin: 0;">{{ $item['title'] }}</h3>
+                            <span style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1rem; padding: 0.5rem 1rem; background: var(--gold); color: var(--night); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; text-transform: uppercase;">
+                                Lihat Detail
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h12m-5-5 5 5-5 5"/></svg>
                             </span>
                         </div>
                     </a>

@@ -947,6 +947,11 @@ class PageController extends Controller
                 'selectedMonthLabel' => now()->format('F Y'),
                 'totalUsers' => 0,
                 'userRole' => $userRole,
+                'tabLabels' => [
+                    'harian' => ['label' => 'Kinerja Harian'],
+                    'bulanan' => ['label' => 'Laporan Bulanan'],
+                    'humas' => ['label' => 'Laporan Hizmat'],
+                ],
             ]);
         }
 
@@ -1031,6 +1036,11 @@ class PageController extends Controller
             'bawahanUsers' => $bawahanUsers,
             'deptName' => DB::table('ktd_department')->where('id', $user->dept_id)->value('nama') ?? 'Unit Kerja',
             'error' => null,
+            'tabLabels' => [
+                'harian' => ['label' => 'Kinerja Harian'],
+                'bulanan' => ['label' => 'Laporan Bulanan'],
+                'humas' => ['label' => 'Laporan Hizmat'],
+            ],
         ]);
     }
 
@@ -1076,6 +1086,12 @@ class PageController extends Controller
                 'title' => 'Dokumen Amprah',
                 'icon' => 'keu003.png',
                 'route' => null,
+            ],
+            [
+                'id' => 'laporan-kinerja',
+                'title' => 'Laporan Kinerja',
+                'icon' => 'ckh.png',
+                'route' => 'laporan-kinerja',
             ],
         ];
 

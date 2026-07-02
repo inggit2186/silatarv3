@@ -275,22 +275,49 @@
         }
     </script>
 
-    <main class="silatar-report-page space-y-6" x-data="bawahanPdfPreview()">
-        <!-- Page Header -->
-        <div class="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 py-8">
-            <div class="mx-auto max-w-6xl px-6 lg:px-8 text-center">
-                <span class="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 font-mono text-xs font-semibold uppercase tracking-widest text-cyan-400">
-                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
+    <main class="neo-mirai silatar-report-page" x-data="bawahanPdfPreview()">
+        <x-layouts.site-header />
+
+        <!-- Hero Section -->
+        <section class="hero-page" style="background-image: url('/assets/img/template/ckh-bg.webp'); background-size: cover; background-position: center center; padding: 2rem 2rem 4rem; min-height: 280px;">
+            <div style="max-width: 36rem; margin: 0 auto; text-align: center; padding-top: 80px;">
+                <p style="color: var(--gold); font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; margin: 0 0 0.5rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     Laporan Bawahan
-                </span>
-                <h1 class="mt-4 font-mono text-3xl font-black uppercase tracking-wider text-white lg:text-4xl">
+                </p>
+                <h1 style="font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 400; color: var(--ink); margin: 0 0 1rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     Rekap Kinerja Bawahan
                 </h1>
-                <p class="mt-2 text-sm text-slate-400">Pantau laporan kinerja bulanan staf di unit kerja Anda</p>
+                <p style="color: var(--ink-soft); font-size: 1rem; max-width: 28rem; margin: 0 auto;">Pantau laporan kinerja bulanan staf di unit kerja Anda.</p>
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-top: 1.5rem;">
+                    <a href="{{ url('/') }}" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.25rem; background: transparent; color: var(--ink); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; text-decoration: none; border: 1px solid var(--line);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                        Beranda
+                    </a>
+                    <a href="{{ route('laporan-kinerja') }}" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.25rem; background: var(--gold); color: var(--night); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; text-decoration: none;">
+                        Laporan Saya
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h12m-5-5 5 5-5 5"/></svg>
+                    </a>
+                </div>
             </div>
-        </div>
+        </section>
+
+        <!-- Section Divider -->
+        <div class="section-divider wave-rounded"></div>
+
+        <!-- Content Section -->
+        <section class="page-content">
+
+        <!-- Tabs Navigation -->
+        <x-laporan-kinerja.tabs
+            active-tab="bawahan"
+            :tab-labels="$tabLabels"
+            :selected-month="$selectedMonth"
+            :selected-year="date('Y')"
+            search=""
+            :show-bawahan="true"
+        />
 
         @if($error)
             <div class="mx-auto max-w-6xl px-6 lg:px-8">
@@ -330,42 +357,44 @@
 
                 {{-- Signature Settings Section --}}
                 <div class="mx-auto max-w-6xl px-6 lg:px-8 -mt-4">
-                    <div class="rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-slate-900/80 p-6">
+                    <div class="neo-card" style="border-color: var(--gold);">
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: var(--gold);">
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="var(--night)" stroke-width="2">
                                         <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                                     </svg>
                                 </div>
                                 <div>
-                                    <h3 class="font-mono text-sm font-semibold text-amber-400">Pengaturan Tanda Tangan</h3>
-                                    <p class="text-xs text-slate-400">Tanda tangan akan muncul di PDF laporan yang disetujui</p>
+                                    <h3 class="font-mono text-sm font-semibold" style="color: var(--gold);">Pengaturan Tanda Tangan</h3>
+                                    <p class="text-xs" style="color: var(--ink-soft);">Tanda tangan akan muncul di PDF laporan yang disetujui</p>
                                 </div>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" x-model="signatureIsActive" @change="saveSignature()" class="sr-only peer">
-                                <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
-                                <span class="ml-3 text-sm font-medium text-slate-300" x-text="signatureIsActive ? 'Aktif' : 'Nonaktif'"></span>
+                                <div class="w-11 h-6 rounded-full peer-focus:outline-none transition" style="background: var(--ash);" class="peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--gold)]"></div>
+                                <span class="ml-3 text-sm font-medium" style="color: var(--ink);" x-text="signatureIsActive ? 'Aktif' : 'Nonaktif'"></span>
                             </label>
                         </div>
 
                         <div x-show="signatureIsActive" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label class="block font-mono text-xs uppercase tracking-wider text-cyan-400 mb-2">Nama</label>
+                                <label class="block font-mono text-xs uppercase tracking-wider mb-2" style="color: var(--ink);">Nama</label>
                                 <input
                                     type="text"
                                     x-model="signatureName"
-                                    class="w-full rounded-lg border border-cyan-500/30 bg-slate-800 px-4 py-2.5 text-white font-mono text-sm"
+                                    class="w-full rounded-lg border px-4 py-2.5 font-mono text-sm"
+                                    style="background: var(--paper); border-color: var(--line); color: var(--ink);"
                                     placeholder="Nama Lengkap"
                                 >
                             </div>
                             <div>
-                                <label class="block font-mono text-xs uppercase tracking-wider text-cyan-400 mb-2">NIP</label>
+                                <label class="block font-mono text-xs uppercase tracking-wider mb-2" style="color: var(--ink);">NIP</label>
                                 <input
                                     type="text"
                                     x-model="signatureNip"
-                                    class="w-full rounded-lg border border-cyan-500/30 bg-slate-800 px-4 py-2.5 text-white font-mono text-sm"
+                                    class="w-full rounded-lg border px-4 py-2.5 font-mono text-sm"
+                                    style="background: var(--paper); border-color: var(--line); color: var(--ink);"
                                     placeholder="NIP"
                                 >
                             </div>
@@ -373,7 +402,8 @@
                                 <button
                                     type="button"
                                     @click="saveSignature()"
-                                    class="w-full rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 px-4 py-2.5 font-mono text-sm font-semibold text-white shadow-[0_0_20px_rgba(0,212,255,0.3)] hover:from-cyan-500 hover:to-cyan-400 transition"
+                                    class="w-full rounded-lg px-4 py-2.5 font-mono text-sm font-semibold transition"
+                                    style="background: var(--gold); color: var(--night);"
                                 >
                                     Simpan
                                 </button>
@@ -382,18 +412,19 @@
 
                         <div x-show="signatureIsActive" class="mt-4">
                             <div class="flex items-center justify-between mb-2">
-                                <label class="font-mono text-xs uppercase tracking-wider text-cyan-400">Gambar Tanda Tangan</label>
+                                <label class="font-mono text-xs uppercase tracking-wider" style="color: var(--ink);">Gambar Tanda Tangan</label>
                                 <button
                                     type="button"
                                     @click="clearSignature()"
-                                    class="text-xs text-rose-400 hover:text-rose-300 transition"
+                                    class="text-xs transition"
+                                    style="color: oklch(45% 0.15 25);"
                                 >
                                     Clear
                                 </button>
                             </div>
-                            <div class="relative rounded-lg border border-cyan-500/30 bg-white overflow-hidden">
+                            <div class="relative rounded-lg border overflow-hidden" style="border-color: var(--line); background: white;">
                                 <canvas id="signaturePad" class="w-full cursor-crosshair touch-none" style="max-width: 100%; height: 150px;"></canvas>
-                                <p class="absolute bottom-2 right-2 text-xs text-slate-400">Gambar tanda tangan di sini</p>
+                                <p class="absolute bottom-2 right-2 text-xs" style="color: var(--ink-soft);">Gambar tanda tangan di sini</p>
                             </div>
                         </div>
                     </div>
@@ -412,31 +443,31 @@
                                     <div class="silatar-report-summary-badge silatar-report-summary-badge-ready">
                                         {{ $selectedMonthLabel }}
                                     </div>
-                                    <h2 class="mt-2 font-mono text-xl font-bold text-white">
+                                    <h2 class="mt-2 font-mono text-xl font-bold" style="color: var(--ink);">
                                         Monitoring Kinerja Staf
                                     </h2>
-                                    <p class="mt-2 max-w-2xl text-sm leading-6 text-cyan-100">
+                                    <p class="mt-2 max-w-2xl text-sm leading-6" style="color: var(--ink-soft);">
                                         Laporan bulanan semua staf di unit kerja Anda.
                                     </p>
                                 </div>
                             </div>
 
                             <div class="grid gap-3 sm:grid-cols-4">
-                                <div class="rounded-xl border border-cyan-500/20 bg-slate-900/80 px-4 py-3">
-                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-cyan-100">Total Laporan</p>
-                                    <p class="mt-2 font-mono text-2xl font-bold text-cyan-400">{{ $reports->count() }}</p>
+                                <div class="rounded-xl border px-4 py-3" style="border-color: var(--line); background: var(--paper-soft);">
+                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest" style="color: var(--ink-soft);">Total Laporan</p>
+                                    <p class="mt-2 font-mono text-2xl font-bold" style="color: var(--gold);">{{ $reports->count() }}</p>
                                 </div>
-                                <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
-                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-emerald-400">Disetujui</p>
-                                    <p class="mt-2 font-mono text-2xl font-bold text-emerald-400">{{ $reports->where('status', 'DISETUJUI')->count() }}</p>
+                                <div class="rounded-xl border px-4 py-3" style="border-color: oklch(72% 0.15 145); background: oklch(72% 0.15 145 / 0.1);">
+                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest" style="color: oklch(45% 0.15 145);">Disetujui</p>
+                                    <p class="mt-2 font-mono text-2xl font-bold" style="color: oklch(45% 0.15 145);">{{ $reports->where('status', 'DISETUJUI')->count() }}</p>
                                 </div>
-                                <div class="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
-                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-amber-400">Dikirim</p>
-                                    <p class="mt-2 font-mono text-2xl font-bold text-amber-400">{{ $reports->where('status', 'DIKIRIM')->count() }}</p>
+                                <div class="rounded-xl border px-4 py-3" style="border-color: oklch(72% 0.15 80); background: oklch(72% 0.15 80 / 0.1);">
+                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest" style="color: oklch(55% 0.15 65);">Dikirim</p>
+                                    <p class="mt-2 font-mono text-2xl font-bold" style="color: oklch(55% 0.15 65);">{{ $reports->where('status', 'DIKIRIM')->count() }}</p>
                                 </div>
-                                <div class="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3">
-                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-rose-400">Ditolak</p>
-                                    <p class="mt-2 font-mono text-2xl font-bold text-rose-400">{{ $reports->where('status', 'DITOLAK')->count() }}</p>
+                                <div class="rounded-xl border px-4 py-3" style="border-color: oklch(65% 0.15 25); background: oklch(65% 0.15 25 / 0.1);">
+                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest" style="color: oklch(45% 0.15 25);">Ditolak</p>
+                                    <p class="mt-2 font-mono text-2xl font-bold" style="color: oklch(45% 0.15 25);">{{ $reports->where('status', 'DITOLAK')->count() }}</p>
                                 </div>
                             </div>
                         </div>
@@ -445,12 +476,12 @@
                     <div class="silatar-report-table-shell" id="rekap-bulanan">
                         @if ($reports->isEmpty())
                             <div class="silatar-report-empty">
-                                <svg class="mx-auto mb-4 h-16 w-16 text-cyan-500/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <svg class="mx-auto mb-4 h-16 w-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity: 0.3;">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
-                                <p class="font-mono text-sm font-semibold uppercase tracking-widest text-cyan-400/50">Kosong</p>
-                                <p class="mt-2 font-mono text-base font-semibold text-white">Belum ada laporan kinerja bulanan dari bawahan.</p>
-                                <p class="mt-2 text-sm leading-6 text-cyan-100">
+                                <p class="font-mono text-sm font-semibold uppercase tracking-widest" style="color: var(--ink-soft);">Kosong</p>
+                                <p class="mt-2 font-mono text-base font-semibold" style="color: var(--ink);">Belum ada laporan kinerja bulanan dari bawahan.</p>
+                                <p class="mt-2 text-sm leading-6" style="color: var(--ink-soft);">
                                     Tidak ada data laporan bulanan pada bulan {{ $selectedMonthLabel }}.
                                 </p>
                             </div>
@@ -470,28 +501,29 @@
                                     <tbody>
                                         @foreach($reports as $index => $report)
                                             <tr>
-                                                <td class="bulanan-cell text-center font-mono text-cyan-400 font-bold">{{ $index + 1 }}</td>
+                                                <td class="bulanan-cell text-center font-mono font-bold" style="color: var(--gold);">{{ $index + 1 }}</td>
                                                 <td class="bulanan-cell">
-                                                    <p class="font-semibold text-white">{{ $report['user_name'] }}</p>
-                                                    <p class="text-xs text-cyan-100/70">{{ $report['jabatan'] }}</p>
+                                                    <p class="font-semibold" style="color: var(--ink);">{{ $report['user_name'] }}</p>
+                                                    <p class="text-xs" style="color: var(--ink-soft);">{{ $report['jabatan'] }}</p>
                                                 </td>
                                                 <td class="bulanan-cell text-center">
                                                     @if($report['filename'])
                                                         <button
                                                             type="button"
                                                             @click="openPdfPreview('/storage/satker_ckh/{{ $report['user_id'] }}/{{ $report['filename'] }}', '{{ $report['user_name'] }} - {{ $report['bulan'] }}', {{ $report['id'] ?? 'null' }}, {{ $report['user_id'] }}, '{{ $report['bulan'] }}')"
-                                                            class="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 font-mono text-xs text-white hover:bg-cyan-500/20 hover:border-cyan-500/50 transition cursor-pointer"
+                                                            class="inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-xs transition cursor-pointer"
+                                                            style="border-color: var(--gold); background: oklch(68% 0.145 74 / 0.1); color: var(--gold);"
                                                         >
                                                             <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                                                             PDF
                                                         </button>
                                                     @else
-                                                        <span class="inline-flex items-center gap-2 rounded-full border border-slate-500/30 bg-slate-500/10 px-3 py-1 font-mono text-xs text-slate-400">
+                                                        <span class="inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-xs" style="border-color: var(--line); color: var(--ink-soft);">
                                                             -
                                                         </span>
                                                     @endif
                                                 </td>
-                                                <td class="text-center font-mono text-xs text-cyan-100">
+                                                <td class="text-center font-mono text-xs" style="color: var(--ink-soft);">
                                                     {{ $report['sending_formatted'] }}
                                                 </td>
                                                 <td class="bulanan-cell text-center">
@@ -507,11 +539,11 @@
                                                 </td>
                                                 <td class="bulanan-cell text-center">
                                                     @if($report['alasan'])
-                                                        <span class="text-xs text-rose-300" title="{{ $report['alasan'] }}">
+                                                        <span class="text-xs" style="color: oklch(45% 0.15 25);" title="{{ $report['alasan'] }}">
                                                             {{ Str::limit($report['alasan'], 20) }}
                                                         </span>
                                                     @else
-                                                        <span class="text-xs text-slate-500">-</span>
+                                                        <span class="text-xs" style="color: var(--ink-soft);">-</span>
                                                     @endif
                                                 </td>
                                             </tr>
@@ -631,5 +663,7 @@
                 </div>
             </div>
         @endif
+
+        </section>
     </main>
 </x-layouts.app>

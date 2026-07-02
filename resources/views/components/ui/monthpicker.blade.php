@@ -19,9 +19,9 @@
     'placeholder' => $placeholder ?? ($monthpickerConfig['placeholder'] ?? 'Pilih bulan'),
     'clearLabel' => $monthpickerConfig['clear_label'] ?? 'Hapus',
     'applyLabel' => $monthpickerConfig['apply_label'] ?? 'Pilih',
-    'locale' => $monthpickerConfig['locale'] ?? 'en-US',
-    'months' => $monthpickerConfig['months'] ?? [],
-    'noSubmit' => true,
+    'locale' => $monthpickerConfig['locale'] ?? 'id-ID',
+    'months' => $monthpickerConfig['months'] ?? ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+    'noSubmit' => false,
 ]))" x-init="init()" @keydown.escape.window="closePicker()" class="silatar-monthpicker">
     @if ($label)
         <label for="{{ $fieldId }}" class="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
