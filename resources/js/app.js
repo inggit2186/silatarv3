@@ -1182,23 +1182,32 @@ document.addEventListener('alpine:init', () => {
         },
         openAddModal() {
             this.addModalOpen = true;
-
-            if (!this.rows.length) {
-                this.rows = [{
-                    kegiatan: '',
-                    volume: '',
-                    satuan: this.unitOptions[0] || 'Kegiatan',
-                }];
-            }
+            this.rows = [{
+                kegiatan: '',
+                volume: '',
+                satuan: this.unitOptions[0] || 'Kegiatan',
+            }];
         },
         closeAddModal() {
             this.addModalOpen = false;
         },
-        openEditModal() {
+        editingDate: '',
+        openEditModal(groupData) {
+            // Store the date for form submission
+            this.editingDate = groupData.date || '';
+            // Parse items from group data
+            const items = groupData.items || [];
+            this.editRows = items.map(item => ({
+                kegiatan: item.kegiatan || '',
+                volume: item.volume || '',
+                satuan: item.satuan || this.unitOptions[0] || 'Kegiatan',
+            }));
             this.editModalOpen = true;
         },
         closeEditModal() {
             this.editModalOpen = false;
+            this.editRows = [];
+            this.editingDate = '';
         },
         addRow() {
             this.rows.push({

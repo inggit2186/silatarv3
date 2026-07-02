@@ -288,8 +288,9 @@
                                                     </p>
                                                     <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
                                                         @if (! empty($group['date']))
-                                                            <a
-                                                                href="{{ route('laporan-kinerja', ['tab' => 'harian', 'month' => $selectedMonth, 'search' => $search, 'edit_date' => $group['date']]) }}"
+                                                            <button
+                                                                type="button"
+                                                                @click="openEditModal({{ json_encode($group) }})"
                                                                 class="neo-btn-action neo-btn-edit"
                                                             >
                                                                 <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -297,7 +298,7 @@
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6l2 2" />
                                                                 </svg>
                                                                 Edit
-                                                            </a>
+                                                            </button>
                                                             <form
                                                                 method="POST"
                                                                 action="{{ route('laporan-kinerja.delete-day') }}"
@@ -837,26 +838,49 @@
         </section>
 
     {{-- Add Modal --}}
+    <template x-if="addModalOpen">
     <div
-        x-show="addModalOpen"
-        x-cloak
-        class="silatar-report-create-overlay"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="background: rgba(42, 37, 32, 0.9); backdrop-filter: blur(8px);"
         @click.self="closeAddModal()"
     >
-        <div class="silatar-report-create-modal">
+        <div class="silatar-report-create-modal"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 translate-y-8"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 translate-y-8"
+        >
             <div class="silatar-report-create-header">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400">Tambah detail kegiatan harian</p>
-                    <h3 class="silatar-report-create-title">::: Laporan Kegiatan :::</h3>
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/20">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 4v16m8-8H4"/>
+                        </svg>
+                        <span class="text-xs font-semibold uppercase tracking-widest" style="color: var(--gold);">Tambah Detail Kegiatan</span>
+                    </span>
+                    <h3 class="silatar-report-create-title">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline mr-2" style="color: var(--gold);">
+                            <path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Laporan Kegiatan Harian
+                    </h3>
                     <p class="silatar-report-create-subtitle">Isi tanggal di atas, lalu tambahkan satu atau beberapa kegiatan di bawahnya.</p>
                 </div>
                 <button
                     type="button"
                     @click="closeAddModal()"
-                    class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-cyan-400 transition hover:border-cyan-200 hover:text-white"
+                    class="neo-modal-close-btn"
                     aria-label="Tutup"
                 >
-                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 5l10 10M15 5 5 15" />
                     </svg>
                 </button>
@@ -972,18 +996,42 @@
             </form>
         </div>
     </div>
+    </template>
 
+    <template x-if="editModalOpen">
     <div
-        x-show="editModalOpen"
-        x-cloak
-        class="silatar-report-create-overlay"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="background: rgba(42, 37, 32, 0.9); backdrop-filter: blur(8px);"
         @click.self="closeEditModal()"
     >
-        <div class="silatar-report-create-modal">
+        <div class="silatar-report-create-modal"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 translate-y-8"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 translate-y-8"
+        >
             <div class="silatar-report-create-header">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400">Edit detail kegiatan harian</p>
-                    <h3 class="silatar-report-create-title">::: Laporan Kegiatan :::</h3>
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/20">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        <span class="text-xs font-semibold uppercase tracking-widest" style="color: var(--gold);">Edit Detail Kegiatan</span>
+                    </span>
+                    <h3 class="silatar-report-create-title">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline mr-2" style="color: var(--gold);">
+                            <path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Laporan Kegiatan Harian
+                    </h3>
                     <p class="silatar-report-create-subtitle">
                         Ubah tanggal dan semua kegiatan pada hari terpilih, lalu simpan kembali.
                     </p>
@@ -991,10 +1039,10 @@
                 <button
                     type="button"
                     @click="closeEditModal()"
-                    class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-cyan-400 transition hover:border-cyan-200 hover:text-white"
+                    class="neo-modal-close-btn"
                     aria-label="Tutup"
                 >
-                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 5l10 10M15 5 5 15" />
                     </svg>
                 </button>
@@ -1006,6 +1054,7 @@
                 <input type="hidden" name="tab" value="harian">
                 <input type="hidden" name="month" value="{{ $selectedMonth }}">
                 <input type="hidden" name="search" value="{{ $search }}">
+                <input type="hidden" name="tanggal" x-model="editingDate">
 
                 <div class="silatar-report-create-body">
                     @if ($errors->any())
@@ -1015,17 +1064,17 @@
                         </div>
                     @endif
 
-                    <x-ui.datepicker
-                        name="tanggal"
-                        label="Tanggal"
-                        :value="$editingDateValue"
-                        :required="true"
-                    />
+                    <div class="silatar-report-create-grid mb-4" style="grid-template-columns: 1fr;">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-widest mb-2" style="color: var(--gold);">Tanggal</label>
+                            <p class="font-mono text-lg font-bold" style="color: var(--ink);" x-text="editingDate"></p>
+                        </div>
+                    </div>
 
                     <div class="silatar-report-create-row">
                         <div class="silatar-report-create-row-head">
                             <div class="flex items-center gap-3">
-                                <span class="silatar-report-create-row-badge">{{ $editingGroupItems->count() ?: count($editingInitialRows) }}</span>
+                                <span class="silatar-report-create-row-badge" x-text="editRows.length"></span>
                                 <div>
                                     <p class="text-sm font-semibold text-slate-950">Kegiatan</p>
                                     <p class="text-xs text-cyan-400">Kegiatan Anda - Volume - Jenis</p>
@@ -1111,6 +1160,7 @@
             </form>
         </div>
     </div>
+    </template>
 
     @if ($printMode)
         <script>
@@ -1215,7 +1265,8 @@
                     method="POST"
                     :action="'/laporan-kinerja/bulanan/' + replaceReportId + '/replace'"
                     enctype="multipart/form-data"
-                    @submit="return confirm('Yakin ingin mengganti file laporan? Status akan berubah menjadi DIKIRIM.')"
+                    x-data="{ submitting: false }"
+                    @submit="if (!confirm('Yakin ingin mengganti file laporan? Status akan berubah menjadi DIKIRIM.')) { $event.preventDefault(); return; } this.submitting = true;"
                 >
                     @csrf
 
@@ -1352,7 +1403,7 @@
                     method="POST"
                     action="{{ route('laporan-kinerja.upload') }}"
                     enctype="multipart/form-data"
-                    @submit="return confirm('Yakin ingin mengupload laporan ini?')"
+                    @submit="if (!confirm('Yakin ingin mengupload laporan ini?')) { $event.preventDefault(); }"
                 >
                     @csrf
 

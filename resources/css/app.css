@@ -1713,8 +1713,15 @@ body {
 
 /* NEO MIRAI overrides for modals */
 .neo-mirai .silatar-report-create-overlay {
+    position: fixed;
+    inset: 0;
     background: rgba(42, 37, 32, 0.85);
     backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
 }
 
 .neo-mirai .silatar-report-create-modal {
@@ -1897,6 +1904,307 @@ body {
 .neo-mirai .bg-gradient-to-r\.from-cyan-600\.to-cyan-500,
 .neo-mirai [class*="from-cyan-600"] {
     background: var(--gold) !important;
+}
+
+/* Enhanced Modal Styles for NEO MIRAI */
+.neo-mirai .silatar-report-create-modal {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 80px oklch(18% 0.03 76 / 0.25);
+}
+
+.neo-mirai .silatar-report-create-header {
+    background: var(--paper-soft);
+    border-bottom: 1px solid var(--line);
+    padding: 1.5rem 2rem;
+}
+
+.neo-mirai .silatar-report-create-header .text-xs {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+}
+
+.neo-mirai .silatar-report-create-title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-top: 0.5rem;
+}
+
+.neo-mirai .silatar-report-create-subtitle {
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    margin-top: 0.25rem;
+}
+
+.neo-mirai .silatar-report-create-body {
+    padding: 1.5rem 2rem;
+    max-height: calc(90vh - 200px);
+    overflow-y: auto;
+}
+
+.neo-mirai .silatar-report-create-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.neo-mirai .silatar-report-create-body::-webkit-scrollbar-track {
+    background: var(--paper);
+}
+
+.neo-mirai .silatar-report-create-body::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 4px;
+}
+
+.neo-mirai .silatar-report-create-body::-webkit-scrollbar-thumb:hover {
+    background: var(--gold);
+}
+
+.neo-mirai .silatar-report-create-row-head {
+    background: var(--paper-soft);
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+}
+
+.neo-mirai .silatar-report-create-row-badge {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+    color: var(--night);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.75rem;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+}
+
+.neo-mirai .silatar-report-create-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 1rem;
+    align-items: end;
+    padding: 1rem;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+}
+
+@media (max-width: 768px) {
+    .neo-mirai .silatar-report-create-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+}
+
+.neo-mirai .silatar-report-edit-field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--ink);
+    transition: all 200ms var(--ease);
+}
+
+.neo-mirai .silatar-report-edit-field:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.2);
+}
+
+.neo-mirai .silatar-report-edit-field::placeholder {
+    color: var(--ink-soft);
+}
+
+.neo-mirai .silatar-report-create-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+    color: var(--night);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: none;
+    border-radius: 2rem;
+    cursor: pointer;
+    transition: all 200ms var(--ease);
+}
+
+.neo-mirai .silatar-report-create-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px oklch(50% 0.15 76 / 0.3);
+}
+
+.neo-mirai .silatar-report-create-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: oklch(65% 0.15 25 / 0.15);
+    color: oklch(45% 0.15 25);
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 200ms var(--ease);
+}
+
+.neo-mirai .silatar-report-create-remove:hover {
+    background: oklch(65% 0.15 25 / 0.3);
+    transform: scale(1.05);
+}
+
+.neo-mirai .silatar-report-create-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 2rem;
+    background: var(--paper-soft);
+    border-top: 1px solid var(--line);
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.neo-mirai .silatar-report-create-footer .text-sm {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+}
+
+.neo-mirai .silatar-report-create-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.neo-mirai .silatar-report-edit-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 200ms var(--ease);
+}
+
+.neo-mirai .silatar-report-edit-cancel:hover {
+    border-color: var(--gold);
+    transform: translateY(-2px);
+}
+
+.neo-mirai .silatar-report-edit-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+    border: none;
+    border-radius: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--night);
+    cursor: pointer;
+    transition: all 200ms var(--ease);
+}
+
+.neo-mirai .silatar-report-edit-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px oklch(50% 0.15 76 / 0.3);
+}
+
+/* Modal close button */
+.neo-mirai .silatar-report-create-header button {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    color: var(--ink-soft);
+    transition: all 200ms var(--ease);
+}
+
+.neo-mirai .silatar-report-create-header button:hover {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--night);
+}
+
+/* Form labels */
+.neo-mirai .silatar-report-create-body label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+}
+
+/* Error messages */
+.neo-mirai .rounded-\[1\.25rem\].border.border-rose-200 {
+    background: oklch(65% 0.15 25 / 0.1);
+    border-color: oklch(65% 0.15 25);
+}
+
+.neo-mirai .rounded-\[1\.25rem\].border.border-rose-200 p {
+    color: oklch(45% 0.15 25);
+}
+
+/* Modal close button */
+.neo-mirai .neo-modal-close-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    color: var(--ink-soft);
+    transition: all 200ms var(--ease);
+    cursor: pointer;
+}
+
+.neo-mirai .neo-modal-close-btn:hover {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--night);
+    transform: rotate(90deg);
+}
+
+.bg-gold\/10 {
+    background-color: oklch(68% 0.145 74 / 0.1);
+}
+
+.border-gold\/20 {
+    border-color: oklch(68% 0.145 74 / 0.2);
 }
 
 .neo-mirai .from-cyan-600 {
