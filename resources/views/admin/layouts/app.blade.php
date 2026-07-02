@@ -23,8 +23,9 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
         <!-- Logo -->
         <div class="sidebar-logo">
             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
-                <div class="brand-mark">
-                    <img src="{{ asset('favicon.webp') }}" alt="SILATAR" class="w-full h-full object-cover" style="border-radius: 50%;">
+                <div class="sidebar-brand">SIL</div>
+                <div class="brand-mark" style="display:none;">
+                    
                 </div>
                 <div x-show="!collapsed" x-transition class="sidebar-word">
                     <span>SILATAR</span>
@@ -109,7 +110,7 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
             </a>
 
             <!-- Divider -->
-            <div class="my-4 h-px" style="background: var(--line);"></div>
+            <div class="sidebar-divider"></div>
 
             <!-- Back to Site -->
             <a href="{{ url('/') }}" target="_blank" class="sidebar-nav-item">
@@ -134,7 +135,7 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
         </button>
 
         <!-- User Profile at Bottom -->
-        <div class="absolute bottom-0 left-0 right-0 p-4" style="border-top: 1px solid var(--line);">
+        <div class="sidebar-footer">
             <div x-show="!collapsed" x-transition class="space-y-3">
                 <div class="flex items-center gap-3">
                     <div class="header-user-avatar">
