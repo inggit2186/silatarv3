@@ -21,6 +21,136 @@
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="{{ $news->title }} - {{ $siteName }}">
         <meta name="twitter:image" content="{{ $ogImage }}">
+        <style>
+            /* News Content Styles - Clean up Quill HTML output */
+            .news-content {
+                font-size: 0.95rem;
+                line-height: 1.8;
+                color: var(--ink);
+            }
+
+            /* Hide Quill internal elements */
+            .news-content .ql-ui[contenteditable="false"] {
+                display: none !important;
+            }
+            .news-content [data-list="ordered"],
+            .news-content [data-list="bullet"] {
+                list-style: none !important;
+                margin-left: 0 !important;
+                padding-left: 0 !important;
+            }
+            .news-content [data-list="ordered"] {
+                counter-reset: none;
+            }
+
+            /* Proper list styling */
+            .news-content ol,
+            .news-content ul {
+                padding-left: 1.5rem !important;
+                margin: 1rem 0 !important;
+            }
+            .news-content li {
+                margin: 0.5rem 0 !important;
+            }
+            .news-content ol li {
+                list-style-type: decimal !important;
+            }
+            .news-content ul li {
+                list-style-type: disc !important;
+            }
+
+            /* Blockquote */
+            .news-content blockquote {
+                border-left: 4px solid var(--gold) !important;
+                padding: 1rem 1.5rem !important;
+                margin: 1.5rem 0 !important;
+                background: var(--paper-soft) !important;
+                border-radius: 0 0.5rem 0.5rem 0 !important;
+                font-style: italic !important;
+                color: var(--ink-soft) !important;
+            }
+
+            /* Code block */
+            .news-content .ql-code-block-container,
+            .news-content .ql-code-block {
+                background: #1e1e1e !important;
+                color: #d4d4d4 !important;
+                border-radius: 8px !important;
+                padding: 1rem !important;
+                margin: 1rem 0 !important;
+                overflow-x: auto !important;
+                font-family: 'Fira Code', 'Monaco', 'Consolas', monospace !important;
+                font-size: 0.85rem !important;
+                line-height: 1.5 !important;
+            }
+            .news-content .ql-code-block-container select.ql-ui,
+            .news-content .ql-code-block-container [contenteditable="false"] {
+                display: none !important;
+            }
+
+            /* Paragraphs */
+            .news-content p {
+                margin: 1rem 0 !important;
+            }
+            .news-content p:empty {
+                min-height: 1rem;
+            }
+
+            /* Headings */
+            .news-content h1,
+            .news-content h2,
+            .news-content h3,
+            .news-content h4 {
+                font-family: var(--font-display) !important;
+                color: var(--ink) !important;
+                margin: 1.5rem 0 1rem !important;
+            }
+            .news-content h1 { font-size: 1.75rem !important; font-weight: 700 !important; }
+            .news-content h2 { font-size: 1.5rem !important; font-weight: 600 !important; }
+            .news-content h3 { font-size: 1.25rem !important; font-weight: 600 !important; }
+
+            /* Text formatting */
+            .news-content strong,
+            .news-content b { font-weight: 700 !important; }
+            .news-content em,
+            .news-content i { font-style: italic !important; }
+            .news-content u { text-decoration: underline !important; }
+            .news-content s,
+            .news-content strike { text-decoration: line-through !important; }
+
+            /* Links */
+            .news-content a {
+                color: var(--gold) !important;
+                text-decoration: underline !important;
+            }
+            .news-content a:hover {
+                color: var(--sun) !important;
+            }
+
+            /* Images */
+            .news-content img {
+                max-width: 100% !important;
+                height: auto !important;
+                border-radius: 8px !important;
+                margin: 1.5rem auto !important;
+                display: block !important;
+            }
+
+            /* Alignment */
+            .news-content .ql-align-right { text-align: right !important; }
+            .news-content .ql-align-center { text-align: center !important; }
+            .news-content .ql-align-justify { text-align: justify !important; }
+
+            /* Indent */
+            .news-content .ql-indent-1 { padding-left: 2rem !important; }
+            .news-content .ql-indent-2 { padding-left: 4rem !important; }
+            .news-content .ql-indent-3 { padding-left: 6rem !important; }
+
+            /* Color styling */
+            .news-content [style*="color: rgb("] {
+                /* Allow inline colors */
+            }
+        </style>
     @endpush
 
     <main class="neo-mirai">
@@ -175,7 +305,7 @@
                     <div class="section-divider geometric" style="margin: 1.5rem 0;"></div>
 
                     <!-- Content -->
-                    <div style="font-size: 0.95rem; line-height: 1.8; color: var(--ink);">
+                    <div class="news-content">
                         {!! $news->content !!}
                     </div>
 

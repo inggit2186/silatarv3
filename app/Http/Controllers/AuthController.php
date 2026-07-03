@@ -39,7 +39,7 @@ class AuthController extends Controller
         Auth::login($user, (bool) ($credentials['remember'] ?? false));
         $request->session()->regenerate();
 
-        return redirect()->intended(route('pelayanan'));
+        return redirect()->intended(route('home'));
     }
 
     public function logout(Request $request)

@@ -1,6 +1,9 @@
 import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
+import Quill from 'quill';
+import 'quill/dist/quill.snow.css';
 
 window.Alpine = Alpine;
+window.Quill = Quill;
 
 document.addEventListener('alpine:init', () => {
     Alpine.data('siteNav', () => ({

@@ -411,14 +411,28 @@ class NewsController extends Controller
             abort(404);
         }
 
+        // Log activity BEFORE deleting (foreign key requires news to exist)
+        $this->logActivity($user->id, 'delete_news', "Menghapus berita: {$news->title}", $id);
+
         // Delete image
         if ($news->image && Storage::disk('public')->exists($news->image)) {
             Storage::disk('public')->delete($news->image);
         }
 
-        DB::table('news')->where('id', $id)->delete();
+        // Delete related content images from storage
+        if ($news->content) {
+            preg_match_all('/storage\/news\/content\/([^"\']+)/', $news->content, $matches);
+            if (!empty($matches[0])) {
+                foreach ($matches[0] as $path) {
+                    $storagePath = str_replace('storage/', '', $path);
+                    if (Storage::disk('public')->exists($storagePath)) {
+                        Storage::disk('public')->delete($storagePath);
+                    }
+                }
+            }
+        }
 
-        $this->logActivity($user->id, 'delete_news', "Menghapus berita: {$news->title}", $id);
+        DB::table('news')->where('id', $id)->delete();
 
         return redirect()->route('admin.news.index')
             ->with('success', 'Berita berhasil dihapus.');

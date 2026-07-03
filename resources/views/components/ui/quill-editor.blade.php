@@ -8,7 +8,7 @@
 
     <div class="neo-editor-container">
         <div id="{{ $id ?? 'quill-editor' }}" class="quill-editor"></div>
-        <input type="hidden" name="{{ $name ?? 'content' }}" id="{{ $name ?? 'content' }}_input" value="{!! $content ?? '' !!}">
+        <textarea name="{{ $name ?? 'content' }}" id="{{ $name ?? 'content' }}_input" class="hidden-quill-input" style="display:none;">{!! $content ?? '' !!}</textarea>
     </div>
 
     <p class="neo-form-hint mt-2 flex items-center gap-2">
@@ -16,7 +16,7 @@
             <svg class="h-4 w-4" style="color: var(--cyan);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <span>Gunakan toolbar untuk formatting. Upload gambar: klik toolbar atau drag &amp; drop. Klik gambar untuk resize.</span>
+            <span>Toolbar: Header, Bold, Italic, Link, Image, Code Block. Upload gambar: drag &amp; drop atau klik toolbar. Klik gambar untuk resize/align. Paste gambar langsung didukung.</span>
         </span>
     </p>
 
@@ -26,20 +26,47 @@
 </div>
 
 @push('styles')
-{{-- Quill.js CSS --}}
-<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+{{-- Highlight.js CSS --}}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 
 <style>
     /* Quill Editor Container Styling */
     .neo-editor-container {
         border-radius: 12px;
         overflow: hidden;
+        position: relative;
     }
 
     .quill-editor {
         min-height: 400px;
         max-height: 600px;
         overflow-y: auto;
+        position: relative;
+    }
+
+    /* Prevent content from rendering outside editor */
+    .quill-editor .ql-editor {
+        overflow-wrap: break-word !important;
+        word-wrap: break-word !important;
+    }
+
+    /* Hide Quill internal UI elements in editor */
+    .quill-editor .ql-code-block-container {
+        position: relative;
+    }
+    .quill-editor .ql-code-block-container select.ql-ui {
+        position: absolute;
+        top: 4px;
+        right: 8px;
+        opacity: 0.5;
+        font-size: 0.65rem;
+        padding: 2px 4px;
+        background: var(--paper-deep);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+    }
+    .quill-editor .ql-code-block-container [contenteditable="false"]:not(select) {
+        display: none !important;
     }
 
     /* Quill Theme Overrides - Neo Mirai Style */
@@ -58,6 +85,7 @@
         background: var(--paper) !important;
         font-family: inherit !important;
         font-size: 15px !important;
+        overflow: hidden !important;
     }
 
     .ql-editor {
@@ -68,13 +96,34 @@
         font-size: 15px !important;
         line-height: 1.7 !important;
         color: var(--ink) !important;
+        overflow-y: auto !important;
+        box-sizing: border-box !important;
     }
 
-    .ql-editor.ql-blank::before {
+    /* Ensure content stays inside the editor */
+    .ql-editor > * {
+        max-width: 100% !important;
+        overflow-wrap: break-word !important;
+    }
+
+    /* Prevent any content from breaking out */
+    .neo-editor-container {
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .neo-editor-container .ql-editor.ql-blank::before {
         color: var(--ink-soft) !important;
         font-style: normal !important;
         left: 20px !important;
         right: 20px !important;
+    }
+
+    /* Ensure images don't overflow */
+    .ql-editor img {
+        max-width: 100% !important;
+        height: auto !important;
     }
 
     /* Toolbar Button Styling */
@@ -143,7 +192,6 @@
     .ql-editor p { margin: 0.75rem 0 !important; }
     .ql-editor ul, .ql-editor ol { margin: 0.75rem 0 !important; padding-left: 1.5rem !important; }
     .ql-editor li { margin: 0.25rem 0 !important; }
-    .ql-editor img { max-width: 100% !important; height: auto !important; border-radius: 8px !important; margin: 1rem 0 !important; cursor: pointer !important; }
     .ql-editor blockquote { border-left: 4px solid var(--cyan) !important; padding-left: 1rem !important; margin: 1rem 0 !important; font-style: italic !important; color: var(--ink-soft) !important; background: var(--paper-soft) !important; padding: 0.75rem 1rem !important; border-radius: 0 8px 8px 0 !important; }
     .ql-editor pre { background: var(--paper-soft) !important; border-radius: 8px !important; padding: 1rem !important; overflow-x: auto !important; margin: 1rem 0 !important; font-family: 'Courier New', monospace !important; }
     .ql-editor code { font-family: 'Courier New', monospace !important; background: var(--paper-soft) !important; padding: 0.2rem 0.4rem !important; border-radius: 4px !important; }
@@ -152,6 +200,40 @@
     .ql-editor th, .ql-editor td { border: 1px solid var(--line) !important; padding: 0.5rem 0.75rem !important; }
     .ql-editor th { background: var(--paper-soft) !important; font-weight: 600 !important; }
     .ql-editor hr { border: none !important; border-top: 1px solid var(--line) !important; margin: 1.5rem 0 !important; }
+
+    /* Images - basic styles */
+    .ql-editor img {
+        max-width: 100% !important;
+        height: auto !important;
+        border-radius: 8px !important;
+        margin: 1rem 0 !important;
+        cursor: pointer !important;
+        display: block !important;
+    }
+
+    /* Images in paragraphs with alignment */
+    .ql-editor p[style*="text-align: center"] img,
+    .ql-editor p[style*="TEXT-ALIGN: center"] img {
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+    .ql-editor p[style*="text-align: right"],
+    .ql-editor p[style*="TEXT-ALIGN: right"] {
+        direction: rtl !important;
+    }
+    .ql-editor p[style*="text-align: right"] img,
+    .ql-editor p[style*="TEXT-ALIGN: right"] img {
+        margin-left: auto !important;
+        direction: ltr !important;
+    }
+
+    /* Center/right alignment inline styles on images */
+    .ql-editor img[style*="margin-left: auto"] {
+        margin-left: auto !important;
+    }
+    .ql-editor img[style*="margin-right: auto"] {
+        margin-right: auto !important;
+    }
 
     /* ==================== */
     /* IMAGE RESIZE STYLES */
@@ -249,12 +331,124 @@
         top: 0 !important;
         bottom: 0 !important;
     }
+
+    /* Upload toast animations */
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    @keyframes slideInToast {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* Loading placeholder animation */
+    .quill-loading-placeholder {
+        background: var(--paper-soft, #faf8f4);
+        border: 2px dashed var(--line, #c5c0b8);
+        border-radius: 8px;
+        padding: 40px 20px;
+        text-align: center;
+        color: var(--ink-soft, #4a4540);
+    }
+
+    /* ==================== */
+    /* ADDITIONAL TOOLBAR STYLES */
+    /* ==================== */
+
+    /* Table styles */
+    .ql-editor table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+        margin: 1rem 0 !important;
+    }
+    .ql-editor table td, .ql-editor table th {
+        border: 1px solid var(--line) !important;
+        padding: 0.5rem 0.75rem !important;
+        min-width: 80px;
+    }
+    .ql-editor table th {
+        background: var(--paper-deep) !important;
+        font-weight: 600 !important;
+    }
+    .ql-editor table caption {
+        font-style: italic !important;
+        color: var(--ink-soft) !important;
+        margin-bottom: 0.5rem !important;
+    }
+    /* Table selection */
+    .ql-editor .quill-cursor-flag {
+        display: none !important;
+    }
+
+    /* Code Block with syntax highlighting */
+    .ql-editor pre.ql-syntax {
+        background: #1e1e1e !important;
+        color: #d4d4d4 !important;
+        border-radius: 8px !important;
+        padding: 1rem !important;
+        margin: 1rem 0 !important;
+        overflow-x: auto !important;
+        font-family: 'Fira Code', 'Monaco', 'Consolas', monospace !important;
+        font-size: 14px !important;
+        line-height: 1.5 !important;
+    }
+    .ql-editor pre.ql-syntax .hljs-keyword { color: #569cd6 !important; }
+    .ql-editor pre.ql-syntax .hljs-string { color: #ce9178 !important; }
+    .ql-editor pre.ql-syntax .hljs-number { color: #b5cea8 !important; }
+    .ql-editor pre.ql-syntax .hljs-function { color: #dcdcaa !important; }
+    .ql-editor pre.ql-syntax .hljs-comment { color: #6a9955 !important; }
+    .ql-editor pre.ql-syntax .hljs-variable { color: #9cdcfe !important; }
+    .ql-editor pre.ql-syntax .hljs-built_in { color: #4ec9b0 !important; }
+    .ql-editor pre.ql-syntax .hljs-class { color: #4ec9b0 !important; }
+    .ql-editor pre.ql-syntax .hljs-attr { color: #9cdcfe !important; }
+
+    /* Inline code */
+    .ql-editor code {
+        background: var(--paper-deep) !important;
+        padding: 0.2em 0.4em !important;
+        border-radius: 4px !important;
+        font-family: 'Fira Code', 'Monaco', monospace !important;
+        font-size: 0.9em !important;
+        color: var(--sun-deep) !important;
+    }
+
+    /* Horizontal Rule */
+    .ql-editor hr {
+        border: none !important;
+        height: 2px !important;
+        background: linear-gradient(90deg, transparent, var(--line), transparent) !important;
+        margin: 2rem 0 !important;
+    }
+
+    /* Video embed */
+    .ql-editor video, .ql-editor iframe {
+        max-width: 100% !important;
+        border-radius: 8px !important;
+        margin: 1rem 0 !important;
+    }
+
+    /* Mention placeholder */
+    .ql-editor .mention {
+        background: rgba(201, 165, 90, 0.15) !important;
+        color: var(--gold) !important;
+        padding: 0.1em 0.3em !important;
+        border-radius: 4px !important;
+        font-weight: 500 !important;
+    }
 </style>
 @endpush
 
 @push('scripts')
-{{-- Quill.js --}}
-<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.min.js"></script>
+{{-- Highlight.js --}}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
 <script>
 (function() {
@@ -278,19 +472,115 @@
             return;
         }
 
-        // Sync content to hidden input
+        // Sync content to textarea
         function syncContent(quill) {
             const content = quill.root.innerHTML;
-            const input = document.getElementById(inputId);
-            if (input) {
-                input.value = content;
+            const textarea = document.getElementById(inputId);
+            if (textarea) {
+                textarea.value = content;
             }
         }
 
-        // Get initial content
-        const initialContent = document.getElementById(inputId)?.value || '';
+        // Get initial content from textarea - content is now raw HTML (not escaped)
+        function getInitialContent() {
+            const textarea = document.getElementById(inputId);
+            if (!textarea) return '';
+
+            let content = textarea.value || '';
+
+            // Clean up Quill internal HTML artifacts
+            // 1. Remove data attributes added by our resize system from images
+            content = content.replace(/\s*data-resize-init="[^"]*"/gi, '');
+            content = content.replace(/\s*data-original-width="[^"]*"/gi, '');
+            content = content.replace(/\s*data-original-height="[^"]*"/gi, '');
+
+            // 2. Remove orphaned span.ql-ui elements inside list items
+            content = content.replace(/<li[^>]*>\s*<span class="ql-ui" contenteditable="false"><\/span>\s*/gi, '<li>');
+
+            // 3. Clean up code block containers - keep the content but remove the select dropdown
+            // Replace select.ql-ui inside code-block-container with empty
+            content = content.replace(/<div class="ql-code-block-container"[^>]*>[\s\S]*?<select class="ql-ui"[^>]*>[\s\S]*?<\/select>/gi, '<div class="ql-code-block-container">');
+
+            return content;
+        }
+
+        const initialContent = getInitialContent();
 
         // Upload image function
+        // Show upload progress toast
+        let uploadToast = null;
+        function showUploadToast(message, type = 'info') {
+            // Remove existing toast
+            const existingToast = document.getElementById('quill-upload-toast');
+            if (existingToast) existingToast.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'quill-upload-toast';
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                padding: 12px 20px;
+                background: var(--paper, #f5f0e6);
+                border: 1px solid var(--line, #c5c0b8);
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 99999;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-family: inherit;
+                font-size: 14px;
+                color: var(--ink, #2a2520);
+                animation: slideInToast 0.3s ease;
+            `;
+
+            const spinner = document.createElement('div');
+            spinner.style.cssText = `
+                width: 18px;
+                height: 18px;
+                border: 2px solid var(--line, #c5c0b8);
+                border-top-color: var(--gold, #c9a55a);
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+            `;
+
+            const text = document.createElement('span');
+            text.textContent = message;
+
+            toast.appendChild(spinner);
+            toast.appendChild(text);
+            document.body.appendChild(toast);
+            uploadToast = toast;
+
+            return toast;
+        }
+
+        function hideUploadToast(success = false, message = '') {
+            const toast = document.getElementById('quill-upload-toast');
+            if (toast) {
+                if (success) {
+                    toast.innerHTML = `
+                        <svg style="width:18px;height:18px;color:#16a34a" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span style="color:#16a34a">${message || 'Berhasil!'}</span>
+                    `;
+                    toast.style.borderColor = 'rgba(22, 163, 74, 0.3)';
+                    setTimeout(() => toast.remove(), 2000);
+                } else {
+                    toast.innerHTML = `
+                        <svg style="width:18px;height:18px;color:#dc2626" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        <span style="color:#dc2626">${message || 'Gagal!'}</span>
+                    `;
+                    toast.style.borderColor = 'rgba(220, 38, 38, 0.3)';
+                    setTimeout(() => toast.remove(), 3000);
+                }
+            }
+        }
+
         function uploadImage(file, insertCallback) {
             const formData = new FormData();
             formData.append('image', file);
@@ -299,25 +589,33 @@
             xhr.open('POST', uploadUrl, true);
             xhr.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').content);
 
+            // Show uploading toast
+            showUploadToast('Mengupload dan memproses gambar...');
+
             xhr.onload = function() {
                 if (xhr.status === 200) {
                     try {
                         const response = JSON.parse(xhr.responseText);
                         if (response.success) {
+                            hideUploadToast(true, 'Gambar berhasil diupload!');
+                            // Show compression stats if available
+                            if (response.meta && response.meta.saved_percent && parseFloat(response.meta.saved_percent) > 0) {
+                                console.log(`Image compressed: ${response.meta.original_size} → ${response.meta.compressed_size} (saved ${response.meta.saved_percent})`);
+                            }
                             insertCallback(response.url);
                         } else {
-                            alert('Upload gagal: ' + (response.error || 'Unknown error'));
+                            hideUploadToast(false, response.error || 'Upload gagal');
                         }
                     } catch (e) {
-                        alert('Invalid response from server');
+                        hideUploadToast(false, 'Respons server tidak valid');
                     }
                 } else {
-                    alert('Upload failed: HTTP ' + xhr.status);
+                    hideUploadToast(false, 'Upload gagal (HTTP ' + xhr.status + ')');
                 }
             };
 
             xhr.onerror = function() {
-                alert('Network error');
+                hideUploadToast(false, 'Kesalahan koneksi');
             };
 
             xhr.send(formData);
@@ -332,22 +630,56 @@
             input.onchange = function() {
                 const file = input.files[0];
                 if (file) {
+                    // Validate file size (max 10MB)
+                    if (file.size > 10 * 1024 * 1024) {
+                        alert('Ukuran file terlalu besar. Maksimal 10MB.');
+                        return;
+                    }
+
                     const quill = window.quillInstances[editorId];
                     const range = quill.getSelection(true);
-                    // Insert placeholder
-                    quill.insertEmbed(range.index, 'image', '{{ asset("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100' viewBox='0 0 200 100'%3E%3Crect fill='%23f0f0f0' width='200' height='100'/%3E%3Ctext x='100' y='50' text-anchor='middle' fill='%23999' font-family='sans-serif' font-size='12'%3EUploading...%3C/text%3E%3C/svg%3E") }}');
+
+                    // Create loading placeholder with animation
+                    const loadingSvg = `data:image/svg+xml,${encodeURIComponent(`
+                        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+                            <rect fill="#f5f0e6" width="400" height="300" rx="8"/>
+                            <rect x="175" y="115" width="50" height="50" rx="25" fill="none" stroke="#c9a55a" stroke-width="3">
+                                <animateTransform attributeName="transform" type="rotate" from="0 200 140" to="360 200 140" dur="1s" repeatCount="indefinite"/>
+                            </rect>
+                            <text x="200" y="190" text-anchor="middle" fill="#4a4540" font-family="system-ui" font-size="13">Memproses gambar...</text>
+                            <text x="200" y="210" text-anchor="middle" fill="#8a8580" font-family="system-ui" font-size="11">Mohon tunggu sebentar</text>
+                        </svg>
+                    `)}`;
+
+                    // Insert loading placeholder
+                    quill.insertEmbed(range.index, 'image', loadingSvg);
+
                     // Upload and replace
                     uploadImage(file, function(url) {
                         const quillInstance = window.quillInstances[editorId];
                         const currentRange = quillInstance.getSelection();
                         if (currentRange) {
-                            const img = quillInstance.root.querySelector(`img[src^="data:image/svg"]`);
-                            if (img) {
-                                img.src = url;
-                                img.removeAttribute('style');
+                            // Find and replace the loading placeholder
+                            const loadingImg = quillInstance.root.querySelector(`img[src*="Memproses"]`);
+                            if (loadingImg) {
+                                loadingImg.src = url;
+                                loadingImg.removeAttribute('style');
+                                loadingImg.style.maxWidth = '100%';
+                                loadingImg.style.height = 'auto';
+                                loadingImg.style.borderRadius = '8px';
                             } else {
-                                quillInstance.deleteText(currentRange.index, 1);
-                                quillInstance.insertEmbed(currentRange.index, 'image', url);
+                                // Fallback: delete loading and insert new image
+                                const allImgs = quillInstance.root.querySelectorAll('img');
+                                for (let img of allImgs) {
+                                    if (img.src.includes('data:image/svg')) {
+                                        img.src = url;
+                                        img.removeAttribute('style');
+                                        img.style.maxWidth = '100%';
+                                        img.style.height = 'auto';
+                                        img.style.borderRadius = '8px';
+                                        break;
+                                    }
+                                }
                             }
                             initImageResize();
                             syncContent(quillInstance);
@@ -357,6 +689,40 @@
             };
         }
 
+        // Wrap image with alignment by setting CSS on parent
+        function wrapImageWithAlignment(img, align) {
+            // Get the immediate parent of the image
+            const parent = img.parentElement;
+
+            // Set text-align on parent element for alignment effect
+            if (parent) {
+                parent.style.textAlign = align || 'left';
+            }
+
+            // Ensure image is block display for proper alignment
+            img.style.display = 'block';
+            img.style.marginLeft = align === 'right' ? 'auto' : (align === 'center' ? 'auto' : '0');
+            img.style.marginRight = align === 'center' ? 'auto' : '0';
+
+            // Force sync to save the content
+            syncContent(quill);
+
+            // Re-initialize image resize to rebind events
+            setTimeout(() => initImageResize(), 100);
+        }
+
+        // Remove alignment wrapper from image
+        function unwrapImage(img) {
+            const wrapper = img.parentElement;
+            if (wrapper && wrapper.classList.contains('quill-image-wrapper')) {
+                const parent = wrapper.parentNode;
+                while (wrapper.firstChild) {
+                    parent.insertBefore(wrapper.firstChild, wrapper);
+                }
+                parent.removeChild(wrapper);
+            }
+        }
+
         // Initialize Quill
         const quill = new Quill('#' + editorId, {
             theme: 'snow',
@@ -364,25 +730,67 @@
             modules: {
                 toolbar: {
                     container: [
-                        [{ 'header': [1, 2, 3, 4, false] }],
+                        [{ 'header': [1, 2, 3, false] }],
                         ['bold', 'italic', 'underline', 'strike'],
                         [{ 'color': [] }, { 'background': [] }],
-                        [{ 'align': [] }],
+                        [{ 'align': [false, 'center', 'right', 'justify'] }],
                         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                         [{ 'indent': '-1'}, { 'indent': '+1' }],
-                        ['link', 'image', 'video'],
+                        ['link', 'image'],
                         ['blockquote', 'code-block'],
                         ['clean']
                     ],
-                    handlers: { 'image': imageHandler }
+                    handlers: {
+                        'image': imageHandler
+                    }
+                },
+                syntax: {
+                    interval: 250
+                },
+                keyboard: {
+                    bindings: {
+                        // Ctrl+Shift+S for superscript
+                        'superscript': {
+                            key: 'S',
+                            ctrlKey: true,
+                            shiftKey: true,
+                            handler: function() {}
+                        }
+                    }
                 }
             },
-            formats: ['header', 'bold', 'italic', 'underline', 'strike', 'color', 'background', 'align', 'list', 'bullet', 'indent', 'link', 'image', 'video', 'blockquote', 'code-block']
+            formats: ['header', 'bold', 'italic', 'underline', 'strike', 'color', 'background', 'align', 'list', 'indent', 'link', 'image', 'blockquote', 'code-block', 'code']
         });
 
+        // Apply syntax highlighting after text changes
+        quill.on('text-change', function() {
+            syncContent(quill);
+            initImageResize();
+            // Apply syntax highlighting to code blocks
+            setTimeout(highlightCodeBlocks, 100);
+        });
+
+        // Initial highlighting
+        setTimeout(highlightCodeBlocks, 100);
+
+        // Function to highlight code blocks
+        function highlightCodeBlocks() {
+            const codeBlocks = quill.root.querySelectorAll('pre.ql-syntax');
+            codeBlocks.forEach(block => {
+                if (!block.dataset.highlighted) {
+                    block.dataset.highlighted = 'true';
+                }
+            });
+        }
+
         // Set initial content
-        if (initialContent) {
-            quill.clipboard.dangerouslyPasteHTML(initialContent);
+        if (initialContent && initialContent.trim()) {
+            try {
+                quill.clipboard.dangerouslyPasteHTML(initialContent);
+            } catch (e) {
+                console.warn('Error loading initial content:', e);
+                quill.setText(initialContent);
+            }
         }
 
         // Store instance
@@ -416,8 +824,15 @@
                     img.dataset.originalWidth = img.naturalWidth;
                     img.dataset.originalHeight = img.naturalHeight;
 
+                    // Prevent Quill from selecting the image as text
+                    img.addEventListener('mousedown', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+
                     // Add click handler for selection
                     img.addEventListener('click', function(e) {
+                        e.preventDefault();
                         e.stopPropagation();
                         selectImage(img);
                     });
@@ -425,6 +840,7 @@
                     // Add double-click to reset
                     img.addEventListener('dblclick', function(e) {
                         e.preventDefault();
+                        e.stopPropagation();
                         resetImageSize(img);
                     });
                 }
@@ -454,18 +870,65 @@
             // Remove existing toolbar
             document.querySelectorAll('.quick-resize-toolbar').forEach(el => el.remove());
 
-            // Get image position relative to editor
-            const editorRect = quill.root.getBoundingClientRect();
+            // Get image position - scroll into view first to get accurate position
+            img.scrollIntoView({ behavior: 'instant', block: 'nearest' });
             const imgRect = img.getBoundingClientRect();
+            const editorRect = quill.root.getBoundingClientRect();
 
             const toolbar = document.createElement('div');
             toolbar.className = 'quick-resize-toolbar';
+            toolbar.id = 'image-toolbar-' + Date.now();
             toolbar.style.cssText = `
                 position: fixed !important;
                 display: flex !important;
                 gap: 4px !important;
+                flex-wrap: wrap !important;
+                max-width: 320px !important;
+                z-index: 10000 !important;
             `;
 
+            // Alignment buttons
+            const aligns = [
+                { label: '◀', value: 'left', title: 'Rata Kiri' },
+                { label: '◫', value: 'center', title: 'Tengah' },
+                { label: '▶', value: 'right', title: 'Rata Kanan' }
+            ];
+
+            // Check current alignment
+            const currentWrapper = img.parentElement;
+            const currentAlign = currentWrapper && currentWrapper.classList.contains('quill-image-wrapper')
+                ? currentWrapper.getAttribute('data-align') || 'left'
+                : 'left';
+
+            aligns.forEach(align => {
+                const btn = document.createElement('button');
+                btn.innerHTML = align.label;
+                btn.title = align.title;
+                btn.style.cssText = `
+                    padding: 6px 10px !important;
+                    border: 1px solid ${align.value === currentAlign ? 'var(--gold)' : 'var(--line)'} !important;
+                    border-radius: 6px !important;
+                    background: ${align.value === currentAlign ? 'var(--gold)' : 'var(--paper)'} !important;
+                    color: ${align.value === currentAlign ? 'var(--night)' : 'var(--ink)'} !important;
+                    cursor: pointer !important;
+                    font-size: 12px !important;
+                `;
+                btn.onclick = function(e) {
+                    e.stopPropagation();
+                    wrapImageWithAlignment(img, align.value);
+                    syncContent(quill);
+                    // Refresh toolbar to update button states
+                    setTimeout(() => showQuickToolbar(img), 50);
+                };
+                toolbar.appendChild(btn);
+            });
+
+            // Divider
+            const div1 = document.createElement('div');
+            div1.style.cssText = 'width: 1px; background: var(--line); margin: 4px 4px;';
+            toolbar.appendChild(div1);
+
+            // Size buttons
             const sizes = [
                 { label: 'S', value: 300 },
                 { label: 'M', value: 600 },
@@ -477,7 +940,7 @@
                 const btn = document.createElement('button');
                 btn.textContent = size.label;
                 btn.style.cssText = `
-                    padding: 6px 12px !important;
+                    padding: 6px 10px !important;
                     border: 1px solid var(--line) !important;
                     border-radius: 6px !important;
                     background: var(--paper) !important;
@@ -489,21 +952,14 @@
                 btn.onclick = function(e) {
                     e.stopPropagation();
                     resizeToWidth(img, size.value);
-                    // Update active state
-                    toolbar.querySelectorAll('button').forEach(b => {
-                        b.style.background = 'var(--paper)';
-                        b.style.color = 'var(--ink)';
-                    });
-                    btn.style.background = 'var(--cyan)';
-                    btn.style.color = 'white';
                 };
                 toolbar.appendChild(btn);
             });
 
             // Divider
-            const div = document.createElement('div');
-            div.style.cssText = 'width: 1px; background: var(--line); margin: 4px 2px;';
-            toolbar.appendChild(div);
+            const div2 = document.createElement('div');
+            div2.style.cssText = 'width: 1px; background: var(--line); margin: 4px 4px;';
+            toolbar.appendChild(div2);
 
             // Reset button
             const resetBtn = document.createElement('button');
@@ -526,24 +982,30 @@
 
             // Dimensions display
             const dims = document.createElement('div');
-            dims.style.cssText = 'padding: 6px 8px !important; color: var(--ink-soft) !important; font-size: 11px !important;';
+            dims.style.cssText = 'padding: 6px 8px !important; color: var(--ink-soft) !important; font-size: 11px !important; white-space: nowrap !important;';
             dims.textContent = img.naturalWidth + '×' + img.naturalHeight;
             toolbar.appendChild(dims);
 
-            // Position toolbar above the image
+            // Position toolbar - place below the image, centered
             document.body.appendChild(toolbar);
             const toolbarRect = toolbar.getBoundingClientRect();
 
-            let top = imgRect.top - toolbarRect.height - 10;
+            // Calculate position below the image
+            let top = imgRect.bottom + 10;
             let left = imgRect.left + (imgRect.width / 2) - (toolbarRect.width / 2);
 
             // Keep within viewport
-            if (top < 10) top = imgRect.bottom + 10;
             if (left < 10) left = 10;
             if (left + toolbarRect.width > window.innerWidth - 10) {
                 left = window.innerWidth - toolbarRect.width - 10;
             }
+            // If would go off bottom, place above image
+            if (top + toolbarRect.height > window.innerHeight - 10) {
+                top = imgRect.top - toolbarRect.height - 10;
+            }
+            if (top < 10) top = 10;
 
+            toolbar.style.position = 'fixed';
             toolbar.style.top = top + 'px';
             toolbar.style.left = left + 'px';
 
