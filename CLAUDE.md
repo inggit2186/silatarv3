@@ -197,3 +197,47 @@ Input -> Process -> Output
 5. Dokumentasikan semua files yang dimodifikasi/ditambahkan
 6. Sertakan code snippets untuk logic penting
 
+
+## UI/UX Styling Guidelines
+
+### Tema: NEO MIRAI
+Aplikasi menggunakan tema **NEO MIRAI** - desain modern, clean, dengan fokus pada keterbacaan dan konsistensi visual.
+
+### Prioritas Styling
+
+1. **Gunakan class CSS yang sudah ada** - Cek file CSS/theme yang tersedia sebelum membuat style baru
+2. **Hindari inline CSS** - Kecuali untuk value dinamis dari server-side
+3. **Komponen yang sudah tersedia:**
+   - `.neo-card`, `.neo-btn`, `.neo-grid`, `.neo-empty`, `.neo-modal-*`
+   - `.neo-upload-*`, `.neo-field-*`, `.neo-alert-*`
+   - `.neo-badge`, `.neo-modal`, `.neo-form-*`
+
+### File CSS Utama
+```
+resources/css/
+├── neo-mirai-home.css    # Homepage styling
+├── app.css              # Base Tailwind styles
+└── (cek folder css/ untuk komponen spesifik)
+```
+
+### Checklist Styling Baru
+- [ ] Cek file CSS yang ada untuk komponen yang diperlukan
+- [ ] Gunakan class yang sudah ada jika memungkinkan
+- [ ] Jika inline CSS diperlukan, catat di comments
+- [ ] Jangan ulangi styling pattern yang sudah ada di tempat lain
+
+### Contoh Pattern
+```blade
+<!-- ✅ Gunakan class yang ada -->
+<div class="neo-card">
+
+<!-- ✅ Inline CSS untuk value dinamis -->
+<div style="background: {{ $color }}">
+
+<!-- ❌ Hindari jika bisa gunakan class -->
+<div style="display: flex; gap: 1rem; padding: 1rem; border-radius: 0.5rem;">
+```
+
+### Referensi Tema
+- Desain sistem menggunakan CSS custom properties (variables)
+- Palette warna ada di `:root` CSS
