@@ -76,17 +76,42 @@
                                             $statusMeta = match ($request->status) {
                                                 'DRAFT' => ['label' => 'Draft', 'color' => 'var(--gold)'],
                                                 'UNCHECK', 'PENDING' => ['label' => 'Pending', 'color' => 'var(--ink-soft)'],
-                                                'DITERIMA', 'DIPROSES' => ['label' => 'Diproses', 'color' => 'var(--gold)'],
+                                                'SUBMITTED', 'DITERIMA', 'DIPROSES' => ['label' => 'Diproses', 'color' => 'var(--gold)'],
                                                 'SUKSES' => ['label' => 'Sukses', 'color' => 'oklch(65% 0.15 145)'],
                                                 'DITOLAK' => ['label' => 'Ditolak', 'color' => 'oklch(60% 0.2 25)'],
                                                 'BATAL' => ['label' => 'Batal', 'color' => 'var(--ink-soft)'],
                                                 default => ['label' => $request->status, 'color' => 'var(--ink-soft)'],
                                             };
+
+                                            // Determine if this is a TPG request
+                                            $isTpg = !empty($request->kategori) && $request->kategori === 'PAIS-TPG-SEMESTER';
+
+                                            // Extract metadata for display
+                                            $metadata = null;
+                                            $displaySubtitle = null;
+                                            if ($isTpg && !empty($request->metadata)) {
+                                                $metadata = is_string($request->metadata) ? json_decode($request->metadata, true) : $request->metadata;
+                                                if (is_string($metadata)) {
+                                                    $metadata = json_decode($metadata, true);
+                                                }
+                                                if ($metadata && isset($metadata['tahun_pelajaran'], $metadata['semester'])) {
+                                                    $displaySubtitle = $metadata['tahun_pelajaran'] . ' - ' . $metadata['semester'];
+                                                }
+                                            }
                                         @endphp
                                         <tr style="border-top: 1px solid var(--line);">
                                             <td style="padding: 1rem;">
                                                 <span style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600; color: var(--gold);">{{ $request->no_req }}</span>
-                                                <br><span style="font-size: 0.7rem; color: var(--ink-soft);">{{ $request->kategori }}</span>
+                                                <br><span style="font-size: 0.7rem; color: var(--ink-soft);">
+                                                    @if ($isTpg)
+                                                        TPG Semester
+                                                        @if ($displaySubtitle)
+                                                            <br><span style="color: var(--gold);">{{ $displaySubtitle }}</span>
+                                                        @endif
+                                                    @else
+                                                        {{ $request->kategori }}
+                                                    @endif
+                                                </span>
                                             </td>
                                             <td style="padding: 1rem;">
                                                 <span style="font-weight: 600; color: var(--ink);">{{ $request->layanan_name }}</span>
@@ -103,9 +128,57 @@
                                                 {{ \Illuminate\Support\Carbon::parse($request->created_at)->format('d M Y') }}
                                             </td>
                                             <td style="padding: 1rem;">
-                                                <a href="{{ route('pengajuan-saya.edit', $request->id) }}" class="neo-btn" style="padding: 0.5rem 1rem; font-size: 0.65rem;">
-                                                    Edit →
-                                                </a>
+                                                @if ($isTpg)
+                                                    @php
+                                                        $editParams = '';
+                                                        if ($metadata) {
+                                                            $editParams = '?tahun_pelajaran=' . urlencode($metadata['tahun_pelajaran'] ?? '') . '&semester=' . urlencode($metadata['semester'] ?? '');
+                                                        }
+                                                    @endphp
+                                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                                        <a href="{{ route('pelayanan.tpg.form', ['pemberkasanId' => $request->id]) . $editParams }}"
+                                                           class="neo-btn"
+                                                           style="padding: 0.5rem 1rem; font-size: 0.65rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                                                                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                                            </svg>
+                                                            Edit
+                                                        </a>
+                                                        @if ($request->status === 'DRAFT')
+                                                            <form action="{{ route('pelayanan.tpg.delete', $request->id) }}" method="POST" onsubmit="return confirm('Yakin ingin hapus draft ini?');" style="display: inline;">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="neo-btn" style="padding: 0.5rem 1rem; font-size: 0.65rem; background: oklch(60% 0.2 25); color: white; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                        <polyline points="3 6 5 6 21 6"/>
+                                                                        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                                                                    </svg>
+                                                                    Hapus
+                                                                </button>
+                                                            </form>
+                                                        @endif
+                                                    </div>
+                                                @else
+                                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                                        <a href="{{ route('pengajuan-saya.edit', $request->id) }}" class="neo-btn" style="padding: 0.5rem 1rem; font-size: 0.65rem;">
+                                                            Edit →
+                                                        </a>
+                                                        @if ($request->status === 'DRAFT')
+                                                            <form action="{{ route('pengajuan-saya.delete', $request->id) }}" method="POST" onsubmit="return confirm('Yakin ingin hapus draft ini?');" style="display: inline;">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="neo-btn" style="padding: 0.5rem 1rem; font-size: 0.65rem; background: oklch(60% 0.2 25); color: white; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                        <polyline points="3 6 5 6 21 6"/>
+                                                                        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                                                                    </svg>
+                                                                    Hapus
+                                                                </button>
+                                                            </form>
+                                                        @endif
+                                                    </div>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach

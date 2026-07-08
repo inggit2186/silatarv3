@@ -3,12 +3,15 @@
         $isEditing = (bool) ($editing ?? false);
         $isAppointment = ! empty($appointmentData);
         $isTpgService = ($service['id'] ?? 0) === 1037;
+        $isTpgEdit = $isTpgService && !empty($editPemberkasanId);
         $formAction = $formAction ?? (
-            $isTpgService
-                ? route('pelayanan.tpg.submit', $service['id'])
-                : route('pelayanan.request.submit', $service['id'])
+            $isTpgEdit
+                ? route('pelayanan.tpg.update', $editPemberkasanId)
+                : ($isTpgService
+                    ? route('pelayanan.tpg.submit', $service['id'])
+                    : route('pelayanan.request.submit', $service['id']))
         );
-        $backUrl = $backUrl ?? route('pelayanan');
+        $backUrl = $backUrl ?? ($isTpgEdit ? route('pengajuan-saya') : route('pelayanan'));
 
         // Separate file and non-file requirements
         $fileRequirements = collect($service['requirements'])->filter(function($r) {
@@ -20,59 +23,116 @@
         })->values();
     @endphp
 
-    <main class="neo-mirai" x-data="{
-        uploadedFiles: {},
-        existingFiles: {{ json_encode($existingFiles ?? []) }},
-        fileErrors: {},
-        isProcessing: {},
-        async handleFileUpload(syaratId, file, inputEl) {
-            if (!file) {
-                delete this.uploadedFiles[syaratId];
-                delete this.fileErrors[syaratId];
-                return;
-            }
+    <main class="neo-mirai" x-data="fileUploadComponent()" x-init="init">
+        <!-- Pass PHP data to component -->
+        <script>
+            function fileUploadComponent() {
+                return {
+                    uploadedFiles: {},
+                    existingFiles: {!! json_encode($existingFiles ?? []) !!},
+                    fileErrors: {},
+                    isProcessing: {},
+                    deletedFileIds: [],
+                    previewModal: { open: false, url: '', filename: '', filetype: '' },
+                    validationModal: { open: false, message: '', missingCount: 0 },
+                    requiredFileIds: {{ json_encode($fileRequirements->where('is_required', true)->pluck('id')->toArray()) }},
 
-            // Reset error
-            delete this.fileErrors[syaratId];
-            this.uploadedFiles[syaratId] = {
-                name: file.name,
-                size: 'Memproses...',
-                status: 'processing'
-            };
-            this.isProcessing[syaratId] = true;
+                    init() {
+                        // Nothing needed here for now
+                    },
 
-            try {
-                // Process file (validate size + compress)
-                const processedFile = await window.processFile(file);
+                    handleFormSubmit(event) {
+                        event.preventDefault();
 
-                // Update file in input for form submission
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(processedFile);
-                inputEl.files = dataTransfer.files;
+                        var missingCount = 0;
+                        var self = this;
 
-                this.uploadedFiles[syaratId] = {
-                    name: processedFile.name,
-                    size: window.formatFileSize(processedFile.size),
-                    status: 'ready'
+                        this.requiredFileIds.forEach(function(fileId) {
+                            var wasDeleted = self.deletedFileIds.includes(fileId);
+                            var fileInput = document.querySelector('input[name="files[' + fileId + ']"]');
+                            var hasNewFile = fileInput && fileInput.files && fileInput.files.length > 0;
+                            var hasExisting = self.existingFiles && self.existingFiles[fileId] && !wasDeleted;
+
+                            if (!hasNewFile && !hasExisting) {
+                                missingCount++;
+                            }
+                        });
+
+                        if (missingCount > 0) {
+                            this.validationModal.message = 'Harap upload semua dokumen yang wajib sebelum mengajukan.';
+                            this.validationModal.missingCount = missingCount;
+                            this.validationModal.open = true;
+                            document.body.style.overflow = 'hidden';
+                            return;
+                        }
+
+                        // Submit form
+                        event.target.submit();
+                    },
+
+                    async handleFileUpload(syaratId, file, inputEl) {
+                        if (!file) {
+                            delete this.uploadedFiles[syaratId];
+                            delete this.fileErrors[syaratId];
+                            return;
+                        }
+
+                        delete this.fileErrors[syaratId];
+                        this.uploadedFiles[syaratId] = { name: file.name, size: 'Memproses...', status: 'processing' };
+                        this.isProcessing[syaratId] = true;
+
+                        try {
+                            const processedFile = await window.processFile(file);
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(processedFile);
+                            inputEl.files = dataTransfer.files;
+                            this.uploadedFiles[syaratId] = { name: processedFile.name, size: window.formatFileSize(processedFile.size), status: 'ready' };
+                        } catch (error) {
+                            this.uploadedFiles[syaratId] = { name: file.name, size: window.formatFileSize(file.size), status: 'error' };
+                            this.fileErrors[syaratId] = error.message || 'Gagal memproses file';
+                        } finally {
+                            delete this.isProcessing[syaratId];
+                        }
+                    },
+
+                    hasExistingFile(syaratId) {
+                        return this.existingFiles && this.existingFiles[syaratId];
+                    },
+
+                    getFileError(syaratId) {
+                        return this.fileErrors[syaratId];
+                    },
+
+                    deleteExistingFile(syaratId) {
+                        if (this.existingFiles && this.existingFiles[syaratId]) {
+                            if (!this.deletedFileIds.includes(syaratId)) {
+                                this.deletedFileIds.push(syaratId);
+                            }
+                            delete this.existingFiles[syaratId];
+                        }
+                    },
+
+                    openPreviewModal(url, filename, filetype) {
+                        this.previewModal = { open: true, url, filename, filetype };
+                        document.body.style.overflow = 'hidden';
+                    },
+
+                    closePreviewModal() {
+                        this.previewModal.open = false;
+                        this.previewModal.url = '';
+                        this.previewModal.filename = '';
+                        this.previewModal.filetype = '';
+                        document.body.style.overflow = '';
+                    },
+
+                    closeValidationModal() {
+                        this.validationModal.open = false;
+                        document.body.style.overflow = '';
+                    }
                 };
-            } catch (error) {
-                this.uploadedFiles[syaratId] = {
-                    name: file.name,
-                    size: window.formatFileSize(file.size),
-                    status: 'error'
-                };
-                this.fileErrors[syaratId] = error.message || 'Gagal memproses file';
-            } finally {
-                delete this.isProcessing[syaratId];
             }
-        },
-        hasExistingFile(syaratId) {
-            return this.existingFiles && this.existingFiles[syaratId];
-        },
-        getFileError(syaratId) {
-            return this.fileErrors[syaratId];
-        }
-    }">
+        </script>
+
         <x-layouts.site-header />
 
         <!-- Hero Section -->
@@ -154,7 +214,7 @@
                 </div>
 
                 <!-- Form -->
-                <form action="{{ $formAction }}" method="POST" class="neo-form-body" enctype="multipart/form-data">
+                <form action="{{ $formAction }}" method="POST" class="neo-form-body" enctype="multipart/form-data" @submit.prevent="handleFormSubmit">
                     @csrf
 
                     <!-- Existing Submission Info (TPG Service) -->
@@ -190,6 +250,11 @@
                     @if ($isEditing && !empty($requestRecord))
                         <input type="hidden" name="request_id" value="{{ $requestRecord->id }}">
                     @endif
+
+                    <!-- Hidden input untuk track deleted files (use array notation for Laravel) -->
+                    <template x-for="id in deletedFileIds" :key="id">
+                        <input type="hidden" name="deleted_files[]" :value="id">
+                    </template>
 
                     @if ($isAppointment && $appointmentData)
                         @if ($appointmentData['type'] === 'direct')
@@ -267,22 +332,54 @@
                                             </div>
                                         </template>
                                         <template x-if="!uploadedFiles[{{ $requirement['id'] }}] && hasExistingFile({{ $requirement['id'] }}) && !isProcessing[{{ $requirement['id'] }}]">
-                                            <a
-                                                :href="existingFiles[{{ $requirement['id'] }}]?.url"
-                                                target="_blank"
-                                                class="neo-upload-preview has-existing"
-                                                title="Klik untuk melihat file"
-                                            >
-                                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                                                    <polyline points="14 2 14 8 20 8"/>
-                                                    <line x1="16" y1="13" x2="8" y2="13"/>
-                                                    <line x1="16" y1="17" x2="8" y2="17"/>
-                                                    <polyline points="10 9 9 9 8 9"/>
-                                                </svg>
-                                                <span class="neo-file-name" x-text="existingFiles[{{ $requirement['id'] }}]?.filename || 'File sudah ada'"></span>
-                                                <span class="neo-file-status uploaded">Terverifikasi</span>
-                                            </a>
+                                            <div class="neo-upload-preview has-existing">
+                                                <button
+                                                    type="button"
+                                                    @click="openPreviewModal(existingFiles[{{ $requirement['id'] }}]?.url, existingFiles[{{ $requirement['id'] }}]?.filename, existingFiles[{{ $requirement['id'] }}]?.filetype)"
+                                                    style="text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; flex: 1; background: none; border: none; cursor: pointer; padding: 0;"
+                                                >
+                                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                                        <polyline points="14 2 14 8 20 8"/>
+                                                        <line x1="16" y1="13" x2="8" y2="13"/>
+                                                        <line x1="16" y1="17" x2="8" y2="17"/>
+                                                        <polyline points="10 9 9 9 8 9"/>
+                                                    </svg>
+                                                    <span class="neo-file-name" x-text="existingFiles[{{ $requirement['id'] }}]?.filename || 'File sudah ada'" style="font-size: 0.7rem; text-align: center; word-break: break-all;"></span>
+                                                    <span class="neo-file-status uploaded">Lihat</span>
+                                                </button>
+                                                @php
+                                                    $isCompleted = isset($existingSubmission) && in_array($existingSubmission->status ?? '', ['SUKSES', 'SELESAI', 'DITOLAK', 'BATAL']);
+                                                @endphp
+                                                @unless($isCompleted)
+                                                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                                                    <button
+                                                        type="button"
+                                                        class="neo-btn-replace"
+                                                        onclick="document.getElementById('req_{{ $requirement['id'] }}').click();"
+                                                        style="padding: 0.5rem 0.75rem; font-size: 0.7rem; background: var(--gold); color: var(--night); border: none; border-radius: 0.35rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600;"
+                                                    >
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                                            <polyline points="17 8 12 3 7 8"/>
+                                                            <line x1="12" y1="3" x2="12" y2="15"/>
+                                                        </svg>
+                                                        Ganti File
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        @click="if(confirm('Yakin ingin hapus file ini?')) { deleteExistingFile({{ $requirement['id'] }}); }"
+                                                        style="padding: 0.5rem 0.75rem; font-size: 0.7rem; background: oklch(60% 0.2 25); color: white; border: none; border-radius: 0.35rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600;"
+                                                    >
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <polyline points="3 6 5 6 21 6"/>
+                                                            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                                                        </svg>
+                                                        Hapus File
+                                                    </button>
+                                                </div>
+                                                @endunless
+                                            </div>
                                         </template>
                                         <input
                                             type="file"
@@ -291,7 +388,6 @@
                                             class="neo-upload-input"
                                             @change="handleFileUpload({{ $requirement['id'] }}, $event.target.files[0], $event.target)"
                                             accept=".pdf,.jpg,.jpeg,.png"
-                                            {{ $requirement['is_required'] && !($isEditing) ? 'required' : '' }}
                                         >
                                     </label>
                                     <template x-if="fileErrors[{{ $requirement['id'] }}]">
@@ -425,6 +521,126 @@
                 </form>
             </div>
         </section>
+
+        <!-- Preview Modal -->
+        <div
+            x-show="previewModal.open"
+            x-transition:enter="neo-modal-enter"
+            x-transition:enter-start="neo-modal-enter-start"
+            x-transition:enter-end="neo-modal-enter-end"
+            x-transition:leave="neo-modal-leave"
+            x-transition:leave-start="neo-modal-leave-start"
+            x-transition:leave-end="neo-modal-leave-end"
+            class="neo-modal-overlay"
+            @click="closePreviewModal()"
+            style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; padding: 1rem; display: flex; align-items: center; justify-content: center;"
+        >
+            <div
+                @click.stop
+                class="neo-modal-content"
+                style="background: var(--paper); border-radius: 1rem; max-width: 900px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);"
+            >
+                <!-- Modal Header -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-bottom: 1px solid var(--line); background: var(--paper-soft);">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--gold);">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        <span style="font-weight: 600; color: var(--ink);" x-text="previewModal.filename || 'Preview File'"></span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <a
+                            :href="previewModal.url"
+                            download
+                            class="neo-btn"
+                            style="padding: 0.5rem 1rem; font-size: 0.7rem; background: oklch(65% 0.15 145); color: white; display: inline-flex; align-items: center; gap: 0.35rem;"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            Download
+                        </a>
+                        <button
+                            type="button"
+                            @click="closePreviewModal()"
+                            style="padding: 0.5rem; background: none; border: 1px solid var(--line); border-radius: 0.5rem; cursor: pointer; color: var(--ink-soft); display: flex; align-items: center; justify-content: center;"
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <!-- Modal Body -->
+                <div style="flex: 1; overflow: auto; padding: 1rem; background: var(--ink); display: flex; align-items: center; justify-content: center;">
+                    <template x-if="previewModal.url">
+                        <iframe
+                            :src="previewModal.url"
+                            style="width: 100%; height: 70vh; border: none; border-radius: 0.5rem;"
+                            title="Preview File"
+                        ></iframe>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Validation Error Modal -->
+        <div
+            x-show="validationModal.open"
+            x-transition:enter="neo-modal-enter"
+            x-transition:enter-start="neo-modal-enter-start"
+            x-transition:enter-end="neo-modal-enter-end"
+            x-transition:leave="neo-modal-leave"
+            x-transition:leave-start="neo-modal-leave-start"
+            x-transition:leave-end="neo-modal-leave-end"
+            class="neo-modal-overlay"
+            @click="closeValidationModal()"
+            style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 99999; padding: 1rem; display: flex; align-items: center; justify-content: center;"
+        >
+            <div
+                @click.stop
+                style="background: linear-gradient(135deg, oklch(60% 0.2 25) 0%, oklch(55% 0.18 20) 100%); border-radius: 1rem; max-width: 480px; width: 100%; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);"
+            >
+                <!-- Modal Header -->
+                <div style="padding: 1.5rem 1.5rem 1rem; text-align: center;">
+                    <div style="width: 64px; height: 64px; margin: 0 auto 1rem; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                    </div>
+                    <h3 style="margin: 0 0 0.5rem; font-size: 1.25rem; font-weight: 700; color: white;">Dokumen Wajib Belum Lengkap</h3>
+                    <p style="margin: 0; color: rgba(255,255,255,0.8); line-height: 1.5;" x-text="validationModal.message"></p>
+                </div>
+                <!-- Info Box -->
+                <div style="margin: 0 1.5rem 1.5rem; background: rgba(255,255,255,0.1); border-radius: 0.75rem; padding: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
+                            <span style="font-size: 1.25rem; font-weight: 700; color: white;" x-text="validationModal.missingCount"></span>
+                        </div>
+                        <div>
+                            <p style="margin: 0; font-size: 0.85rem; color: rgba(255,255,255,0.7);">Dokumen wajib</p>
+                            <p style="margin: 0; font-size: 0.85rem; color: rgba(255,255,255,0.7);">belum diupload</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Action Button -->
+                <div style="padding: 0 1.5rem 1.5rem;">
+                    <button
+                        type="button"
+                        @click="closeValidationModal()"
+                        style="width: 100%; padding: 1rem; background: white; color: oklch(60% 0.2 25); border: none; border-radius: 0.75rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
+                    >
+                        Saya Mengerti!
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <!-- Footer -->
         <footer class="site-footer">

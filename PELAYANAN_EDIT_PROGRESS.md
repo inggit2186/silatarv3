@@ -259,10 +259,11 @@ Menyimpan state syarat layanan SAAT dilakukan submission.
 ```
 PAIS-TPG-SEMESTER-{USER_ID}-{TAHUN_PELAJARAN}-{SEMESTER}
 ```
+**Note:** Tanda "/" pada tahun pelajaran diganti dengan "-" untuk menghindari masalah pada nama file.
 
 ### Contoh
 ```
-PAIS-TPG-SEMESTER-45-2026/2027-GANJIL
+PAIS-TPG-SEMESTER-45-2026-2027-GANJIL
 ```
 
 ### Breakdown
@@ -270,7 +271,7 @@ PAIS-TPG-SEMESTER-45-2026/2027-GANJIL
 |---------|-------------|
 | PAIS-TPG-SEMESTER | Prefix kategori |
 | 45 | User ID |
-| 2026/2027 | Tahun Pelajaran |
+| 2026-2027 | Tahun Pelajaran ("/" diganti "-") |
 | GANJIL | Semester (uppercase) |
 
 ---
@@ -644,10 +645,221 @@ Jika ingin menambahkan layanan baru dengan format serupa:
 
 ## TODO / Pending
 
-- [ ] Tampilkan pengajuan TPG di /pengajuan-saya (belum terhubung)
-- [ ] Fitur edit/update pengajuan TPG
+### User Features (User Side)
+- [x] Tampilkan pengajuan TPG di /pengajuan-saya ✅
+- [x] Fitur edit/update pengajuan TPG ✅
+- [x] Hapus draft ✅
+- [x] Upload ulang file saat edit ✅
+- [x] Hapus file saat edit ✅
+- [x] Validasi dokumen wajib sebelum submit ✅
+- [x] Preview file di modal ✅
+- [x] noreq format fix (hilangkan "/") ✅
+
+### Admin Features (Admin Side)
 - [ ] Admin panel untuk verifikasi pengajuan TPG
 - [ ] Migration command untuk setup database (jika fresh install)
+
+---
+
+## Fitur: Tampilkan Pengajuan TPG di /pengajuan-saya
+
+### Overview
+Data pengajuan TPG dari tabel `satker_pemberkasan` sekarang ditampilkan di halaman `/pengajuan-saya` bersama dengan pengajuan reguler.
+
+### Perubahan Files
+
+| File | Perubahan |
+|------|-----------|
+| `app/Http/Controllers/PageController.php` | Modifikasi `myRequests()` untuk include satker_pemberkasan |
+| `resources/views/pengajuan-saya.blade.php` | Update view untuk handle TPG requests |
+| `routes/web.php` | Route baru untuk edit TPG |
+
+### Struktur Data
+
+#### Combined Query Structure
+```php
+// Regular requests (users_request)
+$regularRequests = DB::table('users_request as ur')
+    ->select([
+        'ur.id',
+        'ur.no_req',
+        // ... regular fields
+        DB::raw('NULL as tipe'),
+        DB::raw('NULL as metadata'),
+        DB::raw('NULL as files_data'),
+    ]);
+
+// TPG requests (satker_pemberkasan)
+$tpgRequests = DB::table('satker_pemberkasan as sp')
+    ->select([
+        'sp.id',
+        'sp.noreq as no_req',
+        // ... TPG-specific fields
+        'sp.tipe',
+        'sp.metadata',
+        'sp.files as files_data',
+    ])
+    ->where('sp.tipe', 'PAIS-TPG-SEMESTER');
+
+// Combined with UNION ALL + pagination
+```
+
+### View Changes
+
+#### Display Logic
+```blade
+@php
+    // Determine if this is a TPG request
+    $isTpg = !empty($request->tipe) && $request->tipe === 'PAIS-TPG-SEMESTER';
+
+    // Extract metadata for display
+    $metadata = json_decode($request->metadata ?? '{}', true);
+    $displaySubtitle = $metadata['tahun_pelajaran'] . ' - ' . $metadata['semester'];
+@endphp
+
+@if ($isTpg)
+    <!-- TPG-specific display -->
+    <span>TPG Semester</span>
+    <span>{{ $displaySubtitle }}</span>
+@else
+    <!-- Regular display -->
+    <span>{{ $request->kategori }}</span>
+@endif
+```
+
+#### Edit Link
+```blade
+@if ($isTpg)
+    <a href="{{ route('pelayanan.tpg.form', ['pemberkasanId' => $request->id]) . $editParams }}">
+        Edit
+    </a>
+@else
+    <a href="{{ route('pengajuan-saya.edit', $request->id) }}">Edit →</a>
+@endif
+```
+
+---
+
+## Fitur: Edit/Update Pengajuan TPG
+
+### Overview
+User dapat mengedit dan update pengajuan TPG yang sudah ada.
+
+### Routes Baru
+
+| Method | URI | Controller@Method | Description |
+|--------|-----|-------------------|-------------|
+| GET | `/pelayanan/tpg/{pemberkasanId}/edit` | PageController@editTpgRequest | Form edit TPG |
+| POST | `/pelayanan/tpg/{pemberkasanId}/update` | PageController@updateTpgRequest | Update data TPG |
+
+### Controller Methods
+
+#### editTpgRequest()
+```php
+public function editTpgRequest(int $pemberkasanId, Request $request = null)
+{
+    $user = auth()->user();
+    abort_unless($user, 403);
+
+    $pemberkasan = DB::table('satker_pemberkasan')
+        ->where('id', $pemberkasanId)
+        ->where('user_id', $user->id)
+        ->first();
+
+    abort_unless($pemberkasan, 404);
+
+    // Decode metadata
+    $metadata = json_decode($pemberkasan->metadata ?? '{}', true);
+    $tahunPelajaran = $metadata['tahun_pelajaran'] ?? '';
+    $semester = $metadata['semester'] ?? '';
+
+    // Get existing files
+    $filesData = json_decode($pemberkasan->files ?? '[]', true);
+    $existingFiles = [];
+    foreach ($filesData as $file) {
+        $syaratId = $file['syarat_id'] ?? 0;
+        if (!empty($file['filename']) && $file['filename'] !== 'NONE') {
+            $existingFiles[$syaratId] = [
+                'filename' => $file['filename'],
+                'url' => route('pelayanan.tpg.preview-file', [
+                    'pemberkasanId' => $pemberkasanId,
+                    'syaratId' => $syaratId,
+                ]),
+            ];
+        }
+    }
+
+    return view('service-request', array_merge(
+        $this->requestFormViewData($service, $user, false, $pemberkasan, [], $existingFiles),
+        [
+            'service' => $service,
+            'tahunPelajaran' => $tahunPelajaran,
+            'semester' => $semester,
+            'existingSubmission' => $pemberkasan,
+            'isEditing' => true,
+            'editPemberkasanId' => $pemberkasanId,
+        ]
+    ));
+}
+```
+
+#### updateTpgRequest()
+```php
+public function updateTpgRequest(Request $request, int $pemberkasanId): \Illuminate\Http\RedirectResponse
+{
+    $user = auth()->user();
+    abort_unless($user, 403);
+
+    $pemberkasan = DB::table('satker_pemberkasan')
+        ->where('id', $pemberkasanId)
+        ->where('user_id', $user->id)
+        ->first();
+
+    abort_unless($pemberkasan, 404);
+
+    // Validate and update...
+    SatkerPemberkasan::where('id', $pemberkasanId)
+        ->where('user_id', $user->id)
+        ->update([
+            'files' => json_encode($filesSnapshot),
+            'metadata' => json_encode($metadata),
+            'requirements_snapshot' => json_encode($requirementsSnapshot),
+            'status' => $isDraft ? 'DRAFT' : 'SUBMITTED',
+            'updated_at' => now(),
+        ]);
+
+    return redirect()
+        ->route('pengajuan-saya')
+        ->with('success', $message);
+}
+```
+
+### View Update for Edit Mode
+
+```blade
+@php
+    $isTpgEdit = $isTpgService && !empty($editPemberkasanId);
+    $formAction = $formAction ?? (
+        $isTpgEdit
+            ? route('pelayanan.tpg.update', $editPemberkasanId)
+            : ($isTpgService
+                ? route('pelayanan.tpg.submit', $service['id'])
+                : route('pelayanan.request.submit', $service['id']))
+    );
+    $backUrl = $backUrl ?? ($isTpgEdit ? route('pengajuan-saya') : route('pelayanan'));
+@endphp
+```
+
+### User Flow: Edit TPG
+```
+1. User buka /pengajuan-saya
+2. Klik tombol "Edit" pada pengajuan TPG
+3. Redirect ke /pelayanan/tpg/{pemberkasanId}/edit
+4. Form tampil dengan file yang sudah diupload
+5. User bisa upload ulang file atau simpan draft
+6. Klik "Ajukan Sekarang" untuk update status ke SUBMITTED
+7. Redirect ke /pengajuan-saya dengan pesan sukses
+```
 
 ---
 
@@ -659,9 +871,162 @@ Jika ingin menambahkan layanan baru dengan format serupa:
 
 ---
 
+## Fitur: Hapus Draft
+
+### Overview
+Tombol hapus ditampilkan pada pengajuan dengan status DRAFT. Tombol ini berfungsi untuk menghapus draft beserta file yang terkait.
+
+### Routes Baru
+
+| Method | URI | Controller@Method | Description |
+|--------|-----|-------------------|-------------|
+| DELETE | `/pelayanan/tpg/{pemberkasanId}/delete` | PageController@deleteTpgRequest | Hapus draft TPG |
+| DELETE | `/pengajuan-saya/{requestId}/delete` | PageController@deleteRequest | Hapus draft reguler |
+
+### Controller Methods
+
+#### deleteTpgRequest()
+```php
+public function deleteTpgRequest(int $pemberkasanId): \Illuminate\Http\RedirectResponse
+{
+    $user = auth()->user();
+    abort_unless($user, 403);
+
+    $pemberkasan = DB::table('satker_pemberkasan')
+        ->where('id', $pemberkasanId)
+        ->where('user_id', $user->id)
+        ->first();
+
+    abort_unless($pemberkasan, 404);
+
+    // Only allow delete for DRAFT status
+    if ($pemberkasan->status !== 'DRAFT') {
+        return redirect()
+            ->route('pengajuan-saya')
+            ->with('error', 'Hanya draft yang dapat dihapus.');
+    }
+
+    // Delete associated files from storage
+    $filesData = json_decode($pemberkasan->files ?? '[]', true);
+    foreach ($filesData as $file) {
+        if (!empty($file['filename']) && $file['filename'] !== 'NONE') {
+            $path = "{$user->nomor_induk}/{$file['filename']}";
+            Storage::disk('users_berkas')->delete($path);
+        }
+    }
+
+    // Delete the record
+    DB::table('satker_pemberkasan')
+        ->where('id', $pemberkasanId)
+        ->where('user_id', $user->id)
+        ->delete();
+
+    return redirect()
+        ->route('pengajuan-saya')
+        ->with('success', 'Draft berhasil dihapus.');
+}
+```
+
+#### deleteRequest() (for regular requests)
+```php
+public function deleteRequest(int $requestId): \Illuminate\Http\RedirectResponse
+{
+    // Similar logic but for users_request table
+    // Deletes files from users_berkas and the request record
+}
+```
+
+### View Changes
+
+```blade
+@if ($request->status === 'DRAFT')
+    <form action="{{ route('pengajuan-saya.delete', $request->id) }}" method="POST" onsubmit="return confirm('Yakin ingin hapus draft ini?');">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="neo-btn" style="background: oklch(60% 0.2 25); color: white;">
+            Hapus
+        </button>
+    </form>
+@endif
+```
+
+### User Flow: Hapus Draft
+```
+1. User buka /pengajuan-saya
+2. Lihat tombol "Hapus" pada pengajuan dengan status DRAFT
+3. Klik tombol "Hapus"
+4. Muncul konfirmasi "Yakin ingin hapus draft ini?"
+5. Klik OK
+6. Draft dan file terkait dihapus
+7. Redirect ke /pengajuan-saya dengan pesan sukses
+```
+
+---
+
 ## Changelog
 
-### 2026-07-08
+### 2026-07-08 (Sesi 4)
+- **Fitur: Preview file di Modal** ✅
+  - File preview sekarang muncul di modal overlay
+  - Tombol "Lihat" untuk membuka modal
+  - Tombol "Download" di dalam modal untuk download file
+  - Iframe untuk preview PDF dalam modal
+  - Tombol tutup dengan X atau klik outside modal
+  - ESC key untuk menutup modal
+
+- **Fitur: Ganti File & Hapus File** ✅
+  - Tombol "Ganti File" lebih besar dan jelas
+  - Tombol "Hapus File" baru (warna merah)
+  - Kedua tombol disembunyikan jika status: SUKSES, SELESAI, DITOLAK, BATAL
+  - Konfirmasi sebelum hapus file
+
+- **Fitur: Validasi dokumen wajib dengan modal error** ✅
+  - Hapus atribut `required` dari file inputs
+  - Validasi manual saat submit dengan Alpine.js
+  - Modal error jika ada dokumen wajib yang belum diupload
+  - Daftar dokumen yang belum lengkap ditampilkan
+  - Tombol "understood" untuk menutup modal
+
+- **Fix: Handle double-encoded JSON** ✅
+  - Method `previewTpgFile()` sekarang handle double-encoded JSON
+  - Route `/pelayanan/tpg/{pemberkasanId}/file/{syaratId}/preview` ditambahkan `whereNumber`
+
+- **Fix: noreq format - replace "/" with "-"** ✅
+  - Format baru: `PAIS-TPG-SEMESTER-{USERID}-{TAHUNPELAJARAN}-{SEMESTER}`
+  - Contoh: `PAIS-TPG-SEMESTER-45-2026-2027-GANJIL` (bukan `2026/2027`)
+  - Menghindari masalah dengan file names yang mengandung "/"
+
+### 2026-07-08 (Sesi 3)
+- **Fitur: Hapus Draft** ✅
+  - Route DELETE untuk TPG: `/pelayanan/tpg/{pemberkasanId}/delete`
+  - Route DELETE untuk reguler: `/pengajuan-saya/{requestId}/delete`
+  - Method `deleteTpgRequest()` di PageController
+  - Method `deleteRequest()` di PageController
+  - Tombol hapus pada view hanya muncul untuk status DRAFT
+  - Konfirmasi sebelum hapus
+  - File terkait ikut dihapus dari storage
+
+- **Fix: Upload ulang file saat edit TPG** ✅
+  - View `service-request.blade.php` menampilkan tombol "Ganti File"
+  - Saat edit, user bisa klik "Ganti File" untuk upload file baru
+  - File lama tetap bisa dilihat dengan klik link
+
+### 2026-07-08 (Sesi 2)
+- **TODO #1: Tampilkan pengajuan TPG di /pengajuan-saya** ✅
+  - Modifikasi `myRequests()` untuk UNION satker_pemberkasan
+  - Update view untuk display metadata (tahun_pelajaran, semester)
+  - Different edit link untuk TPG requests
+  - Combined summary untuk kedua jenis request
+
+- **TODO #2: Fitur edit/update pengajuan TPG** ✅
+  - Route baru `/pelayanan/tpg/{pemberkasanId}/edit` (GET)
+  - Route baru `/pelayanan/tpg/{pemberkasanId}/update` (POST)
+  - Method `editTpgRequest()` di PageController
+  - Method `updateTpgRequest()` di PageController
+  - View `service-request.blade.php` support edit mode
+  - Back URL redirect ke /pengajuan-saya saat edit
+
+### 2026-07-08 (Sesi 1)
 - Implementasi lengkap service 1037 (Pemberkasan TPG)
 - JSON Snapshot dengan files, metadata, requirements_snapshot
 - Storage approach dengan symlink
