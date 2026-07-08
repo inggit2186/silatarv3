@@ -98,6 +98,16 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
                 <span x-show="!collapsed" x-transition class="sidebar-nav-label">Pengajuan</span>
             </a>
 
+            <!-- TPG Verification -->
+            <a href="{{ route('admin.tpg.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.tpg.*') ? 'active' : '' }}" data-tooltip="Verif TPG">
+                <span class="sidebar-nav-icon-wrap emerald">
+                    <svg class="sidebar-nav-icon-inner" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16">
+                        <path d="M128,24A104,104,0,1,0,232,128,104,104,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"/>
+                    </svg>
+                </span>
+                <span x-show="!collapsed" x-transition class="sidebar-nav-label">Verif TPG</span>
+            </a>
+
             <!-- Reports -->
             <a href="{{ route('admin.reports.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}" data-tooltip="Laporan">
                 <span class="sidebar-nav-icon-wrap blue">

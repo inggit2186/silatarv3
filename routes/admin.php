@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\TpgController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\NewsController;
 use Illuminate\Support\Facades\Route;
@@ -94,4 +95,14 @@ Route::middleware(['auth', 'admin'])
         Route::get('/profile', function () {
             return view('admin.profile');
         })->name('profile');
+
+        // TPG Verification Routes
+        Route::prefix('tpg')->name('tpg.')->group(function () {
+            Route::get('/', [TpgController::class, 'index'])->name('index');
+            Route::get('/{id}', [TpgController::class, 'show'])->name('show');
+            Route::post('/{id}/verify', [TpgController::class, 'verify'])->name('verify');
+            Route::post('/{id}/reject', [TpgController::class, 'reject'])->name('reject');
+            Route::get('/{id}/file/{syaratId}', [TpgController::class, 'downloadFile'])->name('file');
+            Route::get('/{id}/preview/{syaratId}', [TpgController::class, 'previewFile'])->name('preview');
+        });
     });
