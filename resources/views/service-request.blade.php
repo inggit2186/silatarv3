@@ -61,8 +61,21 @@
                         event.preventDefault();
 
                         var missingCount = 0;
+                        var errorMessages = [];
                         var self = this;
 
+                        // Check for file errors (size validation, processing errors, etc)
+                        var fileErrorKeys = Object.keys(this.fileErrors);
+                        if (fileErrorKeys.length > 0) {
+                            fileErrorKeys.forEach(function(syaratId) {
+                                var errorMsg = self.fileErrors[syaratId];
+                                if (errorMsg) {
+                                    errorMessages.push(errorMsg);
+                                }
+                            });
+                        }
+
+                        // Check for required files
                         this.requiredFileIds.forEach(function(fileId) {
                             var wasDeleted = self.deletedFileIds.includes(fileId);
                             var fileInput = document.querySelector('input[name="files[' + fileId + ']"]');
@@ -73,6 +86,14 @@
                                 missingCount++;
                             }
                         });
+
+                        if (errorMessages.length > 0) {
+                            this.validationModal.message = 'Ada file yang tidak valid: ' + errorMessages.join('; ');
+                            this.validationModal.missingCount = errorMessages.length;
+                            this.validationModal.open = true;
+                            document.body.style.overflow = 'hidden';
+                            return;
+                        }
 
                         if (missingCount > 0) {
                             this.validationModal.message = 'Harap upload semua dokumen yang wajib sebelum mengajukan.';
