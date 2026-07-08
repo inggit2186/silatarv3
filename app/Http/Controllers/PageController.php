@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SatkerPemberkasan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -365,6 +366,49 @@ class PageController extends Controller
         $req = $request ?? request();
         $employeeId = $req->query('employee_id');
         $isDirect = $req->query('direct') === 'true';
+        $tahunPelajaran = $req->query('tahun_pelajaran');
+        $semester = $req->query('semester');
+
+        // For TPG service (1037), check for existing submission
+        $existingSubmission = null;
+        $existingFiles = [];
+        if ($serviceId === 1037 && $tahunPelajaran && $semester) {
+            $existingNoreq = strtoupper("PAIS-TPG-SEMESTER-{$requester->id}-{$tahunPelajaran}-{$semester}");
+            $existingSubmission = DB::table('satker_pemberkasan')
+                ->where('noreq', $existingNoreq)
+                ->first();
+
+            if ($existingSubmission) {
+                // Decode files JSON snapshot (may be double-encoded: string -> JSON string -> array)
+                $filesRaw = $existingSubmission->files ?? null;
+                if (is_array($filesRaw)) {
+                    $filesData = $filesRaw;
+                } elseif (is_string($filesRaw)) {
+                    $decoded = json_decode($filesRaw, true);
+                    // Handle double-encoded JSON (e.g., '"[...]"' becomes '[...]' as string)
+                    if (is_string($decoded)) {
+                        $decoded = json_decode($decoded, true);
+                    }
+                    $filesData = is_array($decoded) ? $decoded : [];
+                } else {
+                    $filesData = [];
+                }
+                foreach ($filesData as $file) {
+                    $syaratId = $file['syarat_id'] ?? 0;
+                    if ($file['filename'] && $file['filename'] !== 'NONE') {
+                        $existingFiles[$syaratId] = [
+                            'filename' => $file['filename'],
+                            'filetype' => $file['filetype'] ?? null,
+                            'size' => $file['size'] ?? null,
+                            'url' => route('pelayanan.tpg.preview-file', [
+                                'pemberkasanId' => $existingSubmission->id,
+                                'syaratId' => $syaratId,
+                            ]),
+                        ];
+                    }
+                }
+            }
+        }
 
         if ($employeeId) {
             $employee = DB::table('users')->where('id', $employeeId)->first();
@@ -387,13 +431,16 @@ class PageController extends Controller
             ];
         }
 
-        return view('service-request', array_merge($this->requestFormViewData($service, $requester), [
+        return view('service-request', array_merge($this->requestFormViewData($service, $requester, false, $existingSubmission, [], $existingFiles), [
             'service' => $service,
             'requester' => [
                 'name' => $requester?->name,
                 'identity' => $requester?->nomor_induk ?? '',
             ],
             'appointmentData' => $appointmentData,
+            'tahunPelajaran' => $tahunPelajaran,
+            'semester' => $semester,
+            'existingSubmission' => $existingSubmission,
         ]));
     }
 
@@ -470,6 +517,33 @@ class PageController extends Controller
         abort_unless(Storage::disk('public')->exists($path), 404);
 
         return Storage::disk('public')->response($path);
+    }
+
+    /**
+     * Preview uploaded file for TPG service (from satker_pemberkasan)
+     */
+    public function previewTpgFile(int $pemberkasanId, int $syaratId)
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $pemberkasan = DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($pemberkasan, 404);
+
+        $filesData = json_decode($pemberkasan->files ?? '[]', true);
+        $fileEntry = collect($filesData)->firstWhere('syarat_id', $syaratId);
+
+        abort_unless($fileEntry && !empty($fileEntry['filename']) && $fileEntry['filename'] !== 'NONE', 404);
+
+        $path = "{$user->nomor_induk}/{$fileEntry['filename']}";
+
+        abort_unless(Storage::disk('users_berkas')->exists($path), 404);
+
+        return Storage::disk('users_berkas')->response($path);
     }
 
     public function myRequests()
@@ -2499,6 +2573,300 @@ class PageController extends Controller
                     'satuan' => trim((string) ($item['satuan'] ?? $defaultUnit)),
                 ];
             });
+    }
+
+    /**
+     * Handle TPG/Pemberkasan specific submission (Service 1037)
+     * Uses JSON snapshot in satker_pemberkasan
+     */
+    public function submitTpgRequest(Request $request, int $serviceId): \Illuminate\Http\RedirectResponse
+    {
+        $service = $this->serviceDetail($serviceId);
+        $requirements = $service['requirements'];
+        $requester = $request->user();
+        $isDraft = $request->input('submit_action') === 'draft';
+
+        abort_unless($requester, 403);
+
+        // Validate required fields
+        $validated = $request->validate([
+            'tahun_pelajaran' => ['required', 'string'],
+            'semester' => ['required', 'string'],
+        ]);
+
+        // TPG specific params
+        $kategori = 'PAIS-TPG-SEMESTER'; // Fixed for service 1037
+        $tahunPelajaran = $validated['tahun_pelajaran'];
+        $semester = $validated['semester'];
+
+        // Determine item_id based on semester (1=Ganjil, 2=Genap)
+        $itemId = strtoupper($semester) === 'GENAP' ? 2 : 1;
+
+        // Extract tahun from tahun_pelajaran (e.g., "2026/2027" -> 2026)
+        $tahunParts = explode('/', $tahunPelajaran);
+        $tahun = (int) ($tahunParts[0] ?? date('Y'));
+
+        // Determine waktu (start date of semester)
+        // Ganjil: July (bulan 7), Genap: January (bulan 1) of the following year
+        $waktuBulan = $itemId === 1 ? 7 : 1;
+        $waktuTahun = $itemId === 1 ? $tahun : $tahun + 1;
+        $waktuDate = Carbon::createFromDate($waktuTahun, $waktuBulan, 1)->startOfMonth();
+
+        // Generate noreq (unique request number)
+        // Format: PAIS-TPG-SEMESTER-{USERID}-{TAHUNPELAJARAN}-{SEMESTER}
+        // Example: PAIS-TPG-SEMESTER-45-2026-2027-GANJIL
+        $noreq = strtoupper("{$kategori}-{$requester->id}-{$tahunPelajaran}-{$semester}");
+
+        // Generate deskripsi
+        $deskripsi = "[{$kategori}] Semester {$semester} TP. {$tahunPelajaran}";
+
+        // Build files snapshot from uploaded files
+        $filesSnapshot = $this->buildFilesSnapshot($requester, $serviceId, $noreq, $requirements, $request);
+
+        // Build metadata JSON
+        $metadata = [
+            'tahun_pelajaran' => $tahunPelajaran,
+            'semester' => $semester,
+            'kategori' => $kategori,
+            'tahun_ajaran' => $tahun,
+            'submitted_at' => now()->toIso8601String(),
+            'is_draft' => $isDraft,
+        ];
+
+        // Build requirements snapshot (preserve state at submission time)
+        $requirementsSnapshot = collect($requirements)->map(function ($req) {
+            return [
+                'id' => $req['id'],
+                'title' => $req['title'],
+                'note' => $req['note'],
+                'is_required' => $req['is_required'],
+                'type' => $req['type_normalized'],
+            ];
+        })->toArray();
+
+        // Save to satker_pemberkasan
+        SatkerPemberkasan::updateOrCreate(
+            ['noreq' => $noreq],
+            [
+                'user_id' => $requester->id,
+                'tipe' => $kategori,
+                'layanan_id' => $serviceId,
+                'dept_id' => (string) $requester->dept_id,
+                'waktu' => $waktuDate,
+                'item_id' => $itemId,
+                'deskripsi' => $deskripsi,
+                'keterangan' => $request->input('deskripsi') ?? '<NoKomen>',
+                'status' => $isDraft ? 'DRAFT' : 'SUBMITTED',
+                'files' => json_encode($filesSnapshot),
+                'metadata' => json_encode($metadata),
+                'requirements_snapshot' => json_encode($requirementsSnapshot),
+                'is_migrated' => true,
+                'migrated_at' => now(),
+            ]
+        );
+
+        $message = $isDraft
+            ? "Draft {$service['title']} sudah disimpan."
+            : "Pengajuan {$service['title']} sudah diterima.";
+
+        return redirect()
+            ->route('pengajuan-saya')
+            ->with('success', $message);
+    }
+
+    /**
+     * Build files snapshot JSON for storage
+     */
+    private function buildFilesSnapshot($requester, int $serviceId, string $noreq, array $requirements, Request $request): array
+    {
+        $files = [];
+
+        foreach ($requirements as $requirement) {
+            $syaratId = (int) $requirement['id'];
+            $type = $requirement['type_normalized'];
+            $fieldKey = $this->requirementFieldKey($type, $syaratId);
+            $uploadedFile = $request->file($fieldKey);
+
+            $fileEntry = [
+                'syarat_id' => $syaratId,
+                'title' => $requirement['title'],
+                'type' => $type,
+                'is_required' => $requirement['is_required'],
+                'filename' => 'NONE',
+                'filetype' => null,
+                'size' => null,
+                'status' => 0,
+                'uploaded_at' => null,
+            ];
+
+            // Handle file upload
+            if ($uploadedFile) {
+                $extension = strtolower($uploadedFile->getClientOriginalExtension() ?: $uploadedFile->extension());
+                $safeName = Str::slug($requirement['title'] ?? "syarat_{$syaratId}", '');
+                $filename = "{$noreq}.{$requester->id}.{$safeName}.{$extension}";
+                $path = "{$requester->nomor_induk}/{$filename}";
+
+                // Save file to storage/app/users_berkas/{nomor_induk}/{filename}
+                Storage::disk('users_berkas')->put($path, file_get_contents($uploadedFile->getRealPath()));
+
+                $fileEntry['filename'] = $filename;
+                $fileEntry['filetype'] = $extension;
+                $fileEntry['size'] = (string) $uploadedFile->getSize();
+                $fileEntry['status'] = 1;
+                $fileEntry['uploaded_at'] = now()->toIso8601String();
+            }
+
+            $files[] = $fileEntry;
+        }
+
+        return $files;
+    }
+
+    /**
+     * Determine layanan_id based on kategori
+     */
+    private function determineTpgLayananId(string $kategori, int $defaultServiceId): int
+    {
+        return match (strtoupper($kategori)) {
+            'PAIS-TPG-BULANAN' => 1038,
+            'PENMAD-TPG-BULANAN' => 1081,
+            'PENMAD-TPG-PENGAWAS-BULANAN' => 1082,
+            default => $defaultServiceId,
+        };
+    }
+
+    /**
+     * Generate description for TPG submission
+     */
+    private function generateTpgDescription(string $kategori, int $layananId, Carbon $bulanDate, ?string $semester): string
+    {
+        $kategoriUpper = strtoupper($kategori);
+        $formattedMonth = $bulanDate->translatedFormat('F Y');
+        $formattedYear = $bulanDate->translatedFormat('Y');
+
+        return match ($layananId) {
+            1037 => "[{$kategoriUpper}] Semester {$semester} {$formattedYear}/" . $bulanDate->copy()->addYear()->translatedFormat('Y'),
+            default => "[{$kategoriUpper}] {$formattedMonth}",
+        };
+    }
+
+    /**
+     * Process individual TPG requirement
+     */
+    private function processTpgRequirement($requester, int $layananId, string $noreq, array $requirement, Request $request, Carbon $bulanDate): void
+    {
+        $syaratId = (int) $requirement['id'];
+        $type = $requirement['type_normalized'];
+
+        // Get field key for the requirement
+        $fieldKey = $this->requirementFieldKey($type, $syaratId);
+        $uploadedFile = $request->file($fieldKey);
+
+        // Determine filename (existing or placeholder)
+        $filename = $this->getTpgFilename($requester, $layananId, $noreq, $syaratId, $requirement, $bulanDate);
+
+        // Handle file upload if present
+        if ($uploadedFile) {
+            $filename = $this->uploadTpgFile($uploadedFile, $requester, $noreq, $requirement, $syaratId);
+        }
+
+        // File info is saved in satker_pemberkasan.files JSON snapshot
+    }
+
+    /**
+     * Get existing filename or default placeholder
+     */
+    private function getTpgFilename($requester, int $layananId, string $noreq, int $syaratId, array $requirement, Carbon $bulanDate): string
+    {
+        // Special handling for PAIS-TPG-BULANAN with specific syarat
+        if ($layananId === 1038 && $syaratId === 419) {
+            $filename = $this->getPaisTpgSpecialFilename($requester, $bulanDate);
+            if ($filename !== 'NONE') {
+                return $filename;
+            }
+        }
+
+        // Check existing file
+        $existing = DB::table('satker_filepemberkasan')
+            ->where([
+                'user_id' => $requester->id,
+                'noreq' => $noreq,
+                'layanan_id' => $layananId,
+                'syarat_id' => $syaratId,
+            ])
+            ->value('filename');
+
+        return $existing ?: 'NONE';
+    }
+
+    /**
+     * Get special filename for PAIS-TPG-BULANAN service
+     */
+    private function getPaisTpgSpecialFilename($requester, Carbon $bulanDate): string
+    {
+        $start = $bulanDate->copy()->startOfMonth()->subMonth();
+
+        $kinerjaFile = DB::table('satker_ckh')
+            ->where([
+                'user_id' => $requester->id,
+                'bulan' => $start->format('Y-m-d'),
+            ])
+            ->first();
+
+        if (!$kinerjaFile || $kinerjaFile->filename === 'NONE' || $kinerjaFile->status !== 'DISETUJUI') {
+            return 'NONE';
+        }
+
+        $path1 = "{$requester->nomor_induk}/Kinerja/{$kinerjaFile->filename}";
+        $path2 = "{$requester->nomor_induk}/Request/{$kinerjaFile->filename}";
+
+        if (Storage::disk('users_berkas')->exists($path1)) {
+            Storage::disk('users_berkas')->delete($path2);
+            Storage::disk('users_berkas')->copy($path1, $path2);
+            return $kinerjaFile->filename;
+        }
+
+        return 'NONE';
+    }
+
+    /**
+     * Upload TPG file
+     */
+    private function uploadTpgFile($file, $requester, string $noreq, array $requirement, int $syaratId): string
+    {
+        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension());
+        $safeName = Str::slug($requirement['title'] ?? "syarat_{$syaratId}", '');
+        $filename = "{$noreq}.{$requester->id}.{$safeName}.{$extension}";
+        $path = "{$requester->nomor_induk}/Request/{$filename}";
+
+        Storage::disk('users_berkas')->put($path, file_get_contents($file->getRealPath()));
+
+        return $filename;
+    }
+
+    /**
+     * Determine TPG file status
+     */
+    private function getTpgFileStatus(int $layananId, int $syaratId, array $requirement, $requester, string $filename): int
+    {
+        // Check if this requirement has a linked file in users_files
+        $linkedFile = DB::table('users_files')
+            ->where([
+                'user_id' => (string) $requester->nomor_induk,
+                'files_id' => $requirement['ktdfiles_id'] ?? 0,
+            ])
+            ->first();
+
+        if ($linkedFile) {
+            return 1; // Has linked file
+        }
+
+        // Check if there's an uploaded file
+        if ($filename && $filename !== 'NONE') {
+            return 1;
+        }
+
+        return 0;
     }
 
     public function submitServiceRequest(Request $request, int $serviceId)

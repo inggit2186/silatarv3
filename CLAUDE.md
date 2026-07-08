@@ -2,7 +2,7 @@
 
 ## Overview
 
-SILATAR V2 adalah portal layanan online untuk **Kementerian Agama Tanjung Dinang** (KEMENAG-TD), Indonesia. Aplikasi ini memungkinkan warga negara mengajukan layanan administrasi pemerintahan secara digital.
+SILATAR V2 adalah portal layanan online untuk **Kantor Kementerian Agama Tanah Datar** (KEMENAG-TD), Indonesia. Aplikasi ini memungkinkan warga negara mengajukan layanan administrasi pemerintahan secara digital.
 
 ## Tech Stack
 
@@ -145,3 +145,55 @@ Tests are in `tests/` directory. Run with: `php artisan test`
 - [PROJECT_ROADMAP.md](PROJECT_ROADMAP.md) - Full roadmap dengan timeline
 - [ROADMAP_ADMIN.md](ROADMAP_ADMIN.md) - Detail admin panel development
 - [docs/THEME_SYSTEM.md](docs/THEME_SYSTEM.md) - CSS theme documentation
+- [PELAYANAN_EDIT_PROGRESS.md](PELAYANAN_EDIT_PROGRESS.md) - Progress edit layanan
+
+## Progress Tracking
+
+Setiap memulai feature/fitur baru, buat file progress dengan nama `{FEATURE}_PROGRESS.md` untuk mendokumentasikan perkembangan.
+
+### Format Progress File
+
+```markdown
+# Progress [Nama Feature]
+
+## Overview
+Deskripsi singkat feature.
+
+## Status: [DALAM PROGRES | SELESAI | Tunda]
+
+## Checklist
+- [ ] Task 1
+- [ ] Task 2
+- [x] Task 3
+
+## Data Flow
+```
+Input -> Process -> Output
+```
+
+## Files yang Dimodifikasi
+| File | Perubahan |
+|------|-----------|
+| path/to/file.php | Deskripsi |
+
+## Files Baru
+| File | Purpose |
+|------|---------|
+| path/to/file.php | Deskripsi |
+
+## TODO
+- [ ] Task berikutnya
+
+## Changelog
+### YYYY-MM-DD
+- Deskripsi perubahan
+```
+
+### Aturan Progress
+1. Buat file progress SAAT MEMULAI feature baru
+2. Update checklist setiap selesai task
+3. Tulis changelog setiap selesai sesi
+4. Jika feature selesai, pindahkan status ke SELESAI
+5. Dokumentasikan semua files yang dimodifikasi/ditambahkan
+6. Sertakan code snippets untuk logic penting
+

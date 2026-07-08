@@ -17,9 +17,11 @@ Route::post('/whistleblowing', [PageController::class, 'submitWhistleblowing'])-
 Route::middleware('auth')->group(function () {
     Route::get('/pelayanan/ajukan/{serviceId}', [PageController::class, 'requestService'])->whereNumber('serviceId')->name('pelayanan.request');
     Route::post('/pelayanan/ajukan/{serviceId}', [PageController::class, 'submitServiceRequest'])->whereNumber('serviceId')->name('pelayanan.request.submit');
+    Route::post('/pelayanan/ajukan/tpg/{serviceId}', [PageController::class, 'submitTpgRequest'])->whereNumber('serviceId')->name('pelayanan.tpg.submit');
     Route::get('/pengajuan-saya', [PageController::class, 'myRequests'])->name('pengajuan-saya');
     Route::get('/pengajuan-saya/{requestId}/edit', [PageController::class, 'editRequest'])->name('pengajuan-saya.edit');
     Route::get('/pengajuan-saya/{requestId}/file/{syaratId}/preview', [PageController::class, 'previewRequestFile'])->name('pengajuan-saya.preview-file');
+    Route::get('/pelayanan/tpg/{pemberkasanId}/file/{syaratId}/preview', [PageController::class, 'previewTpgFile'])->name('pelayanan.tpg.preview-file');
     Route::get('/laporan-kinerja', [PageController::class, 'laporanKinerja'])->name('laporan-kinerja');
     Route::get('/laporan-kinerja/bawahan', [PageController::class, 'laporanKinerjaBawahan'])->name('laporan-kinerja.bawahan');
     Route::get('/profil', [PageController::class, 'profil'])->name('profil');

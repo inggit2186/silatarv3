@@ -24,18 +24,29 @@
 
     <main class="neo-mirai"
         x-data="{
-            units: @js($kantorUnits),
+            units: {{ json_encode($kantorUnits) }},
             selectedUnitId: null,
-            generalServices: @js($generalServices),
-            specialServicesByUnit: @js($specialServicesByUnit),
+            generalServices: {{ json_encode($generalServices) }},
+            specialServicesByUnit: {{ json_encode($specialServicesByUnit) }},
             leaders: [],
             unitEmployees: [],
             loadingEmployees: false,
-            requestBaseUrl: @js(url('/pelayanan/ajukan')),
+            requestBaseUrl: '{{ url('/pelayanan/ajukan') }}',
             selectedService: null,
             selectedEmployee: null,
             showEmployeeModal: false,
             showPengaduanModal: false,
+            selectedTahunPelajaran: '',
+            selectedSemester: '',
+            tahunPelajaranOptions: [
+                @php
+                    $currentYear = (int) date('Y');
+                    for ($y = $currentYear; $y >= $currentYear - 5; $y--) {
+                        echo "'{$y}/" . ($y + 1) . "', ";
+                    }
+                @endphp
+            ],
+            semesterOptions: ['Ganjil', 'Genap'],
             get selectedUnit() {
                 return this.units.find((unit) => Number(unit.id) === Number(this.selectedUnitId)) ?? null;
             },
@@ -86,8 +97,13 @@
                     this.showEmployeeModal = true;
                 } else if (service.key === 'pengaduan') {
                     this.showPengaduanModal = true;
+                }
+                if (service.id === 1037) {
+                    this.selectedTahunPelajaran = this.tahunPelajaranOptions[0] || '';
+                    this.selectedSemester = this.semesterOptions[0] || '';
                 } else {
-                    if (service.id) { window.location.href = `/pelayanan/ajukan/${service.id}`; }
+                    this.selectedTahunPelajaran = '';
+                    this.selectedSemester = '';
                 }
             },
             selectEmployee(employee) {
@@ -101,8 +117,23 @@
                 const deptId = this.selectedUnitId;
                 window.location.href = `/pelayanan/janji-temu/${deptId}?direct=1`;
             },
+            submitTpgSelection() {
+                if (!this.selectedService || !this.selectedTahunPelajaran || !this.selectedSemester) return;
+                const url = `${this.requestBaseUrl}/${this.selectedService.id}?tahun_pelajaran=${encodeURIComponent(this.selectedTahunPelajaran)}&semester=${encodeURIComponent(this.selectedSemester)}`;
+                window.location.href = url;
+            },
+            proceedToRequest() {
+                if (!this.selectedService) return;
+                if (this.selectedService.id === 1037) {
+                    if (!this.selectedTahunPelajaran || !this.selectedSemester) return;
+                    const url = `${this.requestBaseUrl}/${this.selectedService.id}?tahun_pelajaran=${encodeURIComponent(this.selectedTahunPelajaran)}&semester=${encodeURIComponent(this.selectedSemester)}`;
+                    window.location.href = url;
+                } else {
+                    window.location.href = `${this.requestBaseUrl}/${this.selectedService.id}`;
+                }
+            },
             closeEmployeeModal() { this.showEmployeeModal = false; this.selectedEmployee = null; },
-            closeServiceModal() { this.selectedService = null; },
+            closeServiceModal() { this.selectedService = null; this.selectedTahunPelajaran = ''; this.selectedSemester = ''; },
             closePengaduanModal() { this.showPengaduanModal = false; },
             openPengaduanLink(url) { window.open(url, '_blank'); this.showPengaduanModal = false; }
         }"
@@ -293,6 +324,7 @@
         <!-- Service Modal -->
         <div x-show="selectedService && selectedService.key !== 'janji-temu' && !showEmployeeModal" x-cloak class="neo-modal-backdrop" @click="closeServiceModal()">
             <div class="neo-modal" @click.stop>
+                <!-- Header -->
                 <div class="neo-modal-header">
                     <div>
                         <h3 class="neo-modal-title" x-text="selectedService ? selectedService.title : '-'"></h3>
@@ -302,33 +334,97 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-                        <div style="padding: 0.75rem; background: var(--paper-soft); border: 1px solid var(--line);">
-                            <p style="font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 0.25rem;">Jenis</p>
-                            <p style="font-weight: 600; margin: 0;" x-text="selectedService && selectedService.kind === 'umum' ? 'Layanan Umum' : 'Layanan Khusus'"></p>
+
+                <!-- Meta Info -->
+                <div class="neo-modal-meta">
+                    <div class="neo-modal-meta-item">
+                        <span class="neo-modal-meta-label">Jenis</span>
+                        <span class="neo-modal-meta-value" x-text="selectedService && selectedService.kind === 'umum' ? 'Layanan Umum' : 'Layanan Khusus'"></span>
+                    </div>
+                    <div class="neo-modal-meta-item">
+                        <span class="neo-modal-meta-label">Waktu</span>
+                        <span class="neo-modal-meta-value" x-text="selectedService ? (selectedService.waktu || '-') : '-'"></span>
+                    </div>
+                    <div class="neo-modal-meta-item">
+                        <span class="neo-modal-meta-label">Biaya</span>
+                        <span class="neo-modal-meta-value" x-text="selectedService ? (selectedService.biaya || 'Gratis') : '-'"></span>
+                    </div>
+                </div>
+
+                <!-- Requirements Section - Card Style -->
+                <div class="neo-modal-section">
+                    <div class="neo-modal-section-header">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                        </svg>
+                        <span>Siapkan Dokumen Ini</span>
+                    </div>
+                    <div class="neo-modal-requirements-grid">
+                        <template x-for="(req, index) in selectedServiceRequirements" :key="req.id">
+                            <div class="neo-modal-req-card">
+                                <div class="neo-modal-req-header">
+                                    <div class="neo-modal-req-number" x-text="(index + 1).toString().padStart(2, '0')"></div>
+                                    <span
+                                        class="neo-modal-req-badge"
+                                        :class="req.is_required ? 'neo-modal-req-wajib' : 'neo-modal-req-opsional'"
+                                        x-text="req.is_required ? 'Wajib' : 'Opsional'"
+                                    ></span>
+                                </div>
+                                <div class="neo-modal-req-content">
+                                    <span class="neo-modal-req-title" x-text="req.title"></span>
+                                    <span class="neo-modal-req-note" x-show="req.note" x-text="'(' + req.note + ')'"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- TPG Selection Section (for service 1037) -->
+                <div x-show="selectedService && selectedService.id === 1037" x-cloak class="neo-modal-section neo-modal-section-accent">
+                    <div class="neo-modal-section-header">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <span>Pilih Periode Pencairan</span>
+                    </div>
+                    <div class="neo-modal-tpg-grid">
+                        <div class="neo-modal-field">
+                            <label for="tahun_pelajaran" class="neo-modal-label">Tahun Pelajaran</label>
+                            <select x-model="selectedTahunPelajaran" id="tahun_pelajaran" class="neo-form-select">
+                                <template x-for="tahun in tahunPelajaranOptions" :key="tahun">
+                                    <option :value="tahun" x-text="tahun"></option>
+                                </template>
+                            </select>
                         </div>
-                        <div style="padding: 0.75rem; background: var(--paper-soft); border: 1px solid var(--line);">
-                            <p style="font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 0.25rem;">Waktu</p>
-                            <p style="font-weight: 600; margin: 0;" x-text="selectedService && selectedService.waktu ? selectedService.waktu : '-'"></p>
-                        </div>
-                        <div style="padding: 0.75rem; background: var(--paper-soft); border: 1px solid var(--line);">
-                            <p style="font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 0.25rem;">Biaya</p>
-                            <p style="font-weight: 600; margin: 0;" x-text="selectedService && selectedService.biaya ? selectedService.biaya : '-'"></p>
+                        <div class="neo-modal-field">
+                            <label for="semester" class="neo-modal-label">Semester</label>
+                            <select x-model="selectedSemester" id="semester" class="neo-form-select">
+                                <template x-for="sem in semesterOptions" :key="sem">
+                                    <option :value="sem" x-text="sem"></option>
+                                </template>
+                            </select>
                         </div>
                     </div>
                 </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <h4 style="font-family: var(--font-display); font-size: 0.9rem; font-weight: 600; margin: 0 0 0.75rem;">Syarat-syarat</h4>
-                    <ul style="margin: 0; padding-left: 1.25rem;">
-                        <template x-for="req in selectedServiceRequirements" :key="req.id">
-                            <li style="margin-bottom: 0.5rem; color: var(--ink-soft); font-size: 0.85rem;" x-text="req.title"></li>
-                        </template>
-                    </ul>
-                </div>
-                <div style="display: flex; gap: 1rem;">
-                    <a :href="selectedService ? requestBaseUrl + '/' + selectedService.id : '#'" class="neo-btn" style="flex: 1; justify-content: center;">Ajukan Sekarang</a>
-                    <button type="button" @click="closeServiceModal()" class="neo-btn-secondary">Batal</button>
+
+                <!-- Action Button -->
+                <div class="neo-modal-actions">
+                    <button
+                        type="button"
+                        @click="proceedToRequest()"
+                        :disabled="selectedService && selectedService.id === 1037 && (!selectedTahunPelajaran || !selectedSemester)"
+                        class="neo-btn-action"
+                        :class="{ 'neo-btn-disabled': selectedService && selectedService.id === 1037 && (!selectedTahunPelajaran || !selectedSemester) }"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                        Ajukan Sekarang
+                    </button>
+                    <button type="button" @click="closeServiceModal()" class="neo-btn-cancel">Batal</button>
                 </div>
             </div>
         </div>

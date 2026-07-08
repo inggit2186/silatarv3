@@ -1,51 +1,51 @@
 <x-layouts.app title="Login - SILATAR">
-    <main class="neo-mirai" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem;">
+    <main class="neo-mirai neo-auth-page">
         <x-layouts.site-header />
 
         <!-- Login Card -->
-        <div style="width: 100%; max-width: 28rem; margin-top: 6rem;">
-            <div style="background: var(--paper-soft); border: 1px solid var(--gold); padding: 2rem; border-radius: 0.5rem;">
+        <div class="neo-auth-card">
+            <div class="neo-auth-form-wrapper">
                 <!-- Header -->
-                <div style="text-align: center; margin-bottom: 2rem;">
+                <div class="neo-auth-header">
                     <!-- Logo -->
-                    <div style="width: 5rem; height: 5rem; margin: 0 auto 1.5rem; border-radius: 0.75rem; overflow: hidden; border: 1px solid oklch(30% 0.035 78 / 0.45); background: linear-gradient(135deg, var(--gold) 0 38%, var(--sun) 38% 58%, var(--night-soft) 58%); display: flex; align-items: center; justify-content: center;">
-                        <img src="{{ asset('favicon.webp') }}" alt="SILATAR" style="width: 3rem; height: 3rem; object-fit: contain;">
+                    <div class="neo-auth-logo">
+                        <img src="{{ asset('favicon.webp') }}" alt="SILATAR">
                     </div>
 
-                    <p style="color: var(--gold); font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; margin: 0 0 0.5rem;">Portal Layanan</p>
-                    <h1 style="font-family: var(--font-display); font-size: 2rem; font-weight: 600; color: var(--ink); margin: 0;">SILATAR</h1>
-                    <p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-soft); margin: 0.5rem 0 0;">Kementerian Agama Tanah Datar</p>
+                    <p class="neo-auth-brand-kicker">Portal Layanan</p>
+                    <h1 class="neo-auth-brand-title">SILATAR</h1>
+                    <p class="neo-auth-brand-subtitle">Kementerian Agama Tanah Datar</p>
                 </div>
 
                 <!-- Error Alert -->
                 @if ($errors->any())
-                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: oklch(60% 0.2 25 / 0.1); border: 1px solid oklch(60% 0.2 25 / 0.3); border-radius: 0.5rem; margin-bottom: 1.5rem;">
-                        <div style="width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; background: oklch(60% 0.2 25 / 0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            <svg style="width: 1.25rem; height: 1.25rem; color: oklch(70% 0.2 25);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <div class="neo-auth-alert neo-auth-alert-error">
+                        <div class="neo-auth-alert-icon">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </div>
                         <div>
-                            <p style="font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; color: oklch(70% 0.2 25); margin: 0;">Login Gagal</p>
-                            <p style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--ink-soft); margin: 0.2rem 0 0;">{{ $errors->first() }}</p>
+                            <p class="neo-auth-alert-title">Login Gagal</p>
+                            <p class="neo-auth-alert-text">{{ $errors->first() }}</p>
                         </div>
                     </div>
                 @endif
 
                 <!-- Login Form -->
-                <form method="POST" action="{{ route('login.submit') }}" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                <form method="POST" action="{{ route('login.submit') }}" class="neo-auth-form">
                     @csrf
 
                     <!-- Email/NIP Field -->
-                    <div>
-                        <label style="display: block; font-family: var(--font-mono); font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: var(--gold); margin-bottom: 0.5rem;" for="login">Email / NIP</label>
-                        <div style="position: relative;">
+                    <div class="neo-auth-form-row">
+                        <label class="neo-auth-label" for="login">Email / NIP</label>
+                        <div class="neo-auth-input-wrap">
                             <input
                                 id="login"
                                 name="login"
                                 type="text"
                                 value="{{ old('login') }}"
-                                style="width: 100%; padding: 0.85rem 1rem; background: var(--paper); border: 1px solid var(--line); font-family: var(--font-mono); font-size: 0.85rem; color: var(--ink); transition: border-color 180ms;"
+                                class="neo-auth-input"
                                 placeholder="nama@email.com atau 1978xxxx"
                                 autocomplete="username"
                                 required
@@ -54,20 +54,20 @@
                     </div>
 
                     <!-- Password Field -->
-                    <div>
-                        <label style="display: block; font-family: var(--font-mono); font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: var(--gold); margin-bottom: 0.5rem;" for="password">Password</label>
-                        <div style="position: relative;">
+                    <div class="neo-auth-form-row">
+                        <label class="neo-auth-label" for="password">Password</label>
+                        <div class="neo-auth-input-wrap">
                             <input
                                 id="password"
                                 name="password"
                                 type="password"
-                                style="width: 100%; padding: 0.85rem 3rem 0.85rem 1rem; background: var(--paper); border: 1px solid var(--line); font-family: var(--font-mono); font-size: 0.85rem; color: var(--ink); transition: border-color 180ms;"
+                                class="neo-auth-input neo-auth-input-password"
                                 placeholder="••••••••"
                                 autocomplete="current-password"
                                 required
                             >
-                            <button type="button" id="togglePassword" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--ink-soft);">
-                                <svg style="width: 1.25rem; height: 1.25rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <button type="button" id="togglePassword" class="neo-auth-toggle-password">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                 </svg>
@@ -76,18 +76,18 @@
                     </div>
 
                     <!-- Remember & Forgot -->
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; color: var(--ink-soft);">
-                            <input name="remember" value="1" type="checkbox" style="width: 1rem; height: 1rem; accent-color: var(--gold);">
+                    <div class="neo-auth-actions-row">
+                        <label class="neo-auth-remember">
+                            <input name="remember" value="1" type="checkbox">
                             Ingat saya
                         </label>
-                        <button type="button" onclick="openForgotModal()" style="background: none; border: none; cursor: pointer; font-family: var(--font-mono); font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: var(--gold);">
+                        <button type="button" onclick="openForgotModal()" class="neo-auth-forgot">
                             Lupa password?
                         </button>
                     </div>
 
                     <!-- Submit Button -->
-                    <button type="submit" style="width: 100%; padding: 1rem; background: var(--gold); color: var(--night); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; transition: background 180ms, transform 240ms, box-shadow 240ms;">
+                    <button type="submit" class="neo-auth-btn">
                         Masuk ke Sistem
                     </button>
                 </form>
@@ -96,57 +96,57 @@
                 <div class="section-divider geometric" style="margin: 1.5rem 0;"></div>
 
                 <!-- Back to Home -->
-                <a href="{{ url('/') }}" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.85rem; background: transparent; color: var(--ink); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; text-decoration: none; border: 1px solid var(--line); transition: border-color 180ms, color 180ms;">
+                <a href="{{ url('/') }}" class="neo-auth-btn-secondary">
                     ← Kembali ke Beranda
                 </a>
             </div>
 
             <!-- Footer -->
-            <div style="text-align: center; margin-top: 1.5rem;">
-                <p style="font-family: var(--font-mono); font-size: 0.6rem; color: var(--ink-soft); margin: 0;">
+            <div class="neo-auth-footer">
+                <p class="neo-auth-footer-text">
                     &copy; {{ date('Y') }} SILATAR - Kemenag Tanah Datar
                 </p>
             </div>
         </div>
 
         <!-- Forgot Password Modal -->
-        <div id="forgotModal" style="display: none; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 1rem;">
-            <div style="position: relative; width: 100%; max-width: 28rem; background: var(--paper); border: 1px solid var(--line); padding: 2rem; border-radius: 0.5rem; max-height: 90vh; overflow-y: auto;">
+        <div id="forgotModal" class="neo-forgot-modal">
+            <div class="neo-forgot-modal-content">
                 <div class="neo-modal-header">
                     <div>
                         <h3 class="neo-modal-title">Lupa Password?</h3>
-                        <p style="font-size: 0.85rem; color: var(--ink-soft); margin: 0.25rem 0 0;">Reset password via WhatsApp</p>
+                        <p class="neo-auth-alert-text">Reset password via WhatsApp</p>
                     </div>
                     <button type="button" onclick="closeForgotModal()" class="neo-modal-close">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
 
-                <form id="forgotForm" onsubmit="submitForgotPassword(event)" style="display: flex; flex-direction: column; gap: 1rem;">
+                <form id="forgotForm" onsubmit="submitForgotPassword(event)" class="neo-auth-form">
                     @csrf
-                    <div>
-                        <label style="display: block; font-family: var(--font-mono); font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: var(--gold); margin-bottom: 0.5rem;">Nomor Induk Kepegawaian (NIP)</label>
+                    <div class="neo-auth-form-row">
+                        <label class="neo-auth-label">Nomor Induk Kepegawaian (NIP)</label>
                         <input
                             id="nip"
                             name="nip"
                             type="text"
-                            style="width: 100%; padding: 0.85rem 1rem; background: var(--paper); border: 1px solid var(--line); font-family: var(--font-mono); font-size: 0.9rem; color: var(--ink);"
+                            class="neo-auth-input"
                             placeholder="1978xxxx"
                             required
                         >
                     </div>
-                    <button type="submit" id="forgotSubmitBtn" style="width: 100%; padding: 1rem; background: var(--gold); color: var(--night); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer;">
+                    <button type="submit" id="forgotSubmitBtn" class="neo-auth-btn">
                         Kirim Password Baru
                     </button>
                 </form>
 
-                <div id="forgotResult" style="display: none; margin-top: 1.5rem; padding: 1.5rem; background: oklch(65% 0.15 145 / 0.1); border: 1px solid oklch(65% 0.15 145 / 0.3); border-radius: 0.5rem; text-align: center;">
-                    <p style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: oklch(65% 0.15 145); margin: 0 0 0.5rem;">PASSWORD TERKIRIM!</p>
-                    <p style="font-size: 0.85rem; color: var(--ink-soft); margin: 0;" id="forgotSuccessMessage"></p>
+                <div id="forgotResult" class="neo-forgot-result neo-auth-alert neo-auth-alert-success">
+                    <p class="neo-auth-alert-title">PASSWORD TERKIRIM!</p>
+                    <p class="neo-auth-alert-text" id="forgotSuccessMessage"></p>
                 </div>
 
-                <div id="forgotError" style="display: none; margin-top: 1.5rem; padding: 1.5rem; background: oklch(60% 0.2 25 / 0.1); border: 1px solid oklch(60% 0.2 25 / 0.3); border-radius: 0.5rem; text-align: center;">
-                    <p style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: oklch(60% 0.2 25); margin: 0;" id="forgotErrorMessage"></p>
+                <div id="forgotError" class="neo-forgot-error neo-auth-alert neo-auth-alert-error">
+                    <p class="neo-auth-alert-title" id="forgotErrorMessage"></p>
                 </div>
             </div>
         </div>
@@ -160,11 +160,11 @@
         });
 
         function openForgotModal() {
-            document.getElementById('forgotModal').style.display = 'flex';
+            document.getElementById('forgotModal').classList.add('is-open');
         }
 
         function closeForgotModal() {
-            document.getElementById('forgotModal').style.display = 'none';
+            document.getElementById('forgotModal').classList.remove('is-open');
             resetForgotForm();
         }
 

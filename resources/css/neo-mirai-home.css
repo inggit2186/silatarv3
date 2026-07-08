@@ -18,8 +18,8 @@ html {
   background-size:cover;
   background-position: center;
   background-repeat: no-repeat;
-  font-family: var(--font-serif);
-  line-height: 1.55;
+  font-family: var(--font-body);
+  line-height: 1.6;
   overflow-x: clip;
   background-blend-mode: overlay;
 }
@@ -212,7 +212,7 @@ html {
   align-items: center;
   gap: 0.95rem;
   color: var(--ink-soft);
-  font-family: var(--font-serif);
+  font-family: var(--font-body);
   font-size: clamp(0.9rem, 1.4vw, 1.15rem);
 }
 .vertical-poem span {
@@ -258,7 +258,7 @@ html {
 .hero-place {
   margin: 0.9rem 0 0;
   color: var(--sun-deep);
-  font-family: var(--font-serif);
+  font-family: var(--font-body);
   font-size: clamp(1.5rem, 2.8vw, 2.8rem);
   line-height: 1;
 }
@@ -490,7 +490,7 @@ html {
 .text-action span {
   display: inline-grid;
   place-items: center;
-  font-family: var(--font-serif);
+  font-family: var(--font-body);
 }
 .text-action:hover { color: var(--sun-deep); transform: translateX(0.2rem); }
 
@@ -519,51 +519,6 @@ html {
   position: absolute;
   inset: 0;
   background: linear-gradient(0deg, oklch(12% 0.025 80 / 0.9) 0 40%, transparent 70%);
-}
-.featured-content {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 0.75rem;
-}
-.featured-badge {
-  display: inline-block;
-  padding: 0.15rem 0.4rem;
-  background: var(--gold);
-  color: var(--night);
-  font-family: var(--font-mono);
-  font-size: 0.55rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  margin-bottom: 0.3rem;
-}
-.featured-title {
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--rice);
-  margin: 0;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.featured-excerpt {
-  font-size: 0.7rem;
-  color: oklch(91% 0.035 78 / 0.84);
-  margin: 0.3rem 0 0;
-  display: none;
-}
-.featured-date {
-  font-family: var(--font-mono);
-  font-size: 0.55rem;
-  color: var(--gold-bright);
-  display: none;
-}
-.featured-sidebar {
-  display: none;
 }
 .featured-secondary {
   width: 100%;
@@ -1601,125 +1556,6 @@ html {
   color: var(--ink);
 }
 
-/* NEO Unit Card */
-.neo-unit-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  background: var(--paper-soft);
-  border: 1px solid var(--line);
-  text-decoration: none;
-  color: var(--ink);
-  transition: border-color 180ms var(--ease), transform 240ms var(--ease), box-shadow 240ms var(--ease);
-  overflow: hidden;
-}
-.neo-unit-card:hover {
-  border-color: var(--gold);
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px oklch(18% 0.03 76 / 0.1);
-}
-.neo-unit-cover {
-  position: relative;
-  aspect-ratio: 16/9;
-  overflow: hidden;
-}
-.neo-unit-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 520ms var(--ease-quint);
-}
-.neo-unit-card:hover .neo-unit-cover img {
-  transform: scale(1.05);
-}
-.neo-unit-cover-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(0deg, oklch(12% 0.025 80 / 0.9) 0 30%, transparent 60%);
-}
-.neo-unit-cover-chip {
-  position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  padding: 0.2rem 0.6rem;
-  background: var(--gold);
-  color: var(--night);
-  font-family: var(--font-mono);
-  font-size: 0.55rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-.neo-unit-body {
-  padding: 1.25rem;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-.neo-unit-head-profile {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-.neo-unit-head-photo {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  overflow: hidden;
-  background: var(--gold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.neo-unit-head-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.neo-unit-head-initials {
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--night);
-}
-.neo-unit-head-info {
-  flex: 1;
-}
-.neo-unit-head-label {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  margin: 0;
-}
-.neo-unit-head-value {
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--ink);
-  margin: 0.15rem 0 0;
-}
-.neo-unit-info {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.75rem 0;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 1rem;
-}
-.neo-unit-meta-label {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
-.neo-unit-meta-value {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--ink);
-}
-
 /* NEO Button */
 .neo-btn {
   display: inline-flex;
@@ -1791,42 +1627,6 @@ html {
   margin: 0;
 }
 
-/* NEO Tabs */
-.neo-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-.neo-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1rem;
-  background: transparent;
-  color: var(--ink-soft);
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  text-decoration: none;
-  border: 1px solid var(--line);
-  cursor: pointer;
-  transition: all 180ms var(--ease);
-}
-.neo-tab:hover {
-  border-color: var(--gold);
-  color: var(--ink);
-}
-.neo-tab.is-active {
-  background: var(--gold);
-  color: var(--night);
-  border-color: var(--gold);
-}
-.neo-tab svg {
-  width: 1rem;
-  height: 1rem;
-}
-
 /* NEO Modal */
 .neo-modal-backdrop {
   position: fixed;
@@ -1842,7 +1642,7 @@ html {
 .neo-modal {
   position: relative;
   width: 100%;
-  max-width: 32rem;
+  max-width: 42rem;
   background: var(--paper);
   border: 1px solid var(--line);
   padding: 2rem;
@@ -2621,7 +2421,7 @@ html {
 }
 
 .ppid-hero-subtitle {
-  font-family: var(--font-serif);
+  font-family: var(--font-body);
   font-size: clamp(1rem, 2vw, 1.25rem);
   color: var(--ink-soft);
   max-width: 600px;
@@ -2696,7 +2496,7 @@ html {
 }
 
 .ppid-section-content {
-  font-family: var(--font-serif);
+  font-family: var(--font-body);
   line-height: 1.8;
   color: var(--ink);
 }
@@ -3945,4 +3745,1628 @@ html {
 /* Remove old pagination styles conflict */
 .neo-pagination-wrapper .neo-pagination {
   margin-top: 0;
+}
+
+/* ============================================
+   NEO AUTH STYLES - Login & Register Pages
+   ============================================ */
+
+/* Auth Page Wrapper */
+.neo-auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+/* Auth Card Container */
+.neo-auth-card {
+  width: 100%;
+  max-width: 28rem;
+  margin-top: 6rem;
+}
+
+/* Auth Card Form */
+.neo-auth-form-wrapper {
+  background: var(--paper-soft);
+  border: 1px solid var(--gold);
+  padding: 2rem;
+  border-radius: 0.5rem;
+}
+
+/* Auth Logo */
+.neo-auth-logo {
+  width: 5rem;
+  height: 5rem;
+  margin: 0 auto 1.5rem;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid oklch(30% 0.035 78 / 0.45);
+  background: linear-gradient(135deg, var(--gold) 0 38%, var(--sun) 38% 58%, var(--night-soft) 58%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.neo-auth-logo img {
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+}
+
+.neo-auth-brand-kicker {
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  margin: 0 0 0.5rem;
+}
+
+.neo-auth-brand-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.neo-auth-brand-subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  margin: 0.5rem 0 0;
+}
+
+/* Auth Header */
+.neo-auth-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* Auth Form */
+.neo-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.neo-auth-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Auth Label */
+.neo-auth-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.5rem;
+}
+
+.neo-auth-label-optional {
+  color: var(--ink-soft);
+  font-weight: 400;
+}
+
+/* Auth Input Wrapper */
+.neo-auth-input-wrap {
+  position: relative;
+}
+
+/* Auth Input */
+.neo-auth-input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--ink);
+  transition: border-color 180ms;
+}
+
+.neo-auth-input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.neo-auth-input::placeholder {
+  color: var(--ink-soft);
+}
+
+.neo-auth-input-password {
+  padding-right: 3rem;
+}
+
+/* Auth Actions Row */
+.neo-auth-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.neo-auth-remember {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.neo-auth-remember input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--gold);
+}
+
+.neo-auth-forgot {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--gold);
+  transition: color 180ms;
+}
+
+.neo-auth-forgot:hover {
+  color: var(--sun-deep);
+}
+
+/* Auth Button */
+.neo-auth-btn {
+  width: 100%;
+  padding: 1rem;
+  background: var(--gold);
+  color: var(--night);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: background 180ms, transform 240ms, box-shadow 240ms;
+}
+
+.neo-auth-btn:hover {
+  background: var(--sun-deep);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px oklch(50% 0.15 50 / 0.25);
+}
+
+.neo-auth-btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  transition: border-color 180ms, color 180ms;
+}
+
+.neo-auth-btn-secondary:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Auth Alert - Error */
+.neo-auth-alert {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.neo-auth-alert-error {
+  background: oklch(60% 0.2 25 / 0.1);
+  border: 1px solid oklch(60% 0.2 25 / 0.3);
+}
+
+.neo-auth-alert-success {
+  background: oklch(65% 0.15 145 / 0.1);
+  border: 1px solid oklch(65% 0.15 145 / 0.3);
+}
+
+.neo-auth-alert-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.neo-auth-alert-error .neo-auth-alert-icon {
+  background: oklch(60% 0.2 25 / 0.2);
+}
+
+.neo-auth-alert-success .neo-auth-alert-icon {
+  background: oklch(65% 0.15 145 / 0.2);
+}
+
+.neo-auth-alert-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.neo-auth-alert-error .neo-auth-alert-icon svg {
+  color: oklch(70% 0.2 25);
+}
+
+.neo-auth-alert-success .neo-auth-alert-icon svg {
+  color: oklch(65% 0.15 145);
+}
+
+.neo-auth-alert-title {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.neo-auth-alert-error .neo-auth-alert-title {
+  color: oklch(70% 0.2 25);
+}
+
+.neo-auth-alert-success .neo-auth-alert-title {
+  color: oklch(65% 0.15 145);
+}
+
+.neo-auth-alert-text {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--ink-soft);
+  margin: 0.2rem 0 0;
+}
+
+/* Auth Footer */
+.neo-auth-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.neo-auth-footer-text {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+/* Auth Toggle Password Button */
+.neo-auth-toggle-password {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ink-soft);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.neo-auth-toggle-password svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.neo-auth-toggle-password:hover {
+  color: var(--gold);
+}
+
+/* Forgot Modal */
+.neo-forgot-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.neo-forgot-modal.is-open {
+  display: flex;
+}
+
+.neo-forgot-modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 28rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 2rem;
+  border-radius: 0.5rem;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.neo-forgot-result {
+  display: none;
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  text-align: center;
+}
+
+.neo-forgot-error {
+  display: none;
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  text-align: center;
+}
+
+/* Auth Register Page */
+.neo-auth-register-wrapper {
+  width: 100%;
+  max-width: 36rem;
+  margin-top: 6rem;
+}
+
+.neo-auth-register-header {
+  margin-bottom: 1.5rem;
+}
+
+.neo-auth-register-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 0.5rem;
+}
+
+.neo-auth-register-desc {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+/* Form Select - Shared */
+.neo-form-select {
+  padding: 0.75rem 1rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: border-color 180ms var(--ease), box-shadow 180ms var(--ease);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23454545' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
+}
+
+.neo-form-select:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
+}
+
+.neo-form-select option {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* Service Modal Enhancements */
+.neo-modal-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--paper-soft);
+  border: 1px solid var(--line);
+  margin-bottom: 1.5rem;
+  border-radius: 0.75rem;
+}
+
+.neo-modal-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: center;
+}
+
+.neo-modal-meta-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  letter-spacing: 0.05em;
+}
+
+.neo-modal-meta-value {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Modal Section */
+.neo-modal-section {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+}
+
+.neo-modal-section-accent {
+  background: linear-gradient(135deg, var(--paper-soft) 0%, var(--paper) 100%);
+  border-color: var(--gold);
+  border-left: 4px solid var(--gold);
+}
+
+.neo-modal-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.neo-modal-section-header svg {
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+/* Requirements Cards - 2 Columns Desktop, 1 Column Mobile */
+.neo-modal-requirements-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .neo-modal-requirements-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+.neo-modal-req-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  background: var(--paper-soft);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  transition: border-color 180ms var(--ease), transform 180ms var(--ease), box-shadow 180ms var(--ease);
+}
+
+.neo-modal-req-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px oklch(20% 0.03 82 / 0.12);
+}
+
+.neo-modal-req-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.neo-modal-req-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: var(--gold);
+  color: var(--night);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 0.5rem;
+  flex-shrink: 0;
+}
+
+.neo-modal-req-badge {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.25rem;
+  letter-spacing: 0.05em;
+}
+
+.neo-modal-req-wajib {
+  background: var(--sun);
+  color: var(--night);
+}
+
+.neo-modal-req-opsional {
+  background: var(--paper-deep);
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+
+.neo-modal-req-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.neo-modal-req-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.neo-modal-req-note {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+/* TPG Selection Grid */
+.neo-modal-tpg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.neo-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.neo-modal-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.neo-modal-tpg-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--gold);
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
+  color: var(--night);
+}
+
+.neo-modal-tpg-summary svg {
+  flex-shrink: 0;
+}
+
+.neo-modal-tpg-summary strong {
+  font-weight: 700;
+}
+
+/* Modal Actions Container */
+.neo-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+
+/* Modal Action Buttons */
+.neo-btn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex: 1;
+  padding: 0.75rem 1.25rem;
+  background: var(--gold);
+  color: var(--night);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 180ms var(--ease), transform 240ms var(--ease), box-shadow 240ms var(--ease);
+}
+
+.neo-btn-action:hover {
+  background: var(--gold-bright);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px oklch(68% 0.145 74 / 0.35);
+}
+
+.neo-btn-action:active {
+  transform: translateY(0);
+}
+
+.neo-btn-action svg {
+  flex-shrink: 0;
+}
+
+.neo-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: border-color 180ms var(--ease), background 180ms var(--ease), color 180ms var(--ease);
+}
+
+.neo-btn-cancel:hover {
+  border-color: var(--ink);
+  background: var(--paper-soft);
+}
+
+.neo-btn-disabled,
+.neo-btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ================================
+   Service Request Page Styles
+   ================================ */
+
+/* Periode Display */
+.neo-periode-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background: var(--paper);
+  border-radius: 0.5rem;
+}
+
+.neo-periode-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  letter-spacing: 0.05em;
+}
+
+.neo-periode-value {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Appointment Card */
+.neo-appointment-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--paper-soft);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+}
+
+.neo-appointment-photo {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.neo-appointment-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.neo-appointment-initials {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--night);
+}
+
+.neo-appointment-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.neo-appointment-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.neo-appointment-role {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+/* Service Form */
+.neo-service-form {
+  padding: 0;
+}
+
+.neo-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.neo-form-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+}
+
+.neo-form-required {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  background: var(--sun);
+  color: var(--night);
+  border-radius: 0.25rem;
+}
+
+.neo-form-input,
+.neo-form-textarea,
+.neo-form-select {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  transition: border-color 180ms var(--ease), box-shadow 180ms var(--ease);
+}
+
+.neo-form-input:focus,
+.neo-form-textarea:focus,
+.neo-form-select:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
+}
+
+.neo-form-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.neo-form-hint {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.neo-form-error {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* File Upload */
+.neo-form-file-wrapper {
+  position: relative;
+}
+
+.neo-form-file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.neo-form-file-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  background: var(--paper-soft);
+  border: 2px dashed var(--line);
+  border-radius: 0.75rem;
+  text-align: center;
+  transition: border-color 180ms var(--ease), background 180ms var(--ease);
+}
+
+.neo-form-file-wrapper:hover .neo-form-file-label {
+  border-color: var(--gold);
+  background: var(--paper);
+}
+
+.neo-form-file-label svg {
+  color: var(--gold);
+}
+
+.neo-form-file-label span {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+/* Form Actions */
+.neo-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+  margin-top: 2rem;
+}
+
+.neo-form-actions .neo-btn-action,
+.neo-form-actions .neo-btn-secondary,
+.neo-form-actions .neo-btn-cancel {
+  flex: 1;
+  min-width: 140px;
+  justify-content: center;
+}
+
+/* Responsive Form */
+@media (max-width: 640px) {
+  .neo-form-actions {
+    flex-direction: column;
+  }
+
+  .neo-form-actions .neo-btn-action,
+  .neo-form-actions .neo-btn-secondary,
+  .neo-form-actions .neo-btn-cancel {
+    width: 100%;
+  }
+}
+
+/* ================================
+   Service Request - Full Width Form
+   ================================ */
+
+/* Back Button */
+.neo-btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  transition: all 180ms var(--ease);
+}
+
+.neo-btn-back:hover {
+  background: var(--paper-soft);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Main Form Container */
+.neo-request-form {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+/* Form Header */
+.neo-form-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.neo-form-header-info {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.neo-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem 1.5rem;
+  background: var(--paper-soft);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  min-width: 120px;
+}
+
+.neo-info-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  letter-spacing: 0.05em;
+}
+
+.neo-info-value {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Periode Banner */
+.neo-periode-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
+  border-radius: 0.75rem;
+  flex: 1;
+  min-width: 280px;
+}
+
+.neo-periode-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  background: var(--night);
+  border-radius: 0.5rem;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.neo-periode-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.neo-periode-title {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--night);
+  opacity: 0.8;
+}
+
+.neo-periode-detail {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--night);
+}
+
+/* Appointment Banner */
+.neo-appointment-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: var(--paper-soft);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  flex: 1;
+  min-width: 280px;
+}
+
+.neo-appointment-avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--night);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.neo-appointment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.neo-appointment-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.neo-appointment-title {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.neo-appointment-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.neo-appointment-role {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+/* Form Sections */
+.neo-form-body {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 2rem;
+}
+
+.neo-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.neo-section-header svg {
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.neo-section-count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+}
+
+/* Upload Section - 3 Column Grid */
+.neo-upload-section {
+  margin-bottom: 2.5rem;
+}
+
+.neo-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+
+@media (max-width: 1024px) {
+  .neo-upload-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .neo-upload-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Upload Card */
+.neo-upload-card {
+  background: var(--paper-soft);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: all 180ms var(--ease);
+}
+
+.neo-upload-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 4px 16px oklch(20% 0.03 82 / 0.1);
+}
+
+.neo-upload-card.has-file {
+  border-color: var(--gold);
+}
+
+.neo-upload-card.has-existing {
+  border-color: #22c55e;
+}
+
+.neo-upload-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--paper-deep);
+  border-bottom: 1px solid var(--line);
+}
+
+.neo-upload-number {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.neo-upload-badge {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.neo-upload-badge.wajib {
+  background: var(--sun);
+  color: var(--night);
+}
+
+.neo-upload-badge.opsional {
+  background: var(--paper-soft);
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+
+.neo-upload-card-body {
+  padding: 1rem;
+}
+
+.neo-upload-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  border: 2px dashed var(--line);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 180ms var(--ease);
+}
+
+.neo-upload-dropzone:hover {
+  border-color: var(--gold);
+  background: var(--paper);
+}
+
+.neo-upload-dropzone.has-file {
+  border-style: solid;
+  border-color: var(--gold);
+  background: var(--paper);
+}
+
+.neo-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 1rem;
+}
+
+.neo-upload-placeholder svg {
+  color: var(--ash);
+}
+
+.neo-upload-placeholder span {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.neo-upload-hint {
+  font-size: 0.7rem !important;
+  color: var(--ash) !important;
+}
+
+.neo-upload-input {
+  display: none;
+}
+
+.neo-upload-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.neo-upload-preview svg {
+  color: var(--gold);
+}
+
+.neo-upload-preview.has-existing svg {
+  color: #22c55e;
+}
+
+/* Make existing file preview clickable */
+a.neo-upload-preview {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+a.neo-upload-preview:hover {
+  background-color: rgba(34, 197, 94, 0.1);
+  transform: translateY(-2px);
+}
+
+a.neo-upload-preview:active {
+  transform: translateY(0);
+}
+
+.neo-file-name {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink);
+  word-break: break-all;
+}
+
+.neo-file-size {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+}
+
+.neo-file-status {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.neo-file-status.uploaded {
+  background: #22c55e;
+  color: white;
+}
+
+.neo-file-status.ready {
+  background: var(--gold);
+  color: var(--night);
+}
+
+.neo-file-status.error {
+  background: #dc2626;
+  color: white;
+}
+
+/* Processing State */
+.neo-upload-dropzone.is-processing {
+  border-style: dashed;
+  border-color: var(--gold);
+  background: var(--paper-soft);
+  pointer-events: none;
+}
+
+.neo-upload-processing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.neo-upload-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--line);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: neo-spin 0.8s linear infinite;
+}
+
+@keyframes neo-spin {
+  to { transform: rotate(360deg); }
+}
+
+.neo-upload-processing span {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+/* Error State */
+.neo-upload-card.has-error {
+  border-color: #dc2626;
+}
+
+.neo-upload-dropzone.has-error {
+  border-color: #dc2626;
+  background: oklch(70% 0.2 25 / 0.1);
+}
+
+.neo-upload-preview.is-error svg {
+  color: #dc2626;
+}
+
+.neo-upload-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: oklch(70% 0.2 25 / 0.1);
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  color: #dc2626;
+}
+
+.neo-upload-error svg {
+  flex-shrink: 0;
+}
+
+.neo-upload-card-footer {
+  padding: 0.75rem 1rem;
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+}
+
+.neo-upload-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink);
+  display: block;
+}
+
+.neo-upload-note {
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  display: block;
+  margin-top: 0.25rem;
+}
+
+/* Fields Section */
+.neo-fields-section {
+  margin-bottom: 2rem;
+}
+
+.neo-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .neo-fields-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.neo-field-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.neo-field-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.neo-field-required {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  background: var(--sun);
+  color: var(--night);
+  border-radius: 0.25rem;
+}
+
+.neo-field-input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: var(--paper-soft);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  transition: all 180ms var(--ease);
+}
+
+.neo-field-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
+  background: var(--paper);
+}
+
+.neo-field-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.neo-field-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23454545' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
+}
+
+.neo-field-error {
+  font-size: 0.8rem;
+  color: #dc2626;
+}
+
+/* Keterangan Section */
+.neo-keterangan-section {
+  margin-bottom: 2rem;
+}
+
+/* Form Actions */
+.neo-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+
+.neo-btn-cancel-action,
+.neo-btn-draft,
+.neo-btn-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 180ms var(--ease);
+}
+
+.neo-btn-cancel-action {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.neo-btn-cancel-action:hover {
+  background: var(--paper-soft);
+  border-color: var(--ink);
+}
+
+.neo-btn-draft {
+  background: var(--paper-deep);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.neo-btn-draft:hover {
+  background: var(--paper-soft);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.neo-btn-submit {
+  flex: 1;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
+  color: var(--night);
+  border: none;
+  box-shadow: 0 4px 12px oklch(68% 0.145 74 / 0.3);
+}
+
+.neo-btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px oklch(68% 0.145 74 / 0.4);
+}
+
+@media (max-width: 640px) {
+  .neo-form-actions {
+    flex-direction: column;
+  }
+
+  .neo-btn-cancel-action,
+  .neo-btn-draft,
+  .neo-btn-submit {
+    width: 100%;
+  }
+}
+
+/* Responsive Header */
+@media (max-width: 768px) {
+  .neo-form-header {
+    flex-direction: column;
+  }
+
+  .neo-form-header-info {
+    width: 100%;
+  }
+
+  .neo-info-item {
+    flex: 1;
+  }
+
+  .neo-periode-banner,
+  .neo-appointment-banner {
+    width: 100%;
+  }
 }

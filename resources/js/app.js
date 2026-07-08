@@ -1,6 +1,10 @@
 import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
+import { processFile, formatFileSize } from './file-compression.js';
+
+window.processFile = processFile;
+window.formatFileSize = formatFileSize;
 
 window.Alpine = Alpine;
 window.Quill = Quill;

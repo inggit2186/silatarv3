@@ -28,10 +28,8 @@
 
     @vite([
         'resources/css/app.css',
-        'resources/css/cyberpunk.css',
         'resources/css/neo-mirai-home.css',
-        'resources/js/app.js',
-        'resources/js/cyber-particles.js'
+        'resources/js/app.js'
     ])
 
     @stack('extraHead')

@@ -47,6 +47,14 @@ return [
             'report' => false,
         ],
 
+        'users_berkas' => [
+            'driver' => 'local',
+            'root' => storage_path('app/users_berkas'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage/users_berkas',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
