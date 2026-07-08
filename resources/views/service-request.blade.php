@@ -2,14 +2,30 @@
     @php
         $isEditing = (bool) ($editing ?? false);
         $isAppointment = ! empty($appointmentData);
-        $isTpgService = ($service['id'] ?? 0) === 1037;
-        $isTpgEdit = $isTpgService && !empty($editPemberkasanId);
+        $isTpgSemester = ($service['id'] ?? 0) === 1037;
+        $isTpgBulanan = ($service['id'] ?? 0) === 1038;
+        $isPenmadTpgBulanan = ($service['id'] ?? 0) === 1081;
+        $isPenmadPengawasBulanan = ($service['id'] ?? 0) === 1082;
+        $isTpgService = $isTpgSemester || $isTpgBulanan || $isPenmadTpgBulanan || $isPenmadPengawasBulanan;
+        $isTpgEdit = ($isTpgBulanan || $isPenmadTpgBulanan || $isPenmadPengawasBulanan) && !empty($editPemberkasanId);
         $formAction = $formAction ?? (
-            $isTpgEdit
-                ? route('pelayanan.tpg.update', $editPemberkasanId)
-                : ($isTpgService
-                    ? route('pelayanan.tpg.submit', $service['id'])
-                    : route('pelayanan.request.submit', $service['id']))
+            $isPenmadPengawasBulanan && $isTpgEdit
+                ? route('pelayanan.penmad-pengawas-bulanan.update', $editPemberkasanId)
+                : ($isPenmadPengawasBulanan
+                    ? route('pelayanan.penmad-pengawas-bulanan.submit', $service['id'])
+                    : ($isPenmadTpgBulanan && $isTpgEdit
+                        ? route('pelayanan.penmad-tpg-bulanan.update', $editPemberkasanId)
+                        : ($isPenmadTpgBulanan
+                            ? route('pelayanan.penmad-tpg-bulanan.submit', $service['id'])
+                            : ($isTpgBulanan && $isTpgEdit
+                                ? route('pelayanan.tpg-bulanan.update', $editPemberkasanId)
+                                : ($isTpgBulanan
+                                    ? route('pelayanan.tpg-bulanan.submit', $service['id'])
+                                    : ($isTpgSemester && $isTpgEdit
+                                        ? route('pelayanan.tpg.update', $editPemberkasanId)
+                                        : ($isTpgSemester
+                                            ? route('pelayanan.tpg.submit', $service['id'])
+                                            : route('pelayanan.request.submit', $service['id']))))))))
         );
         $backUrl = $backUrl ?? ($isTpgEdit ? route('pengajuan-saya') : route('pelayanan'));
 
@@ -177,7 +193,7 @@
                     </div>
 
                     <!-- Periode Info for TPG -->
-                    @if ($isTpgService && !empty($tahunPelajaran))
+                    @if ($isTpgSemester && !empty($tahunPelajaran))
                     <div class="neo-periode-banner">
                         <div class="neo-periode-icon">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -190,6 +206,24 @@
                         <div class="neo-periode-text">
                             <span class="neo-periode-title">Periode Pencairan</span>
                             <span class="neo-periode-detail">{{ $tahunPelajaran }} - Semester {{ $semester }}</span>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Periode Info for TPG Bulanan -->
+                    @if ($isTpgBulanan && !empty($tahun) && !empty($bulan))
+                    <div class="neo-periode-banner">
+                        <div class="neo-periode-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                        </div>
+                        <div class="neo-periode-text">
+                            <span class="neo-periode-title">Periode Pencairan</span>
+                            <span class="neo-periode-detail">{{ $tahun }} - {{ $bulan }}</span>
                         </div>
                     </div>
                     @endif
@@ -239,9 +273,33 @@
                     @endif
 
                     <!-- Hidden fields -->
-                    @if ($isTpgService && !empty($tahunPelajaran))
+                    @if ($isTpgSemester && !empty($tahunPelajaran))
                         <input type="hidden" name="tahun_pelajaran" value="{{ $tahunPelajaran }}">
                         <input type="hidden" name="semester" value="{{ $semester }}">
+                        @if ($existingSubmission)
+                            <input type="hidden" name="noreq" value="{{ $existingSubmission->noreq }}">
+                        @endif
+                    @endif
+
+                    @if ($isTpgBulanan && !empty($tahun))
+                        <input type="hidden" name="tahun" value="{{ $tahun }}">
+                        <input type="hidden" name="bulan" value="{{ $bulan ?? '' }}">
+                        @if ($existingSubmission)
+                            <input type="hidden" name="noreq" value="{{ $existingSubmission->noreq }}">
+                        @endif
+                    @endif
+
+                    @if ($isPenmadTpgBulanan && !empty($tahun))
+                        <input type="hidden" name="tahun" value="{{ $tahun }}">
+                        <input type="hidden" name="bulan" value="{{ $bulan ?? '' }}">
+                        @if ($existingSubmission)
+                            <input type="hidden" name="noreq" value="{{ $existingSubmission->noreq }}">
+                        @endif
+                    @endif
+
+                    @if ($isPenmadPengawasBulanan && !empty($tahun))
+                        <input type="hidden" name="tahun" value="{{ $tahun }}">
+                        <input type="hidden" name="bulan" value="{{ $bulan ?? '' }}">
                         @if ($existingSubmission)
                             <input type="hidden" name="noreq" value="{{ $existingSubmission->noreq }}">
                         @endif

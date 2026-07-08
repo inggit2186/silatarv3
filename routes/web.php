@@ -18,6 +18,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/pelayanan/ajukan/{serviceId}', [PageController::class, 'requestService'])->whereNumber('serviceId')->name('pelayanan.request');
     Route::post('/pelayanan/ajukan/{serviceId}', [PageController::class, 'submitServiceRequest'])->whereNumber('serviceId')->name('pelayanan.request.submit');
     Route::post('/pelayanan/ajukan/tpg/{serviceId}', [PageController::class, 'submitTpgRequest'])->whereNumber('serviceId')->name('pelayanan.tpg.submit');
+    Route::post('/pelayanan/ajukan/tpg-bulanan/{serviceId}', [PageController::class, 'submitTpgBulananRequest'])->whereNumber('serviceId')->name('pelayanan.tpg-bulanan.submit');
+    Route::post('/pelayanan/ajukan/penmad-tpg-bulanan/{serviceId}', [PageController::class, 'submitPenmadTpgBulananRequest'])->whereNumber('serviceId')->name('pelayanan.penmad-tpg-bulanan.submit');
+    Route::post('/pelayanan/ajukan/penmad-pengawas-bulanan/{serviceId}', [PageController::class, 'submitPenmadPengawasBulananRequest'])->whereNumber('serviceId')->name('pelayanan.penmad-pengawas-bulanan.submit');
     Route::get('/pengajuan-saya', [PageController::class, 'myRequests'])->name('pengajuan-saya');
     Route::get('/pengajuan-saya/{requestId}/edit', [PageController::class, 'editRequest'])->name('pengajuan-saya.edit');
     Route::delete('/pengajuan-saya/{requestId}/delete', [PageController::class, 'deleteRequest'])->name('pengajuan-saya.delete');
@@ -26,6 +29,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/pelayanan/tpg/{pemberkasanId}/edit', [PageController::class, 'editTpgRequest'])->name('pelayanan.tpg.form');
     Route::post('/pelayanan/tpg/{pemberkasanId}/update', [PageController::class, 'updateTpgRequest'])->name('pelayanan.tpg.update');
     Route::delete('/pelayanan/tpg/{pemberkasanId}/delete', [PageController::class, 'deleteTpgRequest'])->name('pelayanan.tpg.delete');
+    // TPG Bulanan routes (for service 1038 and 1081)
+    Route::get('/pelayanan/tpg-bulanan/{pemberkasanId}/file/{syaratId}/preview', [PageController::class, 'previewTpgBulananFile'])->whereNumber(['pemberkasanId', 'syaratId'])->name('pelayanan.tpg-bulanan.preview-file');
+    Route::get('/pelayanan/tpg-bulanan/{pemberkasanId}/edit', [PageController::class, 'editTpgBulananRequest'])->name('pelayanan.tpg-bulanan.form');
+    Route::post('/pelayanan/tpg-bulanan/{pemberkasanId}/update', [PageController::class, 'updateTpgBulananRequest'])->name('pelayanan.tpg-bulanan.update');
+    Route::delete('/pelayanan/tpg-bulanan/{pemberkasanId}/delete', [PageController::class, 'deleteTpgBulananRequest'])->name('pelayanan.tpg-bulanan.delete');
+    // PENMAD TPG Bulanan routes (for service 1081)
+    Route::get('/pelayanan/penmad-tpg-bulanan/{pemberkasanId}/file/{syaratId}/preview', [PageController::class, 'previewPenmadTpgBulananFile'])->whereNumber(['pemberkasanId', 'syaratId'])->name('pelayanan.penmad-tpg-bulanan.preview-file');
+    Route::get('/pelayanan/penmad-tpg-bulanan/{pemberkasanId}/edit', [PageController::class, 'editPenmadTpgBulananRequest'])->name('pelayanan.penmad-tpg-bulanan.form');
+    Route::post('/pelayanan/penmad-tpg-bulanan/{pemberkasanId}/update', [PageController::class, 'updatePenmadTpgBulananRequest'])->name('pelayanan.penmad-tpg-bulanan.update');
+    Route::delete('/pelayanan/penmad-tpg-bulanan/{pemberkasanId}/delete', [PageController::class, 'deletePenmadTpgBulananRequest'])->name('pelayanan.penmad-tpg-bulanan.delete');
+    // PENMAD Pengawas Bulanan routes (for service 1082)
+    Route::get('/pelayanan/penmad-pengawas-bulanan/{pemberkasanId}/file/{syaratId}/preview', [PageController::class, 'previewPenmadPengawasBulananFile'])->whereNumber(['pemberkasanId', 'syaratId'])->name('pelayanan.penmad-pengawas-bulanan.preview-file');
+    Route::get('/pelayanan/penmad-pengawas-bulanan/{pemberkasanId}/edit', [PageController::class, 'editPenmadPengawasBulananRequest'])->name('pelayanan.penmad-pengawas-bulanan.form');
+    Route::post('/pelayanan/penmad-pengawas-bulanan/{pemberkasanId}/update', [PageController::class, 'updatePenmadPengawasBulananRequest'])->name('pelayanan.penmad-pengawas-bulanan.update');
+    Route::delete('/pelayanan/penmad-pengawas-bulanan/{pemberkasanId}/delete', [PageController::class, 'deletePenmadPengawasBulananRequest'])->name('pelayanan.penmad-pengawas-bulanan.delete');
     Route::get('/laporan-kinerja', [PageController::class, 'laporanKinerja'])->name('laporan-kinerja');
     Route::get('/laporan-kinerja/bawahan', [PageController::class, 'laporanKinerjaBawahan'])->name('laporan-kinerja.bawahan');
     Route::get('/profil', [PageController::class, 'profil'])->name('profil');

@@ -368,8 +368,10 @@ class PageController extends Controller
         $isDirect = $req->query('direct') === 'true';
         $tahunPelajaran = $req->query('tahun_pelajaran');
         $semester = $req->query('semester');
+        $tahun = $req->query('tahun'); // For TPG Bulanan (1038)
+        $bulan = $req->query('bulan');
 
-        // For TPG service (1037), check for existing submission
+        // For TPG Semester service (1037), check for existing submission
         $existingSubmission = null;
         $existingFiles = [];
         if ($serviceId === 1037 && $tahunPelajaran && $semester) {
@@ -412,6 +414,123 @@ class PageController extends Controller
             }
         }
 
+        // For TPG Bulanan service (1038), check for existing submission
+        if ($serviceId === 1038 && $tahun && $bulan) {
+            // Use tahun directly for noreq (no "/" to replace)
+            $existingNoreq = strtoupper("PAIS-TPG-BULANAN-{$requester->id}-{$tahun}-{$bulan}");
+            $existingSubmission = DB::table('satker_pemberkasan')
+                ->where('noreq', $existingNoreq)
+                ->first();
+
+            if ($existingSubmission) {
+                // Decode files JSON snapshot (may be double-encoded)
+                $filesRaw = $existingSubmission->files ?? null;
+                if (is_array($filesRaw)) {
+                    $filesData = $filesRaw;
+                } elseif (is_string($filesRaw)) {
+                    $decoded = json_decode($filesRaw, true);
+                    if (is_string($decoded)) {
+                        $decoded = json_decode($decoded, true);
+                    }
+                    $filesData = is_array($decoded) ? $decoded : [];
+                } else {
+                    $filesData = [];
+                }
+                foreach ($filesData as $file) {
+                    $syaratId = $file['syarat_id'] ?? 0;
+                    if ($file['filename'] && $file['filename'] !== 'NONE') {
+                        $existingFiles[$syaratId] = [
+                            'filename' => $file['filename'],
+                            'filetype' => $file['filetype'] ?? null,
+                            'size' => $file['size'] ?? null,
+                            'url' => route('pelayanan.tpg-bulanan.preview-file', [
+                                'pemberkasanId' => $existingSubmission->id,
+                                'syaratId' => $syaratId,
+                            ]),
+                        ];
+                    }
+                }
+            }
+        }
+
+        // For PENMAD TPG Bulanan service (1081), check for existing submission
+        if ($serviceId === 1081 && $tahun && $bulan) {
+            // Use tahun directly for noreq (no "/" to replace)
+            $existingNoreq = strtoupper("PENMAD-TPG-BULANAN-{$requester->id}-{$tahun}-{$bulan}");
+            $existingSubmission = DB::table('satker_pemberkasan')
+                ->where('noreq', $existingNoreq)
+                ->first();
+
+            if ($existingSubmission) {
+                // Decode files JSON snapshot (may be double-encoded)
+                $filesRaw = $existingSubmission->files ?? null;
+                if (is_array($filesRaw)) {
+                    $filesData = $filesRaw;
+                } elseif (is_string($filesRaw)) {
+                    $decoded = json_decode($filesRaw, true);
+                    if (is_string($decoded)) {
+                        $decoded = json_decode($decoded, true);
+                    }
+                    $filesData = is_array($decoded) ? $decoded : [];
+                } else {
+                    $filesData = [];
+                }
+                foreach ($filesData as $file) {
+                    $syaratId = $file['syarat_id'] ?? 0;
+                    if ($file['filename'] && $file['filename'] !== 'NONE') {
+                        $existingFiles[$syaratId] = [
+                            'filename' => $file['filename'],
+                            'filetype' => $file['filetype'] ?? null,
+                            'size' => $file['size'] ?? null,
+                            'url' => route('pelayanan.penmad-tpg-bulanan.preview-file', [
+                                'pemberkasanId' => $existingSubmission->id,
+                                'syaratId' => $syaratId,
+                            ]),
+                        ];
+                    }
+                }
+            }
+        }
+
+        // For PENMAD Pengawas Bulanan service (1082), check for existing submission
+        if ($serviceId === 1082 && $tahun && $bulan) {
+            // Use tahun directly for noreq (no "/" to replace)
+            $existingNoreq = strtoupper("PENMAD-PENGAWAS-BULANAN-{$requester->id}-{$tahun}-{$bulan}");
+            $existingSubmission = DB::table('satker_pemberkasan')
+                ->where('noreq', $existingNoreq)
+                ->first();
+
+            if ($existingSubmission) {
+                // Decode files JSON snapshot (may be double-encoded)
+                $filesRaw = $existingSubmission->files ?? null;
+                if (is_array($filesRaw)) {
+                    $filesData = $filesRaw;
+                } elseif (is_string($filesRaw)) {
+                    $decoded = json_decode($filesRaw, true);
+                    if (is_string($decoded)) {
+                        $decoded = json_decode($decoded, true);
+                    }
+                    $filesData = is_array($decoded) ? $decoded : [];
+                } else {
+                    $filesData = [];
+                }
+                foreach ($filesData as $file) {
+                    $syaratId = $file['syarat_id'] ?? 0;
+                    if ($file['filename'] && $file['filename'] !== 'NONE') {
+                        $existingFiles[$syaratId] = [
+                            'filename' => $file['filename'],
+                            'filetype' => $file['filetype'] ?? null,
+                            'size' => $file['size'] ?? null,
+                            'url' => route('pelayanan.penmad-pengawas-bulanan.preview-file', [
+                                'pemberkasanId' => $existingSubmission->id,
+                                'syaratId' => $syaratId,
+                            ]),
+                        ];
+                    }
+                }
+            }
+        }
+
         if ($employeeId) {
             $employee = DB::table('users')->where('id', $employeeId)->first();
             if ($employee) {
@@ -442,6 +561,8 @@ class PageController extends Controller
             'appointmentData' => $appointmentData,
             'tahunPelajaran' => $tahunPelajaran,
             'semester' => $semester,
+            'tahun' => $tahun,
+            'bulan' => $bulan,
             'existingSubmission' => $existingSubmission,
         ]));
     }
@@ -828,6 +949,1127 @@ class PageController extends Controller
             ->with('success', 'Draft berhasil dihapus.');
     }
 
+    // ==========================================
+    // TPG BULANAN METHODS (Service 1038)
+    // ==========================================
+
+    /**
+     * Preview uploaded file for TPG Bulanan service
+     */
+    public function previewTpgBulananFile(int $pemberkasanId, int $syaratId)
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $pemberkasan = DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($pemberkasan, 404);
+
+        // Decode files (handle double-encoded JSON)
+        $filesRaw = $pemberkasan->files ?? null;
+        $filesData = [];
+        if (is_array($filesRaw)) {
+            $filesData = $filesRaw;
+        } elseif (is_string($filesRaw)) {
+            $decoded = json_decode($filesRaw, true);
+            if (is_string($decoded)) {
+                $decoded = json_decode($decoded, true);
+            }
+            $filesData = is_array($decoded) ? $decoded : [];
+        }
+
+        $fileEntry = collect($filesData)->firstWhere('syarat_id', $syaratId);
+
+        abort_unless($fileEntry && !empty($fileEntry['filename']) && $fileEntry['filename'] !== 'NONE', 404);
+
+        $path = "{$user->nomor_induk}/{$fileEntry['filename']}";
+
+        abort_unless(Storage::disk('users_berkas')->exists($path), 404);
+
+        return Storage::disk('users_berkas')->response($path);
+    }
+
+    /**
+     * Handle TPG Bulanan submission (Service 1038)
+     */
+    public function submitTpgBulananRequest(Request $request, int $serviceId): \Illuminate\Http\RedirectResponse
+    {
+        $service = $this->serviceDetail($serviceId);
+        $requirements = $service['requirements'];
+        $requester = $request->user();
+        $isDraft = $request->input('submit_action') === 'draft';
+
+        abort_unless($requester, 403);
+
+        // Validate required fields
+        $validated = $request->validate([
+            'tahun' => ['required', 'string'],
+            'bulan' => ['required', 'string'],
+        ]);
+
+        // TPG Bulanan specific params
+        $kategori = 'PAIS-TPG-BULANAN';
+        $tahun = (int) ($validated['tahun'] ?? date('Y'));
+        $bulan = $validated['bulan'];
+
+        // Map bulan name to number (1-12)
+        $bulanMap = [
+            'Januari' => 1, 'Februari' => 2, 'Maret' => 3, 'April' => 4,
+            'Mei' => 5, 'Juni' => 6, 'Juli' => 7, 'Agustus' => 8,
+            'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12,
+        ];
+        $itemId = $bulanMap[strtolower($bulan)] ?? date('n');
+
+        // Determine waktu (start date of the month)
+        $waktuDate = Carbon::createFromDate($tahun, $itemId, 1)->startOfMonth();
+
+        // Generate noreq (unique request number)
+        // Format: PAIS-TPG-BULANAN-{USERID}-{TAHUN}-{BULAN}
+        // Example: PAIS-TPG-BULANAN-45-2026-JULI
+        $noreq = strtoupper("{$kategori}-{$requester->id}-{$tahun}-{$bulan}");
+
+        // Generate deskripsi
+        $deskripsi = "[{$kategori}] {$bulan} {$tahun}";
+
+        // Build files snapshot from uploaded files
+        $filesSnapshot = $this->buildFilesSnapshot($requester, $serviceId, $noreq, $requirements, $request);
+
+        // Build metadata JSON
+        $metadata = [
+            'tahun' => $tahun,
+            'bulan' => $bulan,
+            'bulan_number' => $itemId,
+            'kategori' => $kategori,
+            'tahun_ajaran' => $tahun,
+            'submitted_at' => now()->toIso8601String(),
+            'is_draft' => $isDraft,
+        ];
+
+        // Build requirements snapshot (preserve state at submission time)
+        $requirementsSnapshot = collect($requirements)->map(function ($req) {
+            return [
+                'id' => $req['id'],
+                'title' => $req['title'],
+                'note' => $req['note'],
+                'is_required' => $req['is_required'],
+                'type' => $req['type_normalized'],
+            ];
+        })->toArray();
+
+        // Save to satker_pemberkasan
+        SatkerPemberkasan::updateOrCreate(
+            ['noreq' => $noreq],
+            [
+                'user_id' => $requester->id,
+                'tipe' => $kategori,
+                'layanan_id' => $serviceId,
+                'dept_id' => (string) $requester->dept_id,
+                'waktu' => $waktuDate,
+                'item_id' => $itemId,
+                'deskripsi' => $deskripsi,
+                'keterangan' => $request->input('deskripsi') ?? '<NoKomen>',
+                'status' => $isDraft ? 'DRAFT' : 'SUBMITTED',
+                'files' => json_encode($filesSnapshot),
+                'metadata' => json_encode($metadata),
+                'requirements_snapshot' => json_encode($requirementsSnapshot),
+                'is_migrated' => true,
+                'migrated_at' => now(),
+            ]
+        );
+
+        $message = $isDraft
+            ? "Draft {$service['title']} sudah disimpan."
+            : "Pengajuan {$service['title']} sudah diterima.";
+
+        return redirect()
+            ->route('pengajuan-saya')
+            ->with('success', $message);
+    }
+
+    /**
+     * Edit TPG Bulanan request
+     */
+    public function editTpgBulananRequest(int $pemberkasanId, Request $request = null)
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $pemberkasan = DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($pemberkasan, 404);
+
+        // Decode metadata
+        $metadata = json_decode($pemberkasan->metadata ?? '{}', true);
+        if (is_string($metadata)) {
+            $metadata = json_decode($metadata, true) ?? [];
+        }
+
+        $tahun = $metadata['tahun'] ?? '';
+        $bulan = $metadata['bulan'] ?? '';
+
+        // Get service info (service ID 1038 for TPG Bulanan)
+        $serviceId = 1038;
+        $service = $this->serviceDetail($serviceId);
+
+        // Decode existing files
+        $filesRaw = $pemberkasan->files ?? null;
+        $filesData = [];
+        if (is_array($filesRaw)) {
+            $filesData = $filesRaw;
+        } elseif (is_string($filesRaw)) {
+            $decoded = json_decode($filesRaw, true);
+            if (is_string($decoded)) {
+                $decoded = json_decode($decoded, true);
+            }
+            $filesData = is_array($decoded) ? $decoded : [];
+        }
+
+        $existingFiles = [];
+        foreach ($filesData as $file) {
+            $syaratId = $file['syarat_id'] ?? 0;
+            if (!empty($file['filename']) && $file['filename'] !== 'NONE') {
+                $existingFiles[$syaratId] = [
+                    'filename' => $file['filename'],
+                    'filetype' => $file['filetype'] ?? null,
+                    'size' => $file['size'] ?? null,
+                    'url' => route('pelayanan.tpg-bulanan.preview-file', [
+                        'pemberkasanId' => $pemberkasanId,
+                        'syaratId' => $syaratId,
+                    ]),
+                ];
+            }
+        }
+
+        return view('service-request', array_merge(
+            $this->requestFormViewData($service, $user, false, $pemberkasan, [], $existingFiles),
+            [
+                'service' => $service,
+                'tahun' => $tahun,
+                'bulan' => $bulan,
+                'existingSubmission' => $pemberkasan,
+                'isEditing' => true,
+                'editPemberkasanId' => $pemberkasanId,
+                'isTpgBulanan' => true,
+            ]
+        ));
+    }
+
+    /**
+     * Update TPG Bulanan request
+     */
+    public function updateTpgBulananRequest(Request $request, int $pemberkasanId): \Illuminate\Http\RedirectResponse
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $pemberkasan = DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($pemberkasan, 404);
+
+        // Validate required fields
+        $validated = $request->validate([
+            'tahun' => ['required', 'string'],
+            'bulan' => ['required', 'string'],
+        ]);
+
+        $serviceId = 1038;
+        $service = $this->serviceDetail($serviceId);
+        $requirements = $service['requirements'];
+
+        $kategori = 'PAIS-TPG-BULANAN';
+        $tahun = (int) ($validated['tahun'] ?? date('Y'));
+        $bulan = $validated['bulan'];
+        $isDraft = $request->input('submit_action') === 'draft';
+
+        // Map bulan name to number (1-12)
+        $bulanMap = [
+            'Januari' => 1, 'Februari' => 2, 'Maret' => 3, 'April' => 4,
+            'Mei' => 5, 'Juni' => 6, 'Juli' => 7, 'Agustus' => 8,
+            'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12,
+        ];
+        $itemId = $bulanMap[strtolower($bulan)] ?? date('n');
+
+        // waktu: start date of the month
+        $waktuDate = Carbon::createFromDate($tahun, $itemId, 1)->startOfMonth();
+
+        // Keep existing noreq
+        $noreq = $pemberkasan->noreq;
+
+        // Generate deskripsi
+        $deskripsi = "[{$kategori}] {$bulan} {$tahun}";
+
+        // Build files snapshot
+        // Get existing files from database to preserve
+        $existingFilesRaw = $pemberkasan->files ?? null;
+        $existingFiles = [];
+        if (is_array($existingFilesRaw)) {
+            $existingFiles = $existingFilesRaw;
+        } elseif (is_string($existingFilesRaw)) {
+            $decoded = json_decode($existingFilesRaw, true);
+            if (is_string($decoded)) {
+                $decoded = json_decode($decoded, true);
+            }
+            $existingFiles = is_array($decoded) ? $decoded : [];
+        }
+
+        // Get deleted file IDs from request (handle both array and comma-separated string)
+        $deletedFilesInput = $request->input('deleted_files', []);
+        if (is_array($deletedFilesInput)) {
+            $deletedFileIds = array_map('intval', $deletedFilesInput);
+        } elseif (is_string($deletedFilesInput) && !empty($deletedFilesInput)) {
+            $deletedFileIds = array_map('intval', explode(',', $deletedFilesInput));
+        } else {
+            $deletedFileIds = [];
+        }
+
+        $filesSnapshot = $this->buildFilesSnapshot($user, $serviceId, $noreq, $requirements, $request, $existingFiles, $deletedFileIds);
+
+        // Build metadata
+        $metadata = [
+            'tahun' => $tahun,
+            'bulan' => $bulan,
+            'bulan_number' => $itemId,
+            'kategori' => $kategori,
+            'tahun_ajaran' => $tahun,
+            'submitted_at' => now()->toIso8601String(),
+            'is_draft' => $isDraft,
+            'updated_at' => now()->toIso8601String(),
+        ];
+
+        // Build requirements snapshot
+        $requirementsSnapshot = collect($requirements)->map(function ($req) {
+            return [
+                'id' => $req['id'],
+                'title' => $req['title'],
+                'note' => $req['note'],
+                'is_required' => $req['is_required'],
+                'type' => $req['type_normalized'],
+            ];
+        })->toArray();
+
+        // Update to database
+        SatkerPemberkasan::where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->update([
+                'waktu' => $waktuDate,
+                'item_id' => $itemId,
+                'deskripsi' => $deskripsi,
+                'keterangan' => $request->input('deskripsi') ?? '<NoKomen>',
+                'status' => $isDraft ? 'DRAFT' : 'SUBMITTED',
+                'files' => json_encode($filesSnapshot),
+                'metadata' => json_encode($metadata),
+                'requirements_snapshot' => json_encode($requirementsSnapshot),
+                'updated_at' => now(),
+            ]);
+
+        $message = $isDraft
+            ? "Draft {$service['title']} sudah diperbarui."
+            : "Pengajuan {$service['title']} sudah diperbarui.";
+
+        return redirect()
+            ->route('pengajuan-saya')
+            ->with('success', $message);
+    }
+
+    /**
+     * Delete TPG Bulanan request
+     */
+    public function deleteTpgBulananRequest(int $pemberkasanId): \Illuminate\Http\RedirectResponse
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $pemberkasan = DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($pemberkasan, 404);
+
+        // Only allow delete for DRAFT status
+        if ($pemberkasan->status !== 'DRAFT') {
+            return redirect()
+                ->route('pengajuan-saya')
+                ->with('error', 'Hanya draft yang dapat dihapus.');
+        }
+
+        // Delete associated files from storage
+        $filesData = json_decode($pemberkasan->files ?? '[]', true);
+        foreach ($filesData as $file) {
+            if (!empty($file['filename']) && $file['filename'] !== 'NONE') {
+                $path = "{$user->nomor_induk}/{$file['filename']}";
+                Storage::disk('users_berkas')->delete($path);
+            }
+        }
+
+        // Delete the record
+        DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->delete();
+
+        return redirect()
+            ->route('pengajuan-saya')
+            ->with('success', 'Draft berhasil dihapus.');
+    }
+
+    // ==========================================
+    // PENMAD TPG BULANAN METHODS (Service 1081)
+    // Same as TPG Bulanan but with category PENMAD-TPG-BULANAN
+    // ==========================================
+
+    /**
+     * Preview uploaded file for PENMAD TPG Bulanan service
+     */
+    public function previewPenmadTpgBulananFile(int $pemberkasanId, int $syaratId)
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $pemberkasan = DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($pemberkasan, 404);
+
+        // Decode files (handle double-encoded JSON)
+        $filesRaw = $pemberkasan->files ?? null;
+        $filesData = [];
+        if (is_array($filesRaw)) {
+            $filesData = $filesRaw;
+        } elseif (is_string($filesRaw)) {
+            $decoded = json_decode($filesRaw, true);
+            if (is_string($decoded)) {
+                $decoded = json_decode($decoded, true);
+            }
+            $filesData = is_array($decoded) ? $decoded : [];
+        }
+
+        $fileEntry = collect($filesData)->firstWhere('syarat_id', $syaratId);
+
+        abort_unless($fileEntry && !empty($fileEntry['filename']) && $fileEntry['filename'] !== 'NONE', 404);
+
+        $path = "{$user->nomor_induk}/{$fileEntry['filename']}";
+
+        abort_unless(Storage::disk('users_berkas')->exists($path), 404);
+
+        return Storage::disk('users_berkas')->response($path);
+    }
+
+    /**
+     * Handle PENMAD TPG Bulanan submission (Service 1081)
+     */
+    public function submitPenmadTpgBulananRequest(Request $request, int $serviceId): \Illuminate\Http\RedirectResponse
+    {
+        $service = $this->serviceDetail($serviceId);
+        $requirements = $service['requirements'];
+        $requester = $request->user();
+        $isDraft = $request->input('submit_action') === 'draft';
+
+        abort_unless($requester, 403);
+
+        // Validate required fields
+        $validated = $request->validate([
+            'tahun' => ['required', 'string'],
+            'bulan' => ['required', 'string'],
+        ]);
+
+        // PENMAD TPG Bulanan specific params
+        $kategori = 'PENMAD-TPG-BULANAN';
+        $tahun = (int) ($validated['tahun'] ?? date('Y'));
+        $bulan = $validated['bulan'];
+
+        // Map bulan name to number (1-12)
+        $bulanMap = [
+            'Januari' => 1, 'Februari' => 2, 'Maret' => 3, 'April' => 4,
+            'Mei' => 5, 'Juni' => 6, 'Juli' => 7, 'Agustus' => 8,
+            'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12,
+        ];
+        $itemId = $bulanMap[strtolower($bulan)] ?? date('n');
+
+        // Determine waktu (start date of the month)
+        $waktuDate = Carbon::createFromDate($tahun, $itemId, 1)->startOfMonth();
+
+        // Generate noreq (unique request number)
+        // Format: PENMAD-TPG-BULANAN-{USERID}-{TAHUN}-{BULAN}
+        // Example: PENMAD-TPG-BULANAN-45-2026-JULI
+        $noreq = strtoupper("{$kategori}-{$requester->id}-{$tahun}-{$bulan}");
+
+        // Generate deskripsi
+        $deskripsi = "[{$kategori}] {$bulan} {$tahun}";
+
+        // Build files snapshot from uploaded files
+        $filesSnapshot = $this->buildFilesSnapshot($requester, $serviceId, $noreq, $requirements, $request);
+
+        // Build metadata JSON
+        $metadata = [
+            'tahun' => $tahun,
+            'bulan' => $bulan,
+            'bulan_number' => $itemId,
+            'kategori' => $kategori,
+            'tahun_ajaran' => $tahun,
+            'submitted_at' => now()->toIso8601String(),
+            'is_draft' => $isDraft,
+        ];
+
+        // Build requirements snapshot (preserve state at submission time)
+        $requirementsSnapshot = collect($requirements)->map(function ($req) {
+            return [
+                'id' => $req['id'],
+                'title' => $req['title'],
+                'note' => $req['note'],
+                'is_required' => $req['is_required'],
+                'type' => $req['type_normalized'],
+            ];
+        })->toArray();
+
+        // Save to satker_pemberkasan
+        SatkerPemberkasan::updateOrCreate(
+            ['noreq' => $noreq],
+            [
+                'user_id' => $requester->id,
+                'tipe' => $kategori,
+                'layanan_id' => $serviceId,
+                'dept_id' => (string) $requester->dept_id,
+                'waktu' => $waktuDate,
+                'item_id' => $itemId,
+                'deskripsi' => $deskripsi,
+                'keterangan' => $request->input('deskripsi') ?? '<NoKomen>',
+                'status' => $isDraft ? 'DRAFT' : 'SUBMITTED',
+                'files' => json_encode($filesSnapshot),
+                'metadata' => json_encode($metadata),
+                'requirements_snapshot' => json_encode($requirementsSnapshot),
+                'is_migrated' => true,
+                'migrated_at' => now(),
+            ]
+        );
+
+        $message = $isDraft
+            ? "Draft {$service['title']} sudah disimpan."
+            : "Pengajuan {$service['title']} sudah diterima.";
+
+        return redirect()
+            ->route('pengajuan-saya')
+            ->with('success', $message);
+    }
+
+    /**
+     * Edit PENMAD TPG Bulanan request
+     */
+    public function editPenmadTpgBulananRequest(int $pemberkasanId, Request $request = null)
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $pemberkasan = DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($pemberkasan, 404);
+
+        // Decode metadata
+        $metadata = json_decode($pemberkasan->metadata ?? '{}', true);
+        if (is_string($metadata)) {
+            $metadata = json_decode($metadata, true) ?? [];
+        }
+
+        $tahun = $metadata['tahun'] ?? '';
+        $bulan = $metadata['bulan'] ?? '';
+
+        // Get service info (service ID 1081 for PENMAD TPG Bulanan)
+        $serviceId = 1081;
+        $service = $this->serviceDetail($serviceId);
+
+        // Decode existing files
+        $filesRaw = $pemberkasan->files ?? null;
+        $filesData = [];
+        if (is_array($filesRaw)) {
+            $filesData = $filesRaw;
+        } elseif (is_string($filesRaw)) {
+            $decoded = json_decode($filesRaw, true);
+            if (is_string($decoded)) {
+                $decoded = json_decode($decoded, true);
+            }
+            $filesData = is_array($decoded) ? $decoded : [];
+        }
+
+        $existingFiles = [];
+        foreach ($filesData as $file) {
+            $syaratId = $file['syarat_id'] ?? 0;
+            if (!empty($file['filename']) && $file['filename'] !== 'NONE') {
+                $existingFiles[$syaratId] = [
+                    'filename' => $file['filename'],
+                    'filetype' => $file['filetype'] ?? null,
+                    'size' => $file['size'] ?? null,
+                    'url' => route('pelayanan.penmad-tpg-bulanan.preview-file', [
+                        'pemberkasanId' => $pemberkasanId,
+                        'syaratId' => $syaratId,
+                    ]),
+                ];
+            }
+        }
+
+        return view('service-request', array_merge(
+            $this->requestFormViewData($service, $user, false, $pemberkasan, [], $existingFiles),
+            [
+                'service' => $service,
+                'tahun' => $tahun,
+                'bulan' => $bulan,
+                'existingSubmission' => $pemberkasan,
+                'isEditing' => true,
+                'editPemberkasanId' => $pemberkasanId,
+                'isPenmadTpgBulanan' => true,
+            ]
+        ));
+    }
+
+    /**
+     * Update PENMAD TPG Bulanan request
+     */
+    public function updatePenmadTpgBulananRequest(Request $request, int $pemberkasanId): \Illuminate\Http\RedirectResponse
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $pemberkasan = DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($pemberkasan, 404);
+
+        // Validate required fields
+        $validated = $request->validate([
+            'tahun' => ['required', 'string'],
+            'bulan' => ['required', 'string'],
+        ]);
+
+        $serviceId = 1081;
+        $service = $this->serviceDetail($serviceId);
+        $requirements = $service['requirements'];
+
+        $kategori = 'PENMAD-TPG-BULANAN';
+        $tahun = (int) ($validated['tahun'] ?? date('Y'));
+        $bulan = $validated['bulan'];
+        $isDraft = $request->input('submit_action') === 'draft';
+
+        // Map bulan name to number (1-12)
+        $bulanMap = [
+            'Januari' => 1, 'Februari' => 2, 'Maret' => 3, 'April' => 4,
+            'Mei' => 5, 'Juni' => 6, 'Juli' => 7, 'Agustus' => 8,
+            'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12,
+        ];
+        $itemId = $bulanMap[strtolower($bulan)] ?? date('n');
+
+        // waktu: start date of the month
+        $waktuDate = Carbon::createFromDate($tahun, $itemId, 1)->startOfMonth();
+
+        // Keep existing noreq
+        $noreq = $pemberkasan->noreq;
+
+        // Generate deskripsi
+        $deskripsi = "[{$kategori}] {$bulan} {$tahun}";
+
+        // Build files snapshot
+        // Get existing files from database to preserve
+        $existingFilesRaw = $pemberkasan->files ?? null;
+        $existingFiles = [];
+        if (is_array($existingFilesRaw)) {
+            $existingFiles = $existingFilesRaw;
+        } elseif (is_string($existingFilesRaw)) {
+            $decoded = json_decode($existingFilesRaw, true);
+            if (is_string($decoded)) {
+                $decoded = json_decode($decoded, true);
+            }
+            $existingFiles = is_array($decoded) ? $decoded : [];
+        }
+
+        // Get deleted file IDs from request (handle both array and comma-separated string)
+        $deletedFilesInput = $request->input('deleted_files', []);
+        if (is_array($deletedFilesInput)) {
+            $deletedFileIds = array_map('intval', $deletedFilesInput);
+        } elseif (is_string($deletedFilesInput) && !empty($deletedFilesInput)) {
+            $deletedFileIds = array_map('intval', explode(',', $deletedFilesInput));
+        } else {
+            $deletedFileIds = [];
+        }
+
+        $filesSnapshot = $this->buildFilesSnapshot($user, $serviceId, $noreq, $requirements, $request, $existingFiles, $deletedFileIds);
+
+        // Build metadata
+        $metadata = [
+            'tahun' => $tahun,
+            'bulan' => $bulan,
+            'bulan_number' => $itemId,
+            'kategori' => $kategori,
+            'tahun_ajaran' => $tahun,
+            'submitted_at' => now()->toIso8601String(),
+            'is_draft' => $isDraft,
+            'updated_at' => now()->toIso8601String(),
+        ];
+
+        // Build requirements snapshot
+        $requirementsSnapshot = collect($requirements)->map(function ($req) {
+            return [
+                'id' => $req['id'],
+                'title' => $req['title'],
+                'note' => $req['note'],
+                'is_required' => $req['is_required'],
+                'type' => $req['type_normalized'],
+            ];
+        })->toArray();
+
+        // Update to database
+        SatkerPemberkasan::where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->update([
+                'waktu' => $waktuDate,
+                'item_id' => $itemId,
+                'deskripsi' => $deskripsi,
+                'keterangan' => $request->input('deskripsi') ?? '<NoKomen>',
+                'status' => $isDraft ? 'DRAFT' : 'SUBMITTED',
+                'files' => json_encode($filesSnapshot),
+                'metadata' => json_encode($metadata),
+                'requirements_snapshot' => json_encode($requirementsSnapshot),
+                'updated_at' => now(),
+            ]);
+
+        $message = $isDraft
+            ? "Draft {$service['title']} sudah diperbarui."
+            : "Pengajuan {$service['title']} sudah diperbarui.";
+
+        return redirect()
+            ->route('pengajuan-saya')
+            ->with('success', $message);
+    }
+
+    /**
+     * Delete PENMAD TPG Bulanan request
+     */
+    public function deletePenmadTpgBulananRequest(int $pemberkasanId): \Illuminate\Http\RedirectResponse
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $pemberkasan = DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($pemberkasan, 404);
+
+        // Only allow delete for DRAFT status
+        if ($pemberkasan->status !== 'DRAFT') {
+            return redirect()
+                ->route('pengajuan-saya')
+                ->with('error', 'Hanya draft yang dapat dihapus.');
+        }
+
+        // Delete associated files from storage
+        $filesData = json_decode($pemberkasan->files ?? '[]', true);
+        foreach ($filesData as $file) {
+            if (!empty($file['filename']) && $file['filename'] !== 'NONE') {
+                $path = "{$user->nomor_induk}/{$file['filename']}";
+                Storage::disk('users_berkas')->delete($path);
+            }
+        }
+
+        // Delete the record
+        DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->delete();
+
+        return redirect()
+            ->route('pengajuan-saya')
+            ->with('success', 'Draft berhasil dihapus.');
+    }
+
+    // ==========================================
+    // PENMAD PENGAWAS BULANAN METHODS (Service 1082)
+    // Same as TPG Bulanan but with category PENMAD-PENGAWAS-BULANAN
+    // ==========================================
+
+    /**
+     * Preview uploaded file for PENMAD Pengawas Bulanan service
+     */
+    public function previewPenmadPengawasBulananFile(int $pemberkasanId, int $syaratId)
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $pemberkasan = DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($pemberkasan, 404);
+
+        // Decode files (handle double-encoded JSON)
+        $filesRaw = $pemberkasan->files ?? null;
+        $filesData = [];
+        if (is_array($filesRaw)) {
+            $filesData = $filesRaw;
+        } elseif (is_string($filesRaw)) {
+            $decoded = json_decode($filesRaw, true);
+            if (is_string($decoded)) {
+                $decoded = json_decode($decoded, true);
+            }
+            $filesData = is_array($decoded) ? $decoded : [];
+        }
+
+        $fileEntry = collect($filesData)->firstWhere('syarat_id', $syaratId);
+
+        abort_unless($fileEntry && !empty($fileEntry['filename']) && $fileEntry['filename'] !== 'NONE', 404);
+
+        $path = "{$user->nomor_induk}/{$fileEntry['filename']}";
+
+        abort_unless(Storage::disk('users_berkas')->exists($path), 404);
+
+        return Storage::disk('users_berkas')->response($path);
+    }
+
+    /**
+     * Handle PENMAD Pengawas Bulanan submission (Service 1082)
+     */
+    public function submitPenmadPengawasBulananRequest(Request $request, int $serviceId): \Illuminate\Http\RedirectResponse
+    {
+        $service = $this->serviceDetail($serviceId);
+        $requirements = $service['requirements'];
+        $requester = $request->user();
+        $isDraft = $request->input('submit_action') === 'draft';
+
+        abort_unless($requester, 403);
+
+        // Validate required fields
+        $validated = $request->validate([
+            'tahun' => ['required', 'string'],
+            'bulan' => ['required', 'string'],
+        ]);
+
+        // PENMAD Pengawas Bulanan specific params
+        $kategori = 'PENMAD-PENGAWAS-BULANAN';
+        $tahun = (int) ($validated['tahun'] ?? date('Y'));
+        $bulan = $validated['bulan'];
+
+        // Map bulan name to number (1-12)
+        $bulanMap = [
+            'Januari' => 1, 'Februari' => 2, 'Maret' => 3, 'April' => 4,
+            'Mei' => 5, 'Juni' => 6, 'Juli' => 7, 'Agustus' => 8,
+            'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12,
+        ];
+        $itemId = $bulanMap[strtolower($bulan)] ?? date('n');
+
+        // Determine waktu (start date of the month)
+        $waktuDate = Carbon::createFromDate($tahun, $itemId, 1)->startOfMonth();
+
+        // Generate noreq (unique request number)
+        // Format: PENMAD-PENGAWAS-BULANAN-{USERID}-{TAHUN}-{BULAN}
+        // Example: PENMAD-PENGAWAS-BULANAN-45-2026-JULI
+        $noreq = strtoupper("{$kategori}-{$requester->id}-{$tahun}-{$bulan}");
+
+        // Generate deskripsi
+        $deskripsi = "[{$kategori}] {$bulan} {$tahun}";
+
+        // Build files snapshot from uploaded files
+        $filesSnapshot = $this->buildFilesSnapshot($requester, $serviceId, $noreq, $requirements, $request);
+
+        // Build metadata JSON
+        $metadata = [
+            'tahun' => $tahun,
+            'bulan' => $bulan,
+            'bulan_number' => $itemId,
+            'kategori' => $kategori,
+            'tahun_ajaran' => $tahun,
+            'submitted_at' => now()->toIso8601String(),
+            'is_draft' => $isDraft,
+        ];
+
+        // Build requirements snapshot (preserve state at submission time)
+        $requirementsSnapshot = collect($requirements)->map(function ($req) {
+            return [
+                'id' => $req['id'],
+                'title' => $req['title'],
+                'note' => $req['note'],
+                'is_required' => $req['is_required'],
+                'type' => $req['type_normalized'],
+            ];
+        })->toArray();
+
+        // Save to satker_pemberkasan
+        SatkerPemberkasan::updateOrCreate(
+            ['noreq' => $noreq],
+            [
+                'user_id' => $requester->id,
+                'tipe' => $kategori,
+                'layanan_id' => $serviceId,
+                'dept_id' => (string) $requester->dept_id,
+                'waktu' => $waktuDate,
+                'item_id' => $itemId,
+                'deskripsi' => $deskripsi,
+                'keterangan' => $request->input('deskripsi') ?? '<NoKomen>',
+                'status' => $isDraft ? 'DRAFT' : 'SUBMITTED',
+                'files' => json_encode($filesSnapshot),
+                'metadata' => json_encode($metadata),
+                'requirements_snapshot' => json_encode($requirementsSnapshot),
+                'is_migrated' => true,
+                'migrated_at' => now(),
+            ]
+        );
+
+        $message = $isDraft
+            ? "Draft {$service['title']} sudah disimpan."
+            : "Pengajuan {$service['title']} sudah diterima.";
+
+        return redirect()
+            ->route('pengajuan-saya')
+            ->with('success', $message);
+    }
+
+    /**
+     * Edit PENMAD Pengawas Bulanan request
+     */
+    public function editPenmadPengawasBulananRequest(int $pemberkasanId, Request $request = null)
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $pemberkasan = DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($pemberkasan, 404);
+
+        // Decode metadata
+        $metadata = json_decode($pemberkasan->metadata ?? '{}', true);
+        if (is_string($metadata)) {
+            $metadata = json_decode($metadata, true) ?? [];
+        }
+
+        $tahun = $metadata['tahun'] ?? '';
+        $bulan = $metadata['bulan'] ?? '';
+
+        // Get service info (service ID 1082 for PENMAD Pengawas Bulanan)
+        $serviceId = 1082;
+        $service = $this->serviceDetail($serviceId);
+
+        // Decode existing files
+        $filesRaw = $pemberkasan->files ?? null;
+        $filesData = [];
+        if (is_array($filesRaw)) {
+            $filesData = $filesRaw;
+        } elseif (is_string($filesRaw)) {
+            $decoded = json_decode($filesRaw, true);
+            if (is_string($decoded)) {
+                $decoded = json_decode($decoded, true);
+            }
+            $filesData = is_array($decoded) ? $decoded : [];
+        }
+
+        $existingFiles = [];
+        foreach ($filesData as $file) {
+            $syaratId = $file['syarat_id'] ?? 0;
+            if (!empty($file['filename']) && $file['filename'] !== 'NONE') {
+                $existingFiles[$syaratId] = [
+                    'filename' => $file['filename'],
+                    'filetype' => $file['filetype'] ?? null,
+                    'size' => $file['size'] ?? null,
+                    'url' => route('pelayanan.penmad-pengawas-bulanan.preview-file', [
+                        'pemberkasanId' => $pemberkasanId,
+                        'syaratId' => $syaratId,
+                    ]),
+                ];
+            }
+        }
+
+        return view('service-request', array_merge(
+            $this->requestFormViewData($service, $user, false, $pemberkasan, [], $existingFiles),
+            [
+                'service' => $service,
+                'tahun' => $tahun,
+                'bulan' => $bulan,
+                'existingSubmission' => $pemberkasan,
+                'isEditing' => true,
+                'editPemberkasanId' => $pemberkasanId,
+                'isPenmadPengawasBulanan' => true,
+            ]
+        ));
+    }
+
+    /**
+     * Update PENMAD Pengawas Bulanan request
+     */
+    public function updatePenmadPengawasBulananRequest(Request $request, int $pemberkasanId): \Illuminate\Http\RedirectResponse
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $pemberkasan = DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($pemberkasan, 404);
+
+        // Validate required fields
+        $validated = $request->validate([
+            'tahun' => ['required', 'string'],
+            'bulan' => ['required', 'string'],
+        ]);
+
+        $serviceId = 1082;
+        $service = $this->serviceDetail($serviceId);
+        $requirements = $service['requirements'];
+
+        $kategori = 'PENMAD-PENGAWAS-BULANAN';
+        $tahun = (int) ($validated['tahun'] ?? date('Y'));
+        $bulan = $validated['bulan'];
+        $isDraft = $request->input('submit_action') === 'draft';
+
+        // Map bulan name to number (1-12)
+        $bulanMap = [
+            'Januari' => 1, 'Februari' => 2, 'Maret' => 3, 'April' => 4,
+            'Mei' => 5, 'Juni' => 6, 'Juli' => 7, 'Agustus' => 8,
+            'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12,
+        ];
+        $itemId = $bulanMap[strtolower($bulan)] ?? date('n');
+
+        // waktu: start date of the month
+        $waktuDate = Carbon::createFromDate($tahun, $itemId, 1)->startOfMonth();
+
+        // Keep existing noreq
+        $noreq = $pemberkasan->noreq;
+
+        // Generate deskripsi
+        $deskripsi = "[{$kategori}] {$bulan} {$tahun}";
+
+        // Build files snapshot
+        // Get existing files from database to preserve
+        $existingFilesRaw = $pemberkasan->files ?? null;
+        $existingFiles = [];
+        if (is_array($existingFilesRaw)) {
+            $existingFiles = $existingFilesRaw;
+        } elseif (is_string($existingFilesRaw)) {
+            $decoded = json_decode($existingFilesRaw, true);
+            if (is_string($decoded)) {
+                $decoded = json_decode($decoded, true);
+            }
+            $existingFiles = is_array($decoded) ? $decoded : [];
+        }
+
+        // Get deleted file IDs from request (handle both array and comma-separated string)
+        $deletedFilesInput = $request->input('deleted_files', []);
+        if (is_array($deletedFilesInput)) {
+            $deletedFileIds = array_map('intval', $deletedFilesInput);
+        } elseif (is_string($deletedFilesInput) && !empty($deletedFilesInput)) {
+            $deletedFileIds = array_map('intval', explode(',', $deletedFilesInput));
+        } else {
+            $deletedFileIds = [];
+        }
+
+        $filesSnapshot = $this->buildFilesSnapshot($user, $serviceId, $noreq, $requirements, $request, $existingFiles, $deletedFileIds);
+
+        // Build metadata
+        $metadata = [
+            'tahun' => $tahun,
+            'bulan' => $bulan,
+            'bulan_number' => $itemId,
+            'kategori' => $kategori,
+            'tahun_ajaran' => $tahun,
+            'submitted_at' => now()->toIso8601String(),
+            'is_draft' => $isDraft,
+            'updated_at' => now()->toIso8601String(),
+        ];
+
+        // Build requirements snapshot
+        $requirementsSnapshot = collect($requirements)->map(function ($req) {
+            return [
+                'id' => $req['id'],
+                'title' => $req['title'],
+                'note' => $req['note'],
+                'is_required' => $req['is_required'],
+                'type' => $req['type_normalized'],
+            ];
+        })->toArray();
+
+        // Update to database
+        SatkerPemberkasan::where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->update([
+                'waktu' => $waktuDate,
+                'item_id' => $itemId,
+                'deskripsi' => $deskripsi,
+                'keterangan' => $request->input('deskripsi') ?? '<NoKomen>',
+                'status' => $isDraft ? 'DRAFT' : 'SUBMITTED',
+                'files' => json_encode($filesSnapshot),
+                'metadata' => json_encode($metadata),
+                'requirements_snapshot' => json_encode($requirementsSnapshot),
+                'updated_at' => now(),
+            ]);
+
+        $message = $isDraft
+            ? "Draft {$service['title']} sudah diperbarui."
+            : "Pengajuan {$service['title']} sudah diperbarui.";
+
+        return redirect()
+            ->route('pengajuan-saya')
+            ->with('success', $message);
+    }
+
+    /**
+     * Delete PENMAD Pengawas Bulanan request
+     */
+    public function deletePenmadPengawasBulananRequest(int $pemberkasanId): \Illuminate\Http\RedirectResponse
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $pemberkasan = DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($pemberkasan, 404);
+
+        // Only allow delete for DRAFT status
+        if ($pemberkasan->status !== 'DRAFT') {
+            return redirect()
+                ->route('pengajuan-saya')
+                ->with('error', 'Hanya draft yang dapat dihapus.');
+        }
+
+        // Delete associated files from storage
+        $filesData = json_decode($pemberkasan->files ?? '[]', true);
+        foreach ($filesData as $file) {
+            if (!empty($file['filename']) && $file['filename'] !== 'NONE') {
+                $path = "{$user->nomor_induk}/{$file['filename']}";
+                Storage::disk('users_berkas')->delete($path);
+            }
+        }
+
+        // Delete the record
+        DB::table('satker_pemberkasan')
+            ->where('id', $pemberkasanId)
+            ->where('user_id', $user->id)
+            ->delete();
+
+        return redirect()
+            ->route('pengajuan-saya')
+            ->with('success', 'Draft berhasil dihapus.');
+    }
+
     public function myRequests()
     {
         $user = auth()->user();
@@ -876,21 +2118,21 @@ class PageController extends Controller
             ->orderByDesc('ur.id');
 
         // ==========================================
-        // TPG REQUESTS (satker_pemberkasan)
+        // TPG SEMESTER REQUESTS (satker_pemberkasan)
         // ==========================================
-        $tpgQuery = DB::table('satker_pemberkasan')
+        $tpgSemesterQuery = DB::table('satker_pemberkasan')
             ->where('user_id', $user->id)
             ->where('tipe', 'PAIS-TPG-SEMESTER');
 
-        $tpgSummary = [
-            'total' => (clone $tpgQuery)->count(),
-            'draft' => (clone $tpgQuery)->where('status', 'DRAFT')->count(),
-            'pending' => (clone $tpgQuery)->where('status', 'SUBMITTED')->count(),
-            'processed' => (clone $tpgQuery)->whereIn('status', ['PENDING', 'DITERIMA', 'DIPROSES'])->count(),
-            'done' => (clone $tpgQuery)->whereIn('status', ['SUKSES', 'DITOLAK', 'BATAL'])->count(),
+        $tpgSemesterSummary = [
+            'total' => (clone $tpgSemesterQuery)->count(),
+            'draft' => (clone $tpgSemesterQuery)->where('status', 'DRAFT')->count(),
+            'pending' => (clone $tpgSemesterQuery)->where('status', 'SUBMITTED')->count(),
+            'processed' => (clone $tpgSemesterQuery)->whereIn('status', ['PENDING', 'DITERIMA', 'DIPROSES'])->count(),
+            'done' => (clone $tpgSemesterQuery)->whereIn('status', ['SUKSES', 'DITOLAK', 'BATAL'])->count(),
         ];
 
-        $tpgRequests = DB::table('satker_pemberkasan as sp')
+        $tpgSemesterRequests = DB::table('satker_pemberkasan as sp')
             ->where('sp.user_id', $user->id)
             ->where('sp.tipe', 'PAIS-TPG-SEMESTER')
             ->select([
@@ -906,7 +2148,7 @@ class PageController extends Controller
                 'sp.updated_at',
                 DB::raw('\'Pemberkasan TPG Semester\' as layanan_name'),
                 DB::raw('\'Pemberkasan Pencairan Tunjangan Profesi Guru\' as layanan_description'),
-                DB::raw('NULL as tipe'),
+                DB::raw('\'PAIS-TPG-SEMESTER\' as tipe'),
                 DB::raw('sp.metadata'),
                 DB::raw('sp.files as files_data'),
                 DB::raw('0 as file_count'),
@@ -914,9 +2156,127 @@ class PageController extends Controller
             ->orderByDesc('sp.created_at');
 
         // ==========================================
-        // COMBINE BOTH REQUESTS
+        // TPG BULANAN REQUESTS (satker_pemberkasan)
         // ==========================================
-        $combinedQuery = $regularRequests->unionAll($tpgRequests);
+        $tpgBulananQuery = DB::table('satker_pemberkasan')
+            ->where('user_id', $user->id)
+            ->where('tipe', 'PAIS-TPG-BULANAN');
+
+        $tpgBulananSummary = [
+            'total' => (clone $tpgBulananQuery)->count(),
+            'draft' => (clone $tpgBulananQuery)->where('status', 'DRAFT')->count(),
+            'pending' => (clone $tpgBulananQuery)->where('status', 'SUBMITTED')->count(),
+            'processed' => (clone $tpgBulananQuery)->whereIn('status', ['PENDING', 'DITERIMA', 'DIPROSES'])->count(),
+            'done' => (clone $tpgBulananQuery)->whereIn('status', ['SUKSES', 'DITOLAK', 'BATAL'])->count(),
+        ];
+
+        $tpgBulananRequests = DB::table('satker_pemberkasan as sp')
+            ->where('sp.user_id', $user->id)
+            ->where('sp.tipe', 'PAIS-TPG-BULANAN')
+            ->select([
+                'sp.id',
+                'sp.noreq as no_req',
+                DB::raw('NULL as pemohon'),
+                'sp.layanan_id',
+                DB::raw('NULL as judul'),
+                'sp.deskripsi',
+                'sp.status',
+                'sp.tipe as kategori',
+                'sp.created_at',
+                'sp.updated_at',
+                DB::raw('\'Pemberkasan TPG Bulanan\' as layanan_name'),
+                DB::raw('\'Pemberkasan Pencairan Tunjangan Profesi Guru Perbulan\' as layanan_description'),
+                DB::raw('\'PAIS-TPG-BULANAN\' as tipe'),
+                DB::raw('sp.metadata'),
+                DB::raw('sp.files as files_data'),
+                DB::raw('0 as file_count'),
+            ])
+            ->orderByDesc('sp.created_at');
+
+        // ==========================================
+        // PENMAD TPG BULANAN REQUESTS (satker_pemberkasan)
+        // ==========================================
+        $penmadTpgBulananQuery = DB::table('satker_pemberkasan')
+            ->where('user_id', $user->id)
+            ->where('tipe', 'PENMAD-TPG-BULANAN');
+
+        $penmadTpgBulananSummary = [
+            'total' => (clone $penmadTpgBulananQuery)->count(),
+            'draft' => (clone $penmadTpgBulananQuery)->where('status', 'DRAFT')->count(),
+            'pending' => (clone $penmadTpgBulananQuery)->where('status', 'SUBMITTED')->count(),
+            'processed' => (clone $penmadTpgBulananQuery)->whereIn('status', ['PENDING', 'DITERIMA', 'DIPROSES'])->count(),
+            'done' => (clone $penmadTpgBulananQuery)->whereIn('status', ['SUKSES', 'DITOLAK', 'BATAL'])->count(),
+        ];
+
+        $penmadTpgBulananRequests = DB::table('satker_pemberkasan as sp')
+            ->where('sp.user_id', $user->id)
+            ->where('sp.tipe', 'PENMAD-TPG-BULANAN')
+            ->select([
+                'sp.id',
+                'sp.noreq as no_req',
+                DB::raw('NULL as pemohon'),
+                'sp.layanan_id',
+                DB::raw('NULL as judul'),
+                'sp.deskripsi',
+                'sp.status',
+                'sp.tipe as kategori',
+                'sp.created_at',
+                'sp.updated_at',
+                DB::raw('\'Pemberkasan TPG Bulanan PENMAD\' as layanan_name'),
+                DB::raw('\'Pemberkasan Pencairan Tunjangan Profesi Guru Perbulan PENMAD\' as layanan_description'),
+                DB::raw('\'PENMAD-TPG-BULANAN\' as tipe'),
+                DB::raw('sp.metadata'),
+                DB::raw('sp.files as files_data'),
+                DB::raw('0 as file_count'),
+            ])
+            ->orderByDesc('sp.created_at');
+
+        // ==========================================
+        // PENMAD PENGAWAS BULANAN REQUESTS (satker_pemberkasan)
+        // ==========================================
+        $penmadPengawasBulananQuery = DB::table('satker_pemberkasan')
+            ->where('user_id', $user->id)
+            ->where('tipe', 'PENMAD-PENGAWAS-BULANAN');
+
+        $penmadPengawasBulananSummary = [
+            'total' => (clone $penmadPengawasBulananQuery)->count(),
+            'draft' => (clone $penmadPengawasBulananQuery)->where('status', 'DRAFT')->count(),
+            'pending' => (clone $penmadPengawasBulananQuery)->where('status', 'SUBMITTED')->count(),
+            'processed' => (clone $penmadPengawasBulananQuery)->whereIn('status', ['PENDING', 'DITERIMA', 'DIPROSES'])->count(),
+            'done' => (clone $penmadPengawasBulananQuery)->whereIn('status', ['SUKSES', 'DITOLAK', 'BATAL'])->count(),
+        ];
+
+        $penmadPengawasBulananRequests = DB::table('satker_pemberkasan as sp')
+            ->where('sp.user_id', $user->id)
+            ->where('sp.tipe', 'PENMAD-PENGAWAS-BULANAN')
+            ->select([
+                'sp.id',
+                'sp.noreq as no_req',
+                DB::raw('NULL as pemohon'),
+                'sp.layanan_id',
+                DB::raw('NULL as judul'),
+                'sp.deskripsi',
+                'sp.status',
+                'sp.tipe as kategori',
+                'sp.created_at',
+                'sp.updated_at',
+                DB::raw('\'Pemberkasan TPG Bulanan Pengawas\' as layanan_name'),
+                DB::raw('\'Pemberkasan Pencairan Tunjangan Profesi Guru Pengawas Perbulan\' as layanan_description'),
+                DB::raw('\'PENMAD-PENGAWAS-BULANAN\' as tipe'),
+                DB::raw('sp.metadata'),
+                DB::raw('sp.files as files_data'),
+                DB::raw('0 as file_count'),
+            ])
+            ->orderByDesc('sp.created_at');
+
+        // ==========================================
+        // COMBINE ALL REQUESTS
+        // ==========================================
+        $combinedQuery = $regularRequests
+            ->unionAll($tpgSemesterRequests)
+            ->unionAll($tpgBulananRequests)
+            ->unionAll($penmadTpgBulananRequests)
+            ->unionAll($penmadPengawasBulananRequests);
 
         // Execute with pagination (manual pagination since union)
         $allRequests = DB::query()->fromSub($combinedQuery, 'combined')
@@ -926,7 +2286,7 @@ class PageController extends Controller
 
         // Post-process: count files for TPG requests
         foreach ($allRequests as $request) {
-            if (!empty($request->kategori) && $request->kategori === 'PAIS-TPG-SEMESTER' && !empty($request->files_data)) {
+            if (!empty($request->tipe) && in_array($request->tipe, ['PAIS-TPG-SEMESTER', 'PAIS-TPG-BULANAN', 'PENMAD-TPG-BULANAN', 'PENMAD-PENGAWAS-BULANAN']) && !empty($request->files_data)) {
                 $files = json_decode($request->files_data, true);
                 if (is_string($files)) {
                     $files = json_decode($files, true);
@@ -937,11 +2297,11 @@ class PageController extends Controller
 
         // Calculate combined summary
         $summary = [
-            'total' => $regularSummary['total'] + $tpgSummary['total'],
-            'draft' => $regularSummary['draft'] + $tpgSummary['draft'],
-            'pending' => $regularSummary['pending'] + $tpgSummary['pending'],
-            'processed' => $regularSummary['processed'] + $tpgSummary['processed'],
-            'done' => $regularSummary['done'] + $tpgSummary['done'],
+            'total' => $regularSummary['total'] + $tpgSemesterSummary['total'] + $tpgBulananSummary['total'] + $penmadTpgBulananSummary['total'] + $penmadPengawasBulananSummary['total'],
+            'draft' => $regularSummary['draft'] + $tpgSemesterSummary['draft'] + $tpgBulananSummary['draft'] + $penmadTpgBulananSummary['draft'] + $penmadPengawasBulananSummary['draft'],
+            'pending' => $regularSummary['pending'] + $tpgSemesterSummary['pending'] + $tpgBulananSummary['pending'] + $penmadTpgBulananSummary['pending'] + $penmadPengawasBulananSummary['pending'],
+            'processed' => $regularSummary['processed'] + $tpgSemesterSummary['processed'] + $tpgBulananSummary['processed'] + $penmadTpgBulananSummary['processed'] + $penmadPengawasBulananSummary['processed'],
+            'done' => $regularSummary['done'] + $tpgSemesterSummary['done'] + $tpgBulananSummary['done'] + $penmadTpgBulananSummary['done'] + $penmadPengawasBulananSummary['done'],
         ];
 
         return view('pengajuan-saya', [

@@ -38,6 +38,8 @@
             showPengaduanModal: false,
             selectedTahunPelajaran: '',
             selectedSemester: '',
+            selectedBulan: '',
+            selectedTahun: '',
             tahunPelajaranOptions: [
                 @php
                     $currentYear = (int) date('Y');
@@ -46,7 +48,16 @@
                     }
                 @endphp
             ],
+            tahunOptions: [
+                @php
+                    $currentYear = (int) date('Y');
+                    for ($y = $currentYear; $y >= $currentYear - 5; $y--) {
+                        echo "'{$y}', ";
+                    }
+                @endphp
+            ],
             semesterOptions: ['Ganjil', 'Genap'],
+            bulanOptions: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
             get selectedUnit() {
                 return this.units.find((unit) => Number(unit.id) === Number(this.selectedUnitId)) ?? null;
             },
@@ -101,9 +112,14 @@
                 if (service.id === 1037) {
                     this.selectedTahunPelajaran = this.tahunPelajaranOptions[0] || '';
                     this.selectedSemester = this.semesterOptions[0] || '';
+                } else if (service.id === 1038 || service.id === 1081 || service.id === 1082) {
+                    this.selectedTahun = this.tahunOptions[0] || '';
+                    this.selectedBulan = this.bulanOptions[0] || '';
                 } else {
                     this.selectedTahunPelajaran = '';
                     this.selectedSemester = '';
+                    this.selectedBulan = '';
+                    this.selectedTahun = '';
                 }
             },
             selectEmployee(employee) {
@@ -127,6 +143,10 @@
                 if (this.selectedService.id === 1037) {
                     if (!this.selectedTahunPelajaran || !this.selectedSemester) return;
                     const url = `${this.requestBaseUrl}/${this.selectedService.id}?tahun_pelajaran=${encodeURIComponent(this.selectedTahunPelajaran)}&semester=${encodeURIComponent(this.selectedSemester)}`;
+                    window.location.href = url;
+                } else if (this.selectedService.id === 1038 || this.selectedService.id === 1081 || this.selectedService.id === 1082) {
+                    if (!this.selectedTahun || !this.selectedBulan) return;
+                    const url = `${this.requestBaseUrl}/${this.selectedService.id}?tahun=${encodeURIComponent(this.selectedTahun)}&bulan=${encodeURIComponent(this.selectedBulan)}`;
                     window.location.href = url;
                 } else {
                     window.location.href = `${this.requestBaseUrl}/${this.selectedService.id}`;
@@ -351,35 +371,7 @@
                     </div>
                 </div>
 
-                <!-- Requirements Section - Card Style -->
-                <div class="neo-modal-section">
-                    <div class="neo-modal-section-header">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-                        </svg>
-                        <span>Siapkan Dokumen Ini</span>
-                    </div>
-                    <div class="neo-modal-requirements-grid">
-                        <template x-for="(req, index) in selectedServiceRequirements" :key="req.id">
-                            <div class="neo-modal-req-card">
-                                <div class="neo-modal-req-header">
-                                    <div class="neo-modal-req-number" x-text="(index + 1).toString().padStart(2, '0')"></div>
-                                    <span
-                                        class="neo-modal-req-badge"
-                                        :class="req.is_required ? 'neo-modal-req-wajib' : 'neo-modal-req-opsional'"
-                                        x-text="req.is_required ? 'Wajib' : 'Opsional'"
-                                    ></span>
-                                </div>
-                                <div class="neo-modal-req-content">
-                                    <span class="neo-modal-req-title" x-text="req.title"></span>
-                                    <span class="neo-modal-req-note" x-show="req.note" x-text="'(' + req.note + ')'"></span>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- TPG Selection Section (for service 1037) -->
+                <!-- TPG Semester Selection Section (for service 1037) -->
                 <div x-show="selectedService && selectedService.id === 1037" x-cloak class="neo-modal-section neo-modal-section-accent">
                     <div class="neo-modal-section-header">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -410,14 +402,73 @@
                     </div>
                 </div>
 
+                <!-- TPG Bulanan Selection Section (for service 1038, 1081, 1082) -->
+                <div x-show="selectedService && (selectedService.id === 1038 || selectedService.id === 1081 || selectedService.id === 1082)" x-cloak class="neo-modal-section neo-modal-section-accent">
+                    <div class="neo-modal-section-header">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <span>Pilih Periode Pencairan</span>
+                    </div>
+                    <div class="neo-modal-tpg-grid">
+                        <div class="neo-modal-field">
+                            <label for="tahun" class="neo-modal-label">Tahun</label>
+                            <select x-model="selectedTahun" id="tahun" class="neo-form-select">
+                                <template x-for="tahun in tahunOptions" :key="tahun">
+                                    <option :value="tahun" x-text="tahun"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="neo-modal-field">
+                            <label for="bulan" class="neo-modal-label">Bulan</label>
+                            <select x-model="selectedBulan" id="bulan" class="neo-form-select">
+                                <template x-for="(bulan, index) in bulanOptions" :key="bulan">
+                                    <option :value="bulan" x-text="bulan"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Requirements Section - Card Style -->
+                <div class="neo-modal-section">
+                    <div class="neo-modal-section-header">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                        </svg>
+                        <span>Siapkan Dokumen Ini</span>
+                    </div>
+                    <div class="neo-modal-requirements-grid">
+                        <template x-for="(req, index) in selectedServiceRequirements" :key="req.id">
+                            <div class="neo-modal-req-card">
+                                <div class="neo-modal-req-header">
+                                    <div class="neo-modal-req-number" x-text="(index + 1).toString().padStart(2, '0')"></div>
+                                    <span
+                                        class="neo-modal-req-badge"
+                                        :class="req.is_required ? 'neo-modal-req-wajib' : 'neo-modal-req-opsional'"
+                                        x-text="req.is_required ? 'Wajib' : 'Opsional'"
+                                    ></span>
+                                </div>
+                                <div class="neo-modal-req-content">
+                                    <span class="neo-modal-req-title" x-text="req.title"></span>
+                                    <span class="neo-modal-req-note" x-show="req.note" x-text="'(' + req.note + ')'"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
                 <!-- Action Button -->
                 <div class="neo-modal-actions">
                     <button
                         type="button"
                         @click="proceedToRequest()"
-                        :disabled="selectedService && selectedService.id === 1037 && (!selectedTahunPelajaran || !selectedSemester)"
+                        :disabled="(selectedService && selectedService.id === 1037 && (!selectedTahunPelajaran || !selectedSemester)) || (selectedService && (selectedService.id === 1038 || selectedService.id === 1081 || selectedService.id === 1082) && (!selectedTahun || !selectedBulan))"
                         class="neo-btn-action"
-                        :class="{ 'neo-btn-disabled': selectedService && selectedService.id === 1037 && (!selectedTahunPelajaran || !selectedSemester) }"
+                        :class="{ 'neo-btn-disabled': (selectedService && selectedService.id === 1037 && (!selectedTahunPelajaran || !selectedSemester)) || (selectedService && (selectedService.id === 1038 || selectedService.id === 1081 || selectedService.id === 1082) && (!selectedTahun || !selectedBulan)) }"
                     >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M5 12h14M12 5l7 7-7 7"/>

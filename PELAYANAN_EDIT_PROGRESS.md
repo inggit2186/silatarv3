@@ -996,6 +996,50 @@ public function deleteRequest(int $requestId): \Illuminate\Http\RedirectResponse
   - Contoh: `PAIS-TPG-SEMESTER-45-2026-2027-GANJIL` (bukan `2026/2027`)
   - Menghindari masalah dengan file names yang mengandung "/"
 
+### 2026-07-08 (Sesi 6)
+- **Fitur: TPG Bulanan - Perubahan minor** ✅
+  - Service 1038 sekarang pakai parameter `tahun` (bukan `tahun_pelajaran`)
+  - Pilihan tahun: 2026, 2025, 2024, dst (tanpa "/")
+  - noreq format: `PAIS-TPG-BULANAN-{user_id}-{tahun}-{bulan}`
+  - Contoh: `PAIS-TPG-BULANAN-45-2026-JULI`
+  - Kartu "Siapkan Dokumen Ini" dipindahkan ke bawah kartu "Pilih Periode Pencairan"
+  - Berlaku untuk semua layanan (1037, 1038, dll)
+
+### 2026-07-08 (Sesi 7)
+- **Fitur: PENMAD TPG Bulanan (Service 1081)** ✅
+  - Sama dengan 1038 tapi dengan kategori `PENMAD-TPG-BULANAN`
+  - noreq format: `PENMAD-TPG-BULANAN-{user_id}-{tahun}-{bulan}`
+  - Routes baru: `/pelayanan/ajukan/penmad-tpg-bulanan/{serviceId}`, dll
+  - Methods baru: `submitPenmadTpgBulananRequest()`, `editPenmadTpgBulananRequest()`, dll
+  - Update `requestService()` untuk handle service 1081
+  - Update `myRequests()` untuk include PENMAD-TPG-BULANAN
+  - Update views untuk display dan edit PENMAD TPG Bulanan
+
+- **Fitur: PENMAD Pengawas Bulanan (Service 1082)** ✅
+  - Sama dengan 1038 tapi dengan kategori `PENMAD-PENGAWAS-BULANAN`
+  - noreq format: `PENMAD-PENGAWAS-BULANAN-{user_id}-{tahun}-{bulan}`
+  - Routes baru: `/pelayanan/ajukan/penmad-pengawas-bulanan/{serviceId}`, dll
+  - Methods baru: `submitPenmadPengawasBulananRequest()`, `editPenmadPengawasBulananRequest()`, dll
+  - Update `requestService()` untuk handle service 1082
+  - Update `myRequests()` untuk include PENMAD-PENGAWAS-BULANAN
+  - Update views untuk display dan edit PENMAD Pengawas Bulanan
+
+### 2026-07-08 (Sesi 5)
+- **Fitur: TPG Bulanan (Service 1038)** ✅
+  - Modal selection di pelayanan.blade.php dengan dropdown Tahun Pelajaran dan Bulan
+  - Routes baru: `/pelayanan/ajukan/tpg-bulanan/{serviceId}`, `/pelayanan/tpg-bulanan/{id}/edit`, dll
+  - Method `submitTpgBulananRequest()` - submit dengan parameter bulan (1-12)
+  - Method `editTpgBulananRequest()` - edit dengan metadata bulan
+  - Method `updateTpgBulananRequest()` - update data
+  - Method `deleteTpgBulananRequest()` - hapus draft
+  - Method `previewTpgBulananFile()` - preview file
+  - noreq format: `PAIS-TPG-BULANAN-{user_id}-{tp}-{bulan}`
+  - item_id: bulan number (1-12)
+  - Update `requestService()` untuk handle service 1038
+  - Update `myRequests()` untuk include TPG Bulanan
+  - Update `service-request.blade.php` untuk TPG Bulanan
+  - Update `pengajuan-saya.blade.php` untuk display TPG Bulanan
+
 ### 2026-07-08 (Sesi 3)
 - **Fitur: Hapus Draft** ✅
   - Route DELETE untuk TPG: `/pelayanan/tpg/{pemberkasanId}/delete`
@@ -1044,8 +1088,107 @@ public function deleteRequest(int $requestId): \Illuminate\Http\RedirectResponse
 
 ---
 
-## 2. Layanan Berikutnya
+## 2. Pemberkasan TPG Bulanan (Service ID: 1038)
 
-Service ID:
-- [ ] Service ID:
-- [ ] ...
+**Service ID:** 1038
+**Status:** ✅ SELESAI
+
+### Deskripsi Singkat
+
+Layanan pemberkasan pencairan Tunjangan Profesi Guru (TPG) berbasis bulanan. User memilih Tahun dan Bulan sebelum mengisi form.
+
+### Syarat Layanan
+1. Jurnal / Laporan Kinerja Bulanan (wajib)
+2. Daftar Hadir Bulanan dan Lampiran/Bukti Ketidakhadiran GPAI (wajib)
+3. SK Terakhir / KGB (wajib)
+4. Surat Pernyataan Bermaterai (wajib)
+5. Permohonan Pencairan TPG (wajib)
+
+### Kategori
+- noreq prefix: `PAIS-TPG-BULANAN`
+- Contoh: `PAIS-TPG-BULANAN-45-2026-JULI`
+
+---
+
+## 3. Pemberkasan TPG Bulanan PENMAD (Service ID: 1081)
+
+**Service ID:** 1081
+**Status:** ✅ SELESAI
+
+### Deskripsi Singkat
+
+Sama dengan service 1038, tapi dengan kategori `PENMAD-TPG-BULANAN`.
+
+### Kategori
+- noreq prefix: `PENMAD-TPG-BULANAN`
+- Contoh: `PENMAD-TPG-BULANAN-45-2026-JULI`
+
+### TODO
+- [x] Tambah modal selection di pelayanan.blade.php (reuse dari 1038) ✅
+- [x] Tambah route untuk PENMAD TPG Bulanan ✅
+- [x] Tambah method submitPenmadTpgBulananRequest() ✅
+- [x] Tambah method editPenmadTpgBulananRequest() ✅
+- [x] Tambah method updatePenmadTpgBulananRequest() ✅
+- [x] Tambah method previewPenmadTpgBulananFile() ✅
+- [x] Tambah method deletePenmadTpgBulananRequest() ✅
+- [x] Update view service-request.blade.php ✅
+- [x] Update view pengajuan-saya.blade.php ✅
+- [x] Update requestService() untuk handle 1081 ✅
+- [x] Update myRequests() untuk include PENMAD-TPG-BULANAN ✅
+
+---
+
+## 4. Pemberkasan TPG Bulanan Pengawas (Service ID: 1082)
+
+**Service ID:** 1082
+**Status:** ✅ SELESAI
+
+### Deskripsi Singkat
+
+Sama dengan service 1038 dan 1081, tapi dengan kategori `PENMAD-PENGAWAS-BULANAN`.
+
+### Kategori
+- noreq prefix: `PENMAD-PENGAWAS-BULANAN`
+- Contoh: `PENMAD-PENGAWAS-BULANAN-45-2026-JULI`
+
+### TODO
+- [x] Tambah modal selection di pelayanan.blade.php (reuse dari 1038) ✅
+- [x] Tambah route untuk PENMAD Pengawas Bulanan ✅
+- [x] Tambah method submitPenmadPengawasBulananRequest() ✅
+- [x] Tambah method editPenmadPengawasBulananRequest() ✅
+- [x] Tambah method updatePenmadPengawasBulananRequest() ✅
+- [x] Tambah method previewPenmadPengawasBulananFile() ✅
+- [x] Tambah method deletePenmadPengawasBulananRequest() ✅
+- [x] Update view service-request.blade.php ✅
+- [x] Update view pengajuan-saya.blade.php ✅
+- [x] Update requestService() untuk handle 1082 ✅
+- [x] Update myRequests() untuk include PENMAD-PENGAWAS-BULANAN ✅
+
+---
+
+## 5. Layanan Berikutnya
+
+### Perbedaan dengan TPG Semester
+| Aspek | TPG Semester (1037) | TPG Bulanan (1038) |
+|-------|---------------------|---------------------|
+| Periode | Semester (Ganjil/Genap) | Bulan (1-12) |
+| noreq | `PAIS-TPG-SEMESTER-{id}-{tp}-{semester}` | `PAIS-TPG-BULANAN-{id}-{tp}-{bulan}` |
+| item_id | 1=Ganjil, 2=Genap | 1-12 (bulan) |
+
+### TODO
+- [x] Tambah modal selection di pelayanan.blade.php ✅
+- [x] Tambah route untuk TPG Bulanan ✅
+- [x] Tambah method submitTpgBulananRequest() ✅
+- [x] Tambah method editTpgBulananRequest() ✅
+- [x] Tambah method updateTpgBulananRequest() ✅
+- [x] Tambah method previewTpgBulananFile() ✅
+- [x] Tambah method deleteTpgBulananRequest() ✅
+- [x] Update view service-request.blade.php ✅
+- [x] Update view pengajuan-saya.blade.php ✅
+- [x] Update requestService() untuk handle 1038 ✅
+- [x] Update myRequests() untuk include TPG Bulanan ✅
+- [x] Service 1038 SELESAI ✅
+
+---
+
+## 3. Layanan Berikutnya
