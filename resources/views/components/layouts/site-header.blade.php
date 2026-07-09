@@ -1,4 +1,14 @@
 <header class="site-header" data-reveal="">
+    @php
+    use Illuminate\Support\Facades\DB;
+    $showMadrasahMenu = false;
+    if (auth()->check() && auth()->user()->dept_id) {
+        $dept = DB::table('ktd_department')->where('id', auth()->user()->dept_id)->first();
+        if ($dept && in_array($dept->kategori, ['min', 'mtsn', 'man', 'other'])) {
+            $showMadrasahMenu = true;
+        }
+    }
+    @endphp
     <a class="brand-lockup" href="{{ url("/") }}" aria-label="SILATAR home">
         <span class="brand-mark" aria-hidden="true"><span></span></span>
         <span class="brand-word"><span>SILATAR</span><span>V2</span></span>
@@ -49,6 +59,12 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     Laporan Kinerja
                 </a>
+                @if($showMadrasahMenu)
+                <a href="{{ route('madrasah.profil') }}" class="user-dropdown-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    Laporan Madrasah
+                </a>
+                @endif
                 <div class="user-dropdown-divider"></div>
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
@@ -75,6 +91,9 @@
         <a href="{{ route('ppid') }}">PPID</a>
         <a href="{{ url("/#kontak") }}">Kontak</a>
         @auth
+            @if($showMadrasahMenu)
+            <a href="{{ route('madrasah.profil') }}">Laporan Madrasah</a>
+            @endif
             <a href="{{ route('admin.dashboard') }}" class="mobile-nav-cta">Dashboard</a>
         @else
             <a href="{{ route('login') }}" class="mobile-nav-cta">Login</a>
