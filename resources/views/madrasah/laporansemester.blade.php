@@ -352,10 +352,6 @@
                                 <h3 class="neo-card-title">Tingkat Pendidikan</h3>
                                 <p class="neo-card-desc">Jumlah siswa per tingkat</p>
                             </div>
-                            <button type="button" onclick="addRow(this, 'tingkat')" class="neo-btn-add">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
-                                Tambah
-                            </button>
                         </div>
                         <div class="neo-card-body">
                             <div class="neo-table-wrapper">
