@@ -28,7 +28,7 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
         <div class="sidebar-logo">
             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
                 <div class="sidebar-brand">SIL</div>
-                <div class="brand-mark" style="display:none;">
+                <div class="brand-mark" class="hidden">
                     
                 </div>
                 <div x-show="!collapsed" x-transition class="sidebar-word">
@@ -195,8 +195,7 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
         x-show="open"
         x-cloak
         @click="open = false"
-        class="fixed inset-0 z-40 lg:hidden"
-        style="background: oklch(20% 0.015 80 / 0.5);"
+        class="fixed inset-0 z-40 lg:hidden admin-mobile-overlay"
     ></div>
     <!-- Mobile Sidebar -->
     <aside
@@ -207,8 +206,8 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
     >
         <div class="sidebar-logo">
             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
-                <div class="brand-mark">
-                    <img src="{{ asset('favicon.webp') }}" alt="SILATAR" class="w-full h-full object-cover" style="border-radius: 50%;">
+                <div class="brand-mark lg:hidden">
+                    <img src="{{ asset('favicon.webp') }}" alt="SILATAR" class="w-full h-full object-cover rounded-full">
                 </div>
                 <div class="sidebar-word">
                     <span>SILATAR</span>
@@ -274,7 +273,7 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
                 </span>
                 <span class="sidebar-nav-label">Berita</span>
             </a>
-            <div class="my-4 h-px" style="background: var(--line);"></div>
+            <div class="my-4 h-px" class="sidebar-divider"></div>
             <a href="{{ url('/') }}" target="_blank" class="sidebar-nav-item">
                 <span class="sidebar-nav-icon-wrap slate">
                     <svg class="sidebar-nav-icon-inner" viewBox="0 0 256 256" fill="none">
@@ -288,7 +287,7 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
         <button
             @click="open = false"
             class="absolute right-4 top-4 w-8 h-8 flex items-center justify-center rounded-lg"
-            style="background: var(--paper); border: 1px solid var(--line);"
+            class="icon-btn"
         >
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -304,7 +303,7 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
                 <button
                     @click="open = true"
                     class="flex h-10 w-10 items-center justify-center rounded-lg lg:hidden"
-                    style="background: var(--paper); border: 1px solid var(--line);"
+                    class="icon-btn"
                 >
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
@@ -379,10 +378,10 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
 
                     <!-- Dropdown -->
                     <div x-show="userMenuOpen" x-cloak class="dropdown-menu">
-                        <div class="border-b px-4 py-3" style="border-color: var(--line); background: var(--paper-soft);">
-                            <p class="text-xs font-semibold uppercase tracking-wider" style="color: var(--ink-soft);">Akun</p>
-                            <p class="text-sm font-medium" style="color: var(--ink);">{{ auth()->user()->name }}</p>
-                            <p class="text-xs" style="color: var(--ink-soft);">{{ auth()->user()->nomor_induk }}</p>
+                        <div class="dropdown-header">
+                            <p class="dropdown-header-label">Akun</p>
+                            <p class="dropdown-header-name">{{ auth()->user()->name }}</p>
+                            <p class="dropdown-header-id">{{ auth()->user()->nomor_induk }}</p>
                         </div>
                         <div class="p-2">
                             <a href="{{ route('admin.profile') }}" class="dropdown-item">
@@ -394,8 +393,8 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
                             <div class="dropdown-divider"></div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="dropdown-item w-full" style="color: #e11d48;">
-                                    <svg class="dropdown-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color: #e11d48;">
+                                <button type="submit" class="dropdown-item btn-danger w-full">
+                                    <svg class="dropdown-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                                     </svg>
                                     Logout
@@ -476,8 +475,8 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
                 <svg x-show="toast.type === 'error'" class="toast-icon text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <p class="flex-1 text-sm font-medium" style="color: var(--ink);" x-text="toast.message"></p>
-                <button @click="toasts = toasts.filter(t => t.id !== toast.id)" style="color: var(--ink-soft);">
+                <p class="toast-message" x-text="toast.message"></p>
+                <button @click="toasts = toasts.filter(t => t.id !== toast.id)" class="toast-close">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                     </svg>

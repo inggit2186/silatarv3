@@ -1,20 +1,20 @@
 <x-layouts.app title="Pelayanan - SILATAR">
     <!-- Success Notification -->
     @if(session('success'))
-    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => { show = false }, 4000);" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-4" class="fixed top-24 right-4 z-50 w-80">
-        <div class="neo-card" style="border-color: var(--gold);">
-            <div style="display: flex; align-items: start; gap: 1rem;">
-                <div style="width: 2.5rem; height: 2.5rem; background: var(--gold); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => { show = false }, 4000);" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-4" class="fixed top-24 right-4 z-50 w-80">
+        <div class="neo-card border-gold">
+            <div class="neo-success-alert">
+                <div class="neo-success-alert-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <div style="flex: 1;">
-                    <p style="font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--gold); margin: 0 0 0.25rem;">Success</p>
-                    <p style="font-weight: 600; color: var(--ink); margin: 0; font-size: 0.9rem;">Berhasil</p>
-                    <p style="font-size: 0.8rem; color: var(--ink-soft); margin: 0.25rem 0 0;">{{ session('success') }}</p>
+                <div class="neo-success-alert-content">
+                    <p class="neo-success-alert-label">Success</p>
+                    <p class="neo-success-alert-title">Berhasil</p>
+                    <p class="neo-success-alert-text">{{ session('success') }}</p>
                 </div>
-                <button @click="show = false" style="background: transparent; border: 1px solid var(--line); width: 1.75rem; height: 1.75rem; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-soft);">×</button>
+                <button @click="show = false" class="neo-success-alert-close">×</button>
             </div>
         </div>
     </div>
@@ -160,23 +160,23 @@
         @keydown.escape.window="closeEmployeeModal(); closeServiceModal(); closePengaduanModal();"
     >
         <!-- Hero Section -->
-        <section class="hero-page" style="background-image: url('/assets/img/template/layanan-bg.webp'); background-size: cover; background-position: center top; padding: 120px 2rem 4rem; min-height: 350px;">
-            <div class="hero-page-content" style="max-width: 36rem; text-align: center;">
-                <p class="section-label" style="color: var(--gold); font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; margin: 0 0 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+        <section class="hero-page bg-cover bg-center" style="background-image: url('/assets/img/template/layanan-bg.webp'); padding: 120px 2rem 4rem; min-height: 350px;">
+            <div class="hero-page-content">
+                <p class="section-label-gold section-label-sm">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     Pelayanan SILATAR
                 </p>
-                <h1 class="hero-page-title" style="font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 400; color: var(--ink); margin: 0 0 1rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                <h1 class="hero-page-title">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
                     Pilih unit kerja, lalu pilih layanan
                 </h1>
-                <p style="color: var(--ink-soft); font-size: 1rem; max-width: 28rem; margin: 0 auto;">Halaman ini memisahkan alur pelayanan dari beranda. Pilih unit kerja kantor aktif terlebih dahulu, lalu semua layanan akan muncul dalam bentuk kartu sesuai section-nya.</p>
-                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-top: 1.5rem;">
-                    <a href="{{ url('/') }}" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.25rem; background: transparent; color: var(--ink); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; text-decoration: none; border: 1px solid var(--line);">
+                <p class="text-ink-soft text-base mx-auto max-w-md">Halaman ini memisahkan alur pelayanan dari beranda. Pilih unit kerja kantor aktif terlebih dahulu, lalu semua layanan akan muncul dalam bentuk kartu sesuai section-nya.</p>
+                <div class="hero-actions">
+                    <a href="{{ url('/') }}" class="neo-hero-cta">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                         Beranda
                     </a>
-                    <a href="{{ route('satuan-kerja', ['tab' => 'kantor']) }}" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.25rem; background: var(--gold); color: var(--night); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; text-decoration: none;">
+                    <a href="{{ route('satuan-kerja', ['tab' => 'kantor']) }}" class="neo-hero-cta neo-hero-cta-primary">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M9 8h1m-1 4h1m4-4h1m-1 4h1M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
                         Direktori Kantor
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h12m-5-5 5 5-5 5"/></svg>
@@ -193,15 +193,15 @@
             <div class="neo-card">
                 <div class="neo-card-header">
                     <div>
-                        <p class="section-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Langkah 1</p>
-                        <p class="text-sm" style="color: var(--ink-soft);">Pilih unit kerja kantor yang aktif untuk membuka daftar layanan pada unit tersebut.</p>
+                        <p class="section-label-gold section-label-sm">Langkah 1</p>
+                        <p class="text-sm text-ink-soft">Pilih unit kerja kantor yang aktif untuk membuka daftar layanan pada unit tersebut.</p>
                     </div>
                     <span class="neo-card-badge">{{ $kantorUnits->count() }} unit aktif</span>
                 </div>
 
-                <div class="neo-grid neo-grid-unit-lg" style="margin-top: 1.5rem;">
+                <div class="neo-grid neo-grid-unit-lg mt-6">
                     @forelse ($kantorUnits as $card)
-                        <button type="button" @click="selectUnit({{ $card['id'] }})" class="neo-unit-card" style="cursor: pointer;">
+                        <button type="button" @click="selectUnit({{ $card['id'] }})" class="neo-unit-card cursor-pointer">
                             <div class="neo-unit-card-visual">
                                 @if($card['cover_path'])
                                     <img src="{{ $card['cover_path'] }}" alt="{{ $card['title'] }}" class="neo-unit-card-img">
@@ -253,7 +253,7 @@
                             </div>
                         </button>
                     @empty
-                        <div class="neo-empty" style="grid-column: 1 / -1;">
+                        <div class="neo-empty col-full">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H3a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-2M5 21h2m-2 0H3m14 0h2m-2 0h-2M7 7h10M7 11h10M7 15h6" />
                             </svg>
@@ -270,22 +270,22 @@
             <div class="neo-card">
                 <div class="neo-card-header">
                     <div>
-                        <p class="section-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Langkah 2</p>
+                        <p class="section-label-gold section-label-sm">Langkah 2</p>
                         <h2 class="neo-card-title" x-text="selectedUnit ? selectedUnit.title : ''"></h2>
-                        <p class="text-sm" style="color: var(--ink-soft); margin-top: 0.25rem;">Semua layanan untuk unit ini langsung ditampilkan sebagai kartu.</p>
+                        <p class="text-sm text-ink-soft mt-1">Semua layanan untuk unit ini langsung ditampilkan sebagai kartu.</p>
                     </div>
-                    <button type="button" @click="changeUnit()" class="neo-btn-secondary" style="white-space: nowrap;">Ganti unit</button>
+                    <button type="button" @click="changeUnit()" class="neo-btn-secondary whitespace-nowrap">Ganti unit</button>
                 </div>
 
-                <div style="margin-top: 2rem;">
+                <div class="mt-8">
                     <!-- General Services -->
-                    <div style="margin-bottom: 2rem;">
-                        <h3 style="font-family: var(--font-display); font-size: 1rem; font-weight: 600; margin: 0 0 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--line);">Layanan Umum</h3>
+                    <div class="mb-8">
+                        <h3 class="section-heading">Layanan Umum</h3>
                         <div class="neo-grid neo-grid-3">
                             @foreach($generalServices as $service)
-                                <button type="button" @click="selectService('umum', @js($service))" class="neo-service-card" style="cursor: pointer;">
+                                <button type="button" @click="selectService('umum', @js($service))" class="neo-service-card cursor-pointer">
                                     <div class="neo-service-cover">
-                                        <img src="{{ $service['cover_path'] }}" alt="{{ $service['title'] }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                        <img src="{{ $service['cover_path'] }}" alt="{{ $service['title'] }}" class="neo-service-img">
                                         <div class="neo-service-cover-overlay"></div>
                                         <span class="neo-service-tag">{{ $service['tag'] }}</span>
                                     </div>
@@ -300,7 +300,7 @@
 
                     <!-- Special Services -->
                     <div>
-                        <h3 style="font-family: var(--font-display); font-size: 1rem; font-weight: 600; margin: 0 0 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--line);">Layanan Khusus</h3>
+                        <h3 class="section-heading">Layanan Khusus</h3>
                         <template x-if="specialServices.length === 0">
                             <div class="neo-empty">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -312,12 +312,12 @@
                         </template>
                         <div class="neo-grid neo-grid-3">
                             <template x-for="service in specialServices" :key="service.id">
-                                <button type="button" @click="selectService('khusus', service)" class="neo-service-card" style="cursor: pointer;">
+                                <button type="button" @click="selectService('khusus', service)" class="neo-service-card cursor-pointer">
                                     <div class="neo-service-cover">
-                                        <img :src="service.cover_path" :alt="service.title" style="width: 100%; height: 100%; object-fit: cover;">
+                                        <img :src="service.cover_path" :alt="service.title" class="neo-service-img">
                                         <div class="neo-service-cover-overlay"></div>
                                         <span class="neo-service-tag" x-text="service.tag || 'Layanan Khusus'"></span>
-                                        <span x-show="service.is_spesial" class="neo-service-tag" style="top: auto; bottom: 0.75rem; background: var(--sun);">Spesial</span>
+                                        <span x-show="service.is_spesial" class="neo-service-tag neo-service-tag-special" style="background: var(--sun);">Spesial</span>
                                     </div>
                                     <div class="neo-service-body">
                                         <h4 class="neo-service-title" x-text="service.title"></h4>
@@ -348,7 +348,7 @@
                 <div class="neo-modal-header">
                     <div>
                         <h3 class="neo-modal-title" x-text="selectedService ? selectedService.title : '-'"></h3>
-                        <p class="text-sm" style="color: var(--ink-soft);" x-text="selectedService ? selectedService.description : ''"></p>
+                        <p class="text-sm text-ink-soft" x-text="selectedService ? selectedService.description : ''"></p>
                     </div>
                     <button type="button" @click="closeServiceModal()" class="neo-modal-close">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
@@ -482,52 +482,52 @@
 
         <!-- Employee Selection Modal -->
         <div x-show="showEmployeeModal" x-cloak class="neo-modal-backdrop" @click="closeEmployeeModal()">
-            <div class="neo-modal" style="max-width: 36rem;" @click.stop>
+            <div class="neo-modal neo-modal-sm" @click.stop>
                 <div class="neo-modal-header">
                     <div>
                         <h3 class="neo-modal-title">Pilih Pegawai</h3>
-                        <p class="text-sm" style="color: var(--ink-soft);">Unit: <span x-text="selectedUnit ? selectedUnit.title : '-'"></span></p>
+                        <p class="text-sm text-ink-soft">Unit: <span x-text="selectedUnit ? selectedUnit.title : '-'"></span></p>
                     </div>
                     <button type="button" @click="closeEmployeeModal()" class="neo-modal-close">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
                 <template x-if="loadingEmployees">
-                    <div style="text-align: center; padding: 2rem;">
-                        <p style="color: var(--ink-soft);">Memuat...</p>
+                    <div class="loading-text">
+                        <p class="text-ink-soft">Memuat...</p>
                     </div>
                 </template>
                 <template x-if="!loadingEmployees">
                     <div>
                         <template x-if="leaders.length > 0">
-                            <div style="margin-bottom: 1.5rem;">
-                                <h4 style="font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; text-align: center; color: var(--gold); margin: 0 0 1rem;">Pimpinan</h4>
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 0.75rem;">
+                            <div class="mb-6">
+                                <h4 class="section-label-gold section-label-left text-center">Pimpinan</h4>
+                                <div class="neo-employee-grid neo-employee-grid-leader">
                                     <template x-for="leader in leaders" :key="leader.id">
-                                        <button type="button" @click="selectEmployee(leader)" style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1rem; background: var(--paper-soft); border: 1px solid var(--line); cursor: pointer; transition: border-color 180ms;">
-                                            <div style="width: 3rem; height: 3rem; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 700; color: var(--night);" x-text="leader.avatar_text || leader.name?.substring(0,2).toUpperCase()"></div>
-                                            <div style="text-align: center;">
-                                                <p style="font-weight: 600; font-size: 0.85rem; margin: 0;" x-text="leader.name"></p>
-                                                <p style="font-size: 0.7rem; color: var(--ink-soft); margin: 0.25rem 0 0;" x-text="leader.role_label"></p>
+                                        <button type="button" @click="selectEmployee(leader)" class="neo-employee-card neo-employee-card-center">
+                                            <div class="neo-avatar neo-avatar-md" x-text="leader.avatar_text || leader.name?.substring(0,2).toUpperCase()"></div>
+                                            <div class="neo-employee-info text-center">
+                                                <p class="neo-employee-name" x-text="leader.name"></p>
+                                                <p class="neo-employee-role" x-text="leader.role_label"></p>
                                             </div>
                                         </button>
                                     </template>
                                 </div>
                             </div>
                         </template>
-                        <button type="button" @click="goDirectlyToSeksi()" class="neo-btn-secondary" style="width: 100%; justify-content: center; margin-bottom: 1rem;">
+                        <button type="button" @click="goDirectlyToSeksi()" class="neo-btn-secondary w-full flex justify-center mb-4">
                             Langsung ke Seksi (Tanpa Pilih Pegawai)
                         </button>
                         <template x-if="unitEmployees.length > 0">
                             <div>
-                                <h4 style="font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; text-align: center; color: var(--gold); margin: 0 0 1rem;">Pegawai</h4>
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.75rem;">
+                                <h4 class="section-label-gold section-label-left text-center">Pegawai</h4>
+                                <div class="neo-employee-grid">
                                     <template x-for="employee in unitEmployees" :key="employee.id">
-                                        <button type="button" @click="selectEmployee(employee)" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--paper-soft); border: 1px solid var(--line); cursor: pointer; transition: border-color 180ms; text-align: left;">
-                                            <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 700; color: var(--night); font-size: 0.8rem; flex-shrink: 0;" x-text="employee.avatar_text || employee.name?.substring(0,2).toUpperCase()"></div>
-                                            <div style="min-width: 0;">
-                                                <p style="font-weight: 600; font-size: 0.8rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" x-text="employee.name"></p>
-                                                <p style="font-size: 0.65rem; color: var(--ink-soft); margin: 0.15rem 0 0;" x-text="employee.role_label"></p>
+                                        <button type="button" @click="selectEmployee(employee)" class="neo-employee-card">
+                                            <div class="neo-avatar neo-avatar-sm" x-text="employee.avatar_text || employee.name?.substring(0,2).toUpperCase()"></div>
+                                            <div class="neo-employee-info">
+                                                <p class="neo-employee-name" x-text="employee.name"></p>
+                                                <p class="neo-employee-role neo-employee-role-sm" x-text="employee.role_label"></p>
                                             </div>
                                         </button>
                                     </template>

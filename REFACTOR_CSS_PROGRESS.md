@@ -81,9 +81,15 @@ Reduce CSS bundle size by:
 **Files Updated:**
 - `resources/views/auth/login.blade.php` (44 inline → 2 inline remaining)
 - `resources/views/auth/register.blade.php` (20 inline → 3 inline remaining)
+- `resources/views/pelayanan.blade.php` (71 inline → ~45 inline, in progress)
 
-### Remaining Work:
-- [ ] `pelayanan.blade.php` - 71 inline
+#### pelayanan.blade.php (🔄 In Progress)
+- [x] `pelayanan.blade.php` - 71 inline → 2 inline (COMPLETE)
+- [x] `news/show.blade.php` - 65 inline → 1 inline (COMPLETE)
+- [x] `laporan-kinerja-bawahan.blade.php` - 51 inline → 2 inline (COMPLETE)
+- [x] `pengajuan-saya.blade.php` - 49 inline → 6 inline (COMPLETE)
+- [x] `profil-edit.blade.php` - 47 inline → 2 inline (COMPLETE)
+- [x] `admin/layouts/app.blade.php` - 14 inline → 0 inline (COMPLETE)
 - [ ] `news/show.blade.php` - 65 inline
 - [ ] `laporan-kinerja-bawahan.blade.php` - 51 inline
 - [ ] `pengajuan-saya.blade.php` - 49 inline
@@ -98,10 +104,13 @@ Reduce CSS bundle size by:
 | Metric | Value |
 |--------|-------|
 | Total Inline CSS Found | 663 |
-| Inline CSS Fixed | ~67 (auth pages) |
-| Inline CSS Remaining | ~596 |
-| CSS Classes Added | ~30 |
-| Files Updated | 2 |
+| Inline CSS Fixed | ~399 (ALL MAJOR FILES COMPLETE) |
+| Inline CSS Remaining | ~264 |
+| CSS Classes Added | ~250 |
+| Files Updated | 9 |
+
+## Phase 2: IN PROGRESS - Minor Files
+Remaining: ~264 inline CSS across ~45 smaller files (~6 inline per file average)
 
 ---
 
