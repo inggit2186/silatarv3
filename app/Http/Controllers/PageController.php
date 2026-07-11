@@ -187,7 +187,7 @@ class PageController extends Controller
                 'employee_name' => 'Langsung ke Seksi',
                 'employee_role' => 'Tanpa Pegawai Tertentu',
                 'employee_nip' => null,
-                'employee_photo' => asset('assets/img/ikon/505.png'),
+                'employee_photo' => asset('assets/img/ikon/505.webp'),
             ];
         }
 
@@ -548,7 +548,7 @@ class PageController extends Controller
                 'employee_id' => null,
                 'employee_name' => 'Langsung ke Seksi',
                 'employee_role' => 'Tanpa Pegawai Tertentu',
-                'employee_photo' => asset('assets/img/ikon/505.png'),
+                'employee_photo' => asset('assets/img/ikon/505.webp'),
             ];
         }
 
@@ -4845,7 +4845,7 @@ class PageController extends Controller
                 'description' => $departmentRow->deskripsi,
                 'code' => $departmentRow->kode,
                 'category' => $departmentRow->kategori,
-                'cover' => asset("assets/img/seksi/{$departmentRow->id}.jpg"),
+                'cover' => asset("assets/img/seksi/{$departmentRow->id}.webp"),
             ],
             'leader' => $leader ? $this->personCard($leader, $leaderLabel, true) : null,
             'leaderLabel' => $leaderLabel,
@@ -4900,7 +4900,7 @@ class PageController extends Controller
                     'head_photo' => $headPhotoPath,
                     'head_initials' => $activeHead ? Str::upper(Str::substr($activeHead->name, 0, 2)) : Str::upper(Str::substr($item->nama, 0, 2)),
                     'cover' => Str::upper(Str::substr($item->nama, 0, 2)),
-                    'cover_path' => asset("assets/img/seksi/{$item->id}.jpg"),
+                    'cover_path' => asset("assets/img/seksi/{$item->id}.webp"),
                     'href' => route('unit-kerja.detail', $item->id),
                     'type' => $kategori,
                 ];
@@ -4915,28 +4915,28 @@ class PageController extends Controller
                 'title' => 'Konsultasi',
                 'description' => 'Panduan awal untuk menjawab kebutuhan dan pertanyaan layanan.',
                 'tag' => 'Layanan umum',
-                'cover_path' => asset('assets/img/ikon/777.png'),
+                'cover_path' => asset('assets/img/ikon/777.webp'),
             ],
             [
                 'key' => 'janji-temu',
                 'title' => 'Janji Temu',
                 'description' => 'Atur appointment dengan pegawai/unit kerja.',
                 'tag' => 'Layanan umum',
-                'cover_path' => asset('assets/img/ikon/508.png'),
+                'cover_path' => asset('assets/img/ikon/508.webp'),
             ],
             [
                 'key' => 'pengaduan',
                 'title' => 'Pengaduan',
                 'description' => 'Sampaikan keluhan atau masukan untuk ditindaklanjuti.',
                 'tag' => 'Layanan umum',
-                'cover_path' => asset('assets/img/ikon/888.png'),
+                'cover_path' => asset('assets/img/ikon/888.webp'),
             ],
             [
                 'key' => 'satu-data',
                 'title' => 'Satu Data',
                 'description' => 'Akses data ringkas yang dipakai sebagai referensi layanan.',
                 'tag' => 'Layanan umum',
-                'cover_path' => asset('assets/img/ikon/507.png'),
+                'cover_path' => asset('assets/img/ikon/507.webp'),
             ],
         ];
     }
@@ -5277,28 +5277,28 @@ class PageController extends Controller
     private function serviceIconPath(int $serviceId): string
     {
         // First check if specific icon exists for this service
-        $specificIconPath = public_path("assets/img/ikon/{$serviceId}.png");
+        $specificIconPath = public_path("assets/img/ikon/{$serviceId}.webp");
         if (file_exists($specificIconPath)) {
-            return asset("assets/img/ikon/{$serviceId}.png");
+            return asset("assets/img/ikon/{$serviceId}.webp");
         }
 
         // Fallback to random icon
         $icons = [
-            'humas.png',
-            'presensi.png',
-            'RekapPresensi.png',
-            'LaporanKinerja.png',
-            'FileUploaded.png',
-            'tukin.png',
-            'uangmakan.png',
-            'logohalal.png',
-            '777.png',
-            '508.png',
-            '888.png',
-            '507.png',
+            'humas.webp',
+            'presensi.webp',
+            'RekapPresensi.webp',
+            'LaporanKinerja.webp',
+            'FileUploaded.webp',
+            'tukin.webp',
+            'uangmakan.webp',
+            'logohalal.webp',
+            '777.webp',
+            '508.webp',
+            '888.webp',
+            '507.webp',
         ];
 
-        $icon = $icons[$serviceId % count($icons)] ?? 'FileUploaded.png';
+        $icon = $icons[$serviceId % count($icons)] ?? 'FileUploaded.webp';
 
         return asset("assets/img/ikon/{$icon}");
     }
@@ -5365,7 +5365,7 @@ class PageController extends Controller
                     'head_photo' => $headPhotoPath,
                     'head_initials' => $activeHead ? Str::upper(Str::substr($activeHead->name, 0, 2)) : Str::upper(Str::substr($item->nama, 0, 2)),
                     'cover' => Str::upper(Str::substr($item->nama, 0, 2)),
-                    'cover_path' => asset("assets/img/seksi/{$item->id}.jpg"),
+                    'cover_path' => asset("assets/img/seksi/{$item->id}.webp"),
                     'href' => route('unit-kerja.detail', $item->id),
                     'type' => $kategori,
                 ];

@@ -372,6 +372,12 @@
                                 </div>
 
                                 <div class="neo-upload-card-body">
+                                    <div class="neo-upload-title-row">
+                                        <span class="neo-upload-title">{{ $requirement['title'] }}</span>
+                                        @if ($requirement['note'])
+                                            <span class="neo-upload-note">{{ $requirement['note'] }}</span>
+                                        @endif
+                                    </div>
                                     <label class="neo-upload-dropzone" :class="{
                                         'has-file': uploadedFiles[{{ $requirement['id'] }}],
                                         'is-processing': isProcessing[{{ $requirement['id'] }}],
@@ -479,13 +485,6 @@
                                             <span x-text="fileErrors[{{ $requirement['id'] }}]"></span>
                                         </div>
                                     </template>
-                                </div>
-
-                                <div class="neo-upload-card-footer">
-                                    <span class="neo-upload-title">{{ $requirement['title'] }}</span>
-                                    @if ($requirement['note'])
-                                        <span class="neo-upload-note">{{ $requirement['note'] }}</span>
-                                    @endif
                                 </div>
                             </div>
                             @endforeach

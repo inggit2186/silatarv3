@@ -12,11 +12,11 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/webp" href="{{ asset('favicon.webp') }}">
     <title>{{ $title ?? 'Admin Dashboard - SILATAR' }}</title>
-    <link rel="stylesheet" href="{{ asset('build/assets/fonts-DkuEHybc.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Azeret+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    @vite(['resources/css/app.css', 'resources/css/admin.css', 'resources/css/admin-neo.css', 'resources/css/neo-mirai-home.css', 'resources/js/app.js'])
+    {{-- Admin assets loaded via @vite() - separated for lazy loading --}}
+    @vite(['admin-css', 'admin-neo'])
     <style>[x-cloak] { display: none !important; }</style>
     @stack('styles')
 </head>
