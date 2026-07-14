@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ServiceController;
+use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\TpgController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\NewsController;
@@ -43,30 +45,31 @@ Route::middleware(['auth', 'admin'])
         Route::delete('/news/{id}', [NewsController::class, 'destroy'])->name('news.destroy');
         Route::post('/news/upload-image', [NewsController::class, 'uploadImage'])->name('news.upload-image');
 
-        // Placeholder routes for other admin modules
-        Route::get('/services', function () {
-            return view('admin.services.index');
-        })->name('services.index');
+        // Services Management
+        Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
+        Route::get('/services/create', [ServiceController::class, 'create'])->name('services.create');
+        Route::post('/services', [ServiceController::class, 'store'])->name('services.store');
+        Route::get('/services/{id}/edit', [ServiceController::class, 'edit'])->name('services.edit');
+        Route::put('/services/{id}', [ServiceController::class, 'update'])->name('services.update');
+        Route::delete('/services/{id}', [ServiceController::class, 'destroy'])->name('services.destroy');
+        Route::get('/services/{id}', [ServiceController::class, 'show'])->name('services.show');
+        Route::post('/services/{id}/requirement', [ServiceController::class, 'addRequirement'])->name('services.add-requirement');
+        Route::put('/services/{id}/requirement/{reqId}', [ServiceController::class, 'updateRequirement'])->name('services.update-requirement');
+        Route::delete('/services/{id}/requirement/{reqId}', [ServiceController::class, 'deleteRequirement'])->name('services.delete-requirement');
 
-        Route::get('/services/create', function () {
-            return view('admin.services.create');
-        })->name('services.create');
+        Route::get('/units', [UnitController::class, 'index'])->name('units.index');
 
-        Route::get('/services/{id}', function ($id) {
-            return view('admin.services.edit', ['id' => $id]);
-        })->name('services.edit');
+        Route::get('/units/create', [UnitController::class, 'create'])->name('units.create');
 
-        Route::get('/units', function () {
-            return view('admin.units.index');
-        })->name('units.index');
+        Route::post('/units', [UnitController::class, 'store'])->name('units.store');
 
-        Route::get('/units/create', function () {
-            return view('admin.units.create');
-        })->name('units.create');
+        Route::get('/units/{id}/edit', [UnitController::class, 'edit'])->name('units.edit');
 
-        Route::get('/units/{id}', function ($id) {
-            return view('admin.units.edit', ['id' => $id]);
-        })->name('units.edit');
+        Route::put('/units/{id}', [UnitController::class, 'update'])->name('units.update');
+
+        Route::delete('/units/{id}', [UnitController::class, 'destroy'])->name('units.destroy');
+
+        Route::get('/units/{id}', [UnitController::class, 'show'])->name('units.show');
 
         Route::get('/requests', function () {
             return view('admin.requests.index');

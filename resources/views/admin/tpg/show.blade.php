@@ -1,5 +1,11 @@
 <x-admin.layouts.app>
-    <?php $title = 'Detail Verifikasi TPG'; ?>
+    <?php
+    $title = 'Detail Verifikasi TPG';
+    $metadataParsed = json_decode($item->metadata ?? '{}', true) ?? [];
+    $filesRaw = $item->files ?? '[]';
+    $filesParsed = is_string($filesRaw) ? (json_decode($filesRaw, true) ?? []) : [];
+    $files = is_array($filesParsed) ? $filesParsed : [];
+    ?>
 
     <!-- Page Header -->
     <div class="page-header">
@@ -66,10 +72,10 @@
                         <div>
                             <p style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.25rem;">Periode</p>
                             <p style="font-weight: 600; color: var(--text-primary);">
-                                @if(isset($item->metadata_parsed['semester']))
-                                    {{ $item->metadata_parsed['tahun_pelajaran'] ?? '' }} - Semester {{ $item->metadata_parsed['semester'] }}
-                                @elseif(isset($item->metadata_parsed['bulan']))
-                                    {{ $item->metadata_parsed['bulan'] }} {{ $item->metadata_parsed['tahun'] ?? '' }}
+                                @if(isset($metadataParsed['semester']))
+                                    {{ $metadataParsed['tahun_pelajaran'] ?? '' }} - Semester {{ $metadataParsed['semester'] }}
+                                @elseif(isset($metadataParsed['bulan']))
+                                    {{ $metadataParsed['bulan'] }} {{ $metadataParsed['tahun'] ?? '' }}
                                 @else
                                     -
                                 @endif
@@ -82,6 +88,9 @@
             <!-- Dokumen -->
             <div class="card">
                 <div class="card-header">
+@php
+    $files = is_array($filesParsed) ? $filesParsed : [];
+@endphp
                     <div class="flex items-center gap-3">
                         <div class="stat-icon emerald" style="width: 36px; height: 36px;">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -90,14 +99,14 @@
                         </div>
                         <div>
                             <h3 class="card-title">Dokumen Upload</h3>
-                            <p class="text-sm text-muted">{{ count($item->files_parsed) }} file dilampirkan</p>
+                            <p class="text-sm text-muted">{{ count($files) }} file dilampirkan</p>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
-                    @if(count($item->files_parsed) > 0)
+                    @if(count($files) > 0)
                         <div class="files-grid">
-                            @foreach($item->files_parsed as $index => $file)
+                            @foreach($files as $index => $file)
                                 @php
                                     $fileName = $file['filename'] ?? '';
                                     $hasFile = !empty($fileName) && $fileName !== 'NONE';
