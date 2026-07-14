@@ -1,19 +1,19 @@
-<div class="neo-editor-wrapper">
-    <label class="neo-form-label">
-        <svg class="inline h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<div class="mb-4">
+    <label class="form-label flex items-center gap-2">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/>
         </svg>
         {{ $label ?? 'Konten Berita' }}
     </label>
 
-    <div class="neo-editor-container">
+    <div class="quill-editor-wrapper">
         <div id="{{ $id ?? 'quill-editor' }}" class="quill-editor"></div>
         <textarea name="{{ $name ?? 'content' }}" id="{{ $name ?? 'content' }}_input" class="hidden-quill-input" style="display:none;">{!! $content ?? '' !!}</textarea>
     </div>
 
-    <p class="neo-form-hint mt-2 flex items-center gap-2">
-        <span class="inline-flex items-center gap-1">
-            <svg class="h-4 w-4" style="color: var(--cyan);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <p class="text-xs mt-2" style="color: var(--text-muted);">
+        <span class="flex items-center gap-1">
+            <svg class="w-4 h-4" style="color: var(--info);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             <span>Toolbar: Header, Bold, Italic, Link, Image, Code Block. Upload gambar: drag &amp; drop atau klik toolbar. Klik gambar untuk resize/align. Paste gambar langsung didukung.</span>
@@ -21,20 +21,24 @@
     </p>
 
     @error($name ?? 'content')
-    <p class="neo-form-error">{{ $message }}</p>
+    <p class="text-sm mt-1" style="color: var(--danger);">{{ $message }}</p>
     @enderror
 </div>
 
 @push('styles')
+{{-- Quill CSS --}}
+<link rel="stylesheet" href="https://cdn.quilljs.com/1.3.7/quill.snow.css">
 {{-- Highlight.js CSS --}}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 
 <style>
     /* Quill Editor Container Styling */
-    .neo-editor-container {
-        border-radius: 12px;
+    .quill-editor-wrapper {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         overflow: hidden;
         position: relative;
+        background: var(--card);
     }
 
     .quill-editor {
@@ -61,8 +65,8 @@
         opacity: 0.5;
         font-size: 0.65rem;
         padding: 2px 4px;
-        background: var(--paper-deep);
-        border: 1px solid var(--line);
+        background: var(--secondary);
+        border: 1px solid var(--border);
         border-radius: 4px;
     }
     .quill-editor .ql-code-block-container [contenteditable="false"]:not(select) {
@@ -71,18 +75,18 @@
 
     /* Quill Theme Overrides - Neo Mirai Style */
     .ql-toolbar.ql-snow {
-        border: 1px solid var(--line) !important;
+        border: 1px solid var(--border) !important;
         border-bottom: none !important;
-        border-radius: 12px 12px 0 0 !important;
-        background: var(--paper-soft) !important;
+        border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
+        background: var(--secondary-light) !important;
         padding: 8px 12px !important;
         font-family: inherit !important;
     }
 
     .ql-container.ql-snow {
-        border: 1px solid var(--line) !important;
-        border-radius: 0 0 12px 12px !important;
-        background: var(--paper) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
+        background: var(--card) !important;
         font-family: inherit !important;
         font-size: 15px !important;
         overflow: hidden !important;
@@ -95,7 +99,7 @@
         font-family: inherit !important;
         font-size: 15px !important;
         line-height: 1.7 !important;
-        color: var(--ink) !important;
+        color: var(--text-primary) !important;
         overflow-y: auto !important;
         box-sizing: border-box !important;
     }
@@ -107,14 +111,14 @@
     }
 
     /* Prevent any content from breaking out */
-    .neo-editor-container {
-        border-radius: 12px;
+    .quill-editor-wrapper {
+        border-radius: var(--radius-md);
         overflow: hidden;
         position: relative;
     }
 
-    .neo-editor-container .ql-editor.ql-blank::before {
-        color: var(--ink-soft) !important;
+    .quill-editor-wrapper .ql-editor.ql-blank::before {
+        color: var(--text-muted) !important;
         font-style: normal !important;
         left: 20px !important;
         right: 20px !important;
@@ -133,12 +137,12 @@
     }
 
     .ql-toolbar.ql-snow button:hover {
-        background: var(--paper-hover) !important;
+        background: var(--secondary) !important;
     }
 
     .ql-toolbar.ql-snow button.ql-active {
-        background: var(--cyan-soft) !important;
-        color: var(--cyan) !important;
+        background: rgba(200,154,43,0.1) !important;
+        color: var(--primary) !important;
     }
 
     /* Dropdown styling */
@@ -147,23 +151,23 @@
     }
 
     .ql-toolbar.ql-snow .ql-picker-options {
-        background: var(--paper) !important;
-        border: 1px solid var(--line) !important;
-        border-radius: 8px !important;
+        background: var(--card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: var(--radius) !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
     }
 
     /* Snow theme overrides */
     .ql-snow .ql-stroke {
-        stroke: var(--ink) !important;
+        stroke: var(--text-primary) !important;
     }
 
     .ql-snow .ql-fill {
-        fill: var(--ink) !important;
+        fill: var(--text-primary) !important;
     }
 
     .ql-snow .ql-picker {
-        color: var(--ink) !important;
+        color: var(--text-primary) !important;
     }
 
     /* Scrollbar styling */
@@ -172,17 +176,17 @@
     }
 
     .quill-editor::-webkit-scrollbar-track {
-        background: var(--paper-soft);
+        background: var(--secondary-light);
         border-radius: 4px;
     }
 
     .quill-editor::-webkit-scrollbar-thumb {
-        background: var(--line);
+        background: var(--border);
         border-radius: 4px;
     }
 
     .quill-editor::-webkit-scrollbar-thumb:hover {
-        background: var(--ink-soft);
+        background: var(--text-muted);
     }
 
     /* Content styling */
@@ -192,20 +196,20 @@
     .ql-editor p { margin: 0.75rem 0 !important; }
     .ql-editor ul, .ql-editor ol { margin: 0.75rem 0 !important; padding-left: 1.5rem !important; }
     .ql-editor li { margin: 0.25rem 0 !important; }
-    .ql-editor blockquote { border-left: 4px solid var(--cyan) !important; padding-left: 1rem !important; margin: 1rem 0 !important; font-style: italic !important; color: var(--ink-soft) !important; background: var(--paper-soft) !important; padding: 0.75rem 1rem !important; border-radius: 0 8px 8px 0 !important; }
-    .ql-editor pre { background: var(--paper-soft) !important; border-radius: 8px !important; padding: 1rem !important; overflow-x: auto !important; margin: 1rem 0 !important; font-family: 'Courier New', monospace !important; }
-    .ql-editor code { font-family: 'Courier New', monospace !important; background: var(--paper-soft) !important; padding: 0.2rem 0.4rem !important; border-radius: 4px !important; }
-    .ql-editor a { color: var(--cyan) !important; text-decoration: underline !important; }
+    .ql-editor blockquote { border-left: 4px solid var(--primary) !important; padding-left: 1rem !important; margin: 1rem 0 !important; font-style: italic !important; color: var(--text-muted) !important; background: var(--secondary-light) !important; padding: 0.75rem 1rem !important; border-radius: 0 8px 8px 0 !important; }
+    .ql-editor pre { background: var(--secondary-light) !important; border-radius: var(--radius) !important; padding: 1rem !important; overflow-x: auto !important; margin: 1rem 0 !important; font-family: 'Courier New', monospace !important; }
+    .ql-editor code { font-family: 'Courier New', monospace !important; background: var(--secondary-light) !important; padding: 0.2rem 0.4rem !important; border-radius: 4px !important; }
+    .ql-editor a { color: var(--primary) !important; text-decoration: underline !important; }
     .ql-editor table { width: 100% !important; border-collapse: collapse !important; margin: 1rem 0 !important; }
-    .ql-editor th, .ql-editor td { border: 1px solid var(--line) !important; padding: 0.5rem 0.75rem !important; }
-    .ql-editor th { background: var(--paper-soft) !important; font-weight: 600 !important; }
-    .ql-editor hr { border: none !important; border-top: 1px solid var(--line) !important; margin: 1.5rem 0 !important; }
+    .ql-editor th, .ql-editor td { border: 1px solid var(--border) !important; padding: 0.5rem 0.75rem !important; }
+    .ql-editor th { background: var(--secondary-light) !important; font-weight: 600 !important; }
+    .ql-editor hr { border: none !important; border-top: 1px solid var(--border) !important; margin: 1.5rem 0 !important; }
 
     /* Images - basic styles */
     .ql-editor img {
         max-width: 100% !important;
         height: auto !important;
-        border-radius: 8px !important;
+        border-radius: var(--radius) !important;
         margin: 1rem 0 !important;
         cursor: pointer !important;
         display: block !important;
@@ -241,7 +245,7 @@
 
     /* Selected image state */
     .ql-editor img.selected {
-        outline: 3px solid var(--cyan) !important;
+        outline: 3px solid var(--primary) !important;
         outline-offset: 2px !important;
     }
 
@@ -266,7 +270,7 @@
         position: absolute !important;
         width: 14px !important;
         height: 14px !important;
-        background: var(--cyan) !important;
+        background: var(--primary) !important;
         border: 2px solid white !important;
         border-radius: 3px !important;
         z-index: 10 !important;
@@ -293,9 +297,9 @@
     /* Quick resize toolbar - minimal styles, most is inline */
     .quick-resize-toolbar {
         position: fixed !important;
-        background: var(--paper) !important;
-        border: 1px solid var(--line) !important;
-        border-radius: 8px !important;
+        background: var(--card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: var(--radius) !important;
         padding: 4px !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
         z-index: 9999 !important;
@@ -303,19 +307,19 @@
 
     .quick-resize-toolbar button {
         border-radius: 6px !important;
-        background: var(--paper) !important;
-        color: var(--ink) !important;
+        background: var(--card) !important;
+        color: var(--text-primary) !important;
         cursor: pointer !important;
     }
 
     .quick-resize-toolbar button:hover {
-        background: var(--paper-hover) !important;
+        background: var(--secondary) !important;
     }
 
     /* Resize guide line */
     .resize-guide {
         position: absolute !important;
-        background: var(--cyan) !important;
+        background: var(--primary) !important;
         pointer-events: none !important;
         z-index: 8 !important;
     }
@@ -353,7 +357,7 @@
     .quill-loading-placeholder {
         background: var(--paper-soft, #faf8f4);
         border: 2px dashed var(--line, #c5c0b8);
-        border-radius: 8px;
+        border-radius: var(--radius);
         padding: 40px 20px;
         text-align: center;
         color: var(--ink-soft, #4a4540);
@@ -370,17 +374,17 @@
         margin: 1rem 0 !important;
     }
     .ql-editor table td, .ql-editor table th {
-        border: 1px solid var(--line) !important;
+        border: 1px solid var(--border) !important;
         padding: 0.5rem 0.75rem !important;
         min-width: 80px;
     }
     .ql-editor table th {
-        background: var(--paper-deep) !important;
+        background: var(--secondary) !important;
         font-weight: 600 !important;
     }
     .ql-editor table caption {
         font-style: italic !important;
-        color: var(--ink-soft) !important;
+        color: var(--text-muted) !important;
         margin-bottom: 0.5rem !important;
     }
     /* Table selection */
@@ -392,7 +396,7 @@
     .ql-editor pre.ql-syntax {
         background: #1e1e1e !important;
         color: #d4d4d4 !important;
-        border-radius: 8px !important;
+        border-radius: var(--radius) !important;
         padding: 1rem !important;
         margin: 1rem 0 !important;
         overflow-x: auto !important;
@@ -412,33 +416,33 @@
 
     /* Inline code */
     .ql-editor code {
-        background: var(--paper-deep) !important;
+        background: var(--secondary) !important;
         padding: 0.2em 0.4em !important;
         border-radius: 4px !important;
         font-family: 'Fira Code', 'Monaco', monospace !important;
         font-size: 0.9em !important;
-        color: var(--sun-deep) !important;
+        color: var(--warning) !important;
     }
 
     /* Horizontal Rule */
     .ql-editor hr {
         border: none !important;
         height: 2px !important;
-        background: linear-gradient(90deg, transparent, var(--line), transparent) !important;
+        background: linear-gradient(90deg, transparent, var(--border), transparent) !important;
         margin: 2rem 0 !important;
     }
 
     /* Video embed */
     .ql-editor video, .ql-editor iframe {
         max-width: 100% !important;
-        border-radius: 8px !important;
+        border-radius: var(--radius) !important;
         margin: 1rem 0 !important;
     }
 
     /* Mention placeholder */
     .ql-editor .mention {
         background: rgba(201, 165, 90, 0.15) !important;
-        color: var(--gold) !important;
+        color: var(--primary) !important;
         padding: 0.1em 0.3em !important;
         border-radius: 4px !important;
         font-weight: 500 !important;
@@ -447,8 +451,10 @@
 @endpush
 
 @push('scripts')
-{{-- Highlight.js --}}
+{{-- Highlight.js - must load before Quill syntax module --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+{{-- Quill JS --}}
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 
 <script>
 (function() {
@@ -471,6 +477,10 @@
             console.error('Quill not loaded');
             return;
         }
+
+        // Initialize quillInstances early so handlers can access it
+        if (!window.quillInstances) window.quillInstances = {};
+        window.quillInstances[editorId] = null; // placeholder until Quill is created
 
         // Sync content to textarea
         function syncContent(quill) {
@@ -521,9 +531,9 @@
                 bottom: 24px;
                 right: 24px;
                 padding: 12px 20px;
-                background: var(--paper, #f5f0e6);
-                border: 1px solid var(--line, #c5c0b8);
-                border-radius: 8px;
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                 z-index: 99999;
                 display: flex;
@@ -531,7 +541,7 @@
                 gap: 12px;
                 font-family: inherit;
                 font-size: 14px;
-                color: var(--ink, #2a2520);
+                color: var(--text-primary);
                 animation: slideInToast 0.3s ease;
             `;
 
@@ -539,8 +549,8 @@
             spinner.style.cssText = `
                 width: 18px;
                 height: 18px;
-                border: 2px solid var(--line, #c5c0b8);
-                border-top-color: var(--gold, #c9a55a);
+                border: 2px solid var(--border);
+                border-top-color: var(--primary);
                 border-radius: 50%;
                 animation: spin 0.8s linear infinite;
             `;
@@ -637,7 +647,11 @@
                     }
 
                     const quill = window.quillInstances[editorId];
-                    const range = quill.getSelection(true);
+                if (!quill) {
+                    console.error('Quill instance not found');
+                    return;
+                }
+                const range = quill.getSelection(true);
 
                     // Create loading placeholder with animation
                     const loadingSvg = `data:image/svg+xml,${encodeURIComponent(`
@@ -794,7 +808,6 @@
         }
 
         // Store instance
-        if (!window.quillInstances) window.quillInstances = {};
         window.quillInstances[editorId] = quill;
 
         // Sync content
@@ -906,10 +919,10 @@
                 btn.title = align.title;
                 btn.style.cssText = `
                     padding: 6px 10px !important;
-                    border: 1px solid ${align.value === currentAlign ? 'var(--gold)' : 'var(--line)'} !important;
+                    border: 1px solid ${align.value === currentAlign ? 'var(--primary)' : 'var(--border)'} !important;
                     border-radius: 6px !important;
-                    background: ${align.value === currentAlign ? 'var(--gold)' : 'var(--paper)'} !important;
-                    color: ${align.value === currentAlign ? 'var(--night)' : 'var(--ink)'} !important;
+                    background: ${align.value === currentAlign ? 'var(--primary)' : 'var(--card)'} !important;
+                    color: ${align.value === currentAlign ? 'var(--text-inverse)' : 'var(--text-primary)'} !important;
                     cursor: pointer !important;
                     font-size: 12px !important;
                 `;
@@ -925,7 +938,7 @@
 
             // Divider
             const div1 = document.createElement('div');
-            div1.style.cssText = 'width: 1px; background: var(--line); margin: 4px 4px;';
+            div1.style.cssText = 'width: 1px; background: var(--border); margin: 4px 4px;';
             toolbar.appendChild(div1);
 
             // Size buttons
@@ -941,10 +954,10 @@
                 btn.textContent = size.label;
                 btn.style.cssText = `
                     padding: 6px 10px !important;
-                    border: 1px solid var(--line) !important;
+                    border: 1px solid var(--border) !important;
                     border-radius: 6px !important;
-                    background: var(--paper) !important;
-                    color: var(--ink) !important;
+                    background: var(--card) !important;
+                    color: var(--text-primary) !important;
                     cursor: pointer !important;
                     font-size: 12px !important;
                     font-weight: 600 !important;
@@ -958,7 +971,7 @@
 
             // Divider
             const div2 = document.createElement('div');
-            div2.style.cssText = 'width: 1px; background: var(--line); margin: 4px 4px;';
+            div2.style.cssText = 'width: 1px; background: var(--border); margin: 4px 4px;';
             toolbar.appendChild(div2);
 
             // Reset button
@@ -967,10 +980,10 @@
             resetBtn.title = 'Reset ukuran';
             resetBtn.style.cssText = `
                 padding: 6px 10px !important;
-                border: 1px solid var(--line) !important;
+                border: 1px solid var(--border) !important;
                 border-radius: 6px !important;
-                background: var(--paper) !important;
-                color: var(--ink) !important;
+                background: var(--card) !important;
+                color: var(--text-primary) !important;
                 cursor: pointer !important;
                 font-size: 14px !important;
             `;
@@ -982,7 +995,7 @@
 
             // Dimensions display
             const dims = document.createElement('div');
-            dims.style.cssText = 'padding: 6px 8px !important; color: var(--ink-soft) !important; font-size: 11px !important; white-space: nowrap !important;';
+            dims.style.cssText = 'padding: 6px 8px !important; color: var(--text-muted) !important; font-size: 11px !important; white-space: nowrap !important;';
             dims.textContent = img.naturalWidth + '×' + img.naturalHeight;
             toolbar.appendChild(dims);
 

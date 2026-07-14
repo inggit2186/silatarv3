@@ -1,16 +1,17 @@
 <x-admin.layouts.app>
-    <div class="admin-page-header">
-        <div>
-            <h1 class="admin-page-title">Profil Saya</h1>
-            <p class="admin-page-subtitle">Kelola informasi akun Anda</p>
+    <div class="page-header">
+        <div class="page-header-content">
+            <span class="page-label">// Profil</span>
+            <h1 class="page-title">Profil Saya</h1>
+            <p class="page-subtitle">Kelola informasi akun Anda</p>
         </div>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-3">
-        {{-- Profile Card --}}
+        <!-- Profile Card -->
         <div class="card">
             <div class="card-body text-center">
-                <div class="mx-auto mb-4 h-24 w-24 overflow-hidden rounded-full bg-gradient-to-br from-cyan-500 to-blue-600">
+                <div class="mx-auto mb-4 h-24 w-24 overflow-hidden rounded-full" style="background: linear-gradient(135deg, #0891B2 0%, #2563EB 100%);">
                     @if(auth()->user()->pp && auth()->user()->nomor_induk)
                         <img
                             src="{{ asset('assets/img/users/' . auth()->user()->nomor_induk . '/' . auth()->user()->pp) }}"
@@ -24,16 +25,16 @@
                         </div>
                     @endif
                 </div>
-                <h2 class="text-xl font-bold text-slate-900">{{ auth()->user()->name }}</h2>
-                <p class="text-sm text-slate-500">{{ auth()->user()->role }}</p>
-                <p class="mt-1 text-xs text-slate-400">{{ auth()->user()->nomor_induk }}</p>
+                <h2 class="text-xl font-bold" style="color: var(--text-primary);">{{ auth()->user()->name }}</h2>
+                <p class="text-sm" style="color: var(--text-muted);">{{ auth()->user()->role }}</p>
+                <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ auth()->user()->nomor_induk }}</p>
                 <div class="mt-4">
-                    <span class="badge badge-cyan">{{ auth()->user()->role }}</span>
+                    <span class="badge badge-info">{{ auth()->user()->role }}</span>
                 </div>
             </div>
         </div>
 
-        {{-- Profile Form --}}
+        <!-- Profile Form -->
         <div class="card lg:col-span-2">
             <div class="card-header">
                 <h3 class="card-title">Informasi Akun</h3>
@@ -59,19 +60,19 @@
                         </div>
                     </div>
 
-                    <hr class="my-6 border-slate-100">
+                    <hr class="my-6" style="border-color: var(--border);">
 
-                    <h4 class="mb-4 font-semibold text-slate-900">Ubah Password</h4>
+                    <h4 class="mb-4 font-semibold" style="color: var(--text-primary);">Ubah Password</h4>
                     <div class="space-y-4">
-                        <div class="form-group max-w-md">
+                        <div class="form-group" style="max-width: 400px;">
                             <label class="form-label">Password Lama</label>
                             <input type="password" class="form-input" placeholder="Masukkan password lama">
                         </div>
-                        <div class="form-group max-w-md">
+                        <div class="form-group" style="max-width: 400px;">
                             <label class="form-label">Password Baru</label>
                             <input type="password" class="form-input" placeholder="Masukkan password baru">
                         </div>
-                        <div class="form-group max-w-md">
+                        <div class="form-group" style="max-width: 400px;">
                             <label class="form-label">Konfirmasi Password Baru</label>
                             <input type="password" class="form-input" placeholder="Konfirmasi password baru">
                         </div>

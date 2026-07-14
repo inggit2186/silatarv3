@@ -11,9 +11,8 @@ export default defineConfig({
                 'app': 'resources/css/app.css',
                 'home': 'resources/css/neo-mirai-home.css',
 
-                // Admin entrypoints (lazy loaded via @vite in admin layout)
-                'admin-css': 'resources/css/admin.css',
-                'admin-neo': 'resources/css/admin-neo.css',
+                // Admin entrypoint
+                'admin-css': 'resources/css/admin-new.css',
 
                 // JS entrypoint
                 'app-js': 'resources/js/app.js',
@@ -28,6 +27,12 @@ export default defineConfig({
         tailwindcss(),
     ],
     server: {
+        host: '0.0.0.0',
+        port: 5173,
+        strictPort: true,
+        hmr: {
+            host: 'localhost'
+        },
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },
