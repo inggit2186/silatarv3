@@ -66,6 +66,16 @@ Fitur **Penilaian Kinerja Pejabat** adalah modul untuk menilai kinerja pejabat s
   - Modal styling
   - Responsive design
   - Animations
+  - Button styling (gradient gold, shadows)
+  - Icon button styling
+
+### ✅ fase 6: Bug Fixes & Enhancements
+- [x] Fix CSS import dengan `@stack('styles')`
+- [x] Fix critical bug: field name `pejabats_id` → `pejabat_id`
+- [x] Add toast notification system
+- [x] Add inline validation errors display
+- [x] Beautify buttons (gradient gold, shadows, hover effects)
+- [x] Fix icon visibility on action buttons
 
 ## Routes
 
@@ -94,7 +104,11 @@ dst...
 | `app/Models/User.php` | Tambah helper methods |
 | `routes/web.php` | Tambah route penilaian-kinerja publik |
 | `resources/views/components/layouts/site-header.blade.php` | Tambah menu di user dropdown |
-| `resources/css/penilaian-kinerja-neo.css` | CSS NEO MIRAI theme |
+| `resources/views/components/layouts/app.blade.php` | Tambah toast notification system |
+| `resources/css/penilaian-kinerja-neo.css` | CSS NEO MIRAI theme + button styling |
+| `resources/views/penilaian-kinerja/index.blade.php` | Beautify buttons, fix icons |
+| `resources/views/penilaian-kinerja/create.blade.php` | Fix pejabat_id, add validation errors, beautify |
+| `resources/views/penilaian-kinerja/edit.blade.php` | Beautify buttons |
 
 ## Files Baru
 
@@ -112,15 +126,17 @@ dst...
 | `resources/views/penilaian-kinerja/_partials/kriteria-item.blade.php` | Komponen kriteria |
 | `resources/views/penilaian-kinerja/_partials/kriteria-item-edit.blade.php` | Komponen kriteria edit |
 | `resources/css/penilaian-kinerja-neo.css` | Styling NEO MIRAI theme |
+| `public/css/penilaian-kinerja-neo.css` | Compiled CSS (copy dari resources) |
 
 ## TODO
 
 ### Immediate (Testing)
-- [ ] Test login sebagai kepala → menu tampil di dropdown ✓
-- [ ] Test login sebagai admin lain → menu tidak tampil & 403 ✓
+- [x] Test login sebagai kepala → menu tampil di dropdown
+- [x] Test login sebagai admin lain → menu tidak tampil & 403
 - [ ] Test filter triwulan/tahun
-- [ ] Test submit form penilaian baru
+- [ ] Test submit form penilaian baru (data tersimpan)
 - [ ] Test edit penilaian
+- [ ] Test toast notification (sukses & error)
 - [ ] Test responsive design (mobile)
 
 ### Next Sprint
@@ -135,7 +151,7 @@ dst...
 
 ## Changelog
 
-### 2026-07-15
+### 2026-07-15 (Sesi 1 - Implementasi)
 - Inisiasi plan dan progress file
 - **Implementasi dengan Tema NEO MIRAI:**
   - Migration database ✅
@@ -150,21 +166,37 @@ dst...
   - Menu dipindahkan ke user dropdown ✅
   - Tema diubah ke NEO MIRAI (bukan admin) ✅
 
-### Fix UI/UX create.blade.php
-- Fix Alpine.js expression errors (pejabatan → pejabat)
-- Refactor inline x-data to use `Alpine.data()` function
-- Fix JavaScript number precision issue for large NIP numbers (cast to string)
-- Add prominent "Kembali" button
-- Enhance periode card with gradient background and icon
-- Enlarge pejabat photo preview with shadow ring
+### 2026-07-15 (Sesi 2 - Fix UI/UX)
+- Fix Alpine.js dengan window.pejabatsMap
+- Fix: Foto pejabat dari users->pp
+- Dropdown pejabat dengan preview card
+- Semua halaman sudah menggunakan Alpine.js dengan benar
 
-### Query Optimization
-- Sort pejabat berdasarkan:
-  1. kat_jabatan: kasubbag/kasubag → kasi → kepala (by dept kategori)
-  2. dept_id (ascending)
-  3. name (ascending)
-- Filter: exclude dept_id = 998, 999
-- Filter: status IN (1, 2)
+### 2026-07-15 (Sesi 3 - Bug Fixes & Enhancements)
+- **Critical Bug Fix:**
+  - Field name `pejabats_id` → `pejabat_id` (data tidak tersimpan)
+- **CSS Import Fix:**
+  - Tambah `@stack('styles')` di `app.blade.php`
+  - Tambah `@push('styles')` di setiap halaman penilaian-kinerja
+- **Toast Notification System:**
+  - Toast sukses (hijau) untuk pesan sukses
+  - Toast error (merah) untuk pesan error
+  - Toast error untuk validation errors
+  - Auto-dismiss setelah 5 detik
+  - Tombol close manual
+- **Inline Validation Errors:**
+  - Tampilan error validasi di create.blade.php
+- **Button Beautification:**
+  - Gradient gold background (#c9a227 → #a8871f)
+  - Box shadow dengan glow effect
+  - Hover effect dengan transform & shadow lebih besar
+  - Active state yang smooth
+  - Icon yang lebih besar (20px)
+- **Icon Button Fix:**
+  - Detail: Tombol putih dengan border, icon gelap
+  - Edit: Gradient gold dengan icon putih
+  - Hapus: Background merah muda dengan icon merah
+  - Semua icon sekarang menggunakan SVG yang jelas
 
 ## Referensi Teknis
 
@@ -190,11 +222,23 @@ dst...
 - **Responsive**: Mobile-friendly grid
 - **Animations**: Fade-in untuk kriteria cards
 - **User Dropdown**: Menu di dropdown user (hanya untuk role kepala)
+- **Toast Notifications**: Success (emerald) & Error (red) dengan auto-dismiss
+- **Buttons**: Gradient gold dengan shadow, hover effects
+- **Icon Buttons**: Clear visibility dengan appropriate colors
 
-## Changelog Terakhir
+### CSS Styling
+```css
+/* Base Button */
+.neo-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, #c9a227 0%, #a8871f 100%);
+    box-shadow: 0 4px 14px rgba(201, 162, 39, 0.35);
+}
 
-### 2026-07-15
-- Fix: Alpine.js dengan window.pejabatsMap
-- Fix: Foto pejabat dari users->pp
-- Dropdown pejabat dengan preview card
-- Semua halaman sudah menggunakan Alpine.js dengan benar)
+/* Icon Buttons */
+.neo-btn-icon {
+    width: 40px;
+    height: 40px;
+}
+```

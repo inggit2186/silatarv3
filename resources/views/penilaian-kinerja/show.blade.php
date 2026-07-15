@@ -1,4 +1,9 @@
 <x-layouts.app title="Detail Penilaian Kinerja - SILATAR">
+
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/penilaian-kinerja-neo.css') }}">
+@endpush
+
     <main class="neo-mirai">
 
         <!-- Site Header -->

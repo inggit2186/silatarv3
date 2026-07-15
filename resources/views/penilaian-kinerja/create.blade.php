@@ -1,4 +1,9 @@
 <x-layouts.app title="Buat Penilaian Kinerja - SILATAR">
+
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/penilaian-kinerja-neo.css') }}">
+@endpush
+
     <main class="neo-mirai">
         <x-layouts.site-header />
 
@@ -157,7 +162,25 @@
                         @csrf
                         <input type="hidden" name="tahun" value="{{ $filters['tahun'] }}">
                         <input type="hidden" name="triwulan" value="{{ $filters['triwulan'] }}">
-                        <input type="hidden" name="pejabats_id" x-model="selectedId">
+                        <input type="hidden" name="pejabat_id" x-model="selectedId">
+
+                        @if($errors->any())
+                            <div class="neo-card mb-6 bg-red-50 border-2 border-red-200">
+                                <div class="flex items-start gap-3">
+                                    <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <div>
+                                        <h4 class="font-semibold text-red-700 mb-1">Terjadi Kesalahan:</h4>
+                                        <ul class="text-sm text-red-600 list-disc list-inside space-y-0.5">
+                                            @foreach($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
 
                         <div class="neo-card mb-8">
                             <div class="flex items-center justify-between mb-6">
@@ -190,17 +213,17 @@
                         </div>
 
                         <div class="flex justify-end gap-4">
-                            <a href="{{ route('penilaian-kinerja.index') }}" class="neo-btn-secondary inline-flex items-center gap-2">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <a href="{{ route('penilaian-kinerja.index') }}" class="neo-btn neo-btn-secondary">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                                 </svg>
                                 Kembali
                             </a>
-                            <button type="submit" class="neo-btn-primary inline-flex items-center gap-2">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <button type="submit" class="neo-btn neo-btn-primary">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M5 13l4 4L19 7"/>
                                 </svg>
-                                Simpan
+                                Simpan Penilaian
                             </button>
                         </div>
                     </form>

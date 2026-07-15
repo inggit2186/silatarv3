@@ -33,6 +33,7 @@
             'resources/js/app.js'
         ])
 
+        @stack('styles')
         @stack('extraHead')
     </head>
     <body class="neo-mirai min-h-full text-slate-900 antialiased">
@@ -53,5 +54,52 @@
             window.appUiConfig = {!! json_encode($uiConfig) !!};
             window.livewireScriptConfig = {!! json_encode($livewireConfig) !!};
         </script>
+
+        <!-- Toast Notification -->
+        <div x-data="{
+            show: false,
+            message: '',
+            type: 'success',
+            init() {
+                @if(session('success'))
+                    this.message = {{ json_encode(session('success')) }};
+                    this.type = 'success';
+                    this.show = true;
+                    setTimeout(() => this.show = false, 5000);
+                @endif
+                @if(session('error'))
+                    this.message = {{ json_encode(session('error')) }};
+                    this.type = 'error';
+                    this.show = true;
+                    setTimeout(() => this.show = false, 5000);
+                @endif
+                @if($errors->any())
+                    this.message = {{ json_encode($errors->first()) }};
+                    this.type = 'error';
+                    this.show = true;
+                    setTimeout(() => this.show = false, 5000);
+                @endif
+            }
+        }" x-show="show" x-transition
+            :class="type === 'success' ? 'bg-emerald-500' : 'bg-red-500'"
+            class="fixed bottom-6 right-6 z-50 px-6 py-4 rounded-xl shadow-2xl text-white font-medium flex items-center gap-3 max-w-md"
+            style="display: none;">
+            <template x-if="type === 'success'">
+                <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </template>
+            <template x-if="type === 'error'">
+                <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </template>
+            <span x-text="message" class="flex-1"></span>
+            <button @click="show = false" class="flex-shrink-0 hover:opacity-80 transition-opacity">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
 </body>
 </html>

@@ -1,4 +1,9 @@
 <x-layouts.app title="Edit Penilaian Kinerja - SILATAR">
+
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/penilaian-kinerja-neo.css') }}">
+@endpush
+
     <main class="neo-mirai">
 
         <!-- Site Header -->
@@ -113,9 +118,14 @@
 
                 {{-- Submit --}}
                 <div class="flex justify-end gap-4">
-                    <a href="{{ route('penilaian-kinerja.index') }}" class="neo-btn-secondary">Batal</a>
-                    <button type="submit" class="neo-btn-primary inline-flex items-center gap-2">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="{{ route('penilaian-kinerja.index') }}" class="neo-btn neo-btn-secondary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        Batal
+                    </a>
+                    <button type="submit" class="neo-btn neo-btn-primary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M5 13l4 4L19 7"/>
                         </svg>
                         Update Penilaian
