@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PpidController;
+use App\Http\Controllers\PenilaianKinerjaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
@@ -46,6 +47,17 @@ Route::middleware('auth')->group(function () {
     Route::delete('/pelayanan/penmad-pengawas-bulanan/{pemberkasanId}/delete', [PageController::class, 'deletePenmadPengawasBulananRequest'])->name('pelayanan.penmad-pengawas-bulanan.delete');
     Route::get('/laporan-kinerja', [PageController::class, 'laporanKinerja'])->name('laporan-kinerja');
     Route::get('/laporan-kinerja/bawahan', [PageController::class, 'laporanKinerjaBawahan'])->name('laporan-kinerja.bawahan');
+
+    // Penilaian Kinerja - Hanya untuk role kepala
+    Route::prefix('penilaian-kinerja')->name('penilaian-kinerja.')->group(function () {
+        Route::get('/', [PenilaianKinerjaController::class, 'index'])->name('index');
+        Route::get('/create', [PenilaianKinerjaController::class, 'create'])->name('create');
+        Route::post('/', [PenilaianKinerjaController::class, 'store'])->name('store');
+        Route::get('/{id}', [PenilaianKinerjaController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [PenilaianKinerjaController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [PenilaianKinerjaController::class, 'update'])->name('update');
+        Route::delete('/{id}', [PenilaianKinerjaController::class, 'destroy'])->name('destroy');
+    });
     Route::get('/profil', [PageController::class, 'profil'])->name('profil');
     Route::get('/profil/edit', [PageController::class, 'editProfil'])->name('profil.edit');
     Route::put('/profil/edit', [PageController::class, 'updateProfil'])->name('profil.update');
