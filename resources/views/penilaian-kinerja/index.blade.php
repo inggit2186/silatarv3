@@ -215,6 +215,22 @@
             </div>
         </div>
 
+        <!-- Footer -->
+        <footer class="site-footer">
+            <a class="brand-lockup brand-lockup-small" href="{{ url("/") }}" aria-label="SILATAR home">
+                <span class="brand-mark" aria-hidden="true"><span></span></span>
+                <span class="brand-word"><span>SILATAR</span><span>V2</span></span>
+            </a>
+            <p>Portal Layanan Digital Kementerian Agama Tanah Datar</p>
+            <nav aria-label="Footer navigation">
+                <a href="{{ url("/") }}">Beranda</a>
+                <a href="{{ route('pelayanan') }}">Pelayanan</a>
+                <a href="{{ route('satuan-kerja') }}">Unit Kerja</a>
+                <a href="{{ route('news.index') }}">Berita</a>
+            </nav>
+            <div class="footer-copyright"><span>&copy; {{ date("Y") }} SILATAR - Kementerian Agama Tanah Datar</span></div>
+        </footer>
+
         <!-- Delete Confirmation Modal -->
         <div id="deleteModal" class="modal-backdrop" x-data="{ show: false, id: null }">
             <div class="modal-content">
