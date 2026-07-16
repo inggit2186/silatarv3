@@ -105,10 +105,12 @@ dst...
 | `routes/web.php` | Tambah route penilaian-kinerja publik |
 | `resources/views/components/layouts/site-header.blade.php` | Tambah menu di user dropdown |
 | `resources/views/components/layouts/app.blade.php` | Tambah toast notification system |
-| `resources/css/penilaian-kinerja-neo.css` | CSS NEO MIRAI theme + button styling |
-| `resources/views/penilaian-kinerja/index.blade.php` | Beautify buttons, fix icons |
+| `resources/css/penilaian-kinerja-neo.css` | CSS NEO MIRAI theme + button styling + detail button |
+| `resources/views/penilaian-kinerja/index.blade.php` | Beautify buttons, fix icons, default triwulan |
 | `resources/views/penilaian-kinerja/create.blade.php` | Fix pejabat_id, add validation errors, beautify |
 | `resources/views/penilaian-kinerja/edit.blade.php` | Beautify buttons |
+| `resources/views/penilaian-kinerja/show.blade.php` | Summary horizontal, foto pejabat, catatan styling |
+| `app/Http/Controllers/PenilaianKinerjaController.php` | Default triwulan = triwulan sebelumnya |
 
 ## Files Baru
 
@@ -197,6 +199,22 @@ dst...
   - Edit: Gradient gold dengan icon putih
   - Hapus: Background merah muda dengan icon merah
   - Semua icon sekarang menggunakan SVG yang jelas
+
+### 2026-07-15 (Sesi 4 - UI Enhancements)
+- **Detail Page Redesign:**
+  - Summary Card horizontal dengan foto pejabat dan 3 statistik sejajar
+  - Foto pejabat menggunakan path `/assets/img/users/{nomor_induk}/{pp}`
+  - Pejabat Info card dihapus (sudah digabungkan ke Summary)
+- **Catatan Penilaian Styling:**
+  - Background gradient amber-orange dengan border
+  - Icon catatan dengan circle background
+  - Font lebih besar dan bold untuk teks catatan
+  - Label "Catatan" dengan header style
+- **Index Page Enhancements:**
+  - Default triwulan sekarang triwulan sebelumnya (bukan triwulan saat ini)
+- **Icon Button Fix:**
+  - Tombol detail menggunakan class `.neo-btn-detail` dengan background biru mencolok
+  - Icon putih untuk kontras tinggi
 
 ## Referensi Teknis
 

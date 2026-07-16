@@ -23,7 +23,8 @@ class PenilaianKinerjaController extends Controller
 
         // Get filter values
         $tahun = $request->input('tahun', date('Y'));
-        $triwulan = $request->input('triwulan', ceil(date('n') / 3));
+        $currentTriwulan = ceil(date('n') / 3);
+        $triwulan = $request->input('triwulan', max(1, $currentTriwulan - 1));
 
         $query = PenilaianKinerja::with(['pejabat'])
             ->where('penilai_id', $user->id)
@@ -73,7 +74,8 @@ class PenilaianKinerjaController extends Controller
         }
 
         $tahun = $request->input('tahun', date('Y'));
-        $triwulan = $request->input('triwulan', ceil(date('n') / 3));
+        $currentTriwulan = ceil(date('n') / 3);
+        $triwulan = $request->input('triwulan', max(1, $currentTriwulan - 1));
 
         $pejabats = User::dapatDinilai()
             ->leftJoin('ktd_department as dept', 'dept.id', '=', 'users.dept_id')

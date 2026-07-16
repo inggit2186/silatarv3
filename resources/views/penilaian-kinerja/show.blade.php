@@ -46,60 +46,46 @@
         <div class="container mx-auto px-4 -mt-8 relative z-10 pb-12">
             {{-- Summary Card --}}
             <div class="summary-card mb-8">
-                <div class="flex justify-between items-start mb-6">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-20 h-20 rounded-2xl overflow-hidden bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg ring-4 ring-amber-200/50 flex-shrink-0">
+                        @if($penilaian->pejabat->pp && $penilaian->pejabat->nomor_induk)
+                            <img src="/assets/img/users/{{ $penilaian->pejabat->nomor_induk }}/{{ $penilaian->pejabat->pp }}" class="w-full h-full object-cover" alt="Foto {{ $penilaian->pejabat->name }}">
+                        @else
+                            {{ substr($penilaian->pejabat->name, 0, 2) }}
+                        @endif
+                    </div>
                     <div>
-                        <h3 class="text-xl font-semibold opacity-90">Ringkasan Penilaian</h3>
-                        <p class="opacity-75 text-sm mt-1">{{ $penilaian->pejabat->kat_jabatan_label }}</p>
+                        <h3 class="text-lg font-semibold opacity-90">{{ $penilaian->pejabat->name }}</h3>
+                        <p class="opacity-75 text-sm">{{ $penilaian->pejabat->kat_jabatan_label }}</p>
                     </div>
                 </div>
-                <div class="grid-2 gap-6">
-                    <div class="text-center p-4 bg-white/10 rounded-xl">
+                <div class="flex flex-wrap items-center gap-4 pt-4 border-t border-white/20">
+                    <div class="flex-1 min-w-[120px] text-center p-4 bg-white/10 rounded-xl">
                         <div class="text-4xl font-bold text-green-200">+{{ $penilaian->total_thumbs_up }}</div>
                         <div class="text-sm opacity-75 mt-1">Total Bagus</div>
                     </div>
-                    <div class="text-center p-4 bg-white/10 rounded-xl">
+                    <div class="flex-1 min-w-[120px] text-center p-4 bg-white/10 rounded-xl">
                         <div class="text-4xl font-bold text-red-200">-{{ $penilaian->total_thumbs_down }}</div>
                         <div class="text-sm opacity-75 mt-1">Total Kurang</div>
                     </div>
-                </div>
-                <div class="mt-6 pt-6 border-t border-white/20">
-                    <div class="flex items-center justify-between">
-                        <span class="opacity-75">Skor Net</span>
-                        <span class="text-2xl font-bold {{ $penilaian->net_score >= 0 ? 'text-green-200' : 'text-red-200' }}">
+                    <div class="flex-1 min-w-[140px] text-center p-4 bg-gradient-to-br from-amber-500/30 to-amber-600/30 rounded-xl border border-amber-300/30">
+                        <div class="text-4xl font-bold {{ $penilaian->net_score >= 0 ? 'text-yellow-200' : 'text-red-200' }}">
                             {{ $penilaian->net_score >= 0 ? '+' : '' }}{{ $penilaian->net_score }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Pejabat Info --}}
-            <div class="neo-card mb-8">
-                <div class="flex items-start gap-4">
-                    <div class="w-20 h-20 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
-                        {{ substr($penilaian->pejabat->name, 0, 2) }}
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-semibold">{{ $penilaian->pejabat->name }}</h3>
-                        <div class="flex flex-wrap items-center gap-2 mt-1">
-                            <span class="neo-badge neo-badge-amber">{{ ucfirst($penilaian->pejabat->kat_jabatan) }}</span>
-                            @if($penilaian->pejabat->jabatan)
-                                <span class="text-muted">{{ $penilaian->pejabat->jabatan }}</span>
-                            @endif
                         </div>
-                        <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-muted">
-                            @if($penilaian->pejabat->nomor_induk)
-                                <span><strong>NIP:</strong> {{ $penilaian->pejabat->nomor_induk }}</span>
-                            @endif
-                            @if($penilaian->pejabat->dept_nama)
-                                <span><strong>Tempat Tugas:</strong> {{ $penilaian->pejabat->dept_nama }}</span>
-                            @endif
-                        </div>
+                        <div class="text-sm opacity-75 mt-1">Skor Net</div>
                     </div>
                 </div>
             </div>
 
             {{-- Kriteria Cards --}}
-            <div class="grid-2 gap-6 mb-8">
+            <div class="mb-8">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    Detail Penilaian per Kriteria
+                </h2>
+                <div class="grid-2 gap-6">
                 @php
                     $existingData = [];
                     foreach($penilaian->kriterias as $kriteria) {
@@ -148,7 +134,7 @@
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
                                 @endswitch
                             </div>
-                            <div>
+                            <div class="flex-1">
                                 <h4 class="font-semibold">{{ $kriteria['nama'] }}</h4>
                                 <p class="text-sm text-muted">{{ $kriteria['deskripsi'] }}</p>
                             </div>
@@ -178,13 +164,18 @@
 
                         {{-- Catatan --}}
                         @if($data['catatan'])
-                            <div class="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
-                                <p class="text-sm text-amber-800 flex items-start gap-2">
-                                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
-                                    </svg>
-                                    {{ $data['catatan'] }}
-                                </p>
+                            <div class="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 shadow-sm">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-semibold text-amber-700 mb-1">Catatan</p>
+                                        <p class="text-base text-amber-900 font-medium leading-relaxed">{{ $data['catatan'] }}</p>
+                                    </div>
+                                </div>
                             </div>
                         @endif
                     </div>
