@@ -110,6 +110,15 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
 
             <div class="sidebar-divider"></div>
 
+            <a href="#" onclick="openPasswordModal(); return false;" class="sidebar-nav-item">
+                <div class="sidebar-nav-icon-wrap amber">
+                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                </div>
+                <span>Ubah Password</span>
+            </a>
+
             <a href="{{ url('/') }}" target="_blank" class="sidebar-nav-item">
                 <div class="sidebar-nav-icon-wrap">
                     <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -216,9 +225,174 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
         </template>
     </div>
 
+    <!-- Change Password Modal (Global) -->
+    <div id="globalPasswordModal" class="modal-backdrop">
+        <div class="modal" style="max-width: 440px;">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">Ubah Password</h2>
+                    <p class="text-sm text-muted">Ubah password akun Anda</p>
+                </div>
+                <button onclick="closeGlobalPasswordModal()" class="modal-close">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form id="globalPasswordForm" method="POST" action="{{ route('admin.users.change-password-own') }}">
+                @csrf
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Password Lama</label>
+                        <div class="relative">
+                            <input type="password" id="oldPassword" name="current_password" class="form-input" placeholder="Masukkan password lama" required>
+                            <button type="button" onclick="togglePasswordVisibility('oldPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
+                                <svg id="eyeOldPassword" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password Baru</label>
+                        <div class="relative">
+                            <input type="password" id="globalNewPassword" name="password" class="form-input" placeholder="Minimal 6 karakter" required minlength="6">
+                            <button type="button" onclick="togglePasswordVisibility('globalNewPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
+                                <svg id="eyeGlobalNewPassword" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Konfirmasi Password Baru</label>
+                        <div class="relative">
+                            <input type="password" id="globalConfirmPassword" name="password_confirmation" class="form-input" placeholder="Ulangi password baru" required minlength="6">
+                            <button type="button" onclick="togglePasswordVisibility('globalConfirmPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
+                                <svg id="eyeGlobalConfirmPassword" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="globalPasswordError" class="alert alert-danger hidden mt-3">
+                        <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <span class="alert-message" id="globalPasswordErrorMessage"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeGlobalPasswordModal()" class="btn btn-secondary">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         function toggleSidebar() {
             document.getElementById('adminSidebar').classList.toggle('open');
+        }
+
+        // Global Password Modal Functions
+        const globalPasswordModal = document.getElementById('globalPasswordModal');
+        const globalPasswordForm = document.getElementById('globalPasswordForm');
+        const globalPasswordError = document.getElementById('globalPasswordError');
+        const globalPasswordErrorMessage = document.getElementById('globalPasswordErrorMessage');
+
+        function openPasswordModal() {
+            globalPasswordError.classList.add('hidden');
+            document.getElementById('oldPassword').value = '';
+            document.getElementById('globalNewPassword').value = '';
+            document.getElementById('globalConfirmPassword').value = '';
+            globalPasswordModal.classList.add('active');
+        }
+
+        function closeGlobalPasswordModal() {
+            globalPasswordModal.classList.remove('active');
+            globalPasswordError.classList.add('hidden');
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeGlobalPasswordModal();
+            }
+        });
+
+        globalPasswordModal.addEventListener('click', function(e) {
+            if (e.target === this) closeGlobalPasswordModal();
+        });
+
+        globalPasswordForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('globalNewPassword').value;
+            const confirmPassword = document.getElementById('globalConfirmPassword').value;
+
+            if (newPassword.length < 8) {
+                globalPasswordErrorMessage.textContent = 'Password baru minimal 6 karakter.';
+                globalPasswordError.classList.remove('hidden');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                globalPasswordErrorMessage.textContent = 'Konfirmasi password baru tidak cocok.';
+                globalPasswordError.classList.remove('hidden');
+                return;
+            }
+
+            const formData = new FormData(globalPasswordForm);
+
+            fetch(globalPasswordForm.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                    'Accept': 'application/json',
+                },
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeGlobalPasswordModal();
+                    showGlobalToast('success', data.message);
+                } else {
+                    globalPasswordErrorMessage.textContent = data.message || 'Terjadi kesalahan.';
+                    globalPasswordError.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                globalPasswordErrorMessage.textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+                globalPasswordError.classList.remove('hidden');
+            });
+        });
+
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                } else {
+                    input.type = 'password';
+                }
+            }
+        }
+
+        function showGlobalToast(type, message) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    ${type === 'success' ? '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>' : '<path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>'}
+                </svg>
+                <span class="toast-message">${message}</span>
+                <button onclick="this.parentElement.remove()" class="toast-close">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
         }
     </script>
     @stack('scripts')

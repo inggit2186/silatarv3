@@ -186,6 +186,11 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h5.586a1 1 0 00.707-.293l5.414-5.414a1 1 0 000-1.414l-5.414-5.414A1 1 0 0011.828 6H16"/>
                                         </svg>
                                     </a>
+                                    <button type="button" class="action-btn key" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" title="Ubah Password" onclick="openPasswordModal(this)">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                                        </svg>
+                                    </button>
                                     <button type="button" class="action-btn delete" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" title="Hapus" @if($user->role === 'superadmin') disabled @endif onclick="openDeleteModal(this)">
                                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -273,6 +278,58 @@
             </div>
         </div>
     </div>
+
+    <!-- Change Password Modal -->
+    <div id="passwordModal" class="modal-backdrop">
+        <div class="modal" style="max-width: 440px;">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">Ubah Password</h2>
+                    <p class="text-sm text-muted">Password untuk <strong id="passwordUserName" class="text-primary"></strong></p>
+                </div>
+                <button onclick="closePasswordModal()" class="modal-close">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form id="passwordForm" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Password Baru</label>
+                        <div class="relative">
+                            <input type="password" id="newPassword" name="password" class="form-input" placeholder="Minimal 6 karakter" required minlength="6">
+                            <button type="button" onclick="togglePasswordVisibility('newPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
+                                <svg id="eyeNewPassword" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Konfirmasi Password</label>
+                        <div class="relative">
+                            <input type="password" id="confirmPassword" name="password_confirmation" class="form-input" placeholder="Ulangi password" required minlength="6">
+                            <button type="button" onclick="togglePasswordVisibility('confirmPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
+                                <svg id="eyeConfirmPassword" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="passwordError" class="alert alert-danger hidden mt-3">
+                        <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <span class="alert-message" id="passwordErrorMessage"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closePasswordModal()" class="btn btn-secondary">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </x-admin.layouts.app>
 
 @push('scripts')
@@ -304,6 +361,7 @@ async function toggleUserStatus(button) {
     }
 }
 
+// Delete Modal Functions
 let deleteUserId = null;
 const deleteModal = document.getElementById('deleteModal');
 const deleteUserName = document.getElementById('deleteUserName');
@@ -322,13 +380,101 @@ function closeDeleteModal() {
 }
 
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeDeleteModal();
+    if (e.key === 'Escape') {
+        closeDeleteModal();
+        closePasswordModal();
+    }
 });
 
 deleteModal.addEventListener('click', function(e) {
     if (e.target === this) closeDeleteModal();
 });
 
+// Password Modal Functions
+let passwordUserId = null;
+const passwordModal = document.getElementById('passwordModal');
+const passwordUserName = document.getElementById('passwordUserName');
+const passwordForm = document.getElementById('passwordForm');
+const passwordError = document.getElementById('passwordError');
+const passwordErrorMessage = document.getElementById('passwordErrorMessage');
+
+function openPasswordModal(button) {
+    passwordUserId = button.dataset.userId;
+    passwordUserName.textContent = button.dataset.userName;
+    passwordError.classList.add('hidden');
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+    passwordForm.action = `/admin/users/${passwordUserId}/change-password`;
+    passwordModal.classList.add('active');
+}
+
+function closePasswordModal() {
+    passwordModal.classList.remove('active');
+    passwordUserId = null;
+    passwordError.classList.add('hidden');
+}
+
+passwordModal.addEventListener('click', function(e) {
+    if (e.target === this) closePasswordModal();
+});
+
+passwordForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (newPassword.length < 8) {
+        passwordErrorMessage.textContent = 'Password minimal 6 karakter.';
+        passwordError.classList.remove('hidden');
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        passwordErrorMessage.textContent = 'Konfirmasi password tidak cocok.';
+        passwordError.classList.remove('hidden');
+        return;
+    }
+
+    try {
+        const response = await fetch(passwordForm.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                password: newPassword,
+                password_confirmation: confirmPassword,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            closePasswordModal();
+            showToast('success', data.message);
+        } else {
+            passwordErrorMessage.textContent = data.message || 'Terjadi kesalahan.';
+            passwordError.classList.remove('hidden');
+        }
+    } catch (error) {
+        passwordErrorMessage.textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+        passwordError.classList.remove('hidden');
+    }
+});
+
+function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    if (input.type === 'password') {
+        input.type = 'text';
+    } else {
+        input.type = 'password';
+    }
+}
+
+// Toast Function
 function showToast(type, message) {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;

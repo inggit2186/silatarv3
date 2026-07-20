@@ -35,6 +35,7 @@ Route::middleware(['auth', 'admin'])
         Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
         Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
         Route::post('/users/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+        Route::post('/users/{id}/change-password', [UserController::class, 'changePassword'])->name('users.change-password');
         Route::get('/users/{id}/show', [UserController::class, 'show'])->name('users.show');
 
         // News Management
@@ -91,6 +92,9 @@ Route::middleware(['auth', 'admin'])
         // Impersonate (Login sebagai user lain)
         Route::post('/impersonate', [UserController::class, 'impersonate'])->name('impersonate');
         Route::post('/impersonate/stop', [UserController::class, 'stopImpersonate'])->name('impersonate.stop');
+
+        // Ubah Password User Sendiri
+        Route::post('/change-password-own', [UserController::class, 'changePasswordOwn'])->name('users.change-password-own');
 
         // Laporan Kinerja Verification
         Route::post('/laporan-kinerja/approve', [DashboardController::class, 'approveLaporanKinerja'])->name('laporan-kinerja.approve');

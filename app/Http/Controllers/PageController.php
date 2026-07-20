@@ -7,6 +7,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -2982,6 +2983,48 @@ class PageController extends Controller
         ]);
 
         return redirect()->route('profil')->with('success', 'Profil berhasil diperbarui.');
+    }
+
+    public function ubahPassword(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($user, 403);
+
+        return view('ubah-password');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ], [
+            'current_password.required' => 'Password lama harus diisi.',
+            'password.required' => 'Password baru harus diisi.',
+            'password.min' => 'Password baru minimal 6 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+        ]);
+
+        $user = auth()->user();
+
+        // Verify old password
+        if (!Hash::check($request->current_password, $user->password)) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Password lama salah.'], 400);
+            }
+            return back()->withErrors(['current_password' => 'Password lama salah.'])->withInput();
+        }
+
+        DB::table('users')->where('id', $user->id)->update([
+            'password' => Hash::make($request->password),
+            'updated_at' => now(),
+        ]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Password berhasil diubah.']);
+        }
+
+        return redirect()->route('home')->with('success', 'Password berhasil diubah.');
     }
 
     public function rekapLaporanKinerja(Request $request)

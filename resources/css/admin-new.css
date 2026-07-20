@@ -1576,6 +1576,16 @@
   color: var(--danger);
 }
 
+.action-btn.key {
+  color: var(--primary);
+}
+
+.action-btn.key:hover {
+  background: var(--primary-50);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
 .action-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;

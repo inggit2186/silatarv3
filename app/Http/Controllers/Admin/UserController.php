@@ -316,6 +316,69 @@ class UserController extends Controller
     }
 
     /**
+     * Change user password.
+     */
+    public function changePassword(Request $request, int $id)
+    {
+        $request->validate([
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ], [
+            'password.required' => 'Password harus diisi.',
+            'password.min' => 'Password minimal 6 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+        ]);
+
+        $user = DB::table('users')->where('id', $id)->first();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Pengguna tidak ditemukan.'], 404);
+        }
+
+        DB::table('users')->where('id', $id)->update([
+            'password' => Hash::make($request->password),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password berhasil diubah.',
+        ]);
+    }
+
+    /**
+     * Change own password (current logged in user).
+     */
+    public function changePasswordOwn(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ], [
+            'current_password.required' => 'Password lama harus diisi.',
+            'password.required' => 'Password baru harus diisi.',
+            'password.min' => 'Password baru minimal 6 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+        ]);
+
+        $user = auth()->user();
+
+        // Verify old password
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['success' => false, 'message' => 'Password lama salah.'], 400);
+        }
+
+        DB::table('users')->where('id', $user->id)->update([
+            'password' => Hash::make($request->password),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password berhasil diubah.',
+        ]);
+    }
+
+    /**
      * Get user data for AJAX.
      */
     public function show(int $id)

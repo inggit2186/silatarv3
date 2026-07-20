@@ -61,6 +61,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profil', [PageController::class, 'profil'])->name('profil');
     Route::get('/profil/edit', [PageController::class, 'editProfil'])->name('profil.edit');
     Route::put('/profil/edit', [PageController::class, 'updateProfil'])->name('profil.update');
+    Route::get('/ubah-password', [PageController::class, 'ubahPassword'])->name('ubah-password');
+    Route::post('/ubah-password', [PageController::class, 'updatePassword'])->name('ubah-password.update');
     Route::post('/laporan-kinerja/humas', [PageController::class, 'storeHumas'])->name('laporan-humas.store');
     Route::delete('/laporan-kinerja/humas/{id}', [PageController::class, 'destroyHumas'])->name('laporan-humas.destroy');
     Route::post('/laporan-kinerja/harian', [PageController::class, 'storeLaporanKinerja'])->name('laporan-kinerja.store');
