@@ -3,7 +3,7 @@
         <x-layouts.site-header />
 
         <!-- Hero Section -->
-        <section class="hero-page" style="background-image: url('/assets/img/template/bg2.webp'); background-size: cover; background-position: center center; padding: 2rem 2rem 4rem;">
+        <section class="hero-page bg-cover" style="background-image: url('/assets/img/template/profilasn-bg.webp'); background-position: center top; padding: 120px 2rem 4rem; min-height: 350px;">
             <div style="max-width: 28rem; margin: 0 auto; text-align: center; padding-top: 80px;">
                 <!-- Avatar -->
                 <div style="width: 6rem; height: 6rem; margin: 0 auto 1.5rem; border-radius: 0.75rem; overflow: hidden; border: 2px solid var(--gold); display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--gold) 0 38%, var(--sun) 38% 58%, var(--night-soft) 58%);">
@@ -30,21 +30,33 @@
 
         <!-- Menu Section -->
         <section class="page-content" style="padding-top: 0;">
-            <div style="max-width: 60rem; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-                @foreach($menuItems as $item)
-                    <a href="{{ $item['route'] ? route($item['route']) : '#' }}" class="neo-card" style="text-decoration: none; display: flex; flex-direction: column; overflow: hidden; padding: 0; transition: border-color 180ms, box-shadow 240ms;" onmouseover="this.style.borderColor='var(--gold)'; this.style.boxShadow='0 8px 30px oklch(18% 0.03 76 / 0.08)'" onmouseout="this.style.borderColor='var(--line)'; this.style.boxShadow='none'">
-                        <div style="aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; background: var(--paper-soft);">
-                            <img src="{{ asset('assets/img/ikon/' . $item['icon']) }}" alt="" style="width: 4rem; height: 4rem; object-fit: contain; opacity: 0.6;" onerror="this.style.display='none'">
-                        </div>
-                        <div style="padding: 1.5rem; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center;">
-                            <h3 style="font-family: var(--font-display); font-size: 1rem; font-weight: 600; color: var(--ink); margin: 0;">{{ $item['title'] }}</h3>
-                            <span style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1rem; padding: 0.5rem 1rem; background: var(--gold); color: var(--night); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; text-transform: uppercase;">
-                                Lihat Detail
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h12m-5-5 5 5-5 5"/></svg>
-                            </span>
-                        </div>
-                    </a>
-                @endforeach
+            <div style="max-width: 50rem; margin: 0 auto;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem;">
+                    @foreach($menuItems as $item)
+                        @if($item['route'])
+                            <a href="{{ route($item['route']) }}" class="neo-card" style="text-decoration: none; display: flex; flex-direction: column; transition: all 180ms; overflow: hidden; padding: 0; min-height: 200px;">
+                                <div style="flex: 1; display: flex; align-items: center; justify-content: center; background: var(--paper-soft); padding: 1.5rem;">
+                                    <img src="{{ asset('assets/img/ikon/' . $item['icon']) }}" alt="" style="width: 100%; height: 100%; max-height: 140px; object-fit: contain;" onerror="this.style.display='none'">
+                                </div>
+                                <div style="padding: 1rem; text-align: center; background: var(--rice);">
+                                    <h3 style="font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; color: var(--ink); margin: 0; line-height: 1.3;">{{ $item['title'] }}</h3>
+                                </div>
+                            </a>
+                        @else
+                            <div class="neo-card" style="display: flex; flex-direction: column; overflow: hidden; padding: 0; min-height: 200px; position: relative;">
+                                <div style="flex: 1; display: flex; align-items: center; justify-content: center; background: var(--paper-soft); padding: 1.5rem; opacity: 0.5;">
+                                    <img src="{{ asset('assets/img/ikon/' . $item['icon']) }}" alt="" style="width: 100%; height: 100%; max-height: 140px; object-fit: contain;" onerror="this.style.display='none'">
+                                </div>
+                                <div style="padding: 1rem; text-align: center; background: var(--rice);">
+                                    <h3 style="font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; color: var(--ink); margin: 0; line-height: 1.3;">{{ $item['title'] }}</h3>
+                                </div>
+                                <div style="position: absolute; top: 0.75rem; right: 0.75rem; background: var(--gold); color: var(--night); padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; font-family: var(--font-mono);">
+                                    Segera Hadir
+                                </div>
+                            </div>
+                        @endif
+                    @endforeach
+                </div>
             </div>
         </section>
 
