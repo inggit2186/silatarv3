@@ -2369,6 +2369,9 @@ body {
     border-color: var(--ink-soft) !important;
 }
 
+/* Import Penilaian Kinerja Styles */
+@import './penilaian-kinerja-neo.css';
+
 
 
 

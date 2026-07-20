@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\PenilaianKinerja;
 use App\Models\PenilaianKriteria;
 use App\Models\User;
@@ -15,43 +16,54 @@ class PenilaianKinerjaController extends Controller
      */
     public function index(Request $request)
     {
-        // Check if user is kepala
-        $user = auth()->user();
-        if (!$user || $user->role !== 'kepala') {
-            abort(403, 'Hanya Kepala Kantor yang dapat mengakses halaman ini.');
-        }
-
         // Get filter values
         $tahun = $request->input('tahun', date('Y'));
-        $currentTriwulan = ceil(date('n') / 3);
-        $triwulan = $request->input('triwulan', max(1, $currentTriwulan - 1));
+        $triwulan = $request->input('triwulan', ceil(date('n') / 3));
+
+        // Get current user's penilaian
+        $user = auth()->user();
 
         $query = PenilaianKinerja::with(['pejabat'])
             ->where('penilai_id', $user->id)
             ->orderBy('tahun', 'desc')
             ->orderBy('triwulan', 'desc');
 
+        // Filter by tahun
         if ($tahun) {
             $query->where('tahun', $tahun);
         }
 
+        // Filter by triwulan
         if ($triwulan) {
             $query->where('triwulan', $triwulan);
         }
 
         $penilaians = $query->paginate(15)->withQueryString();
 
+        // Get options for dropdowns
         $tahunOptions = $this->getTahunOptions();
-        $triwulanOptions = $this->getTriwulanOptions();
+        $triwulanOptions = [
+            1 => 'Triwulan I (Jan - Mar)',
+            2 => 'Triwulan II (Apr - Jun)',
+            3 => 'Triwulan III (Jul - Sep)',
+            4 => 'Triwulan IV (Okt - Des)',
+        ];
 
+        // Get statistics
         $stats = [
             'total' => PenilaianKinerja::where('penilai_id', $user->id)->count(),
-            'tahun_ini' => PenilaianKinerja::where('penilai_id', $user->id)->where('tahun', date('Y'))->count(),
+            'tahun_ini' => PenilaianKinerja::where('penilai_id', $user->id)
+                ->where('tahun', date('Y'))->count(),
             'total_up' => PenilaianKinerja::where('penilai_id', $user->id)->sum('total_thumbs_up'),
             'total_down' => PenilaianKinerja::where('penilai_id', $user->id)->sum('total_thumbs_down'),
         ];
 
-        return view('penilaian-kinerja.index', [
+        return view('admin.penilaian-kinerja.index', [
+            'title' => 'Penilaian Kinerja - SILATAR Admin',
+            'breadcrumbs' => [
+                ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
+                ['label' => 'Penilaian Kinerja', 'url' => null],
+            ],
             'penilaians' => $penilaians,
             'tahunOptions' => $tahunOptions,
             'triwulanOptions' => $triwulanOptions,
@@ -69,54 +81,45 @@ class PenilaianKinerjaController extends Controller
     public function create(Request $request)
     {
         $user = auth()->user();
-        if (!$user || $user->role !== 'kepala') {
-            abort(403, 'Hanya Kepala Kantor yang dapat mengakses halaman ini.');
-        }
 
+        // Get filter values
         $tahun = $request->input('tahun', date('Y'));
-        $currentTriwulan = ceil(date('n') / 3);
-        $triwulan = $request->input('triwulan', max(1, $currentTriwulan - 1));
+        $triwulan = $request->input('triwulan', ceil(date('n') / 3));
 
-        // Query pejabat struktural (kasubbag, kasubag, kasi, kepala) dari semua dept
+        // Get pejabat struktural (kasubbag, kasubag, kasi, kepala) dari semua dept
         $pejabatsStruktural = User::dapatDinilai()
-            ->leftJoin('ktd_department as dept', 'dept.id', '=', 'users.dept_id')
-            ->select(['users.*', 'dept.nama as dept_nama', 'dept.kategori as dept_kategori'])
-            ->where('users.id', '!=', $user->id)
-            ->whereIn('users.status', [1, 2])
-            ->whereNotIn('users.dept_id', [998, 999, 14]) // exclude dept 14 (ditambah di query kedua)
-            ->orderByRaw("CASE
-                WHEN kat_jabatan IN ('kasubbag', 'kasubag') THEN 1
-                WHEN kat_jabatan = 'kasi' THEN 2
-                WHEN kat_jabatan = 'kepala' AND dept.kategori = 'kua' THEN 3
-                WHEN kat_jabatan = 'kepala' AND dept.kategori = 'min' THEN 4
-                WHEN kat_jabatan = 'kepala' AND dept.kategori = 'mtsn' THEN 5
-                WHEN kat_jabatan = 'kepala' AND dept.kategori = 'man' THEN 6
-                ELSE 7
-            END")
-            ->orderBy('users.dept_id')
-            ->orderBy('users.name');
+            ->where('id', '!=', $user->id)
+            ->whereNotIn('dept_id', [998, 999, 14])
+            ->orderByRaw("FIELD(kat_jabatan, 'kasubbag', 'kasubag', 'kasi')")
+            ->orderBy('name');
 
-        // Query semua user dari dept_id = 14 (kecuali status = 3)
-        $pejabatsDept14 = User::leftJoin('ktd_department as dept', 'dept.id', '=', 'users.dept_id')
-            ->select(['users.*', 'dept.nama as dept_nama', 'dept.kategori as dept_kategori'])
-            ->where('users.id', '!=', $user->id)
-            ->where('users.dept_id', 14)
-            ->whereIn('users.status', [1, 2])
-            ->where('kat_jabatan', '!=', 'kepala') // exclude kepala (sudah ada di query struktural)
-            ->orderBy('users.name');
+        // Query semua user dari dept_id = 14 (kecuali status = 3 dan kat_jabatan = kepala)
+        $pejabatsDept14 = User::where('id', '!=', $user->id)
+            ->where('dept_id', 14)
+            ->whereIn('status', [1, 2])
+            ->where('kat_jabatan', '!=', 'kepala')
+            ->orderBy('name');
 
         // Combine dengan union
         $pejabats = $pejabatsStruktural->union($pejabatsDept14)->get();
 
+        // Get pejabat yang sudah dinilai di periode ini
         $sudahDinilai = PenilaianKinerja::where('penilai_id', $user->id)
             ->where('tahun', $tahun)
             ->where('triwulan', $triwulan)
             ->pluck('pejabat_id')
             ->toArray();
 
+        // Get all kriteria
         $kriterias = PenilaianKriteria::getAllKriteria();
 
-        return view('penilaian-kinerja.create', [
+        return view('admin.penilaian-kinerja.create', [
+            'title' => 'Buat Penilaian Kinerja - SILATAR Admin',
+            'breadcrumbs' => [
+                ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
+                ['label' => 'Penilaian Kinerja', 'url' => route('admin.penilaian-kinerja.index')],
+                ['label' => 'Buat Baru', 'url' => null],
+            ],
             'pejabats' => $pejabats,
             'sudahDinilai' => $sudahDinilai,
             'kriterias' => $kriterias,
@@ -134,11 +137,6 @@ class PenilaianKinerjaController extends Controller
      */
     public function store(Request $request)
     {
-        $user = auth()->user();
-        if (!$user || $user->role !== 'kepala') {
-            abort(403, 'Hanya Kepala Kantor yang dapat mengakses halaman ini.');
-        }
-
         $request->validate([
             'pejabat_id' => 'required|integer|exists:users,id',
             'tahun' => 'required|integer|min:2020|max:2030',
@@ -148,26 +146,38 @@ class PenilaianKinerjaController extends Controller
             'pejabat_id.exists' => 'Pejabat tidak ditemukan.',
         ]);
 
+        $user = auth()->user();
+
+        // Cek apakah pejabat valid untuk dinilai
         $pejabat = User::find($request->pejabat_id);
         if (!in_array($pejabat->kat_jabatan, ['kasubbag', 'kasubag', 'kasi', 'kepala'])) {
-            return redirect()->back()->withInput()->with('error', 'Pejabat tidak valid untuk dinilai.');
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Pejabat tidak valid untuk dinilai.');
         }
 
+        // Cek apakah menilai diri sendiri
         if ($request->pejabat_id == $user->id) {
-            return redirect()->back()->withInput()->with('error', 'Anda tidak dapat menilai diri sendiri.');
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Anda tidak dapat menilai diri sendiri.');
         }
 
+        // Cek apakah sudah ada penilaian untuk periode ini
         $exists = PenilaianKinerja::where('tahun', $request->tahun)
             ->where('triwulan', $request->triwulan)
             ->where('pejabat_id', $request->pejabat_id)
             ->first();
 
         if ($exists) {
-            return redirect()->back()->withInput()->with('error', 'Penilaian untuk pejabat ini pada periode ini sudah ada. Gunakan fitur edit.');
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Penilaian untuk pejabat ini pada periode ini sudah ada. Gunakan fitur edit.');
         }
 
         DB::beginTransaction();
         try {
+            // Hitung total thumbs
             $totalUp = 0;
             $totalDown = 0;
             $kriteriaData = $request->input('kriteria', []);
@@ -177,6 +187,7 @@ class PenilaianKinerjaController extends Controller
                 $totalDown += $data['thumbs_down'] ?? 0;
             }
 
+            // Buat penilaian
             $penilaian = PenilaianKinerja::create([
                 'tahun' => $request->tahun,
                 'triwulan' => $request->triwulan,
@@ -187,6 +198,7 @@ class PenilaianKinerjaController extends Controller
                 'total_thumbs_down' => $totalDown,
             ]);
 
+            // Simpan kriteria
             foreach ($kriteriaData as $kriteria => $data) {
                 if (in_array($kriteria, PenilaianKriteria::getKriteriaKeys())) {
                     PenilaianKriteria::create([
@@ -201,11 +213,15 @@ class PenilaianKinerjaController extends Controller
 
             DB::commit();
 
-            return redirect()->route('penilaian-kinerja.show', $penilaian->id)->with('success', 'Penilaian kinerja berhasil disimpan.');
+            return redirect()
+                ->route('admin.penilaian-kinerja.show', $penilaian->id)
+                ->with('success', 'Penilaian kinerja berhasil disimpan.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
@@ -214,18 +230,21 @@ class PenilaianKinerjaController extends Controller
      */
     public function show(int $id)
     {
-        $penilaian = PenilaianKinerja::with(['pejabat', 'penilai', 'kriterias'])->findOrFail($id);
+        $penilaian = PenilaianKinerja::with(['pejabat', 'penilai', 'kriterias'])
+            ->findOrFail($id);
 
-        // Load dept_nama for pejabat
-        $penilaian->pejabat->dept_nama = DB::table('ktd_department')
-            ->where('id', $penilaian->pejabat->dept_id)
-            ->value('nama');
-
+        // Cek apakah penilai adalah user saat ini
         if ($penilaian->penilai_id !== auth()->id()) {
             abort(403, 'Anda tidak memiliki akses ke penilaian ini.');
         }
 
-        return view('penilaian-kinerja.show', [
+        return view('admin.penilaian-kinerja.show', [
+            'title' => 'Detail Penilaian Kinerja - SILATAR Admin',
+            'breadcrumbs' => [
+                ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
+                ['label' => 'Penilaian Kinerja', 'url' => route('admin.penilaian-kinerja.index')],
+                ['label' => $penilaian->pejabat->name, 'url' => null],
+            ],
             'penilaian' => $penilaian,
             'kriterias' => PenilaianKriteria::getAllKriteria(),
         ]);
@@ -236,20 +255,27 @@ class PenilaianKinerjaController extends Controller
      */
     public function edit(int $id)
     {
-        $penilaian = PenilaianKinerja::with(['kriterias', 'pejabat'])->findOrFail($id);
+        $penilaian = PenilaianKinerja::with(['kriterias'])
+            ->findOrFail($id);
 
-        // Load dept_nama for pejabat
-        $penilaian->pejabat->dept_nama = DB::table('ktd_department')
-            ->where('id', $penilaian->pejabat->dept_id)
-            ->value('nama');
-
+        // Cek apakah penilai adalah user saat ini
         if ($penilaian->penilai_id !== auth()->id()) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit penilaian ini.');
         }
 
-        return view('penilaian-kinerja.edit', [
+        $kriterias = PenilaianKriteria::getAllKriteria();
+
+        return view('admin.penilaian-kinerja.edit', [
+            'title' => 'Edit Penilaian Kinerja - SILATAR Admin',
+            'breadcrumbs' => [
+                ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
+                ['label' => 'Penilaian Kinerja', 'url' => route('admin.penilaian-kinerja.index')],
+                ['label' => 'Edit: ' . $penilaian->pejabat->name, 'url' => null],
+            ],
             'penilaian' => $penilaian,
-            'kriterias' => PenilaianKriteria::getAllKriteria(),
+            'kriterias' => $kriterias,
+            'tahunOptions' => $this->getTahunOptions(),
+            'triwulanOptions' => $this->getTriwulanOptions(),
         ]);
     }
 
@@ -258,14 +284,21 @@ class PenilaianKinerjaController extends Controller
      */
     public function update(Request $request, int $id)
     {
+        $request->validate([
+            'tahun' => 'required|integer|min:2020|max:2030',
+            'triwulan' => 'required|integer|in:1,2,3,4',
+        ]);
+
         $penilaian = PenilaianKinerja::findOrFail($id);
 
+        // Cek apakah penilai adalah user saat ini
         if ($penilaian->penilai_id !== auth()->id()) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit penilaian ini.');
         }
 
         DB::beginTransaction();
         try {
+            // Hitung total thumbs
             $totalUp = 0;
             $totalDown = 0;
             $kriteriaData = $request->input('kriteria', []);
@@ -275,11 +308,17 @@ class PenilaianKinerjaController extends Controller
                 $totalDown += $data['thumbs_down'] ?? 0;
             }
 
+            // Update penilaian
             $penilaian->update([
+                'tahun' => $request->tahun,
+                'triwulan' => $request->triwulan,
                 'catatan_umum' => $request->catatan_umum,
                 'total_thumbs_up' => $totalUp,
                 'total_thumbs_down' => $totalDown,
             ]);
+
+            // Update/hapus kriteria
+            $existingKriterias = $penilaian->kriterias()->pluck('kriteria')->toArray();
 
             foreach ($kriteriaData as $kriteria => $data) {
                 if (in_array($kriteria, PenilaianKriteria::getKriteriaKeys())) {
@@ -296,11 +335,15 @@ class PenilaianKinerjaController extends Controller
 
             DB::commit();
 
-            return redirect()->route('penilaian-kinerja.show', $penilaian->id)->with('success', 'Penilaian kinerja berhasil diperbarui.');
+            return redirect()
+                ->route('admin.penilaian-kinerja.show', $penilaian->id)
+                ->with('success', 'Penilaian kinerja berhasil diperbarui.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
@@ -311,6 +354,7 @@ class PenilaianKinerjaController extends Controller
     {
         $penilaian = PenilaianKinerja::findOrFail($id);
 
+        // Cek apakah penilai adalah user saat ini
         if ($penilaian->penilai_id !== auth()->id()) {
             return response()->json([
                 'success' => false,
@@ -323,6 +367,49 @@ class PenilaianKinerjaController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Penilaian berhasil dihapus.',
+        ]);
+    }
+
+    /**
+     * Get pejabat list for AJAX
+     */
+    public function getPejabat(Request $request)
+    {
+        $user = auth()->user();
+        $tahun = $request->input('tahun', date('Y'));
+        $triwulan = $request->input('triwulan');
+
+        // Pejabat struktural
+        $queryStruktural = User::dapatDinilai()
+            ->where('id', '!=', $user->id)
+            ->whereNotIn('dept_id', [998, 999, 14])
+            ->orderByRaw("FIELD(kat_jabatan, 'kasubbag', 'kasubag', 'kasi')")
+            ->orderBy('name');
+
+        // Semua user dari dept_id = 14 (kecuali status = 3 dan kat_jabatan = kepala)
+        $queryDept14 = User::where('id', '!=', $user->id)
+            ->where('dept_id', 14)
+            ->whereIn('status', [1, 2])
+            ->where('kat_jabatan', '!=', 'kepala')
+            ->orderBy('name');
+
+        $pejabats = $queryStruktural->union($queryDept14)->get(['id', 'name', 'kat_jabatan', 'jabatan']);
+
+        // Get already rated pejabat if triwulan provided
+        if ($tahun && $triwulan) {
+            $sudahDinilai = PenilaianKinerja::where('penilai_id', $user->id)
+                ->where('tahun', $tahun)
+                ->where('triwulan', $triwulan)
+                ->pluck('pejabat_id')
+                ->toArray();
+        } else {
+            $sudahDinilai = [];
+        }
+
+        return response()->json([
+            'success' => true,
+            'pejabats' => $pejabats,
+            'sudahDinilai' => $sudahDinilai,
         ]);
     }
 

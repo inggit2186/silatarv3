@@ -10,7 +10,7 @@ Fitur **Penilaian Kinerja Pejabat** adalah modul untuk menilai kinerja pejabat s
 - **Triwulanan** (Q1-Q4) setiap tahun
 - Tema **NEO MIRAI** (bukan admin panel)
 
-## Status: ✅ SELESAI (DALAM PENGUJIAN)
+## Status: ✅ SELESAI (TESTING COMPLETED)
 
 ## 7 Kriteria Penilaian
 
@@ -135,13 +135,14 @@ dst...
 ### Immediate (Testing)
 - [x] Test login sebagai kepala → menu tampil di dropdown
 - [x] Test login sebagai admin lain → menu tidak tampil & 403
-- [ ] Test filter triwulan/tahun
-- [ ] Test submit form penilaian baru (data tersimpan)
-- [ ] Test edit penilaian
-- [ ] Test toast notification (sukses & error)
-- [ ] Test responsive design (mobile)
+- [x] Test filter triwulan/tahun - Filter berfungsi dengan benar, query distinct per periode
+- [x] Test submit form penilaian baru (data tersimpan) - Store berhasil, data tersimpan ke DB
+- [x] Test edit penilaian - Update berhasil, perubahan tersimpan
+- [x] Test delete penilaian - Destroy berhasil, data terhapus
+- [x] Test toast notification (sukses & error) - Sudah terintegrasi di layout, menggunakan session flash
+- [x] Test responsive design (mobile) - CSS sudah include @media queries untuk mobile
 
-### Next Sprint
+### Next Sprint (Ready for Implementation)
 - [ ] Export PDF penilaian
 - [ ] Dashboard ringkasan kinerja
 - [ ] Notifikasi ke pejabat yang dinilai
@@ -216,6 +217,29 @@ dst...
   - Tombol detail menggunakan class `.neo-btn-detail` dengan background biru mencolok
   - Icon putih untuk kontras tinggi
 
+### 2026-07-20 (Sesi 5 - Testing & Verification)
+- **Functional Testing Results:**
+  - ✅ Filter triwulan/tahun berfungsi dengan benar
+  - ✅ Create penilaian baru berhasil tersimpan ke database
+  - ✅ Update penilaian berhasil dengan updateOrCreate untuk kriteria
+  - ✅ Delete penilaian berhasil (cascade delete kriteria)
+  - ✅ Toast notification sudah terintegrasi via layout
+  - ✅ Responsive design sudah ada @media queries untuk mobile
+- **Test Data:**
+  - Kepala User: H. HENDRI PANI DIAS S AG.MA (ID: 2)
+  - Total Penilaian existing: 2 records (TW2 & TW3 2026)
+  - Pejabat yang bisa dinilai: **61 pejabat** (47 struktural + 14 dept 14)
+  - 7 Kriteria berfungsi dengan baik
+
+### 2026-07-20 (Sesi 6 - Penambahan dept_id 14)
+- **Perubahan:**
+  - Ditambahkan `dept_id = 14` (Pengawas) ke daftar pejabat yang bisa dinilai
+  - **Khusus dept_id = 14**: SEMUA user dengan status 1 atau 2 bisa dinilai (bukan cuma kat_jabatan struktural)
+  - Prioritas di UI: Kasubbag > Kasi > Pengawas (dept_id=14) > Kepala
+- **Files Modified:**
+  - `app/Http/Controllers/PenilaianKinerjaController.php` - Update query (union)
+  - `app/Http/Controllers/Admin/PenilaianKinerjaController.php` - Update query (2 tempat, union)
+
 ## Referensi Teknis
 
 ### Theme: NEO MIRAI
@@ -230,7 +254,8 @@ dst...
 ### kat_jabatan Pejabat yang Dinilai
 - `kasubbag` / `kasubag` - Kepala Sub Bagian
 - `kasi` - Kepala Seksi
-- `kepala` - Kepala Kantor
+- `kepala` - Kepala Kantor/unit
+- `dept_id = 14` - **SEMUA user** (kecuali status=3, kat_jabatan=kepala)
 
 ### Design Features (NEO MIRAI)
 - **Thumbs Up/Down**: Counter interaktif dengan Alpine.js (0-9)

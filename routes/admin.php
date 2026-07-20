@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\TpgController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\NewsController;
+use App\Http\Controllers\Admin\PenilaianKinerjaController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -93,6 +94,18 @@ Route::middleware(['auth', 'admin'])
 
         // Laporan Kinerja Verification
         Route::post('/laporan-kinerja/approve', [DashboardController::class, 'approveLaporanKinerja'])->name('laporan-kinerja.approve');
+
+        // Penilaian Kinerja (Hanya untuk role kepala)
+        Route::middleware(['kepala'])->prefix('penilaian-kinerja')->name('penilaian-kinerja.')->group(function () {
+            Route::get('/', [PenilaianKinerjaController::class, 'index'])->name('index');
+            Route::get('/create', [PenilaianKinerjaController::class, 'create'])->name('create');
+            Route::post('/', [PenilaianKinerjaController::class, 'store'])->name('store');
+            Route::get('/{id}', [PenilaianKinerjaController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [PenilaianKinerjaController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [PenilaianKinerjaController::class, 'update'])->name('update');
+            Route::delete('/{id}', [PenilaianKinerjaController::class, 'destroy'])->name('destroy');
+            Route::get('/pejabat', [PenilaianKinerjaController::class, 'getPejabat'])->name('pejabat');
+        });
 
         // Profile
         Route::get('/profile', function () {

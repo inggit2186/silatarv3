@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register admin middleware alias
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminAccess::class,
+            'kepala' => \App\Http\Middleware\EnsureIsKepala::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
