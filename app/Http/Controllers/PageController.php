@@ -4927,7 +4927,7 @@ class PageController extends Controller
                 // Build head photo path
                 $headPhotoPath = null;
                 if ($activeHead && ! empty($activeHead->pp) && ! empty($activeHead->nomor_induk)) {
-                    $headPhotoPath = asset("assets/img/users/{$activeHead->nomor_induk}/{$activeHead->pp}");
+                    $headPhotoPath = asset("storage/users_berkas/{$activeHead->nomor_induk}/{$activeHead->pp}");
                 }
 
                 return [
@@ -5392,7 +5392,7 @@ class PageController extends Controller
                 // Build head photo path
                 $headPhotoPath = null;
                 if ($activeHead && ! empty($activeHead->pp) && ! empty($activeHead->nomor_induk)) {
-                    $headPhotoPath = asset("assets/img/users/{$activeHead->nomor_induk}/{$activeHead->pp}");
+                    $headPhotoPath = asset("storage/users_berkas/{$activeHead->nomor_induk}/{$activeHead->pp}");
                 }
 
                 return [
@@ -5441,7 +5441,7 @@ class PageController extends Controller
             // Build user photo path
             $userPhotoPath = null;
             if (! empty($item->pp) && ! empty($item->nomor_induk)) {
-                $userPhotoPath = asset("assets/img/users/{$item->nomor_induk}/{$item->pp}");
+                $userPhotoPath = asset("storage/users_berkas/{$item->nomor_induk}/{$item->pp}");
             }
 
             return [
@@ -5609,7 +5609,7 @@ class PageController extends Controller
             return null;
         }
 
-        $relativePath = "assets/img/users/{$item->nomor_induk}/{$item->pp}";
+        $relativePath = "storage/users_berkas/{$item->nomor_induk}/{$item->pp}";
         $localPath = public_path($relativePath);
 
         if (file_exists($localPath)) {
@@ -5840,7 +5840,7 @@ class PageController extends Controller
         // Add profile photo URLs
         $pegawaiList->getCollection()->transform(function ($item) {
             if ($item->pp && $item->nomor_induk) {
-                $item->photo_url = asset('assets/img/users/' . $item->nomor_induk . '/' . $item->pp);
+                $item->photo_url = asset('storage/users_berkas/' . $item->nomor_induk . '/' . $item->pp);
             } else {
                 $item->photo_url = null;
             }
@@ -5914,7 +5914,7 @@ class PageController extends Controller
         // Add profile photo URLs
         $guruList->getCollection()->transform(function ($item) {
             if ($item->pp && $item->nomor_induk) {
-                $item->photo_url = asset('assets/img/users/' . $item->nomor_induk . '/' . $item->pp);
+                $item->photo_url = asset('storage/users_berkas/' . $item->nomor_induk . '/' . $item->pp);
             } else {
                 $item->photo_url = null;
             }
