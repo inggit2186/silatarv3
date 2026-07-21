@@ -846,6 +846,35 @@ html {
     min-height: clamp(15rem, 40vw, 25rem);
   }
 
+  .pejabat-grid {
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-width:  370px;
+    max-height:  170px;
+    margin: 0 auto;
+  }
+
+  .pejabat-grid li {
+    aspect-ratio: 3 / 4;
+    max-height: none;
+  }
+
+  .pejabat-grid li img {
+    object-fit: cover;
+    object-position: center top;
+  }
+
+  /* Hide 2nd and 3rd person in each slide on mobile */
+  .pejabat-grid li:nth-child(2),
+  .pejabat-grid li:nth-child(3) {
+    display: none;
+  }
+
+  .pejabat-person + .pejabat-person {
+    border-left: none;
+    border-top: 1px solid oklch(50% 0.04 78 / 0.24);
+  }
+
   .pejabat-controls {
     top: auto;
     bottom: 1rem;
