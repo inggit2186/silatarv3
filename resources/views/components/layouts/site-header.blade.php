@@ -464,12 +464,14 @@
     const passwordModal = document.getElementById('passwordModal');
 
     // Close dropdown when clicking change password
-    document.getElementById('changePasswordBtn').addEventListener('click', function(e) {
-        e.preventDefault();
-        // Close the Alpine dropdown by dispatching a click outside
-        document.body.click();
-        openPasswordModal();
-    });
+    const changePasswordBtn = document.getElementById('changePasswordBtn');
+    if (changePasswordBtn) {
+        changePasswordBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.body.click();
+            openPasswordModal();
+        });
+    }
 
     function openPasswordModal() {
         document.getElementById('passwordError').classList.add('hidden');
@@ -500,12 +502,15 @@
     });
 
     // Mobile button
-    document.getElementById('mobilePasswordBtn').addEventListener('click', function(e) {
-        e.preventDefault();
-        document.getElementById('mobile-nav').classList.add('hidden');
-        document.body.style.overflow = '';
-        openPasswordModal();
-    });
+    const mobilePasswordBtn = document.getElementById('mobilePasswordBtn');
+    if (mobilePasswordBtn) {
+        mobilePasswordBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('mobile-nav').classList.add('hidden');
+            document.body.style.overflow = '';
+            openPasswordModal();
+        });
+    }
 
     // Form Submit
     document.getElementById('passwordForm').addEventListener('submit', async function(e) {

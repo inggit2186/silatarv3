@@ -1961,6 +1961,8 @@ html {
     font-size: 0.7rem;
     text-transform: uppercase;
     cursor: pointer;
+    z-index: 101;
+    position: relative;
   }
   .nav-toggle i, .nav-toggle i::before, .nav-toggle i::after {
     display: block;
