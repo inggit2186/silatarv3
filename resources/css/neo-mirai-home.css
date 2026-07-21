@@ -2034,8 +2034,14 @@ html {
     flex-direction: column;
     text-align: center;
     gap: 1rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   }
   .site-footer nav { justify-content: center; }
+
+  /* Pejabat carousel mobile padding for bottom nav */
+  .pejabat-section {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @media (max-width: 540px) {

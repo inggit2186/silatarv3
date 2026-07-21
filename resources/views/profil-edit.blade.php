@@ -41,7 +41,7 @@
                             <div class="avatar-photo-wrapper">
                                 <div class="avatar-photo">
                                     @if($user->pp && $user->nomor_induk)
-                                        <img src="{{ asset('assets/img/users/' . $user->nomor_induk . '/' . $user->pp) }}" alt="{{ $user->name }}">
+                                        <img src="{{ asset('storage/users_berkas/' . $user->nomor_induk . '/' . $user->pp) }}" alt="{{ $user->name }}">
                                     @else
                                         <span class="avatar-photo-initials">{{ substr($user->name, 0, 2) }}</span>
                                     @endif

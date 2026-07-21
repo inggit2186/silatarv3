@@ -134,7 +134,7 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
             <div class="sidebar-user">
                 <div class="sidebar-user-avatar">
                     @if(auth()->user()->pp && auth()->user()->nomor_induk)
-                        <img src="{{ asset('assets/img/users/' . auth()->user()->nomor_induk . '/' . auth()->user()->pp) }}" alt="{{ auth()->user()->name }}" class="w-full h-full object-cover">
+                        <img src="{{ asset('storage/users_berkas/' . auth()->user()->nomor_induk . '/' . auth()->user()->pp) }}" alt="{{ auth()->user()->name }}" class="w-full h-full object-cover">
                     @else
                         {{ substr(auth()->user()->name, 0, 2) }}
                     @endif
@@ -186,7 +186,7 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
                 <div class="header-user">
                     <div class="header-user-avatar">
                         @if(auth()->user()->pp && auth()->user()->nomor_induk)
-                            <img src="{{ asset('assets/img/users/' . auth()->user()->nomor_induk . '/' . auth()->user()->pp) }}" alt="{{ auth()->user()->name }}" class="w-full h-full object-cover">
+                            <img src="{{ asset('storage/users_berkas/' . auth()->user()->nomor_induk . '/' . auth()->user()->pp) }}" alt="{{ auth()->user()->name }}" class="w-full h-full object-cover">
                         @else
                             {{ substr(auth()->user()->name, 0, 2) }}
                         @endif

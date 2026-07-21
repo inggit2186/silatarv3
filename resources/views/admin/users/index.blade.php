@@ -159,7 +159,7 @@
                                 <div class="table-user">
                                     <div class="table-user-avatar">
                                         @if(!empty($user->pp) && !empty($user->nomor_induk))
-                                            <img src="{{ asset('assets/img/users/' . $user->nomor_induk . '/' . $user->pp) }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
+                                            <img src="{{ asset('storage/users_berkas/' . $user->nomor_induk . '/' . $user->pp) }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
                                         @else
                                             {{ substr($user->name, 0, 2) }}
                                         @endif

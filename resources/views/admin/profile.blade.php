@@ -14,7 +14,7 @@
                 <div class="mx-auto mb-4 h-24 w-24 overflow-hidden rounded-full" style="background: linear-gradient(135deg, #0891B2 0%, #2563EB 100%);">
                     @if(auth()->user()->pp && auth()->user()->nomor_induk)
                         <img
-                            src="{{ asset('assets/img/users/' . auth()->user()->nomor_induk . '/' . auth()->user()->pp) }}"
+                            src="{{ asset('storage/users_berkas/' . auth()->user()->nomor_induk . '/' . auth()->user()->pp) }}"
                             alt="{{ auth()->user()->name }}"
                             class="h-full w-full object-cover"
                             onerror="this.style.display='none'; this.parentElement.textContent='{{ substr(auth()->user()->name, 0, 2) }}';"

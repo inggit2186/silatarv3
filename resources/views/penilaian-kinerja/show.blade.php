@@ -49,7 +49,7 @@
                 <div class="flex items-center gap-4 mb-4">
                     <div class="w-20 h-20 rounded-2xl overflow-hidden bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg ring-4 ring-amber-200/50 flex-shrink-0">
                         @if($penilaian->pejabat->pp && $penilaian->pejabat->nomor_induk)
-                            <img src="/assets/img/users/{{ $penilaian->pejabat->nomor_induk }}/{{ $penilaian->pejabat->pp }}" class="w-full h-full object-cover" alt="Foto {{ $penilaian->pejabat->name }}">
+                            <img src="{{ asset('storage/users_berkas/' . $penilaian->pejabat->nomor_induk . '/' . $penilaian->pejabat->pp) }}" class="w-full h-full object-cover" alt="Foto {{ $penilaian->pejabat->name }}">
                         @else
                             {{ substr($penilaian->pejabat->name, 0, 2) }}
                         @endif

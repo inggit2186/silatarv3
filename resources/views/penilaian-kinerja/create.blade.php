@@ -66,7 +66,7 @@
                                 },
                                 get photoUrl() {
                                     if (!this.pejabat || !this.pejabat.pp || !this.pejabat.nomor_induk) return null;
-                                    return '/assets/img/users/' + this.pejabat.nomor_induk + '/' + this.pejabat.pp;
+                                    return '/storage/users_berkas/' + this.pejabat.nomor_induk + '/' + this.pejabat.pp;
                                 }
                             };
                         });

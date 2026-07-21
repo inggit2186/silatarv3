@@ -8,7 +8,7 @@
                 <!-- Avatar -->
                 <div style="width: 6rem; height: 6rem; margin: 0 auto 1.5rem; border-radius: 0.75rem; overflow: hidden; border: 2px solid var(--gold); display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--gold) 0 38%, var(--sun) 38% 58%, var(--night-soft) 58%);">
                     @if($user->pp && $user->nomor_induk)
-                        <img src="{{ asset('assets/img/users/' . $user->nomor_induk . '/' . $user->pp) }}" alt="{{ $user->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <img src="{{ asset('storage/users_berkas/' . $user->nomor_induk . '/' . $user->pp) }}" alt="{{ $user->name }}" style="width: 100%; height: 100%; object-fit: cover;">
                     @else
                         <span style="font-family: var(--font-mono); font-size: 1.5rem; font-weight: 700; color: var(--night);">{{ substr($user->name, 0, 2) }}</span>
                     @endif

@@ -31,8 +31,8 @@
     @auth
         <div class="user-menu-wrapper" x-data="{ open: false }" @click.away="open = false">
             <button type="button" class="user-menu-btn" @click="open = !open" :aria-expanded="open">
-                @if(Auth::user()->pp && file_exists(public_path('storage/' . Auth::user()->pp)))
-                    <img src="{{ asset('storage/' . Auth::user()->pp) }}" alt="PP" class="user-pp">
+                @if(Auth::user()->pp && Auth::user()->nomor_induk)
+                    <img src="{{ asset('storage/users_berkas/' . Auth::user()->nomor_induk . '/' . Auth::user()->pp) }}" alt="PP" class="user-pp">
                 @else
                     <div class="user-pp-placeholder">{{ substr(Auth::user()->name, 0, 1) }}</div>
                 @endif
@@ -90,7 +90,204 @@
     @endauth
 </header>
 
-<!-- Mobile Navigation -->
+<!-- Bottom Navigation Bar - Mobile Only -->
+<nav class="bottom-nav" aria-label="Mobile navigation">
+    <a href="{{ url("/") }}" class="bottom-nav-item {{ request()->is('/') ? 'is-active' : '' }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span>Beranda</span>
+    </a>
+    <a href="{{ route('news.index') }}" class="bottom-nav-item {{ request()->is('berita*') ? 'is-active' : '' }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+        <span>Berita</span>
+    </a>
+    <a href="{{ route('pelayanan') }}" class="bottom-nav-item {{ request()->is('pelayanan*') ? 'is-active' : '' }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span>Layanan</span>
+    </a>
+    <a href="{{ route('laporan-kinerja') }}" class="bottom-nav-item {{ request()->is('laporan-kinerja*') ? 'is-active' : '' }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span>Kinerja</span>
+    </a>
+    @auth
+    <div class="bottom-nav-profil" x-data="{ open: false }" @click.away="open = false">
+        <button type="button" class="bottom-nav-profil-btn" @click="open = !open" :aria-expanded="open">
+            @if(Auth::user()->pp && Auth::user()->nomor_induk)
+                <img src="{{ asset('storage/users_berkas/' . Auth::user()->nomor_induk . '/' . Auth::user()->pp) }}" alt="PP" class="bottom-nav-avatar">
+            @else
+                <div class="bottom-nav-avatar-placeholder">{{ substr(Auth::user()->name, 0, 1) }}</div>
+            @endif
+        </button>
+        <div class="bottom-nav-dropdown" x-show="open" x-transition>
+            <div class="bottom-nav-dropdown-header">
+                <span class="dropdown-user-name">{{ Auth::user()->name }}</span>
+                <span class="dropdown-user-role">{{ Auth::user()->pekerjaan ?? 'Pegawai' }}</span>
+            </div>
+            <div class="bottom-nav-dropdown-divider"></div>
+            <a href="{{ route('profil') }}" class="bottom-nav-dropdown-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                Profil Saya
+            </a>
+            <a href="{{ route('laporan-kinerja') }}" class="bottom-nav-dropdown-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Laporan Kinerja
+            </a>
+            <a href="{{ route('pengajuan-saya') }}" class="bottom-nav-dropdown-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                Pengajuan Saya
+            </a>
+            @if(in_array(auth()->user()->role, ['superadmin', 'admin', 'frontdesk', 'kasubbag', 'kepala', 'kasi']))
+            <a href="{{ route('admin.dashboard') }}" class="bottom-nav-dropdown-item bottom-nav-dropdown-admin">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Admin Panel
+            </a>
+            @endif
+            <div class="bottom-nav-dropdown-divider"></div>
+            <a href="#" class="bottom-nav-dropdown-item" id="mobilePasswordBtnBottom">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                Ubah Password
+            </a>
+            <form action="{{ route('logout') }}" method="POST" class="bottom-nav-dropdown-form">
+                @csrf
+                <button type="submit" class="bottom-nav-dropdown-item bottom-nav-dropdown-logout">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Logout
+                </button>
+            </form>
+        </div>
+    </div>
+    @else
+    <a href="{{ route('login') }}" class="bottom-nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        <span>Login</span>
+    </a>
+    @endauth
+</nav>
+
+<style>
+    /* Bottom Navigation Dropdown for Profil */
+    .bottom-nav-profil {
+        position: relative;
+    }
+
+    .bottom-nav-profil-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    .bottom-nav-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--gold);
+    }
+
+    .bottom-nav-avatar-placeholder {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--gold);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .bottom-nav-dropdown {
+        position: absolute;
+        bottom: 100%;
+        right: 0;
+        margin-bottom: 0.5rem;
+        background: var(--rice);
+        border: 1px solid var(--line);
+        border-radius: 0.75rem;
+        min-width: 200px;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        z-index: 200;
+    }
+
+    .bottom-nav-dropdown-header {
+        padding: 0.75rem 1rem;
+        background: oklch(68% 0.145 74 / 0.05);
+    }
+
+    .dropdown-user-name {
+        display: block;
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--ink);
+    }
+
+    .dropdown-user-role {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--ink-soft);
+    }
+
+    .bottom-nav-dropdown-divider {
+        height: 1px;
+        background: var(--line);
+    }
+
+    .bottom-nav-dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.625rem 1rem;
+        color: var(--ink);
+        text-decoration: none;
+        font-size: 0.8125rem;
+        transition: background 0.15s ease;
+        border: none;
+        background: none;
+        width: 100%;
+        cursor: pointer;
+        text-align: left;
+    }
+
+    .bottom-nav-dropdown-item:hover {
+        background: oklch(68% 0.145 74 / 0.08);
+    }
+
+    .bottom-nav-dropdown-item svg {
+        width: 16px;
+        height: 16px;
+        color: var(--ink-soft);
+        flex-shrink: 0;
+    }
+
+    .bottom-nav-dropdown-admin {
+        color: var(--gold);
+        font-weight: 600;
+    }
+
+    .bottom-nav-dropdown-admin svg {
+        color: var(--gold);
+    }
+
+    .bottom-nav-dropdown-logout {
+        color: #dc2626;
+    }
+
+    .bottom-nav-dropdown-logout svg {
+        color: #dc2626;
+    }
+
+    .bottom-nav-dropdown-form {
+        margin: 0;
+        padding: 0;
+    }
+</style>
+
+<!-- Mobile Navigation Overlay (hidden by default, only for additional menu) -->
 <div id="mobile-nav" class="mobile-nav hidden">
     <button class="mobile-nav-close" id="menuClose" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
     <nav aria-label="Mobile navigation">
@@ -200,6 +397,121 @@
 </div>
 
 <style>
+    /* Bottom Navigation Bar - Mobile Only */
+    .bottom-nav {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: var(--rice);
+        border-top: 1px solid var(--line);
+        padding: 0.5rem 0;
+        padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+        justify-content: space-around;
+        align-items: center;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .bottom-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.5rem 1rem;
+        color: var(--ink-soft);
+        text-decoration: none;
+        transition: color 0.2s ease;
+        min-width: 60px;
+    }
+
+    .bottom-nav-item svg {
+        width: 22px;
+        height: 22px;
+        transition: transform 0.2s ease;
+    }
+
+    .bottom-nav-item span {
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    .bottom-nav-item:hover,
+    .bottom-nav-item.is-active {
+        color: var(--gold);
+    }
+
+    .bottom-nav-item.is-active svg {
+        transform: scale(1.1);
+    }
+
+    .bottom-nav-item.is-active::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 24px;
+        height: 3px;
+        background: var(--gold);
+        border-radius: 0 0 2px 2px;
+    }
+
+    /* Show bottom nav only on mobile */
+    @media (max-width: 900px) {
+        .bottom-nav {
+            display: flex;
+        }
+
+        /* Add padding to main content for bottom nav */
+        main, .neo-mirai {
+            padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+        }
+
+        /* Hide desktop header nav on mobile */
+        .site-nav {
+            display: none !important;
+        }
+
+        .nav-toggle {
+            display: inline-flex !important;
+        }
+
+        .ticket-pill {
+            display: none !important;
+        }
+
+        .user-menu-wrapper {
+            display: none !important;
+        }
+
+        /* Adjust header for mobile */
+        .site-header {
+            padding: 0.75rem 1rem;
+        }
+
+        .site-header .brand-lockup {
+            max-width: 140px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .bottom-nav-item {
+            padding: 0.4rem 0.75rem;
+            min-width: 50px;
+        }
+
+        .bottom-nav-item svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .bottom-nav-item span {
+            font-size: 0.65rem;
+        }
+    }
+
     /* Modal Overlay */
     .modal-overlay {
         position: fixed;
@@ -508,6 +820,15 @@
             e.preventDefault();
             document.getElementById('mobile-nav').classList.add('hidden');
             document.body.style.overflow = '';
+            openPasswordModal();
+        });
+    }
+
+    // Bottom nav password button
+    const mobilePasswordBtnBottom = document.getElementById('mobilePasswordBtnBottom');
+    if (mobilePasswordBtnBottom) {
+        mobilePasswordBtnBottom.addEventListener('click', function(e) {
+            e.preventDefault();
             openPasswordModal();
         });
     }
