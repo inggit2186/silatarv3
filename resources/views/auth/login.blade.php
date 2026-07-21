@@ -1,6 +1,5 @@
 <x-layouts.app title="Login - SILATAR">
     <main class="neo-mirai neo-auth-page">
-        <x-layouts.site-header />
 
         <!-- Login Card -->
         <div class="neo-auth-card">

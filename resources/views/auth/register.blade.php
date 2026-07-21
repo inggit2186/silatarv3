@@ -1,6 +1,5 @@
 <x-layouts.app title="Daftar - SILATAR">
     <main class="neo-mirai neo-auth-page">
-        <x-layouts.site-header />
 
         <div class="neo-auth-register-wrapper">
             <!-- Registration Form -->

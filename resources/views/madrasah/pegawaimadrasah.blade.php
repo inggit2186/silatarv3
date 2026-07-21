@@ -5,8 +5,6 @@
     @endphp
 
     <main class="neo-mirai" x-data="{ expandedRows: [] }">
-        <x-layouts.site-header />
-
         <!-- Hero Section -->
         <section class="hero-page has-bg-image">
             <div class="content-centered" style="max-width: 36rem; text-align: center;">

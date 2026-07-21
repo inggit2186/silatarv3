@@ -1,9 +1,6 @@
 ﻿<x-layouts.app title="Kankemenag Kab.Tanah Datar">
     <main class="neo-mirai">
 
-        <!-- Site Header Component -->
-        <x-layouts.site-header />
-
         <!-- Hero Section -->
         <section class="hero" id="home">
             <div class="vertical-poem" aria-hidden="true"><span>Portal Layanan Digital</span><i></i></div>

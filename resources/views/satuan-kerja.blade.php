@@ -22,8 +22,6 @@
             }
         }"
     >
-        <x-layouts.site-header />
-
         <!-- Hero Section -->
         <section class="hero-page" style="background-image: url('/assets/img/template/satker-bg.webp'); background-size: cover; background-position: center top; padding: 120px 2rem 4rem; min-height: 350px;">
             <div style="max-width: 36rem; text-align: center;">

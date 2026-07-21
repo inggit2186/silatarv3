@@ -20,8 +20,6 @@
     </div>
     @endif
 
-        <x-layouts.site-header />
-
     <main class="neo-mirai"
         x-data="{
             units: {{ json_encode($kantorUnits) }},

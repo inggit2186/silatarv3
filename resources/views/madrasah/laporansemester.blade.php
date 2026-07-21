@@ -1,7 +1,5 @@
 <x-layouts.app title="Laporan Semester Madrasah - SILATAR">
     <main class="neo-mirai">
-        <x-layouts.site-header />
-
         <!-- Hero Section -->
         <section class="hero-page has-bg-image" style="padding: 140px 2rem 4rem; min-height: 320px;">
             <div style="max-width: 42rem; text-align: center;">

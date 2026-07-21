@@ -1,6 +1,5 @@
 <x-layouts.app title="Semua Berita - SILATAR">
     <main class="neo-mirai">
-        <x-layouts.site-header />
 
         <!-- Hero Section -->
         <section class="hero-page" style="background-image: url('/assets/img/template/news-bg.webp'); background-size: cover; background-position: center top; padding: 120px 2rem 4rem; min-height: 350px;">

@@ -37,8 +37,11 @@
         @stack('extraHead')
     </head>
     <body class="neo-mirai min-h-full text-slate-900 antialiased">
+        <!-- Site Header - Sticky Full Navigation -->
+        <x-layouts.site-header />
+
         <!-- Page Content -->
-        <div class="relative">
+        <div class="relative" style="padding-top: var(--header-height);">
             {{ $slot }}
         </div>
 

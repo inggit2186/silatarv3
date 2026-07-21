@@ -1,6 +1,5 @@
 <x-layouts.app title="Profil - SILATAR">
     <main class="neo-mirai">
-        <x-layouts.site-header />
 
         <!-- Hero Section -->
         <section class="hero-page bg-cover" style="background-image: url('/assets/img/template/profilasn-bg.webp'); background-position: center top; padding: 120px 2rem 4rem; min-height: 350px;">

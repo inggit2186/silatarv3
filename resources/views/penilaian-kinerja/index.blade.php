@@ -6,9 +6,6 @@
 
 <main class="neo-mirai">
 
-        <!-- Site Header -->
-        <x-layouts.site-header />
-
         <!-- Hero Section -->
         <section class="hero-page bg-cover bg-center" style="background-image: url('/assets/img/template/kinerja-bg.webp'); padding: 2rem 2rem 4rem; min-height: 320px;">
             <div class="hero-page-content" style="padding-top: 80px;">
