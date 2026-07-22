@@ -58,6 +58,55 @@
                 <input type="hidden" name="tahun_ajaran" x-model="tahunAjaran">
                 <input type="hidden" name="status" value="draft">
 
+                
+                <!-- Section 1: Informasi Laporan -->
+                <div class="neo-card" style="margin-bottom: 1.5rem;">
+                    <div class="neo-card-header">
+                        <div class="neo-card-icon" style="background: var(--gold); color: var(--night);">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="neo-card-title">A. Informasi Laporan</h3>
+                            <p class="neo-card-desc">Periode dan identitas laporan</p>
+                        </div>
+                    </div>
+                    <div class="neo-card-body">
+                        <div class="neo-grid-3">
+                            <div class="neo-field-group">
+                                <label class="neo-field-label">Semester</label>
+                                <select name="semester" class="neo-form-select" required>
+                                    <option value="ganjil" {{ ($selectedSemester ?? 'genap') == 'ganjil' ? 'selected' : '' }}>Ganjil</option>
+                                    <option value="genap" {{ ($selectedSemester ?? 'genap') == 'genap' ? 'selected' : '' }}>Genap</option>
+                                </select>
+                            </div>
+                            <div class="neo-field-group">
+                                <label class="neo-field-label">Tahun Ajaran</label>
+                                <select name="tahun_ajaran" class="neo-form-select" required>
+                                    @foreach($academicYearOptions ?? [] as $ta)
+                                    <option value="{{ $ta }}" {{ ($tahunAjaran ?? '') == $ta ? 'selected' : '' }}>{{ $ta }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="neo-field-group">
+                                <label class="neo-field-label">Status</label>
+                                <input type="text" class="neo-form-input" value="{{ $reportStatus ?? 'Draft' }}" readonly>
+                            </div>
+                        </div>
+                        <div class="neo-grid-1">
+                            <div class="neo-field-group">
+                                <small style="color: var(--ink-soft);">
+                                    @if(isset($submittedAt) && $submittedAt)
+                                    Dikirim pada: {{ \Carbon\Carbon::parse($submittedAt)->format('d F Y H:i') }}
+                                    @else
+                                    Laporan belum dikirim
+                                    @endif
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
                 <!-- Grid 2: Keadaan Gedung & Sarana -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     <!-- Keadaan Gedung -->
