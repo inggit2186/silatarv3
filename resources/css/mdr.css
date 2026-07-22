@@ -1,0 +1,445 @@
+/* ===================================
+   NEO MIRAI Madrasah Pages Enhancement
+   Beautiful, lightweight, responsive design
+   =================================== */
+
+/* --- Google Fonts Import (lightweight) --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* --- CSS Variables for Madrasah --- */
+:root {
+    --mdr-primary: #0891b2;
+    --mdr-gold: #d4af37;
+    --mdr-gold-light: #f4e4b5;
+    --mdr-gold-gradient: linear-gradient(135deg, var(--mdr-gold) 0%, #e6c200 100%);
+    --mdr-glass: rgba(255, 255, 255, 0.85);
+    --mdr-glass-border: rgba(212, 175, 55, 0.2);
+    --mdr-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    --mdr-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.12);
+    --mdr-radius: 16px;
+    --mdr-radius-sm: 8px;
+}
+
+/* --- Page Container --- */
+.madrasah-page {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #fafbfc 0%, #f5f7fa 100%);
+}
+
+/* --- Hero Section Enhancement --- */
+.mdr-hero {
+    position: relative;
+    padding: 3rem 1.5rem;
+    text-align: center;
+    background: linear-gradient(135deg, #fff 0%, var(--mdr-gold-light) 100%);
+    border-bottom: 3px solid var(--mdr-gold);
+    overflow: hidden;
+}
+
+.mdr-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d4af37' fill-opacity='0.05'%3Cpath d='M30 0l30 30-30 30L0 30zM0 60l30-30 30 30-30-30z'/%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+}
+
+.mdr-hero-content {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.mdr-hero-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    background: var(--mdr-gold-gradient);
+    border-radius: 50%;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 8px 32px rgba(212, 175, 55, 0.3);
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.mdr-hero-icon svg {
+    width: 36px;
+    height: 36px;
+    color: var(--night);
+}
+
+.mdr-hero h1 {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--ink) 0%, var(--mdr-primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.75rem;
+}
+
+.mdr-hero p {
+    font-size: 1rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+}
+
+/* --- Info Cards --- */
+.mdr-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.mdr-info-card {
+    background: var(--mdr-glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--mdr-glass-border);
+    border-radius: var(--mdr-radius);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.mdr-info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--mdr-shadow-hover);
+    border-color: var(--mdr-gold);
+}
+
+.mdr-info-card .mdr-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--mdr-primary);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.mdr-info-card .mdr-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.mdr-info-card .mdr-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.75rem;
+    background: var(--mdr-gold);
+    color: var(--night);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    width: fit-content;
+}
+
+.mdr-badge-draft { background: #94a3b8; color: white; }
+.mdr-badge-submitted { background: var(--mdr-primary); color: white; }
+.mdr-badge-approved { background: #22c55e; color: white; }
+.mdr-badge-rejected { background: #ef4444; color: white; }
+
+/* --- Section Cards --- */
+.mdr-section {
+    background: white;
+    border-radius: var(--mdr-radius);
+    box-shadow: var(--mdr-shadow);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.mdr-section:hover {
+    box-shadow: var(--mdr-shadow-hover);
+}
+
+.mdr-section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.mdr-section-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: var(--mdr-gold-gradient);
+    border-radius: var(--mdr-radius-sm);
+    flex-shrink: 0;
+}
+
+.mdr-section-icon svg {
+    width: 22px;
+    height: 22px;
+    color: var(--night);
+}
+
+.mdr-section-title h3 {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--ink);
+}
+
+.mdr-section-title p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+}
+
+.mdr-section-body {
+    padding: 1.5rem;
+}
+
+/* --- Data Grid --- */
+.mdr-data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+/* --- Stat Cards --- */
+.mdr-stat {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: var(--mdr-radius-sm);
+    border: 1px solid #e2e8f0;
+}
+
+.mdr-stat-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--mdr-gold-light);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.mdr-stat-icon svg {
+    width: 20px;
+    height: 20px;
+    color: var(--mdr-gold);
+}
+
+.mdr-stat-info .mdr-stat-label {
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.mdr-stat-info .mdr-stat-value {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+/* --- Form Grid --- */
+.mdr-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+}
+
+.mdr-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.mdr-field label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.mdr-field input,
+.mdr-field select,
+.mdr-field textarea {
+    padding: 0.65rem 0.85rem;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--mdr-radius-sm);
+    font-size: 0.9rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: white;
+}
+
+.mdr-field input:focus,
+.mdr-field select:focus,
+.mdr-field textarea:focus {
+    outline: none;
+    border-color: var(--mdr-gold);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+/* --- Buttons --- */
+.mdr-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--mdr-radius-sm);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.mdr-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.mdr-btn-primary {
+    background: var(--mdr-gold-gradient);
+    color: var(--night);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.mdr-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+}
+
+.mdr-btn-secondary {
+    background: white;
+    color: var(--ink);
+    border: 1px solid #e2e8f0;
+}
+
+.mdr-btn-secondary:hover {
+    background: #f8fafc;
+    border-color: var(--mdr-primary);
+}
+
+/* --- Tabs Enhancement --- */
+.mdr-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    background: white;
+    padding: 0.5rem;
+    border-radius: var(--mdr-radius);
+    box-shadow: var(--mdr-shadow);
+    margin-bottom: 1.5rem;
+}
+
+.mdr-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1rem;
+    border-radius: var(--mdr-radius-sm);
+    text-decoration: none;
+    color: var(--ink-soft);
+    font-weight: 500;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.mdr-tab svg {
+    width: 18px;
+    height: 18px;
+}
+
+.mdr-tab:hover {
+    background: #f1f5f9;
+    color: var(--ink);
+}
+
+.mdr-tab.active {
+    background: var(--mdr-gold-light);
+    color: var(--ink);
+}
+
+.mdr-tab.active svg {
+    color: var(--mdr-gold);
+}
+
+/* --- Mobile Responsive --- */
+@media (max-width: 768px) {
+    .mdr-hero {
+        padding: 2rem 1rem;
+    }
+
+    .mdr-hero-icon {
+        width: 56px;
+        height: 56px;
+    }
+
+    .mdr-hero-icon svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    .mdr-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mdr-section-header {
+        flex-wrap: wrap;
+    }
+
+    .mdr-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .mdr-tab {
+        white-space: nowrap;
+    }
+
+    .mdr-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- Animation Entrance --- */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mdr-section {
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+.mdr-section:nth-child(2) { animation-delay: 0.1s; }
+.mdr-section:nth-child(3) { animation-delay: 0.2s; }
+.mdr-section:nth-child(4) { animation-delay: 0.3s; }
