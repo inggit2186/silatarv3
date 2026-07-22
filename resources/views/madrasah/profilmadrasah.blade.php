@@ -43,7 +43,7 @@
         $statusKkm = ['TERAKREDITASI', 'BELUM TERAKREDITASI'];
     @endphp
 
-    <main class="neo-mirai madrasah-profil" x-data="{ activeTab: 'profil' }">
+    <main class="neo-mirai madrasah-profil madrasah-fullwidth" x-data="{ activeTab: 'profil' }">
         <x-layouts.site-header />
 
         <!-- Hero Section -->
@@ -54,16 +54,10 @@
                     Madrasah
                 </div>
                 <h1 class="hero-title">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M12 21.75V19.5C12 18.12 13.12 17 14.5 17H16.5C17.88 17 19 18.12 19 19.5V21.75M12 21.75V3M12 3H7.5C6.12 3 5 4.12 5 5.5V8.25M12 3H16.5C17.88 3 19 4.12 19 5.5V8.25M5 8.25V12.75C5 14.13 6.12 15.25 7.5 15.25H9M9 15.25C10.38 15.25 11.5 14.13 11.5 12.75V8.25M9 15.25H16.5C17.88 15.25 19 14.13 19 12.75V5.5C19 4.12 17.88 3 16.5 3H12M5 8.25H7.5M7.5 8.25C6.12 8.25 5 9.37 5 10.75V12.75"/></svg>
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M12 21.75V19.5C12 18.12 13.12 17 14.5 17H16.5C17.88 17 19 18.12 19 19.5V21.75M12 21.75V3M12 3H7.5C6.12 3 5 4.12 5 5.5V8.25M12 3H16.5C17.88 3 19 4.12 19 5.5V8.25M5 8.25V12.75C5 14.13 6.12 15.25 7.5 15.25H9M9 15.25C10.38 15.25 11.5 14.13 11.5 12.75V8.25M9 15.25H16.5C17.88 15.25 19 14.13 19 12.75V5.5C19 4.12 17.88 3 16.5 3H12M5 8.25H7.5M7.5 8.25C6.12 8.25 5 9.37 5 10.75V12.75"/></svg>
                     PROFIL MADRASAH
                 </h1>
                 <p class="hero-subtitle">Lengkapi data profil madrasah dengan akurat untuk keperluan pelaporan dan evaluasi kinerja</p>
-                <div class="hero-actions">
-                    <a href="{{ url('/') }}" class="btn-secondary">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                        Beranda
-                    </a>
-                </div>
             </div>
         </section>
 
@@ -71,13 +65,11 @@
         <div class="section-divider wave-rounded"></div>
 
         <!-- Content -->
-        <section class="page-content">
-            <div class="content-centered">
-
-                <!-- Tab Navigation -->
-                <div class="neo-tabs" role="tablist">
-                    <a href="{{ route('madrasah.profil') }}" class="neo-tab is-active" role="tab">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        <section class="page-content page-content-expanded">
+            <!-- Tab Navigation - Large & Prominent -->
+            <div class="neo-tabs neo-tabs-large" role="tablist">
+                <a href="{{ route('madrasah.profil') }}" class="neo-tab is-active" role="tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                         <span>Profil</span>
                     </a>
                     <a href="{{ route('madrasah.pegawai') }}" class="neo-tab" role="tab">
@@ -93,10 +85,12 @@
                         <span>Semester</span>
                     </a>
                     <a href="{{ route('madrasah.laporan-bulanan') }}" class="neo-tab" role="tab">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         <span>Bulanan</span>
                     </a>
                 </div>
+
+                <div class="content-inner">
 
                 <form action="#" method="POST" class="space-y-8">
 
@@ -523,6 +517,100 @@
 
                 </form>
             </div>
+            </div>
         </section>
+
+        <!-- Page Styles -->
+        <style>
+            /* Madrasah Full Width Layout */
+            .madrasah-fullwidth .page-content {
+                padding: 0;
+                max-width: none;
+            }
+
+            .madrasah-fullwidth .page-content-expanded {
+                padding: 0;
+            }
+
+            .madrasah-fullwidth .content-inner {
+                padding: 2rem;
+                max-width: 100%;
+                margin: 0 auto;
+            }
+
+            /* Large Tabs Navigation */
+            .neo-tabs-large {
+                display: flex;
+                gap: 0;
+                padding: 1rem 2rem;
+                background: var(--paper);
+                border-bottom: 2px solid var(--line);
+                justify-content: center;
+                flex-wrap: wrap;
+                margin-bottom: 0;
+            }
+
+            .neo-tabs-large .neo-tab {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 1rem 1.5rem;
+                font-family: var(--font-display);
+                font-size: 0.95rem;
+                font-weight: 600;
+                color: var(--ink-soft);
+                border-radius: 0.5rem;
+                margin: 0 0.25rem;
+                transition: all 200ms var(--ease);
+                text-decoration: none;
+            }
+
+            .neo-tabs-large .neo-tab:hover {
+                color: var(--ink);
+                background: var(--paper-soft);
+            }
+
+            .neo-tabs-large .neo-tab.is-active {
+                color: var(--gold);
+                background: oklch(68% 0.145 74 / 0.1);
+            }
+
+            .neo-tabs-large .neo-tab svg {
+                flex-shrink: 0;
+            }
+
+            .neo-tabs-large .neo-tab span {
+                white-space: nowrap;
+            }
+
+            /* Space between tabs and content */
+            .neo-tabs-large {
+                margin-bottom: 1.5rem;
+            }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .neo-tabs-large {
+                    padding: 0.5rem 1rem;
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
+
+                .neo-tabs-large .neo-tab {
+                    padding: 0.75rem 1rem;
+                    font-size: 0.85rem;
+                    gap: 0.5rem;
+                }
+
+                .neo-tabs-large .neo-tab svg {
+                    width: 20px;
+                    height: 20px;
+                }
+
+                .madrasah-fullwidth .content-inner {
+                    padding: 1rem 0.5rem;
+                }
+            }
+        </style>
     </main>
 </x-layouts.app>

@@ -1,5 +1,5 @@
 <x-layouts.app title="Laporan Bulanan Madrasah - SILATAR">
-    <main class="neo-mirai madrasah-bulanan">
+    <main class="neo-mirai madrasah-bulanan madrasah-fullwidth">
         <!-- Hero Section -->
         <section class="hero-page has-bg-image">
             <div class="hero-content-wrapper">
@@ -8,7 +8,7 @@
                     Laporan Madrasah
                 </div>
                 <h1 class="hero-title">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                     LAPORAN BULANAN
                 </h1>
                 <p class="hero-subtitle">Input data rekap siswa per kelas dan data siswa mutasi, mengundurkan diri, atau drop out</p>
@@ -19,32 +19,32 @@
         <div class="section-divider wave-rounded"></div>
 
         <!-- Content -->
-        <section class="page-content">
-            <div class="content-centered">
+        <section class="page-content page-content-expanded">
+            <!-- Tab Navigation - Large & Prominent -->
+            <div class="neo-tabs neo-tabs-large" role="tablist">
+                <a href="{{ route('madrasah.profil') }}" class="neo-tab" role="tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    <span>Profil</span>
+                </a>
+                <a href="{{ route('madrasah.pegawai') }}" class="neo-tab" role="tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span>Pegawai</span>
+                </a>
+                <a href="{{ route('madrasah.guru') }}" class="neo-tab" role="tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    <span>Guru</span>
+                </a>
+                <a href="{{ route('madrasah.laporan-semester') }}" class="neo-tab" role="tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Semester</span>
+                </a>
+                <a href="{{ route('madrasah.laporan-bulanan') }}" class="neo-tab is-active" role="tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>Bulanan</span>
+                </a>
+            </div>
 
-                <!-- Tab Navigation -->
-                <div class="neo-tabs" role="tablist">
-                    <a href="{{ route('madrasah.profil') }}" class="neo-tab" role="tab">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                        <span>Profil</span>
-                    </a>
-                    <a href="{{ route('madrasah.pegawai') }}" class="neo-tab" role="tab">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <span>Pegawai</span>
-                    </a>
-                    <a href="{{ route('madrasah.guru') }}" class="neo-tab" role="tab">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                        <span>Guru</span>
-                    </a>
-                    <a href="{{ route('madrasah.laporan-semester') }}" class="neo-tab" role="tab">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        <span>Semester</span>
-                    </a>
-                    <a href="{{ route('madrasah.laporan-bulanan') }}" class="neo-tab is-active" role="tab">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        <span>Bulanan</span>
-                    </a>
-                </div>
+            <div class="content-inner">
 
                 <!-- Hero Meta Info Card -->
                 <div class="neo-card info-hero-card">
@@ -544,6 +544,7 @@
 
                 </form>
             </div>
+            </div>
         </section>
 
         <!-- Additional CSS for this page -->
@@ -551,6 +552,72 @@
             /* ============================================
                Madrasah Bulanan Page Styles
                ============================================ */
+
+            /* Madrasah Full Width Layout */
+            .madrasah-fullwidth .page-content {
+                padding: 0;
+                max-width: none;
+            }
+
+            .madrasah-fullwidth .page-content-expanded {
+                padding: 0;
+            }
+
+            .madrasah-fullwidth .content-inner {
+                padding: 2rem;
+                max-width: 100%;
+                margin: 0 auto;
+            }
+
+            /* Large Tabs Navigation */
+            .neo-tabs-large {
+                display: flex;
+                gap: 0;
+                padding: 1rem 2rem;
+                background: var(--paper);
+                border-bottom: 2px solid var(--line);
+                justify-content: center;
+                flex-wrap: wrap;
+                margin-bottom: 0;
+            }
+
+            .neo-tabs-large .neo-tab {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 1rem 1.5rem;
+                font-family: var(--font-display);
+                font-size: 0.95rem;
+                font-weight: 600;
+                color: var(--ink-soft);
+                border-radius: 0.5rem;
+                margin: 0 0.25rem;
+                transition: all 200ms var(--ease);
+                text-decoration: none;
+            }
+
+            .neo-tabs-large .neo-tab:hover {
+                color: var(--ink);
+                background: var(--paper-soft);
+            }
+
+            .neo-tabs-large .neo-tab.is-active {
+                color: var(--gold);
+                background: oklch(68% 0.145 74 / 0.1);
+            }
+
+            .neo-tabs-large .neo-tab svg {
+                flex-shrink: 0;
+            }
+
+            .neo-tabs-large .neo-tab span {
+                white-space: nowrap;
+            }
+
+            /* Space between tabs and content */
+            .neo-tabs-large {
+                margin-bottom: 1.5rem;
+            }
 
             /* Hero Content Wrapper */
             .madrasah-bulanan .hero-content-wrapper {
@@ -1318,6 +1385,28 @@
 
             /* Responsive */
             @media (max-width: 768px) {
+                /* Large Tabs - Responsive */
+                .neo-tabs-large {
+                    padding: 0.5rem 1rem;
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
+
+                .neo-tabs-large .neo-tab {
+                    padding: 0.75rem 1rem;
+                    font-size: 0.85rem;
+                    gap: 0.5rem;
+                }
+
+                .neo-tabs-large .neo-tab svg {
+                    width: 20px;
+                    height: 20px;
+                }
+
+                .madrasah-fullwidth .content-inner {
+                    padding: 1rem 0.5rem;
+                }
+
                 .form-grid-3 {
                     grid-template-columns: 1fr;
                 }
