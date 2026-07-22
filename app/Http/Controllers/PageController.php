@@ -5972,17 +5972,17 @@ class PageController extends Controller
 
         // Default form data structure
         $formData = [
-            'keadaanGedung' => $existingReport ? json_decode($existingReport->keadaan_gedung ?? '{}', true) : $this->getDefaultKeadaanGedung(),
-            'saranaPendidikan' => $existingReport ? json_decode($existingReport->sarana_pendidikan ?? '{}', true) : $this->getDefaultSaranaPendidikan(),
-            'bantuanPemerintah' => $existingReport ? json_decode($existingReport->bantuan_pemerintah ?? '{}', true) : $this->getDefaultBantuanPemerintah(),
-            'bantuanNonPemerintah' => $existingReport ? json_decode($existingReport->bantuan_non_pemerintah ?? '{}', true) : $this->getDefaultBantuanNonPemerintah(),
-            'dataGuruPegawai' => $existingReport ? json_decode($existingReport->data_guru_pegawai ?? '{}', true) : $this->getDefaultDataGuruPegawai(),
-            'tingkatPendidikan' => $existingReport ? json_decode($existingReport->tingkat_pendidikan ?? '{}', true) : $this->getDefaultTingkatPendidikan(),
-            'sertifikasi' => $existingReport ? json_decode($existingReport->sertifikasi ?? '{}', true) : $this->getDefaultSertifikasi(),
+            'keadaanGedung' => $existingReport ? json_decode($existingReport->keadaan_gedung_json ?? '{}', true) : $this->getDefaultKeadaanGedung(),
+            'saranaPendidikan' => $existingReport ? json_decode($existingReport->sarana_pendidikan_json ?? '{}', true) : $this->getDefaultSaranaPendidikan(),
+            'bantuanPemerintah' => $existingReport ? json_decode($existingReport->bantuan_pemerintah_json ?? '{}', true) : $this->getDefaultBantuanPemerintah(),
+            'bantuanNonPemerintah' => $existingReport ? json_decode($existingReport->bantuan_non_pemerintah_json ?? '{}', true) : $this->getDefaultBantuanNonPemerintah(),
+            'dataGuruPegawai' => $existingReport ? json_decode($existingReport->data_guru_pegawai_json ?? '{}', true) : $this->getDefaultDataGuruPegawai(),
+            'tingkatPendidikan' => $existingReport ? json_decode($existingReport->tingkat_pendidikan_json ?? '{}', true) : $this->getDefaultTingkatPendidikan(),
+            'sertifikasi' => $existingReport ? json_decode($existingReport->sertifikasi_json ?? '{}', true) : $this->getDefaultSertifikasi(),
             'banyakHariSekolah' => $existingReport?->banyak_hari_sekolah ?? 0,
-            'absensiSiswa' => $existingReport ? json_decode($existingReport->absensi_siswa ?? '{}', true) : $this->getDefaultAbsensiSiswa(),
-            'luasTanah' => $existingReport ? json_decode($existingReport->luas_tanah ?? '{}', true) : $this->getDefaultLuasTanah(),
-            'sertifikatTanah' => $existingReport ? json_decode($existingReport->sertifikat_tanah ?? '{}', true) : $this->getDefaultSertifikatTanah(),
+            'absensiSiswa' => $existingReport ? json_decode($existingReport->absensi_siswa_json ?? '{}', true) : $this->getDefaultAbsensiSiswa(),
+            'luasTanah' => $existingReport ? json_decode($existingReport->luas_tanah_json ?? '{}', true) : $this->getDefaultLuasTanah(),
+            'sertifikatTanah' => $existingReport ? json_decode($existingReport->sertifikat_tanah_json ?? '{}', true) : $this->getDefaultSertifikatTanah(),
         ];
 
         $reportStatus = $existingReport?->status ?? 'draft';
@@ -6217,17 +6217,17 @@ class PageController extends Controller
             'semester' => $validated['semester'],
             'tahun_ajaran' => $validated['tahun_ajaran'],
             'status' => $validated['status'],
-            'keadaan_gedung' => json_encode($request->input('keadaanGedung', [])),
-            'sarana_pendidikan' => json_encode($request->input('saranaPendidikan', [])),
-            'bantuan_pemerintah' => json_encode($request->input('bantuanPemerintah', [])),
-            'bantuan_non_pemerintah' => json_encode($request->input('bantuanNonPemerintah', [])),
-            'data_guru_pegawai' => json_encode($request->input('dataGuruPegawai', [])),
-            'tingkat_pendidikan' => json_encode($request->input('tingkatPendidikan', [])),
-            'sertifikasi' => json_encode($request->input('sertifikasi', [])),
+            'keadaan_gedung_json' => json_encode($request->input('keadaanGedung', [])),
+            'sarana_pendidikan_json' => json_encode($request->input('saranaPendidikan', [])),
+            'bantuan_pemerintah_json' => json_encode($request->input('bantuanPemerintah', [])),
+            'bantuan_non_pemerintah_json' => json_encode($request->input('bantuanNonPemerintah', [])),
+            'data_guru_pegawai_json' => json_encode($request->input('dataGuruPegawai', [])),
+            'tingkat_pendidikan_json' => json_encode($request->input('tingkatPendidikan', [])),
+            'sertifikasi_json' => json_encode($request->input('sertifikasi', [])),
             'banyak_hari_sekolah' => $request->input('banyakHariSekolah', 0),
-            'absensi_siswa' => json_encode($request->input('absensiSiswa', [])),
-            'luas_tanah' => json_encode($request->input('luasTanah', [])),
-            'sertifikat_tanah' => json_encode($request->input('sertifikatTanah', [])),
+            'absensi_siswa_json' => json_encode($request->input('absensiSiswa', [])),
+            'luas_tanah_json' => json_encode($request->input('luasTanah', [])),
+            'sertifikat_tanah_json' => json_encode($request->input('sertifikatTanah', [])),
         ];
 
         if ($validated['status'] === 'submitted') {
@@ -6290,21 +6290,23 @@ class PageController extends Controller
         // Get existing report if any
         $existingReport = null;
         if ($deptId) {
+            // Normalize semester for query (lowercase to match DB enum)
+            $semesterLower = strtolower($semester);
             $existingReport = DB::table('ktd_laporan_bulanan_madrasah')
                 ->where('dept_id', $deptId)
                 ->where('bulan_laporan', $bulanLaporan)
                 ->where('tahun_laporan', $tahunLaporan)
                 ->where('tahun_ajaran', $tahunAjaran)
-                ->where('semester', $semester)
+                ->where('semester', $semesterLower)
                 ->first();
         }
 
         // Default student counts structure based on category
-        $studentCounts = $existingReport ? json_decode($existingReport->student_counts ?? '{}', true) : [];
+        $studentCounts = $existingReport ? json_decode($existingReport->student_counts_json ?? '{}', true) : [];
         $classLevels = $this->getMadrasahClassLevels($kategori, $studentCounts);
 
         // Get mutation rows
-        $mutationRows = $existingReport ? json_decode($existingReport->mutation_rows ?? '[]', true) : [];
+        $mutationRows = $existingReport ? json_decode($existingReport->mutation_rows_json ?? '[]', true) : [];
 
         // Report status
         $reportStatus = $existingReport?->status ?? 'draft';
@@ -6466,10 +6468,12 @@ class PageController extends Controller
             'bulan_laporan' => $validated['bulan_laporan'],
             'tahun_laporan' => $validated['tahun_laporan'],
             'tahun_ajaran' => $validated['tahun_ajaran'],
-            'semester' => $validated['semester'],
+            'semester' => strtolower($validated['semester']),
             'status' => $status,
-            'student_counts' => json_encode($request->input('studentCounts', [])),
-            'mutation_rows' => json_encode($request->input('mutationRows', [])),
+            'nama_madrasah_snapshot' => DB::table('ktd_department')->where('id', $deptId)->value('nama') ?? '',
+            'instansi_snapshot' => 'Kantor Kementerian Agama Kab. Tanah Datar',
+            'student_counts_json' => json_encode($request->input('studentCounts', [])),
+            'mutation_rows_json' => json_encode($request->input('mutationRows', [])),
             'rb' => count($request->input('studentCounts', [])),
         ];
 
@@ -6477,13 +6481,16 @@ class PageController extends Controller
             $data['submitted_at'] = now();
         }
 
+        // Normalize semester for query (lowercase to match DB enum)
+        $semesterLower = strtolower($validated['semester']);
+
         // Check if record exists
         $existing = DB::table('ktd_laporan_bulanan_madrasah')
             ->where('dept_id', $deptId)
             ->where('bulan_laporan', $validated['bulan_laporan'])
             ->where('tahun_laporan', $validated['tahun_laporan'])
             ->where('tahun_ajaran', $validated['tahun_ajaran'])
-            ->where('semester', $validated['semester'])
+            ->where('semester', $semesterLower)
             ->first();
 
         if ($existing) {
