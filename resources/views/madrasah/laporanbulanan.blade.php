@@ -199,53 +199,61 @@
                             </div>
                         </div>
 
-                        <!-- Rombel Cards Grid -->
+                                                <!-- Rombel Cards Grid -->
                         <div id="rombelContainer">
 
-                        <!-- Sample Rombel Cards for different levels -->
-                        <div class="rombel-level-section">
+                        @php
+                        // Default levels configuration
+                        $defaultLevels = [
+                            ['prefix' => 'I', 'name' => 'I (Satu)'],
+                            ['prefix' => 'II', 'name' => 'II (Dua)'],
+                            ['prefix' => 'III', 'name' => 'III (Tiga)'],
+                        ];
+                        @endphp
+
+                        @foreach($defaultLevels as $level)
+                        @php
+                        $prefix = $level['prefix'];
+                        $levelName = $level['name'];
+
+                        // Get existing codes from studentCounts or use defaults
+                        $existingCodes = [];
+                        if(isset($studentCounts) && is_array($studentCounts)) {
+                            foreach($studentCounts as $code => $data) {
+                                if(strpos($code, $prefix . '.') === 0) {
+                                    $existingCodes[] = $code;
+                                }
+                            }
+                        }
+                        $classes = !empty($existingCodes) ? $existingCodes : [$prefix . '.A', $prefix . '.B', $prefix . '.C'];
+                        @endphp
+
+                        <div class="rombel-level-section" data-level="{{ $prefix }}">
                             <div class="level-header">
                                 <div>
-                                    <h4>I (Satu)</h4>
-                                    <small>3 rombel</small>
+                                    <h4>{{ $levelName }}</h4>
+                                    <small>{{ count($classes) }} rombel</small>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 1rem;">
-                                    <span class="neo-badge neo-badge-primary">I</span>
-                                    <button type="button" class="neo-btn-add-sm" onclick="addRombelToLevel('I')">
+                                    <span class="neo-badge neo-badge-primary">{{ $prefix }}</span>
+                                    <button type="button" class="neo-btn-add-sm" onclick="addRombelToLevel('{{ $prefix }}')">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
                                         Tambah
                                     </button>
                                 </div>
                             </div>
                             <div class="rombel-cards-grid">
-                                <div class="rombel-card" data-level="I" data-code="I.A">
+                                @foreach($classes as $code)
+                                @php
+                                $lVal = isset($studentCounts[$code]['l']) ? (int)$studentCounts[$code]['l'] : 0;
+                                $pVal = isset($studentCounts[$code]['p']) ? (int)$studentCounts[$code]['p'] : 0;
+                                $total = $lVal + $pVal;
+                                @endphp
+                                <div class="rombel-card" data-level="{{ $prefix }}" data-code="{{ $code }}">
                                     <div class="rombel-card-header">
                                         <div class="rombel-card-title">
-                                            <strong>I.A</strong>
-                                            <span class="rombel-total">0 siswa</span>
-                                        </div>
-                                        <button type="button" class="neo-btn-remove-sm" onclick="removeRombel(this)" disabled>
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
-                                    </div>
-                                    <div class="rombel-card-body">
-                                        <div class="gender-input-grid">
-                                            <label class="gender-input-label">
-                                                <span>L</span>
-                                                <input type="number" name="studentCounts[I.A][l]" value="0" min="0" class="neo-form-input calc-siswa" data-class="I.A" data-gender="l">
-                                            </label>
-                                            <label class="gender-input-label">
-                                                <span>P</span>
-                                                <input type="number" name="studentCounts[I.A][p]" value="0" min="0" class="neo-form-input calc-siswa" data-class="I.A" data-gender="p">
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="rombel-card" data-level="I" data-code="I.B">
-                                    <div class="rombel-card-header">
-                                        <div class="rombel-card-title">
-                                            <strong>I.B</strong>
-                                            <span class="rombel-total">0 siswa</span>
+                                            <strong>{{ $code }}</strong>
+                                            <span class="rombel-total">{{ $total }} siswa</span>
                                         </div>
                                         <button type="button" class="neo-btn-remove-sm" onclick="removeRombel(this)">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
@@ -255,38 +263,16 @@
                                         <div class="gender-input-grid">
                                             <label class="gender-input-label">
                                                 <span>L</span>
-                                                <input type="number" name="studentCounts[I.B][l]" value="0" min="0" class="neo-form-input calc-siswa" data-class="I.B" data-gender="l">
+                                                <input type="number" name="studentCounts[{{ $code }}][l]" value="{{ $lVal }}" min="0" class="neo-form-input calc-siswa" data-class="{{ $code }}" data-gender="l">
                                             </label>
                                             <label class="gender-input-label">
                                                 <span>P</span>
-                                                <input type="number" name="studentCounts[I.B][p]" value="0" min="0" class="neo-form-input calc-siswa" data-class="I.B" data-gender="p">
+                                                <input type="number" name="studentCounts[{{ $code }}][p]" value="{{ $pVal }}" min="0" class="neo-form-input calc-siswa" data-class="{{ $code }}" data-gender="p">
                                             </label>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="rombel-card" data-level="I" data-code="I.C">
-                                    <div class="rombel-card-header">
-                                        <div class="rombel-card-title">
-                                            <strong>I.C</strong>
-                                            <span class="rombel-total">0 siswa</span>
-                                        </div>
-                                        <button type="button" class="neo-btn-remove-sm" onclick="removeRombel(this)">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
-                                    </div>
-                                    <div class="rombel-card-body">
-                                        <div class="gender-input-grid">
-                                            <label class="gender-input-label">
-                                                <span>L</span>
-                                                <input type="number" name="studentCounts[I.C][l]" value="0" min="0" class="neo-form-input calc-siswa" data-class="I.C" data-gender="l">
-                                            </label>
-                                            <label class="gender-input-label">
-                                                <span>P</span>
-                                                <input type="number" name="studentCounts[I.C][p]" value="0" min="0" class="neo-form-input calc-siswa" data-class="I.C" data-gender="p">
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
+                                @endforeach
                             </div>
                             <div class="level-footer">
                                 <div><span>Laki-laki:</span> <strong class="level-total-l">0</strong></div>
@@ -294,196 +280,8 @@
                                 <div><span>Total:</span> <strong class="level-total">0</strong></div>
                             </div>
                         </div>
-
-                        <!-- Level II -->
-                        <div class="rombel-level-section">
-                            <div class="level-header">
-                                <div>
-                                    <h4>II (Dua)</h4>
-                                    <small>3 rombel</small>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 1rem;">
-                                    <span class="neo-badge neo-badge-primary">II</span>
-                                    <button type="button" class="neo-btn-add-sm" onclick="addRombelToLevel('II')">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
-                                        Tambah
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="rombel-cards-grid">
-                                <div class="rombel-card" data-level="II" data-code="II.A">
-                                    <div class="rombel-card-header">
-                                        <div class="rombel-card-title">
-                                            <strong>II.A</strong>
-                                            <span class="rombel-total">0 siswa</span>
-                                        </div>
-                                        <button type="button" class="neo-btn-remove-sm" onclick="removeRombel(this)" disabled>
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
-                                    </div>
-                                    <div class="rombel-card-body">
-                                        <div class="gender-input-grid">
-                                            <label class="gender-input-label">
-                                                <span>L</span>
-                                                <input type="number" name="studentCounts[II.A][l]" value="0" min="0" class="neo-form-input calc-siswa" data-class="II.A" data-gender="l">
-                                            </label>
-                                            <label class="gender-input-label">
-                                                <span>P</span>
-                                                <input type="number" name="studentCounts[II.A][p]" value="0" min="0" class="neo-form-input calc-siswa" data-class="II.A" data-gender="p">
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="rombel-card" data-level="II" data-code="II.B">
-                                    <div class="rombel-card-header">
-                                        <div class="rombel-card-title">
-                                            <strong>II.B</strong>
-                                            <span class="rombel-total">0 siswa</span>
-                                        </div>
-                                        <button type="button" class="neo-btn-remove-sm" onclick="removeRombel(this)">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
-                                    </div>
-                                    <div class="rombel-card-body">
-                                        <div class="gender-input-grid">
-                                            <label class="gender-input-label">
-                                                <span>L</span>
-                                                <input type="number" name="studentCounts[II.B][l]" value="0" min="0" class="neo-form-input calc-siswa" data-class="II.B" data-gender="l">
-                                            </label>
-                                            <label class="gender-input-label">
-                                                <span>P</span>
-                                                <input type="number" name="studentCounts[II.B][p]" value="0" min="0" class="neo-form-input calc-siswa" data-class="II.B" data-gender="p">
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="rombel-card" data-level="II" data-code="II.C">
-                                    <div class="rombel-card-header">
-                                        <div class="rombel-card-title">
-                                            <strong>II.C</strong>
-                                            <span class="rombel-total">0 siswa</span>
-                                        </div>
-                                        <button type="button" class="neo-btn-remove-sm" onclick="removeRombel(this)">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
-                                    </div>
-                                    <div class="rombel-card-body">
-                                        <div class="gender-input-grid">
-                                            <label class="gender-input-label">
-                                                <span>L</span>
-                                                <input type="number" name="studentCounts[II.C][l]" value="0" min="0" class="neo-form-input calc-siswa" data-class="II.C" data-gender="l">
-                                            </label>
-                                            <label class="gender-input-label">
-                                                <span>P</span>
-                                                <input type="number" name="studentCounts[II.C][p]" value="0" min="0" class="neo-form-input calc-siswa" data-class="II.C" data-gender="p">
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="level-footer">
-                                <div><span>Laki-laki:</span> <strong class="level-total-l">0</strong></div>
-                                <div><span>Perempuan:</span> <strong class="level-total-p">0</strong></div>
-                                <div><span>Total:</span> <strong class="level-total">0</strong></div>
-                            </div>
+                        @endforeach
                         </div>
-
-                        <!-- Level III -->
-                        <div class="rombel-level-section">
-                            <div class="level-header">
-                                <div>
-                                    <h4>III (Tiga)</h4>
-                                    <small>3 rombel</small>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 1rem;">
-                                    <span class="neo-badge neo-badge-primary">III</span>
-                                    <button type="button" class="neo-btn-add-sm" onclick="addRombelToLevel('III')">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
-                                        Tambah
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="rombel-cards-grid">
-                                <div class="rombel-card" data-level="III" data-code="III.A">
-                                    <div class="rombel-card-header">
-                                        <div class="rombel-card-title">
-                                            <strong>III.A</strong>
-                                            <span class="rombel-total">0 siswa</span>
-                                        </div>
-                                        <button type="button" class="neo-btn-remove-sm" onclick="removeRombel(this)" disabled>
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
-                                    </div>
-                                    <div class="rombel-card-body">
-                                        <div class="gender-input-grid">
-                                            <label class="gender-input-label">
-                                                <span>L</span>
-                                                <input type="number" name="studentCounts[III.A][l]" value="0" min="0" class="neo-form-input calc-siswa" data-class="III.A" data-gender="l">
-                                            </label>
-                                            <label class="gender-input-label">
-                                                <span>P</span>
-                                                <input type="number" name="studentCounts[III.A][p]" value="0" min="0" class="neo-form-input calc-siswa" data-class="III.A" data-gender="p">
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="rombel-card" data-level="III" data-code="III.B">
-                                    <div class="rombel-card-header">
-                                        <div class="rombel-card-title">
-                                            <strong>III.B</strong>
-                                            <span class="rombel-total">0 siswa</span>
-                                        </div>
-                                        <button type="button" class="neo-btn-remove-sm" onclick="removeRombel(this)">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
-                                    </div>
-                                    <div class="rombel-card-body">
-                                        <div class="gender-input-grid">
-                                            <label class="gender-input-label">
-                                                <span>L</span>
-                                                <input type="number" name="studentCounts[III.B][l]" value="0" min="0" class="neo-form-input calc-siswa" data-class="III.B" data-gender="l">
-                                            </label>
-                                            <label class="gender-input-label">
-                                                <span>P</span>
-                                                <input type="number" name="studentCounts[III.B][p]" value="0" min="0" class="neo-form-input calc-siswa" data-class="III.B" data-gender="p">
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="rombel-card" data-level="III" data-code="III.C">
-                                    <div class="rombel-card-header">
-                                        <div class="rombel-card-title">
-                                            <strong>III.C</strong>
-                                            <span class="rombel-total">0 siswa</span>
-                                        </div>
-                                        <button type="button" class="neo-btn-remove-sm" onclick="removeRombel(this)">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
-                                    </div>
-                                    <div class="rombel-card-body">
-                                        <div class="gender-input-grid">
-                                            <label class="gender-input-label">
-                                                <span>L</span>
-                                                <input type="number" name="studentCounts[III.C][l]" value="0" min="0" class="neo-form-input calc-siswa" data-class="III.C" data-gender="l">
-                                            </label>
-                                            <label class="gender-input-label">
-                                                <span>P</span>
-                                                <input type="number" name="studentCounts[III.C][p]" value="0" min="0" class="neo-form-input calc-siswa" data-class="III.C" data-gender="p">
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="level-footer">
-                                <div><span>Laki-laki:</span> <strong class="level-total-l">0</strong></div>
-                                <div><span>Perempuan:</span> <strong class="level-total-p">0</strong></div>
-                                <div><span>Total:</span> <strong class="level-total">0</strong></div>
-                            </div>
-                        </div>
-                        </div>
-                    </div>
-                </div>
-
 
                 <!-- Section 3: Data Siswa Mutasi -->
                 <div class="neo-card" style="margin-bottom: 1.5rem;">
@@ -531,9 +329,102 @@
                             </div>
                         </div>
 
-                        <!-- Mutation Cards Container -->
+                                                <!-- Mutation Cards Container -->
                         <div id="mutationContainer">
-                            <!-- Default 3 mutation rows -->
+
+                        @php
+                        // Get mutation rows from DB or default empty array
+                        $mutationRowsData = $mutationRows ?? [];
+                        @endphp
+
+                        @if(count($mutationRowsData) > 0)
+                            @foreach($mutationRowsData as $idx => $row)
+                            @php
+                            $badgeClass = '';
+                            $badgeText = 'Belum dipilih';
+                            if(isset($row['keterangan'])) {
+                                if($row['keterangan'] == 'Mutasi Masuk') { $badgeClass = 'mutasi-masuk'; $badgeText = 'Mutasi Masuk'; }
+                                elseif($row['keterangan'] == 'Mutasi Keluar') { $badgeClass = 'mutasi-keluar'; $badgeText = 'Mutasi Keluar'; }
+                                elseif($row['keterangan'] == 'Mengundurkan Diri') { $badgeClass = 'mengundurkan-diri'; $badgeText = 'Mengundurkan Diri'; }
+                                elseif($row['keterangan'] == 'DO') { $badgeClass = 'do'; $badgeText = 'Drop Out'; }
+                            }
+                            @endphp
+                            <div class="mutation-card">
+                                <div class="mutation-card-header">
+                                    <div>
+                                        <span class="mutation-card-index">Data {{ $idx + 1 }}</span>
+                                        <h5>{{ $row['nama_siswa'] ?? 'Siswa belum diisi' }}</h5>
+                                    </div>
+                                    <div class="mutation-card-actions">
+                                        <span class="mutation-type-badge {{ $badgeClass }}">{{ $badgeText }}</span>
+                                        <button type="button" class="neo-btn-remove-sm" onclick="removeMutationRow(this)">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mutation-form-grid">
+                                    <div class="neo-field-group span-2">
+                                        <label class="neo-field-label">Nama Siswa</label>
+                                        <input type="text" name="mutationRows[{{ $idx }}][nama_siswa]" value="{{ $row['nama_siswa'] ?? '' }}" class="neo-form-input" placeholder="Nama siswa" onchange="updateMutationCard(this)">
+                                    </div>
+                                    <div class="neo-field-group">
+                                        <label class="neo-field-label">Jenis Data</label>
+                                        <select name="mutationRows[{{ $idx }}][keterangan]" class="neo-form-select" onchange="updateMutationBadge(this)">
+                                            <option value="" disabled>Pilih jenis data</option>
+                                            <option value="Mutasi Masuk" {{ ($row['keterangan'] ?? '') == 'Mutasi Masuk' ? 'selected' : '' }}>Mutasi Masuk</option>
+                                            <option value="Mutasi Keluar" {{ ($row['keterangan'] ?? '') == 'Mutasi Keluar' ? 'selected' : '' }}>Mutasi Keluar</option>
+                                            <option value="Mengundurkan Diri" {{ ($row['keterangan'] ?? '') == 'Mengundurkan Diri' ? 'selected' : '' }}>Mengundurkan Diri</option>
+                                            <option value="DO" {{ ($row['keterangan'] ?? '') == 'DO' ? 'selected' : '' }}>Drop Out (DO)</option>
+                                        </select>
+                                    </div>
+                                    <div class="neo-field-group">
+                                        <label class="neo-field-label">Kelas</label>
+                                        <select name="mutationRows[{{ $idx }}][kelas]" class="neo-form-select">
+                                            <option value="" disabled>Pilih kelas</option>
+                                            <option value="I.A" {{ ($row['kelas'] ?? '') == 'I.A' ? 'selected' : '' }}>I.A</option>
+                                            <option value="I.B" {{ ($row['kelas'] ?? '') == 'I.B' ? 'selected' : '' }}>I.B</option>
+                                            <option value="I.C" {{ ($row['kelas'] ?? '') == 'I.C' ? 'selected' : '' }}>I.C</option>
+                                            <option value="II.A" {{ ($row['kelas'] ?? '') == 'II.A' ? 'selected' : '' }}>II.A</option>
+                                            <option value="II.B" {{ ($row['kelas'] ?? '') == 'II.B' ? 'selected' : '' }}>II.B</option>
+                                            <option value="II.C" {{ ($row['kelas'] ?? '') == 'II.C' ? 'selected' : '' }}>II.C</option>
+                                            <option value="III.A" {{ ($row['kelas'] ?? '') == 'III.A' ? 'selected' : '' }}>III.A</option>
+                                            <option value="III.B" {{ ($row['kelas'] ?? '') == 'III.B' ? 'selected' : '' }}>III.B</option>
+                                            <option value="III.C" {{ ($row['kelas'] ?? '') == 'III.C' ? 'selected' : '' }}>III.C</option>
+                                        </select>
+                                    </div>
+                                    <div class="neo-field-group">
+                                        <label class="neo-field-label">NISN</label>
+                                        <input type="text" name="mutationRows[{{ $idx }}][nisn]" value="{{ $row['nisn'] ?? '' }}" class="neo-form-input" placeholder="NISN">
+                                    </div>
+                                    <div class="neo-field-group">
+                                        <label class="neo-field-label">NIK</label>
+                                        <input type="text" name="mutationRows[{{ $idx }}][nik]" value="{{ $row['nik'] ?? '' }}" class="neo-form-input" placeholder="NIK">
+                                    </div>
+                                    <div class="neo-field-group">
+                                        <label class="neo-field-label">Jenis Kelamin</label>
+                                        <select name="mutationRows[{{ $idx }}][jenis_kelamin]" class="neo-form-select">
+                                            <option value="" disabled selected>Pilih</option>
+                                            <option value="L" {{ ($row['jenis_kelamin'] ?? '') == 'L' ? 'selected' : '' }}>Laki-laki</option>
+                                            <option value="P" {{ ($row['jenis_kelamin'] ?? '') == 'P' ? 'selected' : '' }}>Perempuan</option>
+                                        </select>
+                                    </div>
+                                    <div class="neo-field-group">
+                                        <label class="neo-field-label">Tempat Lahir</label>
+                                        <input type="text" name="mutationRows[{{ $idx }}][tempat_lahir]" value="{{ $row['tempat_lahir'] ?? '' }}" class="neo-form-input" placeholder="Tempat lahir">
+                                    </div>
+                                    <div class="neo-field-group">
+                                        <label class="neo-field-label">Tanggal Lahir</label>
+                                        <input type="date" name="mutationRows[{{ $idx }}][tanggal_lahir]" value="{{ $row['tanggal_lahir'] ?? '' }}" class="neo-form-input">
+                                    </div>
+                                    <div class="neo-field-group span-2">
+                                        <label class="neo-field-label">Nama Ibu Kandung</label>
+                                        <input type="text" name="mutationRows[{{ $idx }}][nama_ibu]" value="{{ $row['nama_ibu'] ?? '' }}" class="neo-form-input" placeholder="Nama ibu kandung">
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        @else
+                            <!-- Empty state - show one default row -->
                             <div class="mutation-card">
                                 <div class="mutation-card-header">
                                     <div>
@@ -607,9 +498,8 @@
                                     </div>
                                 </div>
                             </div>
+                        @endif
                         </div>
-                    </div>
-                </div>
 
                 <!-- Action Buttons -->
                 <div class="neo-form-actions">
