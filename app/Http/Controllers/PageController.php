@@ -6261,4 +6261,247 @@ class PageController extends Controller
             'data' => $report,
         ]);
     }
+
+    /**
+     * Laporan Bulanan Madrasah page.
+     */
+    public function laporanBulananMadrasah(Request $request)
+    {
+        $user = auth()->user();
+        $deptId = $user->dept_id ?? null;
+        $deptName = 'Madrasah';
+        $kategori = 'min';
+
+        // Get department info
+        if ($deptId) {
+            $dept = DB::table('ktd_department')->where('id', $deptId)->first();
+            if ($dept) {
+                $deptName = $dept->nama ?? 'Madrasah';
+                $kategori = strtolower($dept->kategori ?? 'min');
+            }
+        }
+
+        // Get form parameters
+        $bulanLaporan = $request->input('bulan', now()->format('F'));
+        $tahunLaporan = $request->input('tahun', now()->year);
+        $tahunAjaran = $request->input('tahun_ajaran', $this->getDefaultAcademicYear());
+        $semester = $request->input('semester', now()->month >= 7 ? 'Ganjil' : 'Genap');
+
+        // Get existing report if any
+        $existingReport = null;
+        if ($deptId) {
+            $existingReport = DB::table('ktd_laporan_bulanan_madrasah')
+                ->where('dept_id', $deptId)
+                ->where('bulan_laporan', $bulanLaporan)
+                ->where('tahun_laporan', $tahunLaporan)
+                ->where('tahun_ajaran', $tahunAjaran)
+                ->where('semester', $semester)
+                ->first();
+        }
+
+        // Default student counts structure based on category
+        $studentCounts = $existingReport ? json_decode($existingReport->student_counts ?? '{}', true) : [];
+        $classLevels = $this->getMadrasahClassLevels($kategori, $studentCounts);
+
+        // Get mutation rows
+        $mutationRows = $existingReport ? json_decode($existingReport->mutation_rows ?? '[]', true) : [];
+
+        // Report status
+        $reportStatus = $existingReport?->status ?? 'draft';
+        $submittedAt = $existingReport?->submitted_at;
+        $adminNote = $existingReport?->catatan_admin;
+
+        // Status labels
+        $statusLabels = [
+            'draft' => 'Draft',
+            'submitted' => 'Sudah Dikirim',
+            'revisi' => 'Perlu Revisi',
+            'approved' => 'Disetujui'
+        ];
+        $statusLabel = $statusLabels[$reportStatus] ?? 'Draft';
+
+        // Format submitted date
+        $formattedSubmittedAt = $submittedAt ? \Carbon\Carbon::parse($submittedAt)->format('d F Y H:i') : 'Belum dikirim';
+
+        // Madrasah type label
+        $typeLabels = [
+            'min' => 'MIN (Madrasah Ibtidaiyah)',
+            'mtsn' => 'MTsN (Madrasah Tsanawiyah)',
+            'man' => 'MAN (Madrasah Aliyah)',
+            'sma' => 'SMA',
+            'smk' => 'SMK',
+            'other' => 'Madrasah'
+        ];
+        $madrasahTypeLabel = $typeLabels[$kategori] ?? 'Madrasah';
+
+        // Office name
+        $officeName = $user?->dept?->instansi?->nama ?? 'Kantor Kementerian Agama Kab. Tanah Datar';
+
+        // Count rombel
+        $rb = is_array($studentCounts) ? count($studentCounts) : 0;
+
+        return view('madrasah.laporanbulanan', [
+            'deptName' => $deptName,
+            'deptId' => $deptId,
+            'kategori' => $kategori,
+            'madrasahTypeLabel' => $madrasahTypeLabel,
+            'bulan_laporan' => $bulanLaporan,
+            'tahun_laporan' => $tahunLaporan,
+            'tahun_ajaran' => $tahunAjaran,
+            'semester' => $semester,
+            'nama_madrasah' => $deptName,
+            'rb' => $rb,
+            'office_name' => $officeName,
+            'studentCounts' => $studentCounts,
+            'classLevels' => $classLevels,
+            'mutationRows' => $mutationRows,
+            'currentStatus' => $reportStatus,
+            'currentStatusLabel' => $statusLabel,
+            'formattedSubmittedAt' => $formattedSubmittedAt,
+            'currentAdminNote' => $adminNote ?? 'Belum ada catatan admin',
+        ]);
+    }
+
+    /**
+     * Get class levels based on madrasah category.
+     */
+    private function getMadrasahClassLevels(string $kategori, array $existingCounts = []): array
+    {
+        $levels = match($kategori) {
+            'min' => [
+                ['name' => 'I (Satu)', 'prefix' => 'I', 'classes' => [
+                    ['code' => 'I.A'], ['code' => 'I.B'], ['code' => 'I.C']
+                ]],
+                ['name' => 'II (Dua)', 'prefix' => 'II', 'classes' => [
+                    ['code' => 'II.A'], ['code' => 'II.B'], ['code' => 'II.C']
+                ]],
+                ['name' => 'III (Tiga)', 'prefix' => 'III', 'classes' => [
+                    ['code' => 'III.A'], ['code' => 'III.B'], ['code' => 'III.C']
+                ]],
+                ['name' => 'IV (Empat)', 'prefix' => 'IV', 'classes' => [
+                    ['code' => 'IV.A'], ['code' => 'IV.B']
+                ]],
+                ['name' => 'V (Lima)', 'prefix' => 'V', 'classes' => [
+                    ['code' => 'V.A'], ['code' => 'V.B']
+                ]],
+                ['name' => 'VI (Enam)', 'prefix' => 'VI', 'classes' => [
+                    ['code' => 'VI.A'], ['code' => 'VI.B']
+                ]],
+            ],
+            'mtsn' => [
+                ['name' => 'VII (Tujuh)', 'prefix' => 'VII', 'classes' => [
+                    ['code' => 'VII.A'], ['code' => 'VII.B'], ['code' => 'VII.C']
+                ]],
+                ['name' => 'VIII (Delapan)', 'prefix' => 'VIII', 'classes' => [
+                    ['code' => 'VIII.A'], ['code' => 'VIII.B'], ['code' => 'VIII.C']
+                ]],
+                ['name' => 'IX (Sembilan)', 'prefix' => 'IX', 'classes' => [
+                    ['code' => 'IX.A'], ['code' => 'IX.B'], ['code' => 'IX.C']
+                ]],
+            ],
+            'man' => [
+                ['name' => 'X (Sepuluh)', 'prefix' => 'X', 'classes' => [
+                    ['code' => 'X.A'], ['code' => 'X.B'], ['code' => 'X.C']
+                ]],
+                ['name' => 'XI (Sebelas)', 'prefix' => 'XI', 'classes' => [
+                    ['code' => 'XI.A'], ['code' => 'XI.B'], ['code' => 'XI.C']
+                ]],
+                ['name' => 'XII (Dua Belas)', 'prefix' => 'XII', 'classes' => [
+                    ['code' => 'XII.A'], ['code' => 'XII.B'], ['code' => 'XII.C']
+                ]],
+            ],
+            default => [
+                ['name' => 'Kelas I', 'prefix' => 'I', 'classes' => [
+                    ['code' => 'I.A'], ['code' => 'I.B'], ['code' => 'I.C']
+                ]],
+                ['name' => 'Kelas II', 'prefix' => 'II', 'classes' => [
+                    ['code' => 'II.A'], ['code' => 'II.B'], ['code' => 'II.C']
+                ]],
+                ['name' => 'Kelas III', 'prefix' => 'III', 'classes' => [
+                    ['code' => 'III.A'], ['code' => 'III.B'], ['code' => 'III.C']
+                ]],
+            ],
+        };
+
+        // Merge with existing counts to preserve any custom rombel
+        if (!empty($existingCounts)) {
+            foreach ($levels as &$level) {
+                foreach ($level['classes'] as &$class) {
+                    $code = $class['code'];
+                    if (isset($existingCounts[$code])) {
+                        $class['l'] = $existingCounts[$code]['l'] ?? 0;
+                        $class['p'] = $existingCounts[$code]['p'] ?? 0;
+                    }
+                }
+            }
+        }
+
+        return $levels;
+    }
+
+    /**
+     * Save Laporan Bulanan Madrasah.
+     */
+    public function saveLaporanBulananMadrasah(Request $request)
+    {
+        $user = auth()->user();
+        $deptId = $user->dept_id ?? $request->input('dept_id');
+
+        if (!$deptId) {
+            return redirect()->back()->with('error', 'Dept ID diperlukan');
+        }
+
+        $validated = $request->validate([
+            'bulan_laporan' => 'required|string',
+            'tahun_laporan' => 'required|integer|min:2000|max:2100',
+            'tahun_ajaran' => 'required|string',
+            'semester' => 'required|in:Ganjil,Genap',
+        ]);
+
+        $action = $request->input('action', 'draft');
+        $status = $action === 'submit' ? 'submitted' : 'draft';
+
+        $data = [
+            'dept_id' => $deptId,
+            'bulan_laporan' => $validated['bulan_laporan'],
+            'tahun_laporan' => $validated['tahun_laporan'],
+            'tahun_ajaran' => $validated['tahun_ajaran'],
+            'semester' => $validated['semester'],
+            'status' => $status,
+            'student_counts' => json_encode($request->input('studentCounts', [])),
+            'mutation_rows' => json_encode($request->input('mutationRows', [])),
+            'rb' => count($request->input('studentCounts', [])),
+        ];
+
+        if ($status === 'submitted') {
+            $data['submitted_at'] = now();
+        }
+
+        // Check if record exists
+        $existing = DB::table('ktd_laporan_bulanan_madrasah')
+            ->where('dept_id', $deptId)
+            ->where('bulan_laporan', $validated['bulan_laporan'])
+            ->where('tahun_laporan', $validated['tahun_laporan'])
+            ->where('tahun_ajaran', $validated['tahun_ajaran'])
+            ->where('semester', $validated['semester'])
+            ->first();
+
+        if ($existing) {
+            $data['updated_at'] = now();
+            DB::table('ktd_laporan_bulanan_madrasah')
+                ->where('id', $existing->id)
+                ->update($data);
+            $reportId = $existing->id;
+        } else {
+            $data['created_at'] = now();
+            $data['updated_at'] = now();
+            $reportId = DB::table('ktd_laporan_bulanan_madrasah')->insertGetId($data);
+        }
+
+        $message = $status === 'submitted'
+            ? 'Laporan berhasil dikirim!'
+            : 'Draft berhasil disimpan!';
+
+        return redirect()->back()->with('success', $message);
+    }
 }

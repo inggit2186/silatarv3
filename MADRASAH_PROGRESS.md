@@ -44,6 +44,24 @@ Fitur Laporan Madrasah adalah modul untuk mengelola pelaporan semester madrasah 
 - [ ] Generate laporan ke PDF
 - [ ] Export Excel (optional)
 
+### Phase 5: Laporan Bulanan (BARU!)
+- [x] Buat view `laporanbulanan.blade.php`
+- [x] Hero section dengan status badge
+- [x] Meta info cards (tanggal submit, catatan admin)
+- [x] Section Informasi Laporan (bulan, tahun, tahun ajaran, semester, nama madrasah, RB)
+- [x] Section Keadaan Siswa per rombel (card-based per tingkat)
+- [x] Section Mutasi siswa (card-based dengan badge)
+- [x] Reactive totals dengan JavaScript
+- [x] Add/Remove rombel functionality
+- [x] Add/Remove mutation row functionality
+- [x] Action buttons (Reset, Simpan Draft, Kirim)
+- [x] Route baru `/madrasah/laporan-bulanan`
+- [x] Controller method `laporanBulananMadrasah()`
+- [x] Controller method `saveLaporanBulananMadrasah()`
+- [x] Tab navigation dengan semua halaman madrasah
+- [x] Tambah tab menu di halaman Profil, Pegawai, Guru, Laporan Semester
+- [ ] Buat migrasi tabel `ktd_laporan_bulanan_madrasah`
+
 ## Data Flow
 
 ### Input (User-Side)
@@ -91,8 +109,10 @@ Approve / Reject
 | File | Purpose |
 |------|---------|
 | `database/migrations/xxxx_create_ktd_laporan_semester_madrasah.php` | Tabel laporan semester |
+| `database/migrations/xxxx_create_ktd_laporan_bulanan_madrasah.php` | Tabel laporan bulanan |
 | `database/migrations/xxxx_create_ktd_madrasah_pegawai.php` | Tabel data pegawai |
 | `database/migrations/xxxx_create_ktd_madrasah_guru.php` | Tabel data guru |
+| `resources/views/madrasah/laporanbulanan.blade.php` | View laporan bulanan |
 | `resources/views/admin/madrasah/index.blade.php` | View list laporan |
 | `resources/views/admin/madrasah/show.blade.php` | View detail & verifikasi |
 | `resources/css/admin-madrasah.css` | CSS khusus madrasah (jika perlu) |
@@ -240,3 +260,55 @@ Approve / Reject
   - Footer row totals (Jumlah)
   - Saldo cells
 - JavaScript reactive juga meng-update class saat totals berubah
+
+### 2026-07-22 (Fitur Baru: Laporan Bulanan)
+- **Membuat fitur Laporan Bulanan Madrasah** (mirip Vue component yang diberikan user)
+- File baru: `resources/views/madrasah/laporanbulanan.blade.php`
+- Struktur halaman:
+  - Hero section dengan status badge dan meta info
+  - Tab navigation untuk semua halaman madrasah
+  - Section A: Informasi Laporan (bulan, tahun, tahun ajaran, semester, RB)
+  - Section B: Keadaan Siswa per rombel (card-based, grid layout)
+  - Section C: Data Mutasi (card-based dengan badge badge)
+- Komponen UI baru:
+  - `.neo-card-hero` - Card untuk hero info
+  - `.rombel-card` - Card untuk setiap rombel
+  - `.mutation-card` - Card untuk setiap data mutasi
+  - `.gender-input-grid` - Grid untuk input L/P
+  - `.status-badge` - Badge untuk status laporan
+- JavaScript features:
+  - Reactive total calculation per rombel dan level
+  - Grand total (Laki-laki, Perempuan, Total Siswa)
+  - Mutation stats (Mutasi Masuk/Keluar, DO)
+  - Add/Remove rombel per tingkat
+  - Add/Remove mutation rows
+- Routes baru:
+  - `GET /madrasah/laporan-bulanan` - Halaman form
+  - `POST /madrasah/laporan-bulanan/save` - Simpan laporan
+- Controller methods:
+  - `laporanBulananMadrasah()` - Tampilkan form
+  - `saveLaporanBulananMadrasah()` - Simpan data
+  - `getMadrasahClassLevels()` - Helper untuk struktur rombel per kategori
+- Theme: **100% NEO MIRAI**
+
+### 2026-07-22 (Fixes & Enhancements)
+- **Fix PHP syntax error** - template variables yang kosong telah diisi
+- **Fix CSS buttons** - menggunakan class yang benar:
+  - `neo-btn-action-reset` untuk Reset
+  - `neo-btn-action-save` untuk Simpan Draft
+  - `neo-btn-submit` untuk Kirim Laporan
+- **Tambah CSS classes baru**:
+  - `.level-header` - Header section per tingkat
+  - `.level-footer` - Footer dengan totals per tingkat
+  - `.rombel-level-section` - Section untuk tingkat kelas
+  - `.neo-badge-primary` - Badge dengan warna gold
+- **Hapus inline styles** - styling dipindahkan ke CSS classes
+- **Fix dropdown placeholder** - option "Pilih" sekarang disabled
+  - "Pilih jenis data" → disabled
+  - "Pilih kelas" → disabled
+  - "Pilih" → disabled + selected
+- **Tambah tab menu** di semua halaman madrasah:
+  - profilmadrasah.blade.php
+  - pegawaimadrasah.blade.php
+  - gurumadrasah.blade.php
+  - laporansemester.blade.php

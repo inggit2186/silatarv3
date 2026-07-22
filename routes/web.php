@@ -80,6 +80,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/madrasah/guru', [PageController::class, 'guruMadrasah'])->name('madrasah.guru');
     Route::get('/madrasah/laporan-semester', [PageController::class, 'laporanSemesterMadrasah'])->name('madrasah.laporan-semester');
     Route::post('/madrasah/laporan-semester/save', [PageController::class, 'saveLaporanSemesterMadrasah'])->name('madrasah.laporan-semester.save');
+    Route::get('/madrasah/laporan-bulanan', [PageController::class, 'laporanBulananMadrasah'])->name('madrasah.laporan-bulanan');
+    Route::post('/madrasah/laporan-bulanan/save', [PageController::class, 'saveLaporanBulananMadrasah'])->name('madrasah.laporan-bulanan.save');
 });
 
 Route::get('/satuan-kerja', [PageController::class, 'satuanKerja'])->name('satuan-kerja');
