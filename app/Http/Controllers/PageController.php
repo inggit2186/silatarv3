@@ -5797,9 +5797,10 @@ class PageController extends Controller
             }
         }
 
-        // Get users based on dept_id
+        // Get users based on dept_id - Filter untuk Staff/Administrasi (kat_jabatan = adm)
         $usersQuery = DB::table('users')
             ->where('dept_id', $deptId)
+            ->where('kat_jabatan', 'adm')
             ->whereNotIn('role', ['other', 'pensiun', 'pindah'])
             ->select([
                 'id',
@@ -5851,8 +5852,8 @@ class PageController extends Controller
         // Summary stats - ASN: cpns/pns/pppk, Non ASN: Honor/GTT/PTT/dll
         $stats = [
             'total' => $pegawaiList->total(),
-            'asn' => DB::table('users')->where('dept_id', $deptId)->whereIn('asn', ['cpns', 'pns', 'pppk'])->count(),
-            'honorer' => DB::table('users')->where('dept_id', $deptId)->whereNotIn('asn', ['cpns', 'pns', 'pppk'])->count(),
+            'asn' => DB::table('users')->where('dept_id', $deptId)->where('kat_jabatan', 'adm')->whereIn('asn', ['cpns', 'pns', 'pppk'])->count(),
+            'honorer' => DB::table('users')->where('dept_id', $deptId)->where('kat_jabatan', 'adm')->whereNotIn('asn', ['cpns', 'pns', 'pppk'])->count(),
         ];
 
         return view('madrasah.pegawaimadrasah', [
@@ -5880,10 +5881,10 @@ class PageController extends Controller
             }
         }
 
-        // Get only guru based on dept_id
+        // Get only guru & kepala based on dept_id
         $guruQuery = DB::table('users')
             ->where('dept_id', $deptId)
-            ->where('kat_jabatan', 'guru')
+            ->whereIn('kat_jabatan', ['guru', 'kepala'])
             ->whereNotIn('role', ['other', 'pensiun', 'pindah'])
             ->select([
                 'id',
@@ -5925,8 +5926,8 @@ class PageController extends Controller
         // Summary stats - serdik: sertifikasi / non-sertifikasi / non-guru / unknown
         $stats = [
             'total' => $guruList->total(),
-            'sertifikasi' => DB::table('users')->where('dept_id', $deptId)->where('kat_jabatan', 'guru')->where('serdik', 'sertifikasi')->count(),
-            'belum_sertifikasi' => DB::table('users')->where('dept_id', $deptId)->where('kat_jabatan', 'guru')->whereIn('serdik', ['non-sertifikasi', 'non-guru', 'unknown'])->count(),
+            'sertifikasi' => DB::table('users')->where('dept_id', $deptId)->whereIn('kat_jabatan', ['guru', 'kepala'])->where('serdik', 'sertifikasi')->count(),
+            'belum_sertifikasi' => DB::table('users')->where('dept_id', $deptId)->whereIn('kat_jabatan', ['guru', 'kepala'])->whereIn('serdik', ['non-sertifikasi', 'non-guru', 'unknown'])->count(),
         ];
 
         return view('madrasah.gurumadrasah', [
