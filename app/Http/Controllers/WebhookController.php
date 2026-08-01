@@ -6,6 +6,7 @@ use App\Services\CommandHandler;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class WebhookController extends Controller
 {
@@ -59,6 +60,21 @@ class WebhookController extends Controller
                 ]);
                 return response()->json(['status' => 'ignored', 'reason' => 'message from bot']);
             }
+
+            // Deduplication: Skip if same message already processed within 5 seconds
+            $message = $request->message ?? '';
+            $cacheKey = 'wa_processed_' . md5($senderNumber . '|' . $message);
+
+            if (Cache::has($cacheKey)) {
+                Log::channel('whatsapp')->debug('Skipping duplicate message', [
+                    'from' => $senderNumber,
+                    'message' => $message,
+                ]);
+                return response()->json(['status' => 'ignored', 'reason' => 'duplicate']);
+            }
+
+            // Mark as processed
+            Cache::put($cacheKey, true, now()->addSeconds(10));
 
             $waService = new WhatsAppService();
             $handler = new CommandHandler($request, $waService);
@@ -192,16 +208,16 @@ class WebhookController extends Controller
             'timestamp' => now()->toIso8601String(),
         ]);
 
-        // Sample test payload
+        // Use actual request data for testing (preserve original fields)
         $testPayload = [
-            'device' => 'test-device',
-            'message' => $request->get('message', 'halo'),
-            'from' => $request->get('from', '6281234567890'),
-            'name' => $request->get('name', 'Test User'),
-            'participant' => null,
-            'ppUrl' => null,
-            'media' => null,
-            'mimetype' => null,
+            'device' => $request->device ?? 'test-device',
+            'message' => $request->message ?? $request->get('message', 'halo'),
+            'from' => $request->from ?? $request->get('from', '6281234567890'),
+            'name' => $request->name ?? $request->get('name', 'Test User'),
+            'participant' => $request->participant,
+            'ppUrl' => $request->ppUrl,
+            'media' => $request->media,
+            'mimetype' => $request->mimetype,
         ];
 
         Log::channel('whatsapp')->info('WhatsApp TEST Webhook received', [
@@ -209,10 +225,25 @@ class WebhookController extends Controller
             'timestamp' => now()->toIso8601String(),
         ]);
 
-        // Create a fake request with test data
+        // Create a fake request with test data (preserve participant!)
         $fakeRequest = new Request($testPayload);
 
         try {
+            // Deduplication for test endpoint too
+            $senderNumber = $testPayload['from'];
+            $message = $testPayload['message'];
+            $cacheKey = 'wa_processed_' . md5($senderNumber . '|' . $message);
+
+            if (Cache::has($cacheKey)) {
+                Log::channel('whatsapp')->debug('Test: Skipping duplicate', [
+                    'from' => $senderNumber,
+                    'message' => $message,
+                ]);
+                return response()->json(['status' => 'ignored', 'reason' => 'duplicate']);
+            }
+
+            Cache::put($cacheKey, true, now()->addSeconds(10));
+
             $waService = new WhatsAppService();
             $handler = new CommandHandler($fakeRequest, $waService);
 

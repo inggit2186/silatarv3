@@ -68,6 +68,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get department (unit kerja)
+     */
+    public function dept()
+    {
+        return $this->belongsTo(Department::class, 'dept_id');
+    }
+
+    /**
      * Scope: Get users yang bisa dinilai (kasubbag, kasi, kepala)
      */
     public function scopeDapatDinilai($query)
