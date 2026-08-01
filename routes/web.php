@@ -152,3 +152,16 @@ Route::prefix('ppid')->group(function () {
     // Tentang Kami
     Route::get('/tentang-kami', [PpidController::class, 'tentangKami'])->name('ppid.tentang-kami');
 });
+
+// WhatsApp Webhook Routes
+use App\Http\Controllers\WebhookController;
+
+Route::prefix('webhook')->group(function () {
+    // WhatsApp webhook endpoint - POST
+    Route::post('/whatsapp', [WebhookController::class, 'Webhook'])->name('webhook.whatsapp');
+
+    // WhatsApp webhook verification - GET (for Facebook/WhatsApp API verification)
+    Route::get('/whatsapp', [WebhookController::class, 'verify'])->name('webhook.whatsapp.verify');
+});
+
+Route::get('/webhook/whatsapp/test', [WebhookController::class, 'randomx']); // Dev only
