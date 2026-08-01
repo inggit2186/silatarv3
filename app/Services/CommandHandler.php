@@ -518,10 +518,6 @@ class CommandHandler
      */
     private function logIncoming(): void
     {
-        Log::channel('whatsapp')->info('WhatsApp Webhook received', [
-            'from' => $this->phoneNumber,
-            'message' => $this->message,
-            'timestamp' => now()->toIso8601String(),
-        ]);
+        // Logging is done in WebhookController, no need to duplicate here
     }
 }
