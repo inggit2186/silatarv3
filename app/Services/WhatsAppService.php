@@ -87,6 +87,9 @@ class WhatsAppService
         ?string $footer = null
     ): ?array {
         try {
+            // Default image URL untuk list message
+            $defaultImage = 'https://sms.kemenagtanahdatar.id/themes/vuexy/img/front-pages/landing-page/hero-elements-light.png';
+
             $payload = [
                 "api_key" => $this->apiKey,
                 "sender" => $this->sender,
@@ -96,6 +99,7 @@ class WhatsAppService
                 "buttontext" => $buttonText,
                 "message" => $message,
                 "footer" => $footer ?? $this->defaultFooter,
+                "image" => $defaultImage,
                 "sections" => $sections,
             ];
 
