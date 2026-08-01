@@ -61,9 +61,14 @@ class WebhookController extends Controller
                 return response()->json(['status' => 'ignored', 'reason' => 'message from bot']);
             }
 
-            // Deduplication: Skip if same message already processed within 5 seconds
+            // Deduplication: Skip if same message already processed within 60 seconds
             $message = $request->message ?? '';
             $cacheKey = 'wa_processed_' . md5($senderNumber . '|' . $message);
+
+            Log::channel('whatsapp')->debug('Cache check', [
+                'cache_key' => $cacheKey,
+                'ttl' => 5,
+            ]);
 
             if (Cache::has($cacheKey)) {
                 Log::channel('whatsapp')->debug('Skipping duplicate message', [
@@ -73,8 +78,11 @@ class WebhookController extends Controller
                 return response()->json(['status' => 'ignored', 'reason' => 'duplicate']);
             }
 
-            // Mark as processed
-            Cache::put($cacheKey, true, now()->addSeconds(10));
+            // Set cache for 60 seconds
+            Cache::put($cacheKey, true, 5);
+            Log::channel('whatsapp')->debug('Message marked as processed', [
+                'cache_key' => $cacheKey,
+            ]);
 
             $waService = new WhatsAppService();
             $handler = new CommandHandler($request, $waService);
@@ -234,15 +242,22 @@ class WebhookController extends Controller
             $message = $testPayload['message'];
             $cacheKey = 'wa_processed_' . md5($senderNumber . '|' . $message);
 
+            Log::channel('whatsapp')->debug('TEST: Cache check', [
+                'cache_key' => $cacheKey,
+                'cache_exists' => Cache::has($cacheKey),
+                'cache_driver' => config('cache.default'),
+            ]);
+
             if (Cache::has($cacheKey)) {
-                Log::channel('whatsapp')->debug('Test: Skipping duplicate', [
+                Log::channel('whatsapp')->debug('TEST: Skipping duplicate', [
                     'from' => $senderNumber,
                     'message' => $message,
                 ]);
                 return response()->json(['status' => 'ignored', 'reason' => 'duplicate']);
             }
 
-            Cache::put($cacheKey, true, now()->addSeconds(10));
+            Cache::put($cacheKey, true, 5);
+            Log::channel('whatsapp')->debug('TEST: Message marked as processed', ['cache_key' => $cacheKey]);
 
             $waService = new WhatsAppService();
             $handler = new CommandHandler($fakeRequest, $waService);
