@@ -164,4 +164,5 @@ Route::prefix('webhook')->group(function () {
     Route::get('/whatsapp', [WebhookController::class, 'verify'])->name('webhook.whatsapp.verify');
 });
 
-Route::get('/webhook/whatsapp/test', [WebhookController::class, 'randomx']); // Dev only
+// Test endpoint for development - POST /webhook/whatsapp/test?message=halo&from=6281234567890&name=Test
+Route::post('/webhook/whatsapp/test', [WebhookController::class, 'test'])->name('webhook.whatsapp.test');

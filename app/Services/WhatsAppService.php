@@ -11,13 +11,14 @@ class WhatsAppService
     private string $apiKey;
     private string $sender;
     private string $waServerUrl;
-    private string $defaultFooter = '© ' . date('Y') . ' SILATAR AI (Reply Otomatis)';
+    private string $defaultFooter;
 
     public function __construct()
     {
         $this->apiKey = env('WA_TOKEN');
         $this->sender = env('WA_NUMBER');
         $this->waServerUrl = env('URL_WA_SERVER');
+        $this->defaultFooter = '© ' . date('Y') . ' SILATAR AI (Reply Otomatis)';
     }
 
     /**

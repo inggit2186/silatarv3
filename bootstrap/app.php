@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminAccess::class,
             'kepala' => \App\Http\Middleware\EnsureIsKepala::class,
         ]);
+
+        // Override VerifyCsrfToken for webhook routes
+        $middleware->validateCsrfTokens(except: [
+            'webhook/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

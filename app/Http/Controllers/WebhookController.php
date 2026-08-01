@@ -173,4 +173,56 @@ class WebhookController extends Controller
 
         return response('Forbidden', 403);
     }
+
+    /**
+     * Test webhook with dummy data - for testing only
+     * URL: POST /webhook/whatsapp/test
+     */
+    public function test(Request $request)
+    {
+        // Sample test payload
+        $testPayload = [
+            'device' => 'test-device',
+            'message' => $request->get('message', 'halo'),
+            'from' => $request->get('from', '6281234567890'),
+            'name' => $request->get('name', 'Test User'),
+            'participant' => null,
+            'ppUrl' => null,
+            'media' => null,
+            'mimetype' => null,
+        ];
+
+        Log::channel('whatsapp')->info('WhatsApp TEST Webhook received', [
+            'payload' => $testPayload,
+            'timestamp' => now()->toIso8601String(),
+        ]);
+
+        // Create a fake request with test data
+        $fakeRequest = new Request($testPayload);
+
+        try {
+            $waService = new WhatsAppService();
+            $handler = new CommandHandler($fakeRequest, $waService);
+
+            $result = $handler->handle();
+
+            return response()->json([
+                'status' => 'success',
+                'input' => $testPayload,
+                'output' => $result,
+            ]);
+        } catch (\Exception $e) {
+            Log::channel('whatsapp')->error('Test webhook error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'input' => $testPayload,
+                'error' => $e->getMessage(),
+                'trace' => explode("\n", $e->getTraceAsString()),
+            ], 500);
+        }
+    }
 }
