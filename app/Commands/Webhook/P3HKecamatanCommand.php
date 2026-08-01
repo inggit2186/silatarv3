@@ -3,6 +3,7 @@
 namespace App\Commands\Webhook;
 
 use App\Models\HakAkses;
+use App\Services\WhatsAppService;
 
 class P3HKecamatanCommand extends BaseCommand
 {

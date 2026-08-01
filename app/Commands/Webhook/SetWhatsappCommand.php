@@ -3,6 +3,7 @@
 namespace App\Commands\Webhook;
 
 use App\Models\User;
+use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 
 class SetWhatsappCommand extends BaseCommand

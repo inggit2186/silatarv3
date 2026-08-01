@@ -4,6 +4,7 @@ namespace App\Commands\Webhook;
 
 use App\Models\Department;
 use App\Models\User;
+use App\Services\WhatsAppService;
 
 class CekSatkerCommand extends BaseCommand
 {

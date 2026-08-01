@@ -4,6 +4,7 @@ namespace App\Commands\Webhook;
 
 use App\Models\HakAkses;
 use App\Models\User;
+use App\Services\WhatsAppService;
 use Carbon\Carbon;
 
 class HalalCommand extends BaseCommand

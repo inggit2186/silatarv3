@@ -2,6 +2,8 @@
 
 namespace App\Commands\Webhook;
 
+use App\Services\WhatsAppService;
+
 class HelpCommand extends BaseCommand
 {
     public function execute(): ?array
