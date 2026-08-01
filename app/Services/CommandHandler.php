@@ -203,9 +203,10 @@ class CommandHandler
             return null;
         }
 
-        // Skip if participant is sender's own JID (not a group)
+        // WA server sends 2 requests: one with participant (own JID), one without
+        // If participant == sender, use the request WITHOUT participant (cleaner)
         if ($this->isOwnJid()) {
-            Log::channel('whatsapp')->debug('Skipping own JID (not a group)', [
+            Log::channel('whatsapp')->debug('Skipping duplicate (own JID), using request without participant', [
                 'from' => $this->phoneNumber,
                 'participant' => $this->participant,
             ]);
