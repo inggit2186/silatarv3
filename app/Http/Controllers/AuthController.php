@@ -115,7 +115,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Password Baru Anda telah dikirim ke no WhatsApp <br/> <b>+62 ' . $telp . '</b><hr/><i style="font-size: 13px">Jika Nomor WhatsApp Anda Salah, Silahkan WhatsApp ke nomor <br/><b>0895 0900 7078</b><br/>Dengan chat : <b>Set WhatsApp <i>NIP</i></b> dengan Nomor baru Anda.',
+            'message' => '+62 ' . $telp,
         ]);
     }
 }
