@@ -26,13 +26,18 @@ class WebhookController extends Controller
     public function Webhook(Request $request)
     {
         try {
-            // Log incoming webhook
-            Log::channel('whatsapp')->info('WhatsApp Webhook received', [
-                'from' => $request->from,
-                'message' => $request->message,
-                'name' => $request->name,
-                'device' => $request->device,
+            // Log ALL incoming webhook data
+            $postData = $request->all();
+            Log::channel('whatsapp')->info('=== WHATSAPP WEBHOOK RECEIVED ===', [
+                'POST_DATA' => $postData,
+                'from' => $request->from ?? 'N/A',
+                'message' => $request->message ?? 'N/A',
+                'name' => $request->name ?? 'N/A',
+                'device' => $request->device ?? 'N/A',
+                'participant' => $request->participant ?? null,
+                'mimetype' => $request->mimetype ?? null,
                 'timestamp' => now()->toIso8601String(),
+                'ip' => $request->ip(),
             ]);
 
             // Validate required fields
@@ -180,6 +185,13 @@ class WebhookController extends Controller
      */
     public function test(Request $request)
     {
+        // Log incoming test webhook
+        Log::channel('whatsapp')->info('=== WHATSAPP TEST WEBHOOK ===', [
+            'QUERY_PARAMS' => $request->query(),
+            'POST_DATA' => $request->all(),
+            'timestamp' => now()->toIso8601String(),
+        ]);
+
         // Sample test payload
         $testPayload = [
             'device' => 'test-device',
