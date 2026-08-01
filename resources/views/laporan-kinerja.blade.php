@@ -221,10 +221,10 @@
                                     <div class="silatar-report-summary-badge {{ $dailySummary['entries'] > 0 ? 'silatar-report-summary-badge-ready' : 'silatar-report-summary-badge-pending' }}">
                                         {{ $dailySummary['entries'] > 0 ? 'Tersimpan' : 'Belum Dikirim' }}
                                     </div>
-                                    <h2 class="mt-2 font-mono text-xl font-bold text-white">
+                                    <h2 class="silatar-report-title">
                                         Laporan Kinerja Harian {{ $selectedMonthLabel }}
                                     </h2>
-                                    <p class="mt-2 max-w-2xl text-sm leading-6 text-cyan-100">
+                                    <p class="silatar-report-subtitle">
                                         {{ $dailySummary['entries'] > 0
                                             ? 'Data kegiatan sudah tersimpan dan bisa direkap kembali bila diperlukan.'
                                             : 'Belum ada kegiatan yang tercatat pada bulan terpilih.' }}
@@ -232,18 +232,33 @@
                                 </div>
                             </div>
 
-                            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                                <div class="rounded-xl border border-cyan-500/20 bg-slate-900/80 px-4 py-3 shadow-sm">
-                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-cyan-100">Entri</p>
-                                    <p class="mt-2 font-mono text-2xl font-bold text-cyan-400">{{ $dailySummary['entries'] }}</p>
+                            <div class="neo-grid-4">
+                                <div class="neo-stat-card">
+                                    <div class="neo-stat-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                        </svg>
+                                    </div>
+                                    <div class="neo-stat-value">{{ $dailySummary['entries'] }}</div>
+                                    <div class="neo-stat-label">Entri</div>
                                 </div>
-                                <div class="rounded-xl border border-cyan-500/20 bg-slate-900/80 px-4 py-3 shadow-sm">
-                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-cyan-100">Hari</p>
-                                    <p class="mt-2 font-mono text-2xl font-bold text-cyan-400">{{ $dailySummary['days'] }}</p>
+                                <div class="neo-stat-card">
+                                    <div class="neo-stat-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="neo-stat-value">{{ $dailySummary['days'] }}</div>
+                                    <div class="neo-stat-label">Hari</div>
                                 </div>
-                                <div class="rounded-xl border border-cyan-500/20 bg-slate-900/80 px-4 py-3 shadow-sm">
-                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-cyan-100">Volume</p>
-                                    <p class="mt-2 font-mono text-2xl font-bold text-cyan-400">{{ $dailySummary['volume'] }}</p>
+                                <div class="neo-stat-card">
+                                    <div class="neo-stat-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                        </svg>
+                                    </div>
+                                    <div class="neo-stat-value">{{ $dailySummary['volume'] }}</div>
+                                    <div class="neo-stat-label">Volume</div>
                                 </div>
                             </div>
                         </div>
@@ -371,61 +386,74 @@
                                     <div class="silatar-report-summary-badge silatar-report-summary-badge-ready">
                                         Rekap Bulanan
                                     </div>
-                                    <h2 class="mt-2 font-mono text-xl font-bold text-white">
+                                    <h2 class="silatar-report-title">
                                         Rekap Kinerja Tahun {{ $selectedYear }}
                                     </h2>
-                                    <p class="mt-2 max-w-2xl text-sm leading-6 text-cyan-100">
+                                    <p class="silatar-report-subtitle">
                                         Daftar laporan kinerja bulanan per pengguna dari tabel satker_ckh.
                                     </p>
                                 </div>
                             </div>
 
-                            <div class="grid gap-3 sm:grid-cols-4">
-                                <div class="rounded-xl border border-cyan-500/20 bg-slate-900/80 px-4 py-3">
-                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-cyan-100">Total Entri</p>
-                                    <p class="mt-2 font-mono text-2xl font-bold text-cyan-400">{{ $bulananReports->count() }}</p>
+                            <div class="neo-grid-4">
+                                <div class="neo-stat-card neo-stat-card-total">
+                                    <div class="neo-stat-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                        </svg>
+                                    </div>
+                                    <div class="neo-stat-value">{{ $bulananReports->count() }}</div>
+                                    <div class="neo-stat-label">Total Entri</div>
                                 </div>
-                                <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
-                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-emerald-400">Disetujui</p>
-                                    <p class="mt-2 font-mono text-2xl font-bold text-emerald-400">{{ $bulananReports->where('status', 'DISETUJUI')->count() }}</p>
+                                <div class="neo-stat-card neo-stat-card-success">
+                                    <div class="neo-stat-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="neo-stat-value">{{ $bulananReports->where('status', 'DISETUJUI')->count() }}</div>
+                                    <div class="neo-stat-label">Disetujui</div>
                                 </div>
-                                <div class="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
-                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-amber-400">Dikirim</p>
-                                    <p class="mt-2 font-mono text-2xl font-bold text-amber-400">{{ $bulananReports->where('status', 'DIKIRIM')->count() }}</p>
+                                <div class="neo-stat-card neo-stat-card-warning">
+                                    <div class="neo-stat-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                        </svg>
+                                    </div>
+                                    <div class="neo-stat-value">{{ $bulananReports->where('status', 'DIKIRIM')->count() }}</div>
+                                    <div class="neo-stat-label">Dikirim</div>
                                 </div>
-                                <div class="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3">
-                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-rose-400">Ditolak</p>
-                                    <p class="mt-2 font-mono text-2xl font-bold text-rose-400">{{ $bulananReports->where('status', 'DITOLAK')->count() }}</p>
+                                <div class="neo-stat-card neo-stat-card-danger">
+                                    <div class="neo-stat-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="neo-stat-value">{{ $bulananReports->where('status', 'DITOLAK')->count() }}</div>
+                                    <div class="neo-stat-label">Ditolak</div>
                                 </div>
                             </div>
 
                             {{-- Upload Button --}}
                             <div class="mt-4 flex justify-end">
-                                <button
-                                    type="button"
-                                    @click="openUploadModal()"
-                                    class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 px-5 py-2.5 font-mono text-sm font-bold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(0,212,255,0.3)] transition-all hover:shadow-[0_0_30px_rgba(0,212,255,0.5)]"
-                                >
-                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <a href="#" @click.prevent="openUploadModal()" class="neo-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="neo-btn-icon">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                                     </svg>
                                     Upload Laporan
-                                </button>
+                                </a>
                             </div>
                         </div>
                     </div>
 
                     <div class="silatar-report-table-shell" id="rekap-bulanan">
                         @if ($bulananReports->isEmpty())
-                            <div class="silatar-report-empty">
-                                <svg class="mx-auto mb-4 h-16 w-16 text-cyan-500/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <div class="neo-empty">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
-                                <p class="font-mono text-sm font-semibold uppercase tracking-widest text-cyan-400/50">Kosong</p>
-                                <p class="mt-2 font-mono text-base font-semibold text-white">Belum ada laporan kinerja bulanan.</p>
-                                <p class="mt-2 text-sm leading-6 text-cyan-100">
-                                    Tidak ada data laporan kinerja pada tahun {{ $selectedYear }}.
-                                </p>
+                                <p class="neo-empty-title">Belum Ada Laporan Bulanan</p>
+                                <p class="neo-empty-text">Tidak ada data laporan kinerja pada tahun {{ $selectedYear }}.</p>
                             </div>
                         @else
                             <div class="overflow-x-auto">
@@ -517,33 +545,54 @@
                                     <div class="silatar-report-summary-badge silatar-report-summary-badge-ready">
                                         Laporan Humas
                                     </div>
-                                    <h2 class="mt-2 font-mono text-xl font-bold text-white">
+                                    <h2 class="silatar-report-title">
                                         Rekap publikasi dan kanal aktif
                                     </h2>
-                                    <p class="mt-2 max-w-2xl text-sm leading-6 text-cyan-100">
+                                    <p class="silatar-report-subtitle">
                                         Menampilkan bulan laporan, kanal yang terisi, serta status pemeriksaan.
                                     </p>
                                 </div>
                             </div>
 
-                            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                                <div class="rounded-xl border border-cyan-500/20 bg-slate-900/80 px-4 py-3">
-                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-cyan-100">Laporan</p>
-                                    <p class="mt-2 font-mono text-2xl font-bold text-cyan-400">{{ $humasData->count() }}</p>
+                            <div class="neo-grid-4">
+                                <div class="neo-stat-card">
+                                    <div class="neo-stat-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="neo-stat-value">{{ $humasData->count() }}</div>
+                                    <div class="neo-stat-label">Laporan</div>
                                 </div>
-                                <div class="rounded-xl border border-cyan-500/20 bg-slate-900/80 px-4 py-3">
-                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-cyan-100">Kanal aktif</p>
-                                    <p class="mt-2 font-mono text-2xl font-bold text-cyan-400">{{ $humasData->sum('active_channels') }}</p>
+                                <div class="neo-stat-card">
+                                    <div class="neo-stat-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="neo-stat-value">{{ $humasData->sum('active_channels') }}</div>
+                                    <div class="neo-stat-label">Kanal Aktif</div>
                                 </div>
-                                <div class="rounded-xl border border-cyan-500/20 bg-slate-900/80 px-4 py-3">
-                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-cyan-100">Status</p>
-                                    <p class="mt-2 font-mono text-2xl font-bold text-cyan-400">Tersimpan</p>
+                                <div class="neo-stat-card neo-stat-card-success">
+                                    <div class="neo-stat-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </div>
+                                    <div class="neo-stat-value">Tersimpan</div>
+                                    <div class="neo-stat-label">Status</div>
                                 </div>
-                                <div class="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 flex flex-col justify-center">
-                                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-cyan-100 mb-2">Aksi</p>
-                                    <button type="button" @click="openAddModal()" class="rounded-full bg-gradient-to-r from-rose-600 to-rose-500 px-5 py-2 font-mono text-sm font-semibold text-white shadow-[0_0_20px_rgba(244,63,94,0.3)]">
-                                    TAMBAH
-                                </button>
+                                <div class="neo-stat-card neo-stat-card-action">
+                                    <button type="button" @click="openAddModal()" class="neo-stat-action-overlay">
+                                        <div class="neo-stat-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                                            </svg>
+                                        </div>
+                                        <div class="neo-stat-value">TAMBAH</div>
+                                        <div class="neo-stat-label">Aksi</div>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -551,9 +600,12 @@
 
                                         <div class="silatar-report-table-shell">
                         @if ($humasData->isEmpty())
-                            <div class="silatar-report-empty">
-                                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-400">Kosong</p>
-                                <p class="mt-2 text-base font-semibold text-white">Belum ada laporan humas.</p>
+                            <div class="neo-empty">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <p class="neo-empty-title">Belum Ada Laporan</p>
+                                <p class="neo-empty-text">Silakan klik tombol TAMBAH untuk membuat laporan humas.</p>
                             </div>
                         @else
                             <div class="overflow-x-auto">
@@ -745,37 +797,42 @@
                 </div>
 
                 {{-- Hummas Modal --}}
-                <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.85);">
-                    <div class="w-full max-w-4xl rounded-2xl border border-cyan-500/30 bg-slate-900 shadow-[0_0_60px_rgba(0,212,255,0.3)] max-h-[90vh] overflow-y-auto">
-                        <div class="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-cyan-500/30 bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-4">
+                <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: oklch(20% 0.015 80 / 0.85); backdrop-filter: blur(4px);">
+                    <div class="neo-modal humas-modal">
+                        <div class="neo-modal-header">
                             <div>
-                                <h3 class="font-mono text-lg font-bold text-cyan-400">::: Laporan Kehumasan :::</h3>
-                                <p class="text-xs text-slate-400 mt-1" x-text="isEdit ? 'Edit Detail Kegiatan' : 'Detail Kegiatan Baru'"></p>
+                                <span class="neo-modal-badge">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="neo-modal-badge-icon">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                                    </svg>
+                                    Laporan Kehumasan
+                                </span>
+                                <p class="neo-modal-subtitle" x-text="isEdit ? 'Edit Detail Kegiatan' : 'Detail Kegiatan Baru'"></p>
                             </div>
-                            <button type="button" @click="closeModal()" class="rounded-full bg-slate-700/50 p-2 text-slate-400 transition hover:bg-slate-600 hover:text-white">
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <button type="button" @click="closeModal()" class="neo-modal-close">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                                 </svg>
                             </button>
                         </div>
 
-                        <form method="POST" :action="isEdit ? '/laporan-kinerja/humas/' + editingId : '{{ route('laporan-humas.store') }}'" class="p-6 space-y-6">
+                        <form method="POST" :action="isEdit ? '/laporan-kinerja/humas/' + editingId : '{{ route('laporan-humas.store') }}'" class="neo-modal-body">
                             @csrf
                             <template x-if="isEdit">
                                 @method('PUT')
                             </template>
 
-                            <div>
-                                <label class="block font-mono text-xs uppercase tracking-wider text-cyan-400 mb-2">Bulan Pelaporan <span class="text-rose-400">*</span></label>
-                                <input type="month" name="bulan" x-model="selectedMonth" class="w-full rounded-lg border border-cyan-500/30 bg-slate-800 px-4 py-3 text-white font-mono" required>
+                            <div class="neo-form-group">
+                                <label class="neo-form-label">Bulan Pelaporan <span class="text-rose-500">*</span></label>
+                                <input type="month" name="bulan" x-model="selectedMonth" class="neo-form-input" required>
                             </div>
 
-                            <div class="space-y-4">
-                                <h4 class="font-mono text-sm font-semibold uppercase tracking-wider text-cyan-300 border-b border-cyan-500/20 pb-2">Data Posting per Platform</h4>
+                            <div class="neo-form-section">
+                                <h4 class="neo-form-section-title">Data Posting per Platform</h4>
 
                                 <template x-for="platform in platforms" :key="platform">
-                                    <div class="rounded-xl border border-cyan-500/20 bg-slate-800/50 p-4">
-                                        <div class="flex items-center justify-center gap-3 mb-4">
+                                    <div class="neo-platform-card">
+                                        <div class="neo-platform-header">
                                             {{-- Platform Logo SVG --}}
                                             <template x-if="platform === 'Facebook'">
                                                 <svg class="w-8 h-8" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
@@ -792,37 +849,37 @@
                                             <template x-if="platform === 'YouTube'">
                                                 <svg class="w-8 h-8" viewBox="0 0 24 24" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                                             </template>
-                                            <h5 class="font-mono text-sm font-bold text-cyan-400 uppercase tracking-wider" x-text="platform"></h5>
+                                            <h5 class="neo-platform-title" x-text="platform"></h5>
                                         </div>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div class="space-y-3">
-                                                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Posting Pertama</div>
+                                                <div class="neo-posting-label">Posting Pertama</div>
                                                 <div>
-                                                    <label class="block text-xs text-slate-400 mb-1">Tanggal</label>
-                                                    <input type="date" :name="platform.toLowerCase() + '[first][date]'" x-model="platformData[platform].first.date" class="w-full rounded-lg border border-cyan-500/30 bg-slate-900 px-3 py-2 text-white text-sm">
+                                                    <label class="neo-form-label-sm">Tanggal</label>
+                                                    <input type="date" :name="platform.toLowerCase() + '[first][date]'" x-model="platformData[platform].first.date" class="neo-form-input">
                                                 </div>
                                                 <div>
-                                                    <label class="block text-xs text-slate-400 mb-1">Judul Pemberitaan</label>
-                                                    <input type="text" :name="platform.toLowerCase() + '[first][content]'" x-model="platformData[platform].first.content" placeholder="Judul pemberitaan..." class="w-full rounded-lg border border-cyan-500/30 bg-slate-900 px-3 py-2 text-white text-sm">
+                                                    <label class="neo-form-label-sm">Judul Pemberitaan</label>
+                                                    <input type="text" :name="platform.toLowerCase() + '[first][content]'" x-model="platformData[platform].first.content" placeholder="Judul pemberitaan..." class="neo-form-input">
                                                 </div>
                                                 <div>
-                                                    <label class="block text-xs text-slate-400 mb-1">Link</label>
-                                                    <input type="url" :name="platform.toLowerCase() + '[first][link]'" x-model="platformData[platform].first.link" placeholder="https://..." class="w-full rounded-lg border border-cyan-500/30 bg-slate-900 px-3 py-2 text-white text-sm">
+                                                    <label class="neo-form-label-sm">Link</label>
+                                                    <input type="url" :name="platform.toLowerCase() + '[first][link]'" x-model="platformData[platform].first.link" placeholder="https://..." class="neo-form-input">
                                                 </div>
                                             </div>
                                             <div class="space-y-3">
-                                                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Posting Terakhir</div>
+                                                <div class="neo-posting-label neo-posting-label-last">Posting Terakhir</div>
                                                 <div>
-                                                    <label class="block text-xs text-slate-400 mb-1">Tanggal</label>
-                                                    <input type="date" :name="platform.toLowerCase() + '[last][date]'" x-model="platformData[platform].last.date" class="w-full rounded-lg border border-cyan-500/30 bg-slate-900 px-3 py-2 text-white text-sm">
+                                                    <label class="neo-form-label-sm">Tanggal</label>
+                                                    <input type="date" :name="platform.toLowerCase() + '[last][date]'" x-model="platformData[platform].last.date" class="neo-form-input">
                                                 </div>
                                                 <div>
-                                                    <label class="block text-xs text-slate-400 mb-1">Judul Pemberitaan</label>
-                                                    <input type="text" :name="platform.toLowerCase() + '[last][content]'" x-model="platformData[platform].last.content" placeholder="Judul pemberitaan..." class="w-full rounded-lg border border-cyan-500/30 bg-slate-900 px-3 py-2 text-white text-sm">
+                                                    <label class="neo-form-label-sm">Judul Pemberitaan</label>
+                                                    <input type="text" :name="platform.toLowerCase() + '[last][content]'" x-model="platformData[platform].last.content" placeholder="Judul pemberitaan..." class="neo-form-input">
                                                 </div>
                                                 <div>
-                                                    <label class="block text-xs text-slate-400 mb-1">Link</label>
-                                                    <input type="url" :name="platform.toLowerCase() + '[last][link]'" x-model="platformData[platform].last.link" placeholder="https://..." class="w-full rounded-lg border border-cyan-500/30 bg-slate-900 px-3 py-2 text-white text-sm">
+                                                    <label class="neo-form-label-sm">Link</label>
+                                                    <input type="url" :name="platform.toLowerCase() + '[last][link]'" x-model="platformData[platform].last.link" placeholder="https://..." class="neo-form-input">
                                                 </div>
                                             </div>
                                         </div>
@@ -830,14 +887,14 @@
                                 </template>
                             </div>
 
-                            <div>
-                                <label class="block font-mono text-xs uppercase tracking-wider text-cyan-400 mb-2">Komentar / Kendala Yang Dihadapi</label>
-                                <textarea name="comment" x-model="comment" rows="4" class="w-full rounded-lg border border-cyan-500/30 bg-slate-800 px-4 py-3 text-white resize-none" placeholder="Ceritakan kendala atau komentar..."></textarea>
+                            <div class="neo-form-group">
+                                <label class="neo-form-label">Komentar / Kendala Yang Dihadapi</label>
+                                <textarea name="comment" x-model="comment" rows="4" class="neo-form-textarea" placeholder="Ceritakan kendala atau komentar..."></textarea>
                             </div>
 
-                            <div class="flex justify-end gap-3 pt-4 border-t border-cyan-500/20">
-                                <button type="button" @click="closeModal()" class="rounded-full border border-slate-600 px-6 py-2.5 font-mono text-sm text-slate-300 hover:bg-slate-800">Batal</button>
-                                <button type="submit" class="rounded-full bg-gradient-to-r from-cyan-600 to-cyan-500 px-6 py-2.5 font-mono text-sm font-semibold text-white shadow-[0_0_20px_rgba(0,212,255,0.3)]">Simpan</button>
+                            <div class="neo-modal-footer">
+                                <button type="button" @click="closeModal()" class="neo-btn-secondary">Batal</button>
+                                <button type="submit" class="neo-btn">Simpan</button>
                             </div>
                         </form>
                     </div>

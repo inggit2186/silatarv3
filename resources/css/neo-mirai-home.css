@@ -1515,9 +1515,18 @@ html {
   display: grid;
   gap: 1.25rem;
 }
-.neo-grid-2 { grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); }
-.neo-grid-3 { grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
-.neo-grid-4 { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
+.neo-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.neo-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.neo-grid-4 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.neo-grid-4 > .neo-stat-card {
+  flex: 1 1 calc(25% - 1rem);
+  min-width: 10rem;
+  max-width: 100%;
+}
 
 /* NEO Service Card */
 .neo-service-card {
@@ -2087,6 +2096,494 @@ html {
     width: 100% !important;
     min-width: unset !important;
     aspect-ratio: 16/9 !important;
+  }
+}
+
+/* ============================================
+   NEO STAT CARD - Card stats for Laporan Kinerja
+   ============================================ */
+
+.neo-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem 1rem;
+  background: var(--paper-soft);
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  transition: border-color 200ms var(--ease), transform 300ms var(--ease), box-shadow 300ms var(--ease);
+}
+
+.neo-stat-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px oklch(18% 0.03 76 / 0.1);
+}
+
+.neo-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: 1rem;
+  background: oklch(94% 0.035 78 / 0.6);
+  border-radius: 1rem;
+  transition: background 200ms var(--ease), transform 200ms var(--ease);
+}
+
+.neo-stat-card:hover .neo-stat-icon {
+  background: var(--gold);
+  transform: scale(1.1);
+}
+
+.neo-stat-icon svg {
+  width: 1.75rem;
+  height: 1.75rem;
+  stroke: var(--ink);
+  transition: stroke 200ms var(--ease);
+}
+
+.neo-stat-card:hover .neo-stat-icon svg {
+  stroke: var(--night);
+}
+
+.neo-stat-value {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+  margin-bottom: 0.25rem;
+}
+
+.neo-stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+}
+
+/* Stat Card Variants */
+.neo-stat-card-total .neo-stat-icon {
+  background: oklch(94% 0.035 78 / 0.6);
+}
+
+.neo-stat-card-success .neo-stat-icon {
+  background: oklch(70% 0.12 145 / 0.12);
+}
+
+.neo-stat-card-success .neo-stat-icon svg {
+  stroke: #16a34a;
+}
+
+.neo-stat-card-success .neo-stat-value {
+  color: #16a34a;
+}
+
+.neo-stat-card-warning .neo-stat-icon {
+  background: oklch(76% 0.14 70 / 0.12);
+}
+
+.neo-stat-card-warning .neo-stat-icon svg {
+  stroke: #d97706;
+}
+
+.neo-stat-card-warning .neo-stat-value {
+  color: #d97706;
+}
+
+.neo-stat-card-danger .neo-stat-icon {
+  background: oklch(65% 0.18 25 / 0.12);
+}
+
+.neo-stat-card-danger .neo-stat-icon svg {
+  stroke: #dc2626;
+}
+
+.neo-stat-card-danger .neo-stat-value {
+  color: #dc2626;
+}
+
+.neo-stat-card-action {
+  position: relative;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--sun-deep) 100%);
+  border-color: var(--gold);
+}
+
+.neo-stat-card-action .neo-stat-icon {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.neo-stat-card-action .neo-stat-icon svg {
+  stroke: var(--night);
+}
+
+.neo-stat-card-action .neo-stat-value,
+.neo-stat-card-action .neo-stat-label {
+  color: var(--night);
+}
+
+.neo-stat-card-action:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 16px 48px oklch(50% 0.15 50 / 0.3);
+}
+
+.neo-stat-action-btn {
+  position: absolute;
+  bottom: -1rem;
+  right: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gold);
+  color: var(--night);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 4px 12px oklch(50% 0.15 50 / 0.3);
+  transition: transform 200ms var(--ease), background 200ms var(--ease);
+}
+
+.neo-stat-action-btn:hover {
+  background: var(--sun-deep);
+  transform: scale(1.1);
+}
+
+.neo-stat-action-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+}
+
+/* NEO Button with icon */
+.neo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--gold);
+  color: var(--night);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  border: none;
+  border-radius: 2rem;
+  cursor: pointer;
+  transition: background 180ms var(--ease), transform 240ms var(--ease), box-shadow 240ms var(--ease);
+}
+
+.neo-btn:hover {
+  background: var(--sun-deep);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px oklch(50% 0.15 50 / 0.25);
+}
+
+.neo-btn-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke: currentColor;
+}
+
+/* Responsive for stat cards */
+@media (max-width: 640px) {
+  .neo-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .neo-stat-card {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .neo-stat-value {
+    font-size: 1.75rem;
+  }
+}
+
+/* ============================================
+   NEO MODAL - Modal dialogs for Laporan Kinerja
+   ============================================ */
+
+.neo-modal {
+  width: 100%;
+  max-width: 52rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 1.5rem;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 25px 80px oklch(18% 0.03 76 / 0.15);
+}
+
+.neo-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(135deg, oklch(94% 0.035 78 / 0.5), var(--paper-soft));
+}
+
+.neo-modal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  background: var(--gold);
+  color: var(--night);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: 2rem;
+}
+
+.neo-modal-badge-icon {
+  width: 1rem;
+  height: 1rem;
+  stroke: currentColor;
+}
+
+.neo-modal-subtitle {
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.neo-modal-close {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all 180ms var(--ease);
+}
+
+.neo-modal-close:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--night);
+}
+
+.neo-modal-close svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke: currentColor;
+}
+
+.neo-modal-body {
+  padding: 2rem;
+  max-height: calc(90vh - 120px);
+  overflow-y: auto;
+}
+
+.neo-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+/* NEO Form Elements */
+.neo-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.neo-form-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+}
+
+.neo-form-label-sm {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  margin-bottom: 0.35rem;
+}
+
+.neo-form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--ink);
+  transition: border-color 180ms var(--ease), box-shadow 180ms var(--ease);
+}
+
+.neo-form-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px oklch(50% 0.15 50 / 0.15);
+}
+
+.neo-form-input::placeholder {
+  color: var(--ink-soft);
+}
+
+.neo-form-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ink);
+  resize: vertical;
+  min-height: 120px;
+  transition: border-color 180ms var(--ease), box-shadow 180ms var(--ease);
+}
+
+.neo-form-textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px oklch(50% 0.15 50 / 0.15);
+}
+
+.neo-form-section {
+  margin-bottom: 2rem;
+}
+
+.neo-form-section-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--gold);
+}
+
+/* Platform Card for Hummas Modal */
+.neo-platform-card {
+  background: var(--paper-soft);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  transition: border-color 180ms var(--ease);
+}
+
+.neo-platform-card:hover {
+  border-color: var(--gold);
+}
+
+.neo-platform-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.neo-platform-title {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.neo-posting-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  margin-bottom: 0.75rem;
+}
+
+.neo-posting-label-last {
+  color: var(--sun-deep);
+}
+
+/* NEO Button variants */
+.neo-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.25rem;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--line);
+  border-radius: 2rem;
+  cursor: pointer;
+  transition: all 180ms var(--ease);
+}
+
+.neo-btn-secondary:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Responsive modal */
+@media (max-width: 640px) {
+  .neo-modal {
+    max-width: 100%;
+    border-radius: 1rem;
+  }
+
+  .neo-modal-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .neo-modal-body {
+    padding: 1.25rem;
+  }
+
+  .neo-platform-card .neo-grid-2 {
+    grid-template-columns: 1fr;
   }
 }
 

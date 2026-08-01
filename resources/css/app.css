@@ -455,11 +455,18 @@
     }
 
     .silatar-report-title {
-        @apply text-2xl font-semibold text-slate-950;
+        margin-top: 0.5rem;
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--ink);
     }
 
     .silatar-report-subtitle {
-        @apply mt-1 text-sm leading-6 text-slate-500;
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: var(--ink-soft);
     }
 
     .silatar-report-filter {
@@ -475,7 +482,10 @@
     }
 
     .silatar-report-summary {
-        @apply rounded-[1.75rem] border border-sky-100 bg-gradient-to-br from-sky-50 via-white to-slate-50 p-5;
+        border-radius: 1.75rem;
+        border: 1px solid var(--line);
+        background: linear-gradient(135deg, oklch(94% 0.035 78 / 0.5), var(--paper-soft));
+        padding: 1.25rem;
     }
 
     .silatar-report-summary-header {
@@ -491,11 +501,22 @@
     }
 
     .silatar-report-summary-badge-ready {
-        @apply bg-cyan-100 text-cyan-700;
+        background-color: oklch(68% 0.145 74 / 0.2);
+        color: var(--gold);
     }
 
     .silatar-report-summary-icon {
-        @apply grid h-14 w-14 place-items-center rounded-2xl bg-sky-100 text-sky-700;
+        display: grid;
+        width: 3.5rem;
+        height: 3.5rem;
+        place-items: center;
+        border-radius: 1rem;
+        background-color: oklch(94% 0.035 78 / 0.6);
+        color: var(--ink);
+    }
+
+    .silatar-report-summary-icon svg {
+        stroke: var(--gold);
     }
 
     .silatar-report-actions {

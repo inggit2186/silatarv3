@@ -275,6 +275,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('silatarDatepicker', (config = {}) => ({
         open: false,
         value: config.value || '',
+        defaultDate: config.defaultDate || '',
         placeholder: config.placeholder || 'Pilih tanggal',
         todayLabel: config.todayLabel || 'Hari ini',
         clearLabel: config.clearLabel || 'Hapus',
@@ -319,8 +320,31 @@ document.addEventListener('alpine:init', () => {
             this.popoverStyle = `position:fixed;left:${Math.round(left)}px;top:${Math.round(top)}px;width:${width}px;z-index:110;`;
         },
         init() {
-            this.monthCursor = this.value ? this.parseValue(this.value) : new Date();
-            this.monthCursor = new Date(this.monthCursor.getFullYear(), this.monthCursor.getMonth(), 1);
+            // Parse the value to get year and month
+            if (this.value) {
+                const parts = this.value.split('-');
+                if (parts.length >= 2) {
+                    const year = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1;
+                    if (!isNaN(year) && !isNaN(month)) {
+                        this.monthCursor = new Date(year, month, 1);
+                        return;
+                    }
+                }
+            }
+            // Fallback: use config.defaultDate or current date
+            if (config.defaultDate) {
+                const parts = config.defaultDate.split('-');
+                if (parts.length >= 2) {
+                    const year = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1;
+                    if (!isNaN(year) && !isNaN(month)) {
+                        this.monthCursor = new Date(year, month, 1);
+                        return;
+                    }
+                }
+            }
+            this.monthCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
         },
         parseValue(value) {
             const [year, month, day] = String(value).split('-').map((part) => parseInt(part, 10));
@@ -379,7 +403,7 @@ document.addEventListener('alpine:init', () => {
             const year = this.monthCursor.getFullYear();
             const month = this.monthCursor.getMonth();
             const firstDay = new Date(year, month, 1);
-            const offset = (firstDay.getDay() + 6) % 7;
+            const offset = firstDay.getDay();
             const totalDays = new Date(year, month + 1, 0).getDate();
             const cells = [];
 
@@ -476,6 +500,7 @@ document.addEventListener('alpine:init', () => {
         open: false,
         dateValue: config.dateValue || '',
         timeValue: config.timeValue || '',
+        defaultDate: config.defaultDate || '',
         placeholder: config.placeholder || 'Pilih tanggal & waktu',
         todayLabel: config.todayLabel || 'Hari ini',
         clearLabel: config.clearLabel || 'Hapus',
@@ -524,8 +549,31 @@ document.addEventListener('alpine:init', () => {
             this.popoverStyle = `position:fixed;left:${Math.round(left)}px;top:${Math.round(top)}px;width:${width}px;z-index:110;`;
         },
         init() {
-            this.monthCursor = this.dateValue ? this.parseValue(this.dateValue) : new Date();
-            this.monthCursor = new Date(this.monthCursor.getFullYear(), this.monthCursor.getMonth(), 1);
+            // Parse the dateValue to get year and month
+            if (this.dateValue) {
+                const parts = this.dateValue.split('-');
+                if (parts.length >= 2) {
+                    const year = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1;
+                    if (!isNaN(year) && !isNaN(month)) {
+                        this.monthCursor = new Date(year, month, 1);
+                        return;
+                    }
+                }
+            }
+            // Fallback: use config.defaultDate or current date
+            if (config.defaultDate) {
+                const parts = config.defaultDate.split('-');
+                if (parts.length >= 2) {
+                    const year = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1;
+                    if (!isNaN(year) && !isNaN(month)) {
+                        this.monthCursor = new Date(year, month, 1);
+                        return;
+                    }
+                }
+            }
+            this.monthCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
         },
         parseValue(value) {
             const [year, month, day] = String(value).split('-').map((part) => parseInt(part, 10));
@@ -593,7 +641,7 @@ document.addEventListener('alpine:init', () => {
             const year = this.monthCursor.getFullYear();
             const month = this.monthCursor.getMonth();
             const firstDay = new Date(year, month, 1);
-            const offset = (firstDay.getDay() + 6) % 7;
+            const offset = firstDay.getDay();
             const totalDays = new Date(year, month + 1, 0).getDate();
             const cells = [];
 

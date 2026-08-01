@@ -2,6 +2,7 @@
     'name',
     'label' => null,
     'value' => null,
+    'defaultDate' => null,
     'placeholder' => null,
     'required' => false,
     'id' => null,
@@ -17,6 +18,7 @@
 
 <div x-data="silatarDatepicker(@js([
     'value' => $value,
+    'defaultDate' => $defaultDate ?? $value,
     'placeholder' => $placeholder ?? ($datepickerConfig['placeholder'] ?? 'Pilih tanggal'),
     'todayLabel' => $datepickerConfig['today_label'] ?? 'Hari ini',
     'clearLabel' => $datepickerConfig['clear_label'] ?? 'Hapus',
