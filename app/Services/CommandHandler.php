@@ -86,10 +86,45 @@ class CommandHandler
 
     /**
      * Check if message is from a group
+     * Group JID format: xxxxxxxxx@g.us
+     * Personal JID format: xxxxxxxxx@s.whatsapp.net
      */
     public function isGroupMessage(): bool
     {
-        return !empty($this->participant);
+        if (empty($this->participant)) {
+            return false;
+        }
+
+        // Check if participant is a group (contains @g.us)
+        if (str_contains($this->participant, '@g.us')) {
+            return true;
+        }
+
+        // If participant contains @s.whatsapp.net but equals sender, it's not a group
+        if (str_contains($this->participant, '@s.whatsapp.net')) {
+            return false;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if participant is the sender's own JID (not a group)
+     */
+    public function isOwnJid(): bool
+    {
+        if (empty($this->participant)) {
+            return false;
+        }
+
+        // Extract number from participant JID (remove @s.whatsapp.net or @g.us)
+        $participantNumber = preg_replace('/@(s\.whatsapp\.net|g\.us)/', '', $this->participant);
+
+        // Compare with sender number (normalize both)
+        $normalizedParticipant = preg_replace('/[^0-9]/', '', $participantNumber);
+        $normalizedSender = preg_replace('/[^0-9]/', '', $this->phoneNumber);
+
+        return $normalizedParticipant === $normalizedSender;
     }
 
     /**
@@ -162,6 +197,15 @@ class CommandHandler
         // Skip group messages (only handle direct messages)
         if ($this->isGroupMessage()) {
             Log::channel('whatsapp')->debug('Skipping group message', [
+                'from' => $this->phoneNumber,
+                'participant' => $this->participant,
+            ]);
+            return null;
+        }
+
+        // Skip if participant is sender's own JID (not a group)
+        if ($this->isOwnJid()) {
+            Log::channel('whatsapp')->debug('Skipping own JID (not a group)', [
                 'from' => $this->phoneNumber,
                 'participant' => $this->participant,
             ]);
