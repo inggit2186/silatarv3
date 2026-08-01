@@ -3141,6 +3141,13 @@ class PageController extends Controller
             }
         }
 
+        // Determine signature label based on dept_id
+        $specialDeptIds = [998, 999];
+        $kepalaLabel = in_array((int) $user->dept_id, $specialDeptIds)
+            ? ($user->satker ?? $unitName)
+            : ($unitName ?: '-');
+        $signatureLabel = $isPlh ? 'Mengetahui<br>PLT Kepala,' : "Mengetahui<br>Kepala {$kepalaLabel},";
+
         $pdfData = [
             'userName' => $user->name,
             'userNip' => $user->nomor_induk ?: '-',
@@ -3153,7 +3160,7 @@ class PageController extends Controller
             'signatureName' => $signatureName,
             'signatureNip' => $signatureNip,
             'signatureImage' => null,
-            'signatureLabel' => $isPlh ? 'Mengetahui<br>PLT Kepala,' : 'Mengetahui<br>Kepala,',
+            'signatureLabel' => $signatureLabel,
             'watermarkText' => 'Kankemenag Kab.Tanah Datar',
         ];
 
@@ -3296,6 +3303,9 @@ class PageController extends Controller
             }
         }
 
+        // For dept_id 998/999, use user's satker field
+        $kepalaLabel = $user->satker ?? $unitName;
+
         $pdfData = [
             'userName' => $user->name,
             'userNip' => $user->nomor_induk ?: '-',
@@ -3308,7 +3318,7 @@ class PageController extends Controller
             'signatureName' => $signatureName,
             'signatureNip' => $signatureNip,
             'signatureImage' => null,
-            'signatureLabel' => $isPlh ? 'Mengetahui<br>PLT Kepala,' : 'Mengetahui<br>Kepala,',
+            'signatureLabel' => $isPlh ? 'Mengetahui<br>PLT Kepala,' : "Mengetahui<br>Kepala {$kepalaLabel},",
             'watermarkText' => 'Kankemenag Kab.Tanah Datar',
         ];
 
@@ -4298,6 +4308,12 @@ class PageController extends Controller
             }
         }
 
+        // Determine signature label based on dept_id
+        $specialDeptIds = [998, 999];
+        $kepalaLabel = in_array((int) ($bawahanUser->dept_id ?? $reportInfo->dept_id), $specialDeptIds)
+            ? ($bawahanUser->satker ?? $unitName)
+            : ($unitName ?: '-');
+
         $pdfData = [
             'userName' => $bawahanUser->name ?? '-',
             'userNip' => $bawahanUser->nomor_induk ?? '-',
@@ -4310,7 +4326,7 @@ class PageController extends Controller
             'signatureName' => $signatureName,
             'signatureNip' => $signatureNip,
             'signatureImage' => $signatureImage,
-            'signatureLabel' => $pltPlh ? 'Mengetahui<br>PLT Kepala,' : 'Mengetahui<br>Kepala,',
+            'signatureLabel' => $pltPlh ? 'Mengetahui<br>PLT Kepala,' : "Mengetahui<br>Kepala {$kepalaLabel},",
         ];
 
         $pdf = Pdf::loadView('pdf.laporan-kinerja-harian', $pdfData)
