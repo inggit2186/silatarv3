@@ -194,7 +194,7 @@ class CommandHandler
     {
         $this->logIncoming();
 
-        // Skip group messages (only handle direct messages)
+        // Skip true group messages only (contains @g.us)
         if ($this->isGroupMessage()) {
             Log::channel('whatsapp')->debug('Skipping group message', [
                 'from' => $this->phoneNumber,
@@ -203,15 +203,9 @@ class CommandHandler
             return null;
         }
 
-        // WA server sends 2 requests: one with participant (own JID), one without
-        // If participant == sender, use the request WITHOUT participant (cleaner)
-        if ($this->isOwnJid()) {
-            Log::channel('whatsapp')->debug('Skipping duplicate (own JID), using request without participant', [
-                'from' => $this->phoneNumber,
-                'participant' => $this->participant,
-            ]);
-            return null;
-        }
+        // WA server sends participant field for all messages (even direct)
+        // @s.whatsapp.net = direct message, @g.us = group message
+        // We only skip @g.us (true groups), process everything else
 
         // Test webhook
         if ($this->message === 'test webhook') {
