@@ -189,13 +189,16 @@ class AuthController extends BaseApiController
             'email' => $user->email,
             'role' => $user->role,
             'nik' => $user->nik,
+            'nomor_induk' => $user->nomor_induk,
             'no_hp' => $user->no_hp,
             'alamat' => $user->alamat,
             'tempat_lahir' => $user->tempat_lahir,
             'tanggal_lahir' => $user->tanggal_lahir,
             'jenis_kelamin' => $user->jenis_kelamin,
-            'foto' => $user->foto,
+            'foto' => $user->pp, // pp field from database
+            'pp' => $user->pp,
             'status' => $user->status,
+            'unit_id' => $user->dept_id,
             'created_at' => $user->created_at,
         ];
     }
