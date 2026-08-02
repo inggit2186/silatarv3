@@ -78,7 +78,18 @@
       "PowerShell(& \"D:\\\\Program Files\\\\XAMPP\\\\mysql\\\\bin\\\\mysql.exe\" -u root kemenagtd_db -e \"DESCRIBE satker_pemberkasan;\")",
       "PowerShell(& \"D:\\\\Program Files\\\\XAMPP\\\\mysql\\\\bin\\\\mysql.exe\" -u root kemenagtd_db -e \"DESCRIBE satker_ckh;\")",
       "PowerShell(& \"D:\\\\Program Files\\\\XAMPP\\\\mysql\\\\bin\\\\mysql.exe\" -u root kemenagtd_db -e \"DESCRIBE satker_kegiatan;\")",
-      "Bash(node build-admin-css.js)"
+      "Bash(node build-admin-css.js)",
+      "Bash(curl -L -o Poppins-Regular.ttf \"https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Regular.ttf\")",
+      "Bash(curl -L -o Poppins-Medium.ttf \"https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Medium.ttf\")",
+      "Bash(curl -L -o Poppins-SemiBold.ttf \"https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-SemiBold.ttf\")",
+      "Bash(curl -L -o Poppins-Bold.ttf \"https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Bold.ttf\")",
+      "Bash(flutter pub *)",
+      "Bash(flutter build *)",
+      "Bash(flutter analyze *)",
+      "Bash(git remote *)",
+      "Bash(git commit -m 'Initial commit: SILATAR V3 Flutter Mobile App *)",
+      "Bash(gh auth *)",
+      "Bash(git ls-remote *)"
     ]
   },
   "hooks": {
