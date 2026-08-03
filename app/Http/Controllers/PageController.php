@@ -2533,7 +2533,6 @@ class PageController extends Controller
             ->leftJoin('users as u', 'u.id', '=', 'ck.user_id')
             ->leftJoin('ktd_department as dept', 'dept.id', '=', 'ck.dept_id')
             ->whereBetween('ck.bulan', [$yearStart->toDateString(), $yearEnd->toDateString()])
-            ->where('ck.item_id', 1)
             // Filter: only show current user's reports for bulanan tab
             ->where('ck.user_id', $user->id)
             ->select([
@@ -2772,7 +2771,6 @@ class PageController extends Controller
             ->leftJoin('ktd_department as dept', 'dept.id', '=', 'ck.dept_id')
             ->whereIn('ck.user_id', $userIds)
             ->whereBetween('ck.bulan', [$monthStart->toDateString(), $monthEnd->toDateString()])
-            ->where('ck.item_id', 1)
             ->select([
                 'ck.id',
                 'ck.user_id',
