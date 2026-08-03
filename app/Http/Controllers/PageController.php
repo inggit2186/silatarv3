@@ -2466,6 +2466,8 @@ class PageController extends Controller
             'Unit',
             'Lembar',
             'Buah',
+            'Laporan',
+            'Data',
         ]);
 
         $monthlyActivityStats = DB::table('satker_kegiatan')

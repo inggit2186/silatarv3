@@ -13,6 +13,7 @@
         $activityUnits = isset($activityUnits) ? collect($activityUnits)->filter()->values()->all() : [
             'Kegiatan',
             'Dokumen',
+            'Modul',
             'Jam',
             'Berkas',
             'Orang',
@@ -20,6 +21,8 @@
             'Unit',
             'Lembar',
             'Buah',
+            'Laporan',
+            'Data',
         ];
         $defaultActivityDate = \Illuminate\Support\Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth()->format('Y-m-d');
         $addModalOpen = (bool) session('open_add_modal', false);

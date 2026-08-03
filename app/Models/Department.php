@@ -11,6 +11,12 @@ class Department extends Model
     protected $fillable = [
         'nama',
         'kode',
+        'latitude',
+        'longitude',
+        'radius',
+        'jam_masuk',
+        'jam_pulang',
+        'hari_kerja',
     ];
 
     public function users()
@@ -21,5 +27,14 @@ class Department extends Model
     public function instansi()
     {
         return $this->hasOne(Instansi::class, 'dept_id');
+    }
+
+    /**
+     * Get hari kerja schedule
+     * Menggunakan field 'hari_kerja' yang berisi ID ke tabel hari_kerja
+     */
+    public function hariKerja()
+    {
+        return $this->belongsTo(HariKerja::class, 'hari_kerja');
     }
 }

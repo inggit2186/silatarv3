@@ -25,9 +25,11 @@ class AuthController extends BaseApiController
         $login = $request->input('login');
 
         // Cek apakah login adalah email atau NIP
-        $user = User::query()
-            ->where('email', $login)
-            ->orWhere('nomor_induk', $login)
+        $user = User::with('dept.hariKerja')
+            ->where(function($query) use ($login) {
+                $query->where('email', $login)
+                    ->orWhere('nomor_induk', $login);
+            })
             ->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
@@ -83,7 +85,7 @@ class AuthController extends BaseApiController
      */
     public function me(Request $request)
     {
-        $user = $request->user();
+        $user = $request->user()->load('dept.hariKerja');
 
         return $this->success([
             'user' => $this->formatUser($user),
@@ -183,7 +185,7 @@ class AuthController extends BaseApiController
      */
     private function formatUser(User $user): array
     {
-        return [
+        $data = [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
@@ -195,11 +197,44 @@ class AuthController extends BaseApiController
             'tempat_lahir' => $user->tempat_lahir,
             'tanggal_lahir' => $user->tanggal_lahir,
             'jenis_kelamin' => $user->jenis_kelamin,
-            'foto' => $user->pp, // pp field from database
+            'foto' => $user->pp,
             'pp' => $user->pp,
             'status' => $user->status,
             'unit_id' => $user->dept_id,
             'created_at' => $user->created_at,
         ];
+
+        // Include department with location and work schedule
+        if ($user->dept) {
+            $dept = $user->dept;
+
+            // Base dept data
+            $deptData = [
+                'id' => $dept->id,
+                'nama' => $dept->nama,
+                'latitude' => $dept->latitude,
+                'longitude' => $dept->longitude,
+                'radius' => $dept->radius ?? 100,
+                'jam_masuk' => $dept->jam_masuk,
+                'jam_pulang' => $dept->jam_pulang,
+            ];
+
+            // Include hari kerja schedule from relation
+            if ($dept->hariKerja) {
+                $hk = $dept->hariKerja;
+                $deptData['hari_kerja'] = [
+                    'id' => $hk->id,
+                    'masuk' => $hk->masuk,
+                    'biasa' => $hk->biasa,
+                    'jumat' => $hk->jumat,
+                    'sabtu' => $hk->sabtu,
+                    'minggu' => $hk->minggu,
+                ];
+            }
+
+            $data['dept'] = $deptData;
+        }
+
+        return $data;
     }
 }
