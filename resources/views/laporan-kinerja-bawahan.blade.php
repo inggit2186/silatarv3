@@ -1,9 +1,23 @@
 <x-layouts.app title="Laporan Kinerja Bawahan - SILATAR">
     @php
-        $selectedMonth = $selectedMonth ?? date('Y-m');
-        $selectedMonthLabel = $selectedMonthLabel ?? date('m/Y');
-        $userRole = $userRole ?? '';
-    @endphp
+    $sortBy = $sortBy ?? 'status_priority';
+    $sortDir = $sortDir ?? 'asc';
+
+    function sortUrl($field, $currentSort, $currentDir, $month) {
+        $newDir = ($currentSort === $field && $currentDir === 'asc') ? 'desc' : 'asc';
+        return route('laporan-kinerja.bawahan', ['month' => $month, 'sort' => $field, 'dir' => $newDir]);
+    }
+
+    function sortIcon($field, $currentSort, $currentDir) {
+        if ($currentSort !== $field) {
+            return '<svg class="w-4 h-4 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>';
+        }
+        if ($currentDir === 'asc') {
+            return '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 15l7-7 7 7"/></svg>';
+        }
+        return '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7"/></svg>';
+    }
+@endphp
 
     <script>
         function bawahanPdfPreview() {
@@ -340,7 +354,7 @@
                             Laporan Bawahan {{ $selectedMonthLabel }}
                         </h1>
                         <p class="silatar-report-subtitle">
-                            Daftar laporan bulanan dari {{ $totalUsers }} staf di {{ $deptName ?? 'Unit Kerja' }}.
+                            Daftar {{ $reports->count() > 0 ? (($reports->currentPage() - 1) * $reports->perPage() + 1) . '-' . min($reports->currentPage() * $reports->perPage(), $reports->total()) : 0 }} dari {{ $reportStats['total'] }} staf di {{ $deptName ?? 'Unit Kerja' }}.
                         </p>
                     </div>
 
@@ -452,20 +466,20 @@
 
                             <div class="grid gap-3 sm:grid-cols-4">
                                 <div class="report-stat-card report-stat-card-neutral">
-                                    <p class="report-stat-card-label">Total Laporan</p>
-                                    <p class="report-stat-card-value">{{ $reports->count() }}</p>
+                                    <p class="report-stat-card-label">Total Staff</p>
+                                    <p class="report-stat-card-value">{{ $reportStats['total'] }}</p>
                                 </div>
                                 <div class="report-stat-card report-stat-card-approved">
                                     <p class="report-stat-card-label">Disetujui</p>
-                                    <p class="report-stat-card-value">{{ $reports->where('status', 'DISETUJUI')->count() }}</p>
+                                    <p class="report-stat-card-value">{{ $reportStats['disetujui'] }}</p>
                                 </div>
                                 <div class="report-stat-card report-stat-card-sent">
                                     <p class="report-stat-card-label">Dikirim</p>
-                                    <p class="report-stat-card-value">{{ $reports->where('status', 'DIKIRIM')->count() }}</p>
+                                    <p class="report-stat-card-value">{{ $reportStats['dikirim'] }}</p>
                                 </div>
-                                <div class="report-stat-card report-stat-card-rejected">
-                                    <p class="report-stat-card-label">Ditolak</p>
-                                    <p class="report-stat-card-value">{{ $reports->where('status', 'DITOLAK')->count() }}</p>
+                                <div class="report-stat-card report-stat-card-neutral">
+                                    <p class="report-stat-card-label">Belum Upload</p>
+                                    <p class="report-stat-card-value">{{ $reportStats['belum_upload'] }}</p>
                                 </div>
                             </div>
                         </div>
@@ -477,10 +491,9 @@
                                 <svg class="mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
-                                <p class="report-empty-title">Kosong</p>
-                                <p class="report-empty-subtitle">Belum ada laporan kinerja bulanan dari bawahan.</p>
+                                <p class="report-empty-title">Tidak Ada Staff</p>
                                 <p class="report-empty-desc">
-                                    Tidak ada data laporan bulanan pada bulan {{ $selectedMonthLabel }}.
+                                    Tidak ada staff di unit kerja Anda.
                                 </p>
                             </div>
                         @else
@@ -488,24 +501,39 @@
                                 <table class="silatar-report-table">
                                     <thead>
                                         <tr>
-                                            <th class="text-center">No</th>
-                                            <th class="text-left">Nama</th>
+                                            <th class="text-center w-12">No</th>
+                                            <th class="text-left">
+                                                <a href="{{ sortUrl('nama', $sortBy, $sortDir, $selectedMonth) }}" class="sortable-header {{ $sortBy === 'nama' ? 'is-sorted' : '' }}">
+                                                    <span>Nama</span>
+                                                    <span class="sort-icon">{!! sortIcon('nama', $sortBy, $sortDir) !!}</span>
+                                                </a>
+                                            </th>
                                             <th class="text-center">File</th>
-                                            <th class="text-center">Tanggal Kirim</th>
-                                            <th class="text-center">Status</th>
+                                            <th class="text-center">
+                                                <a href="{{ sortUrl('tanggal', $sortBy, $sortDir, $selectedMonth) }}" class="sortable-header {{ $sortBy === 'tanggal' ? 'is-sorted' : '' }}">
+                                                    <span>Tanggal Kirim</span>
+                                                    <span class="sort-icon">{!! sortIcon('tanggal', $sortBy, $sortDir) !!}</span>
+                                                </a>
+                                            </th>
+                                            <th class="text-center">
+                                                <a href="{{ sortUrl('status', $sortBy, $sortDir, $selectedMonth) }}" class="sortable-header {{ $sortBy === 'status' || $sortBy === 'status_priority' ? 'is-sorted' : '' }}">
+                                                    <span>Status</span>
+                                                    <span class="sort-icon">{!! sortIcon('status', $sortBy, $sortDir) !!}</span>
+                                                </a>
+                                            </th>
                                             <th class="text-center">Keterangan</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach($reports as $index => $report)
-                                            <tr>
+                                            <tr class="{{ !$report['has_report'] ? 'opacity-60' : '' }}">
                                                 <td class="bulanan-cell text-center report-table-cell-index">{{ $index + 1 }}</td>
                                                 <td class="bulanan-cell">
                                                     <p class="report-table-cell-bold">{{ $report['user_name'] }}</p>
                                                     <p class="report-table-cell-muted">{{ $report['jabatan'] }}</p>
                                                 </td>
                                                 <td class="bulanan-cell text-center">
-                                                    @if($report['filename'])
+                                                    @if($report['has_report'] && $report['filename'])
                                                         <button
                                                             type="button"
                                                             @click="openPdfPreview('/storage/satker_ckh/{{ $report['user_id'] }}/{{ $report['filename'] }}', '{{ $report['user_name'] }} - {{ $report['bulan'] }}', {{ $report['id'] ?? 'null' }}, {{ $report['user_id'] }}, '{{ $report['bulan'] }}')"
@@ -528,8 +556,10 @@
                                                         <span class="cyber-status-badge cyber-status-dikirim"><span class="cyber-dot"></span>Dikirim</span>
                                                     @elseif($report['status'] === 'DITOLAK')
                                                         <span class="cyber-status-badge cyber-status-ditolak"><span class="cyber-dot"></span>Ditolak</span>
+                                                    @elseif($report['status'] === 'BELUM_UPLOAD')
+                                                        <span class="cyber-status-badge cyber-status-belum"><span class="cyber-dot"></span>Belum Upload</span>
                                                     @else
-                                                        <span class="cyber-status-badge cyber-status-belum"><span class="cyber-dot"></span>Belum Kirim</span>
+                                                        <span class="cyber-status-badge cyber-status-belum"><span class="cyber-dot"></span>{{ $report['status'] }}</span>
                                                     @endif
                                                 </td>
                                                 <td class="bulanan-cell text-center">
@@ -546,6 +576,11 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            {{-- Pagination --}}
+                            <div class="mt-6">
+                                <x-ui.neo-pagination :paginator="$reports" />
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -555,64 +590,87 @@
             <div
                 x-show="pdfPreviewOpen"
                 x-cloak
-                class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop-dark"
+                class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                style="background: oklch(20% 0.015 80 / 0.8); backdrop-filter: blur(8px);"
                 @keydown.escape.window="closePdfPreview()"
             >
-                <div class="relative w-full max-w-5xl h-[90vh] bg-gradient-to-b from-slate-900 to-slate-950 border border-cyan-500/30 rounded-2xl shadow-[0_0_60px_rgba(0,212,255,0.3)] overflow-hidden flex flex-col">
+                <div class="neo-modal" style="max-width: 56rem; width: 100%; max-height: 92vh;">
                     {{-- Header --}}
-                    <div class="flex items-center justify-between px-6 py-4 border-b border-cyan-500/30 bg-slate-900/80">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
-                                <svg class="w-5 h-5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <div class="neo-modal-header">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background: var(--gold);">
+                                <svg class="w-7 h-7" style="color: var(--night);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                                     <path d="M9 13h6M9 17h4"/>
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="font-mono text-sm font-semibold text-cyan-400">Preview Laporan</h3>
-                                <p class="text-xs text-slate-400" x-text="pdfPreviewTitle"></p>
+                                <span class="neo-modal-badge" style="background: var(--gold); color: var(--night);">
+                                    <svg class="neo-modal-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    Preview Laporan
+                                </span>
+                                <p class="neo-modal-subtitle" x-text="pdfPreviewTitle"></p>
                             </div>
                         </div>
                         <button
                             type="button"
                             @click="closePdfPreview()"
-                            class="rounded-full bg-slate-700/50 p-2 text-slate-400 hover:text-white hover:bg-slate-600 transition"
+                            class="neo-modal-close"
                         >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
                     </div>
-                    {{-- Action Buttons --}}
-                    <div class="flex items-center justify-between px-6 py-3 border-b border-cyan-500/20 bg-slate-900/50">
-                        <p class="text-xs text-slate-400">Verifikasi laporan kinerja bawahan</p>
-                        <div class="flex items-center gap-3">
-                            <button
-                                type="button"
-                                @click="rejectReport()"
-                                :disabled="isProcessing"
-                                class="inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-4 py-2 font-mono text-xs font-semibold text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
-                                Tolak
-                            </button>
-                            <button
-                                type="button"
-                                @click="approveReport()"
-                                :disabled="isProcessing"
-                                class="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 font-mono text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                Setuju
-                            </button>
+
+                    {{-- Verifikasi Section --}}
+                    <div class="px-6 py-5 border-b" style="border-color: var(--line);">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: oklch(94% 0.035 78 / 0.5);">
+                                    <svg class="w-5 h-5" style="color: var(--gold);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-lg" style="color: var(--ink); font-family: var(--font-display);">Verifikasi Laporan</h3>
+                                    <p class="text-sm" style="color: var(--ink-soft);">Periksa dan setujui atau tolak laporan kinerja bawahan</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4 w-full sm:w-auto">
+                                <button
+                                    type="button"
+                                    @click="rejectReport()"
+                                    :disabled="isProcessing"
+                                    class="flex-1 sm:flex-none inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-semibold text-base transition-all"
+                                    style="background: transparent; border: 2px solid #f43f5e; color: #f43f5e;"
+                                >
+                                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                    Tolak Laporan
+                                </button>
+                                <button
+                                    type="button"
+                                    @click="approveReport()"
+                                    :disabled="isProcessing"
+                                    class="flex-1 sm:flex-none inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-semibold text-base transition-all"
+                                    style="background: var(--gold); color: var(--night);"
+                                >
+                                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Setujui Laporan
+                                </button>
+                            </div>
                         </div>
                     </div>
+
                     {{-- PDF Content --}}
-                    <div class="flex-1 overflow-hidden bg-slate-800/50">
+                    <div class="flex-1 overflow-hidden" style="height: calc(92vh - 200px);">
                         <iframe
                             x-show="pdfPreviewUrl"
                             :src="pdfPreviewUrl"
@@ -621,10 +679,10 @@
                         ></iframe>
                         <div x-show="!pdfPreviewUrl" class="flex items-center justify-center h-full">
                             <div class="text-center">
-                                <svg class="w-16 h-16 mx-auto text-slate-600 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <svg class="w-16 h-16 mx-auto mb-4" style="color: var(--ink-soft); opacity: 0.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                     <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                                 </svg>
-                                <p class="text-slate-400">Memuat PDF...</p>
+                                <p style="color: var(--ink-soft);">Memuat PDF...</p>
                             </div>
                         </div>
                     </div>
@@ -659,5 +717,30 @@
         @endif
 
         </section>
+
+        <style>
+            .sortable-header {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                color: inherit;
+                text-decoration: none;
+                transition: color 0.2s;
+            }
+            .sortable-header:hover {
+                color: var(--gold);
+            }
+            .sortable-header.is-sorted {
+                color: var(--gold);
+            }
+            .sort-icon {
+                display: inline-flex;
+                align-items: center;
+            }
+            .report-table-cell-date {
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+            }
+        </style>
     </main>
 </x-layouts.app>

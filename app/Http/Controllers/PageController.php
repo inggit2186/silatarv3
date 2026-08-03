@@ -2755,18 +2755,19 @@ class PageController extends Controller
         $monthStart = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
         $monthEnd = $monthStart->copy()->endOfMonth();
 
-        // Get all users in the same department
+        // Get all users in the same department (excluding kepala/head and current user)
         $bawahanUsers = DB::table('users')
             ->where('dept_id', $user->dept_id)
             ->where('id', '!=', $user->id)
-            ->select(['id', 'name', 'kat_jabatan'])
+            ->where('kat_jabatan', '!=', 'kepala')
+            ->select(['id', 'name', 'kat_jabatan', 'pekerjaan'])
             ->get();
 
         $userIds = $bawahanUsers->pluck('id')->toArray();
         $totalUsers = count($userIds);
 
         // Get laporan bulanan (satker_ckh) data for all bawahan in selected month
-        $reports = DB::table('satker_ckh as ck')
+        $submittedReports = DB::table('satker_ckh as ck')
             ->leftJoin('users as u', 'u.id', '=', 'ck.user_id')
             ->leftJoin('ktd_department as dept', 'dept.id', '=', 'ck.dept_id')
             ->whereIn('ck.user_id', $userIds)
@@ -2788,13 +2789,15 @@ class PageController extends Controller
                 'u.pekerjaan',
                 'dept.nama as dept_name',
             ])
-            ->orderBy('u.name')
-            ->orderBy('ck.bulan', 'desc')
             ->get()
-            ->map(function ($item) {
-                $bulanDate = Carbon::createFromFormat('Y-m-d', substr($item->bulan, 0, 10));
-                $bulanLabel = $bulanDate->format('F Y');
+            ->keyBy('user_id');
 
+        // Build reports list - include ALL users, mark those without reports as "Belum Upload"
+        $allReports = collect($bawahanUsers)->map(function ($user) use ($submittedReports, $monthStart) {
+            $report = $submittedReports->get($user->id);
+
+            if ($report) {
+                $bulanDate = Carbon::createFromFormat('Y-m-d', substr($report->bulan, 0, 10));
                 $statusColors = [
                     'DISETUJUI' => 'emerald',
                     'DIKIRIM' => 'amber',
@@ -2802,32 +2805,113 @@ class PageController extends Controller
                 ];
 
                 return [
-                    'id' => $item->id,
-                    'user_id' => $item->user_id,
-                    'user_name' => $item->user_name ?? 'Unknown',
-                    'jabatan' => $item->pekerjaan ?? '-',
+                    'id' => $report->id,
+                    'user_id' => $report->user_id,
+                    'user_name' => $report->user_name ?? $user->name,
+                    'jabatan' => $report->pekerjaan ?? $user->pekerjaan ?? '-',
                     'bulan' => $bulanDate->format('Y-m'),
-                    'bulan_label' => $bulanLabel,
-                    'filename' => $item->filename,
-                    'status' => $item->status,
-                    'status_color' => $statusColors[$item->status] ?? 'slate',
-                    'alasan' => $item->alasan,
-                    'sending' => $item->sending,
-                    'sending_formatted' => $this->indonesianDateTimeFormat($item->sending),
-                    'created_at' => $item->created_at,
-                    'updated_at' => $item->updated_at,
+                    'bulan_label' => $bulanDate->format('F Y'),
+                    'filename' => $report->filename,
+                    'status' => $report->status,
+                    'status_color' => $statusColors[$report->status] ?? 'slate',
+                    'alasan' => $report->alasan,
+                    'sending' => $report->sending,
+                    'sending_formatted' => $this->indonesianDateTimeFormat($report->sending),
+                    'created_at' => $report->created_at,
+                    'updated_at' => $report->updated_at,
+                    'has_report' => true,
                 ];
+            }
+
+            // User has not submitted any report
+            return [
+                'id' => null,
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'jabatan' => $user->pekerjaan ?? '-',
+                'bulan' => $monthStart->format('Y-m'),
+                'bulan_label' => $monthStart->format('F Y'),
+                'filename' => null,
+                'status' => 'BELUM_UPLOAD',
+                'status_color' => 'slate',
+                'alasan' => null,
+                'sending' => null,
+                'sending_formatted' => '-',
+                'created_at' => null,
+                'updated_at' => null,
+                'has_report' => false,
+            ];
+        })->sortBy('user_name')->values();
+
+        // Sorting - default order by status priority (Ditolak, Dikirim, Disetujui, Belum Upload)
+        $sortBy = $request->query('sort', 'status_priority');
+        $sortDir = $request->query('dir', 'asc');
+
+        // Define status priority for sorting
+        $statusPriority = [
+            'DITOLAK' => 1,
+            'DIKIRIM' => 2,
+            'DISETUJUI' => 3,
+            'BELUM_UPLOAD' => 4,
+        ];
+
+        // Apply sorting based on field
+        if ($sortBy === 'nama') {
+            $allReports = $sortDir === 'asc'
+                ? $allReports->sortBy('user_name')
+                : $allReports->sortByDesc('user_name');
+        } elseif ($sortBy === 'tanggal') {
+            $allReports = $allReports->sortBy(function ($item) {
+                return $item['sending'] ?? '1970-01-01';
             });
+            if ($sortDir === 'desc') {
+                $allReports = $allReports->reverse()->values();
+            }
+        } elseif ($sortBy === 'status') {
+            $allReports = $allReports->sortBy(function ($item) use ($statusPriority) {
+                return $statusPriority[$item['status']] ?? 99;
+            });
+            if ($sortDir === 'desc') {
+                $allReports = $allReports->reverse()->values();
+            }
+        } else {
+            // Default: sort by status priority (Ditolak, Dikirim, Disetujui, Belum Upload)
+            $allReports = $allReports->sortBy(function ($item) use ($statusPriority) {
+                return $statusPriority[$item['status']] ?? 99;
+            });
+        }
+
+        // Calculate statistics from all reports (before pagination)
+        $stats = [
+            'total' => $allReports->count(),
+            'disetujui' => $allReports->where('status', 'DISETUJUI')->count(),
+            'dikirim' => $allReports->where('status', 'DIKIRIM')->count(),
+            'ditolak' => $allReports->where('status', 'DITOLAK')->count(),
+            'belum_upload' => $allReports->where('status', 'BELUM_UPLOAD')->count(),
+        ];
+
+        // Paginate the results (12 per page)
+        $perPage = 12;
+        $currentPage = (int) $request->query('page', 1);
+        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+            $allReports->forPage($currentPage, $perPage),
+            $allReports->count(),
+            $perPage,
+            $currentPage,
+            ['path' => route('laporan-kinerja.bawahan', ['month' => $selectedMonth])]
+        );
 
         return view('laporan-kinerja-bawahan', [
-            'reports' => $reports,
+            'reports' => $paginator,
             'selectedMonth' => $selectedMonth,
             'selectedMonthLabel' => $monthStart->format('F Y'),
-            'totalUsers' => $totalUsers,
+            'reportStats' => $stats,
             'userRole' => $userRole,
             'bawahanUsers' => $bawahanUsers,
             'deptName' => DB::table('ktd_department')->where('id', $user->dept_id)->value('nama') ?? 'Unit Kerja',
             'error' => null,
+            'sortBy' => $sortBy,
+            'sortDir' => $sortDir,
             'tabLabels' => [
                 'harian' => ['label' => 'Kinerja Harian'],
                 'bulanan' => ['label' => 'Laporan Bulanan'],
