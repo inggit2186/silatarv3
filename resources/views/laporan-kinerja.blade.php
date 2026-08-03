@@ -1124,7 +1124,7 @@
                 <input type="hidden" name="tab" value="harian">
                 <input type="hidden" name="month" value="{{ $selectedMonth }}">
                 <input type="hidden" name="search" value="{{ $search }}">
-                <input type="hidden" name="tanggal" x-model="editingDate">
+                <input type="hidden" name="tanggal" :value="editingDate">
 
                 <div class="silatar-report-create-body">
                     @if ($errors->any())

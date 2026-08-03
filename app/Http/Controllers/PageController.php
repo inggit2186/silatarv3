@@ -3811,24 +3811,24 @@ class PageController extends Controller
 
         $jsonData = json_encode(['items' => $jsonItems], JSON_UNESCAPED_UNICODE);
 
-        // Find existing record
-        $existing = DB::table('satker_kegiatan')
+        // Delete ALL existing records for this date (handles legacy format with multiple rows)
+        // Then insert a new single row with JSON format
+        DB::table('satker_kegiatan')
             ->where('user_id', $user->id)
             ->whereDate('tanggal', $tanggal)
-            ->first();
+            ->delete();
 
-        if ($existing) {
-            // Update existing row with new JSON data
-            DB::table('satker_kegiatan')
-                ->where('id', $existing->id)
-                ->update([
-                    'kegiatan' => $rows->first()['kegiatan'],
-                    'volume' => $rows->first()['volume'] ?? 0,
-                    'satuan' => $rows->first()['satuan'] ?? 'Kegiatan',
-                    'data_json' => $jsonData,
-                    'updated_at' => $submittedAt,
-                ]);
-        }
+        // Insert new record with JSON format
+        DB::table('satker_kegiatan')->insert([
+            'user_id' => $user->id,
+            'tanggal' => $tanggal,
+            'kegiatan' => $rows->first()['kegiatan'],
+            'volume' => $rows->first()['volume'] ?? 0,
+            'satuan' => $rows->first()['satuan'] ?? 'Kegiatan',
+            'data_json' => $jsonData,
+            'created_at' => $submittedAt,
+            'updated_at' => $submittedAt,
+        ]);
 
         return redirect()
             ->route('laporan-kinerja', [
