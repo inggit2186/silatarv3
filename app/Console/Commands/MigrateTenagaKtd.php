@@ -394,38 +394,29 @@ class MigrateTenagaKtd extends Command
      */
     protected function migrateUsers(bool $dryRun): void
     {
-        $this->info('4. Migrasi data dari users (staf madrasah)...');
+        $this->info('4. Migrasi data dari users (SEMUA USER - TANPA FILTER)...');
 
-        // Get users that are from madrasah departments and have kat_jabatan = 'adm' or 'guru'
+        // Get ALL users (NO FILTER - migrate everything)
         $query = DB::table('users')
-            ->join('ktd_department', 'users.dept_id', '=', 'ktd_department.id')
-            ->whereIn('ktd_department.kategori', ['man', 'min', 'mtsn', 'ra', 'other'])
-            ->whereIn('users.kat_jabatan', ['adm', 'guru'])
-            ->whereNotIn('users.role', ['other', 'pensiun', 'pindah']);
+            ->leftJoin('ktd_department', 'users.dept_id', '=', 'ktd_department.id');
 
         $count = $query->count();
-        $this->line("   Ditemukan {$count} user yang eligible untuk migrasi.");
+        $this->line("   Ditemukan {$count} user untuk migrasi.");
 
         if ($count === 0) {
             $this->line('   Tidak ada data untuk dimigrasi.');
             return;
         }
 
-        // Show breakdown
-        $admCount = DB::table('users')
-            ->join('ktd_department', 'users.dept_id', '=', 'ktd_department.id')
-            ->whereIn('ktd_department.kategori', ['man', 'min', 'mtsn', 'ra', 'other'])
-            ->where('users.kat_jabatan', 'adm')
-            ->count();
-
-        $guruCount = DB::table('users')
-            ->join('ktd_department', 'users.dept_id', '=', 'ktd_department.id')
-            ->whereIn('ktd_department.kategori', ['man', 'min', 'mtsn', 'ra', 'other'])
-            ->where('users.kat_jabatan', 'guru')
-            ->count();
-
-        $this->line("   - Adm/Staf: {$admCount}");
-        $this->line("   - Guru: {$guruCount}");
+        // Show breakdown by kat_jabatan
+        $this->line("   Breakdown by kat_jabatan:");
+        $byKat = DB::table('users')
+            ->select('kat_jabatan', DB::raw('COUNT(*) as total'))
+            ->groupBy('kat_jabatan')
+            ->get();
+        foreach ($byKat as $item) {
+            $this->line("   - " . ($item->kat_jabatan ?? 'NULL') . ": {$item->total}");
+        }
         $this->newLine();
 
         if ($dryRun) {
@@ -437,6 +428,7 @@ class MigrateTenagaKtd extends Command
             'users.id as user_id',
             'users.*',
             'ktd_department.kategori',
+            'ktd_department.nama as dept_nama',
         ])->get();
 
         $bar = $this->output->createProgressBar($count);
@@ -450,7 +442,8 @@ class MigrateTenagaKtd extends Command
             $katJabatan = match ($record->kat_jabatan) {
                 'adm' => 'staf',
                 'guru' => 'guru',
-                default => $record->kat_jabatan,
+                'kasubbag', 'kasubag' => 'kasubag',
+                default => $record->kat_jabatan ?? 'staf',
             };
 
             // Determine status

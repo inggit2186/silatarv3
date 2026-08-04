@@ -15,6 +15,7 @@ class CleanupUsersColumns extends Command
      */
     protected $signature = 'madrasah:cleanup-users
                             {--list : List columns that can be removed}
+                            {--cleanup-all : Remove ALL columns that have been migrated to tenaga_ktd}
                             {--remove-duplicates : Remove duplicate columns (gol, ijazah_*)}
                             {--drop-old-tables : Drop guru_madrasah and pegawai_madrasah tables}
                             {--dry-run : Preview without making changes}';
@@ -27,15 +28,34 @@ class CleanupUsersColumns extends Command
     protected $description = 'Cleanup unnecessary columns from users table and drop old tables';
 
     /**
-     * Columns that are duplicates (can be removed after data is in tenaga_ktd)
+     * Columns that have been migrated to tenaga_ktd (can be safely removed)
      */
-    protected array $duplicateColumns = [
-        'gol' => 'Duplikat dari golongan (sudah ada di tenaga_ktd)',
+    protected array $migratedColumns = [
+        'gol' => 'Duplikat dari golongan',
         'ijazah_jurusan' => 'Sudah ada di tenaga_ktd.jurusan',
         'ijazah_fakultas' => 'Sudah ada di tenaga_ktd.fakultas',
         'ijazah_universitas' => 'Sudah ada di tenaga_ktd.universitas',
         'ijazah_pendidikan' => 'Sudah ada di tenaga_ktd.pendidikan',
         'ijazah_tahun_lulus' => 'Sudah ada di tenaga_ktd.tahun_lulus',
+        'tmt_cpns' => 'Sudah ada di tenaga_ktd.tmt_cpns',
+        'tmt_pns' => 'Sudah ada di tenaga_ktd.tmt_pns',
+        'nikah' => 'Sudah ada di tenaga_ktd.nikah',
+        'jenis_pjob' => 'Sudah ada di tenaga_ktd.jenis_pjob',
+        'pjob' => 'Sudah ada di tenaga_ktd.pjob',
+        'req_tunjangan' => 'Sudah ada di tenaga_ktd.req_tunjangan',
+        'jml_anak' => 'Sudah ada di tenaga_ktd.jml_anak',
+        'kk' => 'Sudah ada di tenaga_ktd.kk',
+        'bio' => 'Sudah ada di tenaga_ktd.bio',
+        'facebook' => 'Sudah ada di tenaga_ktd.facebook',
+        'twitter' => 'Sudah ada di tenaga_ktd.twitter',
+        'linkedin' => 'Sudah ada di tenaga_ktd.linkedin',
+        'instagram' => 'Sudah ada di tenaga_ktd.instagram',
+        'jenis_guru' => 'Sudah ada di tenaga_ktd.jenis_guru',
+        'nuptk' => 'Sudah ada di tenaga_ktd.nuptk',
+        'npk' => 'Sudah ada di tenaga_ktd.npk',
+        'nrg' => 'Sudah ada di tenaga_ktd.nrg',
+        'bidang_studi_diajar' => 'Sudah ada di tenaga_ktd.bidang_studi_diajar',
+        'serdik' => 'Sudah ada di tenaga_ktd.serdik',
     ];
 
     /**
@@ -49,11 +69,23 @@ class CleanupUsersColumns extends Command
         'status_THK2' => 'THK2 status, mungkin tidak relevan',
         'grade' => 'Grade, mungkin tidak digunakan',
         'tmt_pensiun' => 'TMT Pensiun, bisa dihitung',
-        'serdik' => 'Serdik, sudah ada di tenaga_ktd untuk guru',
         'gaji' => 'Gaji, mungkin sensitif',
         'bank' => 'Bank, mungkin sensitif',
         'rekening' => 'Rekening, mungkin sensitif',
         'harikerja_id' => 'Hari kerja ID, mungkin tidak digunakan',
+    ];
+
+    /**
+     * Columns that are still used by other systems (DO NOT REMOVE)
+     */
+    protected array $protectedColumns = [
+        'id', 'name', 'email', 'password', 'role', 'dept_id',
+        'nomor_induk', 'jk', 'telp', 'alamat', 'pekerjaan', 'status',
+        'tempat_lahir', 'tanggal_lahir', 'golongan', 'jabatan',
+        'tmt_tugas', 'kgb', 'masa_kerja_tahun', 'masa_kerja_bulan',
+        'npwp', 'asn', 'pp', 'nip', 'satker', 'instansi',
+        'nomor_induk', 'remember_token', 'email_verified_at',
+        'created_at', 'updated_at',
     ];
 
     /**
@@ -78,6 +110,11 @@ class CleanupUsersColumns extends Command
             $this->listColumns();
         }
 
+        // Cleanup all migrated columns
+        if ($this->option('cleanup-all')) {
+            $this->cleanupAll($dryRun);
+        }
+
         // Remove duplicate columns
         if ($this->option('remove-duplicates')) {
             $this->removeDuplicateColumns($dryRun);
@@ -96,9 +133,9 @@ class CleanupUsersColumns extends Command
      */
     protected function listColumns(): void
     {
-        $this->info('KOLOM DUPLIKAT (direkomendasikan untuk dihapus):');
+        $this->info('KOLOM YANG SUDAH DIMIGRASIKAN KE tenaga_ktd:');
         $this->line('--------------------------------------------');
-        foreach ($this->duplicateColumns as $col => $desc) {
+        foreach ($this->migratedColumns as $col => $desc) {
             $exists = Schema::hasColumn('users', $col);
             $status = $exists ? '✅ ADA' : '❌ TIDAK ADA';
             $this->line("  {$status} | {$col}");
@@ -116,6 +153,70 @@ class CleanupUsersColumns extends Command
         }
 
         $this->newLine();
+
+        // Count total removable
+        $removable = 0;
+        foreach ($this->migratedColumns as $col => $desc) {
+            if (Schema::hasColumn('users', $col)) {
+                $removable++;
+            }
+        }
+        foreach ($this->optionalColumns as $col => $desc) {
+            if (Schema::hasColumn('users', $col)) {
+                $removable++;
+            }
+        }
+        $this->info("Total kolom yang bisa dihapus: {$removable}");
+
+        $this->newLine();
+    }
+
+    /**
+     * Cleanup all migrated columns
+     */
+    protected function cleanupAll(bool $dryRun): void
+    {
+        $this->info('Menghapus SEMUA kolom yang sudah dimigrasikan ke tenaga_ktd...');
+        $this->newLine();
+
+        $toRemove = array_merge($this->migratedColumns, $this->optionalColumns);
+        $removed = 0;
+        $skipped = 0;
+
+        foreach ($toRemove as $col => $desc) {
+            // Skip protected columns
+            if (in_array($col, $this->protectedColumns)) {
+                $this->line("   🔒 PROTECTED: {$col} - tidak bisa dihapus (still used)");
+                continue;
+            }
+
+            if (!Schema::hasColumn('users', $col)) {
+                $this->line("   ⏭️  Lewati: {$col} tidak ada di tabel.");
+                $skipped++;
+                continue;
+            }
+
+            if ($dryRun) {
+                $this->line("   [DRY RUN] ✓ Akan menghapus: {$col}");
+                $removed++;
+                continue;
+            }
+
+            try {
+                Schema::table('users', function ($table) use ($col) {
+                    $table->dropColumn($col);
+                });
+                $this->line("   ✓ Berhasil menghapus: {$col}");
+                $removed++;
+            } catch (\Exception $e) {
+                $this->error("   ✗ Gagal menghapus {$col}: " . $e->getMessage());
+                $skipped++;
+            }
+        }
+
+        $this->newLine();
+        $this->info("Selesai: {$removed} kolom dihapus, {$skipped} dilewati.");
+        $this->newLine();
     }
 
     /**
@@ -126,11 +227,16 @@ class CleanupUsersColumns extends Command
         $this->info('Menghapus kolom duplikat dari tabel users...');
         $this->newLine();
 
-        $toRemove = array_merge($this->duplicateColumns, $this->optionalColumns);
+        $toRemove = $this->migratedColumns;
         $removed = 0;
         $skipped = 0;
 
         foreach ($toRemove as $col => $desc) {
+            // Skip protected columns
+            if (in_array($col, $this->protectedColumns)) {
+                continue;
+            }
+
             if (!Schema::hasColumn('users', $col)) {
                 $this->line("   ⏭️  Lewati: {$col} tidak ada di tabel.");
                 $skipped++;
