@@ -202,7 +202,22 @@
                         this.showToast('Terjadi kesalahan: ' + err.message, 'error');
                     });
                 },
-                openPdfPreview(url, title, reportId, userId, bulan) {
+                async openPdfPreview(url, title, reportId, userId, bulan) {
+                    // Check if file exists first
+                    try {
+                        const response = await fetch(url, { method: 'HEAD' });
+                        if (!response.ok) {
+                            // File not found - redirect to regenerate
+                            const urlParts = url.split('/');
+                            const filename = urlParts[urlParts.length - 1];
+                            // For bawahan, show message or regenerate
+                            alert('File tidak ditemukan. File akan digenerate ulang.');
+                            return;
+                        }
+                    } catch (e) {
+                        // Network error, try to open anyway
+                    }
+                    // File exists or check failed - open preview
                     this.pdfPreviewUrl = url;
                     this.pdfPreviewTitle = title || 'Preview PDF';
                     this.currentReportId = reportId;

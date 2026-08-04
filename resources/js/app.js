@@ -1225,7 +1225,27 @@ document.addEventListener('alpine:init', () => {
         pdfPreviewOpen: false,
         pdfPreviewUrl: '',
         pdfPreviewTitle: '',
-        openPdfPreview(url, title) {
+        async openPdfPreview(url, title) {
+            // Check if file exists first
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                if (!response.ok) {
+                    // File not found - redirect to regenerate
+                    const urlParts = url.split('/');
+                    const filename = urlParts[urlParts.length - 1];
+                    // Extract bulan from filename (e.g., "1959.kinerja-07-2026.pdf" -> "2026-07")
+                    const match = filename.match(/kinerja-(\d{2})-(\d{4})\.pdf$/);
+                    if (match) {
+                        const bulan = match[2] + '-' + match[1]; // "2026-07"
+                        const rekapUrl = `/laporan-kinerja/rekap?tab=harian&month=${bulan}`;
+                        window.open(rekapUrl, '_blank');
+                        return;
+                    }
+                }
+            } catch (e) {
+                // Network error, try to open anyway
+            }
+            // File exists or check failed - open preview
             this.pdfPreviewUrl = url;
             this.pdfPreviewTitle = title || 'Preview PDF';
             this.pdfPreviewOpen = true;
