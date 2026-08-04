@@ -46,6 +46,75 @@
 
             <div class="content-inner">
 
+                <!-- Filter Form - Select periode laporan -->
+                @php
+                    $bulanIndonesia = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+                    $currentBulan = $bulanIndonesia[date('n') - 1];
+                    $currentTahun = date('Y');
+                    $currentSemester = (date('n') >= 7) ? 'Ganjil' : 'Genap';
+                    $currentTahunAjaran = (date('n') >= 7) ? (date('Y') . '/' . (date('Y') + 1)) : ((date('Y') - 1) . '/' . date('Y'));
+                @endphp
+                <div class="filter-container">
+                    <div class="filter-header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                        <span>Pilih Periode Laporan</span>
+                    </div>
+                    <form action="{{ route('madrasah.laporan-bulanan') }}" method="GET" id="filterForm" class="filter-form">
+                        <div class="filter-item">
+                            <label class="filter-label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                Bulan
+                            </label>
+                            <select name="bulan" onchange="document.getElementById('filterForm').submit()" class="filter-select">
+                                @foreach(["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"] as $bulan)
+                                    <option value="{{ $bulan }}" {{ ($bulan_laporan ?? $currentBulan) == $bulan ? "selected" : "" }}>{{ $bulan }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label class="filter-label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                Tahun
+                            </label>
+                            <select name="tahun" onchange="document.getElementById('filterForm').submit()" class="filter-select">
+                                @for($y = date('Y') + 1; $y >= date('Y') - 5; $y--)
+                                    <option value="{{ $y }}" {{ ($tahun_laporan ?? $currentTahun) == $y ? "selected" : "" }}>{{ $y }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label class="filter-label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                                Tahun Ajaran
+                            </label>
+                            <select name="tahun_ajaran" onchange="document.getElementById('filterForm').submit()" class="filter-select">
+                                @for($y = date('Y'); $y >= date('Y') - 3; $y--)
+                                    <option value="{{ $y }}/{{ $y + 1 }}" {{ ($tahun_ajaran ?? $currentTahunAjaran) == ($y.'/'.($y+1)) ? "selected" : "" }}>{{ $y }}/{{ $y + 1 }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label class="filter-label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                Semester
+                            </label>
+                            <select name="semester" onchange="document.getElementById('filterForm').submit()" class="filter-select">
+                                <option value="Ganjil" {{ ($semester ?? $currentSemester) == "Ganjil" ? "selected" : "" }}>Ganjil</option>
+                                <option value="Genap" {{ ($semester ?? $currentSemester) == "Genap" ? "selected" : "" }}>Genap</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Info Banner: Periode Laporan -->
+                <div class="info-period-banner">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <div class="info-period-text">
+                        <span class="info-period-label">Periode Laporan</span>
+                        <span class="info-period-value">{{ $bulan_laporan ?? $currentBulan }} {{ $tahun_laporan ?? $currentTahun }} | Semester {{ $semester ?? $currentSemester }} TA {{ $tahun_ajaran ?? $currentTahunAjaran }}</span>
+                    </div>
+                </div>
+
                 <!-- Hero Meta Info Card -->
                 <div class="neo-card info-hero-card">
                     <div class="info-hero-header">
@@ -74,90 +143,43 @@
                         </div>
                     </div>
                     <p class="info-hero-desc">Input data rekap siswa per kelas dan data siswa mutasi, mengundurkan diri, atau drop out.</p>
-                    <div class="info-hero-actions">
-                        <button type="button" class="btn-action-secondary" onclick="resetForm()">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                            Reset Semua
-                        </button>
-                        <button type="submit" class="btn-action-save" name="action" value="draft">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                            Simpan Draft
-                        </button>
-                        <button type="submit" class="btn-action-primary" name="action" value="submit">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                            Kirim Laporan
-                        </button>
-                    </div>
                 </div>
 
                 <form action="{{ route('madrasah.laporan-bulanan.save') }}" method="POST" id="laporanBulananForm">
                 @csrf
 
-                <!-- Section 1: Informasi Laporan -->
+                <!-- Section 1: Informasi Madrasah -->
                 <div class="neo-card section-card">
                     <div class="neo-card-header">
                         <div class="neo-card-icon" style="background: var(--gold); color: var(--night);">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                         </div>
                         <div class="neo-card-text">
-                            <h3 class="neo-card-title">A. Informasi Laporan</h3>
-                            <p class="neo-card-desc">Periode dan identitas laporan</p>
+                            <h3 class="neo-card-title">A. Informasi Madrasah</h3>
+                            <p class="neo-card-desc">Identitas madrasah</p>
                         </div>
                     </div>
                     <div class="neo-card-body">
+                        <!-- Hidden inputs for periode -->
+                        <input type="hidden" name="bulan_laporan" value="{{ $bulan_laporan ?? 'Januari' }}">
+                        <input type="hidden" name="tahun_laporan" value="{{ $tahun_laporan ?? date('Y') }}">
+                        <input type="hidden" name="tahun_ajaran" value="{{ $tahun_ajaran ?? '' }}">
+                        <input type="hidden" name="semester" value="{{ $semester ?? 'Genap' }}">
+
                         <div class="form-grid form-grid-3">
-                            <div class="neo-field-group">
-                                <label class="neo-field-label">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                    Bulan
-                                </label>
-                                <select name="bulan_laporan" class="neo-form-select" required>
-                                    @foreach(["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"] as $bulan)
-                                        <option value="{{ $bulan }}" {{ ($bulan_laporan ?? "Januari") == $bulan ? "selected" : "" }}>{{ $bulan }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="neo-field-group">
-                                <label class="neo-field-label">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                    Tahun
-                                </label>
-                                <input type="number" name="tahun_laporan" class="neo-form-input" value="{{ $tahun_laporan ?? date("Y") }}" min="2000" max="2100" required>
-                            </div>
-                            <div class="neo-field-group">
-                                <label class="neo-field-label">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                                    Tahun Ajaran
-                                </label>
-                                <select name="tahun_ajaran" class="neo-form-select" required>
-                                    @for($y = date("Y") - 2; $y <= date("Y") + 1; $y++)
-                                        <option value="{{ $y }}/{{ $y + 1 }}" {{ ($tahun_ajaran ?? "") == ($y."/".($y+1)) ? "selected" : "" }}>{{ $y }}/{{ $y + 1 }}</option>
-                                    @endfor
-                                </select>
-                            </div>
-                            <div class="neo-field-group">
-                                <label class="neo-field-label">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                    Semester
-                                </label>
-                                <select name="semester" class="neo-form-select" required>
-                                    <option value="Ganjil" {{ ($semester ?? "Genap") == "Ganjil" ? "selected" : "" }}>Ganjil</option>
-                                    <option value="Genap" {{ ($semester ?? "Genap") == "Genap" ? "selected" : "" }}>Genap</option>
-                                </select>
-                            </div>
                             <div class="neo-field-group">
                                 <label class="neo-field-label">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/></svg>
                                     Nama Madrasah
                                 </label>
-                                <input type="text" name="nama_madrasah" class="neo-form-input" value="{{ $nama_madrasah ?? "" }}" readonly>
+                                <input type="text" class="neo-form-input" value="{{ $nama_madrasah ?? "" }}" readonly>
                             </div>
                             <div class="neo-field-group">
                                 <label class="neo-field-label">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                     Rombel (RB)
                                 </label>
-                                <input type="number" name="rb" class="neo-form-input" value="{{ $rb ?? 0 }}" min="0">
+                                <input type="number" name="rb" id="rbCount" class="neo-form-input" value="{{ $rb ?? 0 }}" min="0" readonly>
                             </div>
                         </div>
                         <div class="form-full mt-4">
@@ -165,7 +187,7 @@
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                                 Kantor / Instansi
                             </label>
-                            <input type="text" name="office_name" class="neo-form-input" value="{{ $office_name ?? "Kantor Kementerian Agama Kab. Tanah Datar" }}" readonly>
+                            <input type="text" class="neo-form-input" value="{{ $office_name ?? "Kantor Kementerian Agama Kab. Tanah Datar" }}" readonly>
                         </div>
                     </div>
                 </div>
@@ -194,7 +216,7 @@
                                 <div class="stat-info">
                                     <span class="stat-label">Madrasah</span>
                                     <strong class="stat-value">{{ $nama_madrasah ?? "Belum diisi" }}</strong>
-                                    <small>RB {{ $rb ?? 0 }}</small>
+                                    <small>RB <span id="rbCountStat">{{ $rb ?? 0 }}</span></small>
                                 </div>
                             </div>
                             <div class="stat-card">
@@ -404,17 +426,8 @@
                                     </div>
                                     <div class="neo-field-group">
                                         <label class="neo-field-label">Kelas</label>
-                                        <select name="mutationRows[{{ $idx }}][kelas]" class="neo-form-select">
-                                            <option value="" disabled>Pilih kelas</option>
-                                            <option value="I.A" {{ ($row['kelas'] ?? '') == 'I.A' ? 'selected' : '' }}>I.A</option>
-                                            <option value="I.B" {{ ($row['kelas'] ?? '') == 'I.B' ? 'selected' : '' }}>I.B</option>
-                                            <option value="I.C" {{ ($row['kelas'] ?? '') == 'I.C' ? 'selected' : '' }}>I.C</option>
-                                            <option value="II.A" {{ ($row['kelas'] ?? '') == 'II.A' ? 'selected' : '' }}>II.A</option>
-                                            <option value="II.B" {{ ($row['kelas'] ?? '') == 'II.B' ? 'selected' : '' }}>II.B</option>
-                                            <option value="II.C" {{ ($row['kelas'] ?? '') == 'II.C' ? 'selected' : '' }}>II.C</option>
-                                            <option value="III.A" {{ ($row['kelas'] ?? '') == 'III.A' ? 'selected' : '' }}>III.A</option>
-                                            <option value="III.B" {{ ($row['kelas'] ?? '') == 'III.B' ? 'selected' : '' }}>III.B</option>
-                                            <option value="III.C" {{ ($row['kelas'] ?? '') == 'III.C' ? 'selected' : '' }}>III.C</option>
+                                        <select name="mutationRows[{{ $idx }}][kelas]" class="neo-form-select kelas-select" data-selected="{{ $row['kelas'] ?? '' }}">
+                                            <option value="">Memuat kelas...</option>
                                         </select>
                                     </div>
                                     <div class="neo-field-group">
@@ -480,17 +493,8 @@
                                     </div>
                                     <div class="neo-field-group">
                                         <label class="neo-field-label">Kelas</label>
-                                        <select name="mutationRows[0][kelas]" class="neo-form-select">
-                                            <option value="" disabled selected>Pilih kelas</option>
-                                            <option value="I.A">I.A</option>
-                                            <option value="I.B">I.B</option>
-                                            <option value="I.C">I.C</option>
-                                            <option value="II.A">II.A</option>
-                                            <option value="II.B">II.B</option>
-                                            <option value="II.C">II.C</option>
-                                            <option value="III.A">III.A</option>
-                                            <option value="III.B">III.B</option>
-                                            <option value="III.C">III.C</option>
+                                        <select name="mutationRows[0][kelas]" class="neo-form-select kelas-select" data-selected="">
+                                            <option value="">Pilih kelas</option>
                                         </select>
                                     </div>
                                     <div class="neo-field-group">
@@ -617,6 +621,134 @@
             /* Space between tabs and content */
             .neo-tabs-large {
                 margin-bottom: 1.5rem;
+            }
+
+            /* Filter Container */
+            .filter-container {
+                background: linear-gradient(135deg, var(--paper-soft) 0%, var(--paper) 100%);
+                border: 2px solid var(--line);
+                border-radius: 1rem;
+                padding: 1.25rem;
+                margin-bottom: 1.5rem;
+                box-shadow: 0 2px 12px oklch(18% 0.03 76 / 0.06);
+            }
+
+            .filter-header {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+                padding-bottom: 0.75rem;
+                border-bottom: 1px dashed var(--line);
+                color: var(--ink);
+                font-family: var(--font-display);
+                font-size: 0.95rem;
+                font-weight: 600;
+            }
+
+            .filter-header svg {
+                color: var(--gold);
+                flex-shrink: 0;
+            }
+
+            .filter-form {
+                display: flex;
+                gap: 1.25rem;
+                justify-content: flex-end;
+                align-items: flex-end;
+                flex-wrap: wrap;
+            }
+
+            .filter-item {
+                display: flex;
+                flex-direction: column;
+                gap: 0.4rem;
+                min-width: 140px;
+            }
+
+            .filter-label {
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: var(--ink-soft);
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+            }
+
+            .filter-label svg {
+                color: var(--gold);
+                flex-shrink: 0;
+            }
+
+            .filter-select {
+                padding: 0.625rem 2.5rem 0.625rem 0.875rem;
+                border: 2px solid var(--line);
+                border-radius: 0.5rem;
+                font-size: 0.85rem;
+                font-family: var(--font-mono);
+                font-weight: 500;
+                background: var(--paper);
+                color: var(--ink);
+                cursor: pointer;
+                transition: all 200ms var(--ease);
+                appearance: none;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23b8860b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 0.6rem center;
+            }
+
+            .filter-select:hover {
+                border-color: var(--gold);
+                background-color: oklch(68% 0.145 74 / 0.05);
+            }
+
+            .filter-select:focus {
+                outline: none;
+                border-color: var(--gold);
+                box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
+            }
+
+            /* Info Period Banner */
+            .info-period-banner {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 1rem;
+                padding: 1.25rem 2rem;
+                background: linear-gradient(135deg, oklch(68% 0.145 74 / 0.12), oklch(68% 0.145 74 / 0.06));
+                border: 2px solid var(--gold);
+                border-radius: 1rem;
+                margin: 0 auto 2rem;
+                max-width: 560px;
+                text-align: center;
+                box-shadow: 0 4px 20px oklch(68% 0.145 74 / 0.15);
+            }
+
+            .info-period-banner svg {
+                flex-shrink: 0;
+                color: var(--gold);
+            }
+
+            .info-period-text {
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+
+            .info-period-label {
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: var(--ink-soft);
+            }
+
+            .info-period-value {
+                font-family: var(--font-display);
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: var(--gold);
             }
 
             /* Hero Content Wrapper */
@@ -1496,6 +1628,16 @@
                     calculateAllTotals();
                 });
             });
+
+            // Add event listeners to mutation name inputs
+            document.querySelectorAll("input[name*=\"[nama_siswa]\"]").forEach(input => {
+                input.addEventListener("input", function() {
+                    calculateMutationStats();
+                });
+            });
+
+            // Initial update for RB count and kelas dropdowns
+            updateRombelInfo();
         });
 
         function calculateAllTotals() {
@@ -1550,6 +1692,42 @@
             if (totalEl) {
                 totalEl.textContent = (l + p) + " siswa";
             }
+        }
+
+        // Update RB count and populate kelas dropdowns based on rombel cards
+        function updateRombelInfo() {
+            const rombelContainer = document.getElementById("rombelContainer");
+            const rombelCards = rombelContainer.querySelectorAll(".rombel-card");
+
+            // Update RB count
+            const rbCount = rombelCards.length;
+            const rbInput = document.getElementById("rbCount");
+            const rbStat = document.getElementById("rbCountStat");
+            if (rbInput) rbInput.value = rbCount;
+            if (rbStat) rbStat.textContent = rbCount;
+
+            // Get all rombel codes and sort them
+            const rombelCodes = [];
+            rombelCards.forEach(card => {
+                const code = card.dataset.code;
+                if (code) rombelCodes.push(code);
+            });
+            rombelCodes.sort();
+
+            // Update all kelas dropdowns
+            document.querySelectorAll(".kelas-select").forEach(select => {
+                const selectedValue = select.dataset.selected || '';
+                select.innerHTML = '<option value="">Pilih kelas</option>';
+                rombelCodes.forEach(code => {
+                    const option = document.createElement("option");
+                    option.value = code;
+                    option.textContent = code;
+                    if (code === selectedValue) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+            });
         }
 
         function addRombelToLevel(prefix) {
@@ -1608,6 +1786,9 @@
             }
 
             calculateAllTotals();
+
+            // Update RB count and kelas dropdowns
+            updateRombelInfo();
         }
 
         function removeRombel(btn) {
@@ -1631,6 +1812,9 @@
             }
 
             calculateAllTotals();
+
+            // Update RB count and kelas dropdowns
+            updateRombelInfo();
         }
 
         let mutationRowIndex = 1;
@@ -1712,7 +1896,19 @@
             `;
 
             container.appendChild(newCard);
+
+            // Add event listener to new name input
+            const nameInput = newCard.querySelector("input[name*=\"[nama_siswa]\"]");
+            if (nameInput) {
+                nameInput.addEventListener("input", function() {
+                    calculateMutationStats();
+                });
+            }
+
             calculateMutationStats();
+
+            // Update RB count and kelas dropdowns
+            updateRombelInfo();
         }
 
         function removeMutationRow(btn) {
@@ -1769,15 +1965,22 @@
             const container = document.getElementById("mutationContainer");
             const cards = container.querySelectorAll(".mutation-card");
 
-            let total = cards.length;
+            let total = 0;
             let masuk = 0, keluar = 0, doCount = 0;
 
             cards.forEach(card => {
+                const namaInput = card.querySelector("input[name*=\"[nama_siswa]\"]");
                 const select = card.querySelector("select[name*=\"[keterangan]\"]");
-                const value = select?.value;
-                if (value === "Mutasi Masuk") masuk++;
-                else if (value === "Mutasi Keluar") keluar++;
-                else if (value === "DO" || value === "Mengundurkan Diri") doCount++;
+                const namaValue = namaInput?.value?.trim();
+                const selectValue = select?.value;
+
+                // Only count if student name is filled
+                if (namaValue && namaValue.length > 0) {
+                    total++;
+                    if (selectValue === "Mutasi Masuk") masuk++;
+                    else if (selectValue === "Mutasi Keluar") keluar++;
+                    else if (selectValue === "DO" || selectValue === "Mengundurkan Diri") doCount++;
+                }
             });
 
             document.getElementById("mutationTotal").textContent = total;

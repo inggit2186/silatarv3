@@ -15,9 +15,10 @@ Fitur Laporan Madrasah adalah modul untuk mengelola pelaporan semester madrasah 
 - [x] MadrasahController sudah ada
 - [x] Routes user-side sudah ada (profil, pegawai, guru, laporan-semester)
 - [x] Menu Laporan Madrasah di dropdown user (berdasarkan kategori dept)
-- [ ] Buat migrasi tabel `ktd_laporan_semester_madrasah`
-- [ ] Buat migrasi tabel `ktd_madrasah_pegawai` (jika belum ada)
-- [ ] Buat migrasi tabel `ktd_madrasah_guru` (jika belum ada)
+- [x] Tabel `ktd_laporan_semester_madrasah` sudah ada di database
+- [x] Tabel `ktd_laporan_bulanan_madrasah` sudah ada di database
+- [x] Tabel `ktd_madrasah_pegawai` (guru_madrasah) sudah ada
+- [x] Tabel `ktd_madrasah_guru` (pegawai_madrasah) sudah ada
 
 ### Phase 2: User-Side Pages
 - [x] Header/Hero Section - Menggunakan `.hero-page`, `.content-centered`
@@ -31,7 +32,10 @@ Fitur Laporan Madrasah adalah modul untuk mengelola pelaporan semester madrasah 
 - [x] pegawaimadrasah.blade.php - Full NEO MIRAI theme dengan CSS classes
 - [x] gurumadrasah.blade.php - Full NEO MIRAI theme dengan CSS classes
 - [x] laporansemester.blade.php - Full NEO MIRAI theme dengan CSS classes
-- [ ] Tambah fitur Submit laporan (selain draft)
+- [x] Tambah fitur Submit laporan (selain draft)
+- [x] Save Profil Madrasah - update ktd_department
+- [x] Save Laporan Semester - update ktd_laporan_semester_madrasah
+- [x] Save Laporan Bulanan - update ktd_laporan_bulanan_madrasah
 
 ### Phase 3: Admin-Side (Verifikasi)
 - [ ] Buat view admin `resources/views/admin/madrasah/index.blade.php`
@@ -54,13 +58,21 @@ Fitur Laporan Madrasah adalah modul untuk mengelola pelaporan semester madrasah 
 - [x] Reactive totals dengan JavaScript
 - [x] Add/Remove rombel functionality
 - [x] Add/Remove mutation row functionality
-- [x] Action buttons (Reset, Simpan Draft, Kirim)
+- [x] Action buttons (Reset, Simpan Draft, Kirim) - dipindahkan ke bawah form
 - [x] Route baru `/madrasah/laporan-bulanan`
 - [x] Controller method `laporanBulananMadrasah()`
 - [x] Controller method `saveLaporanBulananMadrasah()`
 - [x] Tab navigation dengan semua halaman madrasah
 - [x] Tambah tab menu di halaman Profil, Pegawai, Guru, Laporan Semester
-- [ ] Buat migrasi tabel `ktd_laporan_bulanan_madrasah`
+- [x] Tabel `ktd_laporan_bulanan_madrasah` sudah ada di database
+- [x] Alert messages di view untuk success/error
+- [x] Tambah fitur Submit laporan (selain draft)
+- [x] Hapus form filter duplikat - sekarang hanya satu form Informasi Madrasah
+- [x] Filter form dengan default value waktu saat ini
+- [x] RB field read-only dan auto-calculate dari rombel cards
+- [x] Dropdown kelas dinamis berdasarkan rombel yang ada
+- [x] Total Data Mutasi hanya hitung jika Nama Siswa terisi
+- [x] Ambil data terbaru jika belum ada untuk periode dipilih
 
 ## Data Flow
 
@@ -98,31 +110,33 @@ Approve / Reject
 | File | Perubahan |
 |------|-----------|
 | `resources/views/components/layouts/site-header.blade.php` | Tambah menu Laporan Madrasah |
-| `resources/views/madrasah/profilmadrasah.blade.php` | Full NEO MIRAI theme |
+| `resources/views/madrasah/profilmadrasah.blade.php` | Full NEO MIRAI theme + form action + CSRF + alert |
 | `resources/views/madrasah/pegawaimadrasah.blade.php` | Full NEO MIRAI theme dengan CSS classes |
 | `resources/views/madrasah/gurumadrasah.blade.php` | Full NEO MIRAI theme dengan CSS classes |
-| `resources/views/madrasah/laporansemester.blade.php` | Full NEO MIRAI theme dengan CSS classes |
+| `resources/views/madrasah/laporansemester.blade.php` | Full NEO MIRAI theme + form action + CSRF + alert |
+| `resources/views/madrasah/laporanbulanan.blade.php` | Full NEO MIRAI theme + form action + CSRF + alert |
+| `app/Http/Controllers/PageController.php` | Method saveProfilMadrasah, fix saveLaporanSemesterMadrasah |
+| `routes/web.php` | Route POST untuk saveProfilMadrasah |
 | `resources/css/neo-mirai-home.css` | Komponen baru: `.hero-label`, `.hero-title`, `.hero-desc`, `.hero-actions`, `.neo-stat-*`, `.neo-table-*`, `.neo-avatar-*`, `.neo-badge-*`, `.neo-action-btn`, `.neo-user-cell`, `.neo-pagination-*` |
 
 ## Files Baru
 
 | File | Purpose |
 |------|---------|
-| `database/migrations/xxxx_create_ktd_laporan_semester_madrasah.php` | Tabel laporan semester |
-| `database/migrations/xxxx_create_ktd_laporan_bulanan_madrasah.php` | Tabel laporan bulanan |
-| `database/migrations/xxxx_create_ktd_madrasah_pegawai.php` | Tabel data pegawai |
-| `database/migrations/xxxx_create_ktd_madrasah_guru.php` | Tabel data guru |
 | `resources/views/madrasah/laporanbulanan.blade.php` | View laporan bulanan |
-| `resources/views/admin/madrasah/index.blade.php` | View list laporan |
-| `resources/views/admin/madrasah/show.blade.php` | View detail & verifikasi |
-| `resources/css/admin-madrasah.css` | CSS khusus madrasah (jika perlu) |
-| `MADRASAH_ADMIN_PROGRESS.md` | Progress admin-side |
+| `resources/views/admin/madrasah/index.blade.php` | View list laporan (belum dibuat) |
+| `resources/views/admin/madrasah/show.blade.php` | View detail & verifikasi (belum dibuat) |
+| `MADRASAH_ADMIN_PROGRESS.md` | Progress admin-side (belum dibuat) |
+
+**Note:** Tabel database sudah ada di database - tidak perlu buat migrasi baru.
 
 ## TODO (Next Steps)
-- [ ] Cek struktur database yang sudah ada (tabel ktd_department, dll)
-- [ ] Buat migrasi untuk tabel-tabel baru
-- [ ] Review form laporan semester yang sudah ada
-- [ ] Tambah fitur Submit laporan (selain draft)
+- [x] Cek struktur database yang sudah ada (tabel ktd_department, ktd_laporan_bulanan_madrasah, ktd_laporan_semester_madrasah)
+- [x] Buat method saveProfilMadrasah - update ktd_department
+- [x] Fix saveLaporanSemesterMadrasah - return redirect
+- [x] Fix saveLaporanBulananMadrasah - sudah ada
+- [x] Tambah POST route untuk saveProfilMadrasah
+- [x] Update views dengan form action dan CSRF token
 - [ ] Phase 3: Admin-Side views (list & verify laporan)
 
 ## Changelog
@@ -312,3 +326,83 @@ Approve / Reject
   - pegawaimadrasah.blade.php
   - gurumadrasah.blade.php
   - laporansemester.blade.php
+
+### 2026-08-04 (Implementasi Database Storage)
+- **Cek struktur database yang sudah ada:**
+  - `ktd_laporan_bulanan_madrasah` - sudah ada dengan field: id, dept_id, bulan_laporan, tahun_laporan, tahun_ajaran, semester, status, student_counts_json, mutation_rows_json, dll
+  - `ktd_laporan_semester_madrasah` - sudah ada dengan field: id, dept_id, semester, tahun_ajaran, status, keadaan_gedung_json, sarana_pendidikan_json, dll
+  - `ktd_department` - sudah ada dengan field untuk profil madrasah lengkap (nama, nsm, npsm, alamat, kontak, akreditasi, jarak, dll)
+- **Tidak perlu migrasi baru** - tabel sudah ada di database
+
+- **Implementasi `saveProfilMadrasah`:**
+  - Method baru di PageController.php (setelah profilMadrasah)
+  - Update data ke tabel `ktd_department`
+  - Handle semua field: nsm, npsm, status_lembaga, alamat (gabungan jalan/jorong/nagari/kecamatan), kontak, website, visi, sk_pendirian, akreditasi, jarak, dll
+  - Return redirect dengan success/error message
+
+- **Fix `saveLaporanSemesterMadrasah`:**
+  - Ubah return dari JSON ke redirect (sesuai pattern Laravel)
+  - Handle semester dengan uppercase/lowercase (accept Ganjil/Genap/ganjil/genap)
+  - Gunakan `action` button value (draft/submit) untuk menentukan status
+  - Return redirect dengan success message
+
+- **Route baru:**
+  - `POST /madrasah/profil/save` -> saveProfilMadrasah
+
+- **Update views dengan form action dan CSRF:**
+  - `profilmadrasah.blade.php`:
+    - Tambah `<form action="{{ route('madrasah.profil.save') }}" method="POST">`
+    - Tambah `@csrf` token
+    - Tambah alert messages untuk success/error
+  - `laporansemester.blade.php`:
+    - Tambah `<form action="{{ route('madrasah.laporan-semester.save') }}" method="POST">`
+    - Tambah `@csrf` token
+    - Tambah alert messages
+    - Hapus orphan hidden input status (sekarang pakai action button)
+  - `laporanbulanan.blade.php`:
+    - Sudah punya form action dan CSRF
+    - Tambah alert messages untuk success/error
+
+### 2026-08-04 (Simplifikasi Form Informasi)
+- **Hapus form filter duplikat** di halaman Laporan Bulanan:
+  - Filter form (bulan, tahun, tahun ajaran, semester) di atas sudah dihapus
+  - Sekarang hanya ada **satu form Informasi Madrasah** di Section A
+  - Periode laporan tetap ditampilkan di banner info (read-only)
+  - Field bulan, tahun, tahun ajaran, semester sekarang menggunakan hidden inputs
+  - User mengisi data periode melalui dropdown di header/navigation (route `/madrasah/laporan-bulanan?bulan=X&tahun=Y&tahun_ajaran=Z&semester=S`)
+
+### 2026-08-04 (Filter Form Perbaikan)
+- **Perbaiki form filter menjadi lebih menarik**:
+  - Tambahkan header "Pilih Periode Laporan" dengan icon filter
+  - Semua dropdown sejajar ke kanan
+  - Label dengan icon untuk setiap dropdown
+  - Style CSS baru: `.filter-container`, `.filter-header`, `.filter-item`, `.filter-label`, `.filter-select`
+- **Default value sesuai waktu saat ini**:
+  - Bulan: menggunakan array `$bulanIndonesia` untuk nama bulan Bahasa Indonesia
+  - Tahun Ajaran: logic Juli-Desember = Ganjil (tahun/tahun+1), Jan-Juni = Genap (tahun-1/tahun)
+  - Controller `laporanBulananMadrasah()` diupdate untuk menggunakan nama bulan Indonesia
+
+### 2026-08-04 (RB & Mutation Improvements)
+- **RB Field (Rombel) di Informasi Madrasah**:
+  - Dibuat read-only (`readonly`)
+  - Otomatis menghitung jumlah rombel dari bagian Keadaan Siswa via JavaScript
+  - Function `updateRombelInfo()` untuk sinkronisasi RB count
+- **Dropdown Kelas di Data Siswa Mutasi**:
+  - Sekarang dinamis - mengambil kelas dari rombel yang ada di Keadaan Siswa
+  - Saat menambah/hapus rombel, dropdown kelas otomatis ter-update
+  - Function `updateRombelInfo()` juga mengupdate semua dropdown `.kelas-select`
+- **Total Data Mutasi**:
+  - Sekarang hanya menghitung jika Nama Siswa terisi
+  - Event listener untuk recalculate saat input nama berubah
+- **Hapus tombol aksi di Hero Card**:
+  - Tombol Reset, Simpan Draft, Kirim dihapus dari Hero Meta Info Card
+  - Tombol tetap ada di bagian bawah form
+
+### 2026-08-04 (Ambil Data Terbaru Jika Belum Ada)
+- **Logic controller diupdate** untuk mengambil data terbaru:
+  - Jika user memilih periode dan data belum ada:
+    - Ambil `student_counts` dari periode terbaru yang ada
+    - `mutation_rows` tetap kosong
+    - Status tetap "Belum dikirim"
+  - Jika data ada untuk periode tersebut, tampilkan semua data
+- Ini mengikuti pola yang sama dengan Laporan Semester

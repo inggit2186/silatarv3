@@ -5878,6 +5878,103 @@ class PageController extends Controller
     }
 
     /**
+     * Save Profil Madrasah - update ktd_department.
+     */
+    public function saveProfilMadrasah(Request $request)
+    {
+        $user = auth()->user();
+        $deptId = $user->dept_id ?? $request->input('dept_id');
+
+        if (!$deptId) {
+            return redirect()->back()->with('error', 'Unit kerja tidak ditemukan');
+        }
+
+        $validated = $request->validate([
+            'nsm' => 'nullable|string|max:50',
+            'npsm' => 'nullable|string|max:50',
+            'status_lembaga' => 'nullable|string|max:20',
+            'jarak_pusat_provinsi' => 'nullable|string|max:50',
+            'jarak_pusat_kabupaten' => 'nullable|string|max:50',
+            'jarak_kecamatan' => 'nullable|string|max:50',
+            'jarak_kanwil_kemenag' => 'nullable|string|max:50',
+            'jarak_kemenag_kab' => 'nullable|string|max:50',
+            'jarak_kua' => 'nullable|string|max:50',
+            'jarak_ra_terdekat' => 'nullable|string|max:50',
+            'jarak_mi_terdekat' => 'nullable|string|max:50',
+            'jarak_mts_terdekat' => 'nullable|string|max:50',
+            'jarak_ma_terdekat' => 'nullable|string|max:50',
+            'jarak_pontren_terdekat' => 'nullable|string|max:50',
+            'jarak_tk_terdekat' => 'nullable|string|max:50',
+            'jarak_sd_terdekat' => 'nullable|string|max:50',
+            'jarak_smp_terdekat' => 'nullable|string|max:50',
+            'jarak_sma_terdekat' => 'nullable|string|max:50',
+            'telepon' => 'nullable|string|max:30',
+            'email' => 'nullable|email|max:255',
+            'website' => 'nullable|string|max:255',
+            'koordinat' => 'nullable|string|max:100',
+            'waktu_belajar' => 'nullable|string|max:20',
+            'visi' => 'nullable|string',
+            'sk_pendirian' => 'nullable|string|max:255',
+            'tanggal_sk' => 'nullable|date',
+            'komite_lembaga' => 'nullable|string|max:30',
+            'akreditasi' => 'nullable|string|max:10',
+            'tanggal_akreditasi' => 'nullable|date',
+            'status_kkm' => 'nullable|string|max:20',
+        ]);
+
+        // Build alamat from parts
+        $alamatParts = array_filter([
+            trim($request->input('jalan', '')),
+            trim($request->input('jorong', '')),
+            trim($request->input('nagari', '')),
+            trim($request->input('kecamatan', '')),
+        ]);
+        $alamat = implode(', ', $alamatParts);
+
+        $data = [
+            'nsm' => $request->input('nsm'),
+            'npsm' => $request->input('npsm'),
+            'status_lembaga' => $request->input('status_lembaga'),
+            'alamat' => $alamat ?: null,
+            'telepon' => $request->input('telepon'),
+            'email' => $request->input('email'),
+            'website' => $request->input('website'),
+            'koordinat' => $request->input('koordinat'),
+            'waktu_belajar' => $request->input('waktu_belajar'),
+            'visi' => $request->input('visi'),
+            'sk_pendirian' => $request->input('sk_pendirian'),
+            'tanggal_sk' => $request->input('tanggal_sk'),
+            'komite_lembaga' => $request->input('komite_lembaga'),
+            'akreditasi' => $request->input('akreditasi'),
+            'tanggal_akreditasi' => $request->input('tanggal_akreditasi'),
+            'status_kkm' => $request->input('status_kkm'),
+            'jarak_pusat_provinsi' => $request->input('jarak_pusat_provinsi'),
+            'jarak_pusat_kabupaten' => $request->input('jarak_pusat_kabupaten'),
+            'jarak_kecamatan' => $request->input('jarak_kecamatan'),
+            'jarak_kanwil_kemenag' => $request->input('jarak_kanwil_kemenag'),
+            'jarak_kemenag_kab' => $request->input('jarak_kemenag_kab'),
+            'jarak_kua' => $request->input('jarak_kua'),
+            'jarak_ra_terdekat' => $request->input('jarak_ra_terdekat'),
+            'jarak_mi_terdekat' => $request->input('jarak_mi_terdekat'),
+            'jarak_mts_terdekat' => $request->input('jarak_mts_terdekat'),
+            'jarak_ma_terdekat' => $request->input('jarak_ma_terdekat'),
+            'jarak_pontren_terdekat' => $request->input('jarak_pontren_terdekat'),
+            'jarak_tk_terdekat' => $request->input('jarak_tk_terdekat'),
+            'jarak_sd_terdekat' => $request->input('jarak_sd_terdekat'),
+            'jarak_smp_terdekat' => $request->input('jarak_smp_terdekat'),
+            'jarak_sma_terdekat' => $request->input('jarak_sma_terdekat'),
+            'updated_at' => now(),
+        ];
+
+        // Filter out null values
+        $data = array_filter($data, fn($v) => $v !== null);
+
+        DB::table('ktd_department')->where('id', $deptId)->update($data);
+
+        return redirect()->back()->with('success', 'Profil madrasah berhasil disimpan!');
+    }
+
+    /**
      * Pegawai Madrasah page - daftar pegawai berdasarkan dept_id user.
      */
     public function pegawaiMadrasah(Request $request)
@@ -6060,35 +6157,52 @@ class PageController extends Controller
 
         // Get existing report if any
         $existingReport = null;
+        $latestReport = null;
         if ($deptId) {
+            // Check exact match for selected period
             $existingReport = DB::table('ktd_laporan_semester_madrasah')
                 ->where('dept_id', $deptId)
                 ->where('semester', $selectedSemester)
                 ->where('tahun_ajaran', $tahunAjaran)
                 ->first();
+
+            // If no exact match, get the latest data from same department (for template)
+            if (!$existingReport) {
+                $latestReport = DB::table('ktd_laporan_semester_madrasah')
+                    ->where('dept_id', $deptId)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+            }
         }
+
+        // Determine which data to use: exact match first, then latest as template
+        $sourceReport = $existingReport ?? $latestReport;
+        $hasTemplateFromLatest = !$existingReport && $latestReport !== null;
 
         // Generate academic year options
         $academicYearOptions = $this->generateAcademicYearOptions();
 
         // Default form data structure
         $formData = [
-            'keadaanGedung' => $existingReport ? json_decode($existingReport->keadaan_gedung_json ?? '{}', true) : $this->getDefaultKeadaanGedung(),
-            'saranaPendidikan' => $existingReport ? json_decode($existingReport->sarana_pendidikan_json ?? '{}', true) : $this->getDefaultSaranaPendidikan(),
-            'bantuanPemerintah' => $existingReport ? json_decode($existingReport->bantuan_pemerintah_json ?? '{}', true) : $this->getDefaultBantuanPemerintah(),
-            'bantuanNonPemerintah' => $existingReport ? json_decode($existingReport->bantuan_non_pemerintah_json ?? '{}', true) : $this->getDefaultBantuanNonPemerintah(),
-            'dataGuruPegawai' => $existingReport ? json_decode($existingReport->data_guru_pegawai_json ?? '{}', true) : $this->getDefaultDataGuruPegawai(),
-            'tingkatPendidikan' => $existingReport ? json_decode($existingReport->tingkat_pendidikan_json ?? '{}', true) : $this->getDefaultTingkatPendidikan(),
-            'sertifikasi' => $existingReport ? json_decode($existingReport->sertifikasi_json ?? '{}', true) : $this->getDefaultSertifikasi(),
-            'banyakHariSekolah' => $existingReport?->banyak_hari_sekolah ?? 0,
-            'absensiSiswa' => $existingReport ? json_decode($existingReport->absensi_siswa_json ?? '{}', true) : $this->getDefaultAbsensiSiswa(),
-            'luasTanah' => $existingReport ? json_decode($existingReport->luas_tanah_json ?? '{}', true) : $this->getDefaultLuasTanah(),
-            'sertifikatTanah' => $existingReport ? json_decode($existingReport->sertifikat_tanah_json ?? '{}', true) : $this->getDefaultSertifikatTanah(),
+            'keadaanGedung' => $sourceReport ? json_decode($sourceReport->keadaan_gedung_json ?? '{}', true) : $this->getDefaultKeadaanGedung(),
+            'saranaPendidikan' => $sourceReport ? json_decode($sourceReport->sarana_pendidikan_json ?? '{}', true) : $this->getDefaultSaranaPendidikan(),
+            'bantuanPemerintah' => $sourceReport ? json_decode($sourceReport->bantuan_pemerintah_json ?? '{}', true) : $this->getDefaultBantuanPemerintah(),
+            'bantuanNonPemerintah' => $sourceReport ? json_decode($sourceReport->bantuan_non_pemerintah_json ?? '{}', true) : $this->getDefaultBantuanNonPemerintah(),
+            'dataGuruPegawai' => $sourceReport ? json_decode($sourceReport->data_guru_pegawai_json ?? '{}', true) : $this->getDefaultDataGuruPegawai(),
+            'tingkatPendidikan' => $sourceReport ? json_decode($sourceReport->tingkat_pendidikan_json ?? '{}', true) : $this->getDefaultTingkatPendidikan(),
+            'sertifikasi' => $sourceReport ? json_decode($sourceReport->sertifikasi_json ?? '{}', true) : $this->getDefaultSertifikasi(),
+            'banyakHariSekolah' => $sourceReport?->banyak_hari_sekolah ?? '',
+            'absensiSiswa' => $sourceReport ? json_decode($sourceReport->absensi_siswa_json ?? '{}', true) : $this->getDefaultAbsensiSiswa(),
+            'luasTanah' => $sourceReport ? json_decode($sourceReport->luas_tanah_json ?? '{}', true) : $this->getDefaultLuasTanah(),
+            'sertifikatTanah' => $sourceReport ? json_decode($sourceReport->sertifikat_tanah_json ?? '{}', true) : $this->getDefaultSertifikatTanah(),
         ];
 
-        $reportStatus = $existingReport?->status ?? 'draft';
+        $reportStatus = $existingReport?->status;
+        $hasExistingData = $existingReport !== null;
         $submittedAt = $existingReport?->submitted_at;
         $catatanAdmin = $existingReport?->catatan_admin;
+        $templateInfo = $hasTemplateFromLatest ? "Data template dari {$latestReport->semester} TA {$latestReport->tahun_ajaran}" : null;
+        $formattedSubmittedAt = $submittedAt ? \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Jakarta')->format('d M Y, H:i') : null;
 
         return view('madrasah.laporansemester', [
             'deptName' => $deptName,
@@ -6098,7 +6212,11 @@ class PageController extends Controller
             'academicYearOptions' => $academicYearOptions,
             'formData' => $formData,
             'reportStatus' => $reportStatus,
+            'hasExistingData' => $hasExistingData,
+            'hasTemplateFromLatest' => $hasTemplateFromLatest,
+            'templateInfo' => $templateInfo,
             'submittedAt' => $submittedAt,
+            'formattedSubmittedAt' => $formattedSubmittedAt,
             'catatanAdmin' => $catatanAdmin,
         ]);
     }
@@ -6145,10 +6263,10 @@ class PageController extends Controller
 
         return array_map(fn($label) => [
             'label' => $label,
-            'baik' => 0,
-            'ringan' => 0,
-            'sedang' => 0,
-            'berat' => 0,
+            'baik' => '',
+            'ringan' => '',
+            'sedang' => '',
+            'berat' => '',
             'isCustom' => false,
         ], $labels);
     }
@@ -6167,10 +6285,10 @@ class PageController extends Controller
 
         return array_map(fn($label) => [
             'label' => $label,
-            'baik' => 0,
-            'ringan' => 0,
-            'sedang' => 0,
-            'berat' => 0,
+            'baik' => '',
+            'ringan' => '',
+            'sedang' => '',
+            'berat' => '',
             'isCustom' => false,
         ], $labels);
     }
@@ -6182,8 +6300,8 @@ class PageController extends Controller
     {
         return array_map(fn($label) => [
             'label' => $label,
-            'diterima' => 0,
-            'terserap' => 0,
+            'diterima' => '',
+            'terserap' => '',
             'isCustom' => false,
         ], ['BOS', 'BSM', 'Block Grant']);
     }
@@ -6195,8 +6313,8 @@ class PageController extends Controller
     {
         return array_map(fn($label) => [
             'label' => $label,
-            'diterima' => 0,
-            'terserap' => 0,
+            'diterima' => '',
+            'terserap' => '',
             'isCustom' => false,
         ], ['Sumbangan']);
     }
@@ -6214,8 +6332,8 @@ class PageController extends Controller
 
         return array_map(fn($label) => [
             'label' => $label,
-            'l' => 0,
-            'p' => 0,
+            'l' => '',
+            'p' => '',
             'isCustom' => false,
         ], $labels);
     }
@@ -6229,8 +6347,8 @@ class PageController extends Controller
 
         return array_map(fn($label) => [
             'label' => $label,
-            'l' => 0,
-            'p' => 0,
+            'l' => '',
+            'p' => '',
             'isCustom' => false,
         ], $labels);
     }
@@ -6244,8 +6362,8 @@ class PageController extends Controller
 
         return array_map(fn($label) => [
             'label' => $label,
-            'l' => 0,
-            'p' => 0,
+            'l' => '',
+            'p' => '',
             'isCustom' => false,
         ], $labels);
     }
@@ -6259,8 +6377,8 @@ class PageController extends Controller
 
         return array_map(fn($label) => [
             'label' => $label,
-            'l' => 0,
-            'p' => 0,
+            'l' => '',
+            'p' => '',
             'isCustom' => false,
         ], $labels);
     }
@@ -6271,14 +6389,14 @@ class PageController extends Controller
     private function getDefaultLuasTanah(): array
     {
         return [
-            'total' => 0,
-            'perkaranganLuas' => 0,
-            'perkaranganTerbangun' => 0,
-            'kebun' => 0,
-            'lapanganOlahraga' => 0,
-            'masjidMusholla' => 0,
-            'wc' => 0,
-            'perpustakaan' => 0,
+            'total' => '',
+            'perkaranganLuas' => '',
+            'perkaranganTerbangun' => '',
+            'kebun' => '',
+            'lapanganOlahraga' => '',
+            'masjidMusholla' => '',
+            'wc' => '',
+            'perpustakaan' => '',
         ];
     }
 
@@ -6291,7 +6409,7 @@ class PageController extends Controller
             'statusKepemilikan' => '',
             'nomor' => '',
             'tanggal' => '',
-            'luas' => 0,
+            'luas' => '',
         ];
     }
 
@@ -6304,20 +6422,26 @@ class PageController extends Controller
         $deptId = $user->dept_id ?? $request->input('dept_id');
 
         if (!$deptId) {
-            return response()->json(['success' => false, 'message' => 'Dept ID diperlukan'], 400);
+            return redirect()->back()->with('error', 'Unit kerja tidak ditemukan');
         }
 
+        // Normalize semester (accept both uppercase and lowercase)
+        $semesterInput = strtolower($request->input('semester', 'ganjil'));
+        $semester = in_array($semesterInput, ['ganjil', 'genap']) ? $semesterInput : 'ganjil';
+
         $validated = $request->validate([
-            'semester' => 'required|in:ganjil,genap',
+            'semester' => 'required|string|in:ganjil,genap,Ganjil,Genap',
             'tahun_ajaran' => 'required|string',
-            'status' => 'required|in:draft,submitted',
         ]);
+
+        $action = $request->input('action', 'draft');
+        $status = $action === 'submit' ? 'submitted' : 'draft';
 
         $data = [
             'dept_id' => $deptId,
-            'semester' => $validated['semester'],
+            'semester' => $semester,
             'tahun_ajaran' => $validated['tahun_ajaran'],
-            'status' => $validated['status'],
+            'status' => $status,
             'keadaan_gedung_json' => json_encode($request->input('keadaanGedung', [])),
             'sarana_pendidikan_json' => json_encode($request->input('saranaPendidikan', [])),
             'bantuan_pemerintah_json' => json_encode($request->input('bantuanPemerintah', [])),
@@ -6331,14 +6455,14 @@ class PageController extends Controller
             'sertifikat_tanah_json' => json_encode($request->input('sertifikatTanah', [])),
         ];
 
-        if ($validated['status'] === 'submitted') {
+        if ($status === 'submitted') {
             $data['submitted_at'] = now();
         }
 
         // Check if record exists
         $existing = DB::table('ktd_laporan_semester_madrasah')
             ->where('dept_id', $deptId)
-            ->where('semester', $validated['semester'])
+            ->where('semester', $semester)
             ->where('tahun_ajaran', $validated['tahun_ajaran'])
             ->first();
 
@@ -6347,20 +6471,17 @@ class PageController extends Controller
             DB::table('ktd_laporan_semester_madrasah')
                 ->where('id', $existing->id)
                 ->update($data);
-            $reportId = $existing->id;
         } else {
             $data['created_at'] = now();
             $data['updated_at'] = now();
-            $reportId = DB::table('ktd_laporan_semester_madrasah')->insertGetId($data);
+            DB::table('ktd_laporan_semester_madrasah')->insert($data);
         }
 
-        $report = DB::table('ktd_laporan_semester_madrasah')->where('id', $reportId)->first();
+        $message = $status === 'submitted'
+            ? 'Laporan semester berhasil dikirim!'
+            : 'Draft laporan semester berhasil disimpan!';
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Laporan berhasil disimpan',
-            'data' => $report,
-        ]);
+        return redirect()->back()->with('success', $message);
     }
 
     /**
@@ -6383,15 +6504,19 @@ class PageController extends Controller
         }
 
         // Get form parameters
-        $bulanLaporan = $request->input('bulan', now()->format('F'));
-        $tahunLaporan = $request->input('tahun', now()->year);
+        $bulanIndonesia = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        $currentMonthIndex = (int)now()->format('n') - 1;
+        $bulanLaporan = $request->input('bulan', $bulanIndonesia[$currentMonthIndex]);
+        $tahunLaporan = $request->input('tahun', (string)now()->year);
         $tahunAjaran = $request->input('tahun_ajaran', $this->getDefaultAcademicYear());
         $semester = $request->input('semester', now()->month >= 7 ? 'Ganjil' : 'Genap');
 
-        // Get existing report if any
+        // Check if user selected a period (form submitted)
+        $isUserSelection = $request->has('bulan') || $request->has('tahun') || $request->has('tahun_ajaran') || $request->has('semester');
+
+        // Get existing report for selected period
         $existingReport = null;
         if ($deptId) {
-            // Normalize semester for query (lowercase to match DB enum)
             $semesterLower = strtolower($semester);
             $existingReport = DB::table('ktd_laporan_bulanan_madrasah')
                 ->where('dept_id', $deptId)
@@ -6402,17 +6527,34 @@ class PageController extends Controller
                 ->first();
         }
 
-        // Default student counts structure based on category
-        $studentCounts = $existingReport ? json_decode($existingReport->student_counts_json ?? '{}', true) : [];
-        $classLevels = $this->getMadrasahClassLevels($kategori, $studentCounts);
+        // If no data for selected period and user selected a period, get latest data
+        $studentCounts = [];
+        $hasExistingData = $existingReport !== null;
+        $reportStatus = null;
+        $submittedAt = null;
+        $adminNote = null;
 
-        // Get mutation rows
+        if (!$existingReport && $isUserSelection && $deptId) {
+            // Get the latest report for student counts (ignore mutation rows)
+            $latestReport = DB::table('ktd_laporan_bulanan_madrasah')
+                ->where('dept_id', $deptId)
+                ->orderBy('tahun_laporan', 'desc')
+                ->orderByRaw("FIELD(bulan_laporan, 'Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember') desc")
+                ->first();
+
+            if ($latestReport) {
+                $studentCounts = json_decode($latestReport->student_counts_json ?? '{}', true);
+            }
+        } elseif ($existingReport) {
+            // Has data for selected period
+            $studentCounts = json_decode($existingReport->student_counts_json ?? '{}', true);
+            $reportStatus = $existingReport->status;
+            $submittedAt = $existingReport->submitted_at;
+            $adminNote = $existingReport->catatan_admin;
+        }
+
+        // Mutation rows always empty when no exact match (per requirements)
         $mutationRows = $existingReport ? json_decode($existingReport->mutation_rows_json ?? '[]', true) : [];
-
-        // Report status
-        $reportStatus = $existingReport?->status ?? 'draft';
-        $submittedAt = $existingReport?->submitted_at;
-        $adminNote = $existingReport?->catatan_admin;
 
         // Status labels
         $statusLabels = [
@@ -6421,10 +6563,6 @@ class PageController extends Controller
             'revisi' => 'Perlu Revisi',
             'approved' => 'Disetujui'
         ];
-        $statusLabel = $statusLabels[$reportStatus] ?? 'Draft';
-
-        // Format submitted date
-        $formattedSubmittedAt = $submittedAt ? \Carbon\Carbon::parse($submittedAt)->format('d F Y H:i') : 'Belum dikirim';
 
         // Madrasah type label
         $typeLabels = [
@@ -6438,10 +6576,13 @@ class PageController extends Controller
         $madrasahTypeLabel = $typeLabels[$kategori] ?? 'Madrasah';
 
         // Office name
-        $officeName = $user?->dept?->instansi?->nama ?? 'Kantor Kementerian Agama Kab. Tanah Datar';
+        $officeName = $user?->dept?->nama ?? 'Kantor Kementerian Agama Kab. Tanah Datar';
 
         // Count rombel
         $rb = is_array($studentCounts) ? count($studentCounts) : 0;
+
+        // Get class levels based on student counts
+        $classLevels = $this->getMadrasahClassLevels($kategori, $studentCounts);
 
         return view('madrasah.laporanbulanan', [
             'deptName' => $deptName,
@@ -6458,9 +6599,10 @@ class PageController extends Controller
             'studentCounts' => $studentCounts,
             'classLevels' => $classLevels,
             'mutationRows' => $mutationRows,
+            'hasExistingData' => $hasExistingData,
             'currentStatus' => $reportStatus,
-            'currentStatusLabel' => $statusLabel,
-            'formattedSubmittedAt' => $formattedSubmittedAt,
+            'currentStatusLabel' => $hasExistingData ? ($statusLabels[$reportStatus] ?? 'Draft') : null,
+            'formattedSubmittedAt' => $submittedAt ? \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Jakarta')->format('d M Y, H:i') : 'Belum dikirim',
             'currentAdminNote' => $adminNote ?? 'Belum ada catatan admin',
         ]);
     }
