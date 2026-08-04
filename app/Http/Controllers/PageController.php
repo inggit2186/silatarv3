@@ -5994,63 +5994,35 @@ class PageController extends Controller
             }
         }
 
-        // Get users based on dept_id - Filter untuk Staff/Administrasi (kat_jabatan = adm)
-        $usersQuery = DB::table('users')
+        // Get tenaga_ktd based on dept_id - Filter untuk Staff (kat_jabatan = staf/honorer)
+        $query = DB::table('tenaga_ktd')
             ->where('dept_id', $deptId)
-            ->where('kat_jabatan', 'adm')
-            ->whereNotIn('role', ['other', 'pensiun', 'pindah'])
-            ->select([
-                'id',
-                'name',
-                'nomor_induk',
-                'kat_jabatan',
-                'pekerjaan',
-                'satker',
-                'email',
-                'telp',
-                'jk',
-                'pp',
-                'status',
-                'npwp',
-                'tempat_lahir',
-                'tanggal_lahir',
-                'alamat',
-                'tmt_cpns',
-                'tmt_pns',
-                'tmt_tugas',
-                'kgb',
-                'asn',
-                'gol',
-                'jabatan',
-                'masa_kerja_tahun',
-                'masa_kerja_bulan',
-                'ijazah_jurusan',
-                'ijazah_fakultas',
-                'ijazah_universitas',
-                'ijazah_pendidikan',
-                'ijazah_tahun_lulus',
-            ])
-            ->orderByRaw("FIELD(kat_jabatan, 'kepala', 'kasubag', 'kasi', 'kaur', 'pelaksana', 'staf', 'honorer', 'guru', '')")
-            ->orderBy('name');
+            ->whereIn('kat_jabatan', ['staf', 'honorer'])
+            ->where('is_active', true);
 
-        $pegawaiList = $usersQuery->paginate(15);
+        $pegawaiList = $query->orderBy('nama')->paginate(15);
 
-        // Add profile photo URLs
+        // Add profile photo URLs from users table via user_id
         $pegawaiList->getCollection()->transform(function ($item) {
-            if ($item->pp && $item->nomor_induk) {
-                $item->photo_url = asset('storage/users_berkas/' . $item->nomor_induk . '/' . $item->pp);
+            if ($item->user_id) {
+                $userData = DB::table('users')->where('id', $item->user_id)->first();
+                if ($userData && $userData->pp && $userData->nomor_induk) {
+                    $item->photo_url = asset('storage/users_berkas/' . $userData->nomor_induk . '/' . $userData->pp);
+                } else {
+                    $item->photo_url = null;
+                }
             } else {
                 $item->photo_url = null;
             }
-            $item->initials = $item->name ? strtoupper(substr($item->name, 0, 2)) : 'NA';
+            $item->initials = $item->nama ? strtoupper(substr($item->nama, 0, 2)) : 'NA';
             return $item;
         });
 
-        // Summary stats - ASN: cpns/pns/pppk, Non ASN: Honor/GTT/PTT/dll
+        // Summary stats - ASN: PNS/CPNS/PPPK, Non ASN: Honorer
         $stats = [
             'total' => $pegawaiList->total(),
-            'asn' => DB::table('users')->where('dept_id', $deptId)->where('kat_jabatan', 'adm')->whereIn('asn', ['cpns', 'pns', 'pppk'])->count(),
-            'honorer' => DB::table('users')->where('dept_id', $deptId)->where('kat_jabatan', 'adm')->whereNotIn('asn', ['cpns', 'pns', 'pppk'])->count(),
+            'asn' => DB::table('tenaga_ktd')->where('dept_id', $deptId)->whereIn('kat_jabatan', ['staf', 'honorer'])->whereIn('status', ['PNS', 'CPNS', 'PPPK'])->count(),
+            'honorer' => DB::table('tenaga_ktd')->where('dept_id', $deptId)->whereIn('kat_jabatan', ['staf', 'honorer'])->whereNotIn('status', ['PNS', 'CPNS', 'PPPK'])->count(),
         ];
 
         return view('madrasah.pegawaimadrasah', [
@@ -6078,53 +6050,35 @@ class PageController extends Controller
             }
         }
 
-        // Get only guru & kepala based on dept_id
-        $guruQuery = DB::table('users')
+        // Get only guru based on dept_id from tenaga_ktd
+        $guruQuery = DB::table('tenaga_ktd')
             ->where('dept_id', $deptId)
-            ->whereIn('kat_jabatan', ['guru', 'kepala'])
-            ->whereNotIn('role', ['other', 'pensiun', 'pindah'])
-            ->select([
-                'id',
-                'name',
-                'nomor_induk',
-                'kat_jabatan',
-                'pekerjaan',
-                'satker',
-                'email',
-                'telp',
-                'jk',
-                'pp',
-                'status',
-                'npwp',
-                'tempat_lahir',
-                'tanggal_lahir',
-                'alamat',
-                'jabatan',
-                'nuptk',
-                'nrg',
-                'serdik',
-                'bidang_studi_diajar',
-            ])
-            ->orderBy('name');
+            ->where('kat_jabatan', 'guru')
+            ->where('is_active', true);
 
-        $guruList = $guruQuery->paginate(15);
+        $guruList = $guruQuery->orderBy('nama')->paginate(15);
 
-        // Add profile photo URLs
+        // Add profile photo URLs from users table via user_id
         $guruList->getCollection()->transform(function ($item) {
-            if ($item->pp && $item->nomor_induk) {
-                $item->photo_url = asset('storage/users_berkas/' . $item->nomor_induk . '/' . $item->pp);
+            if ($item->user_id) {
+                $userData = DB::table('users')->where('id', $item->user_id)->first();
+                if ($userData && $userData->pp && $userData->nomor_induk) {
+                    $item->photo_url = asset('storage/users_berkas/' . $userData->nomor_induk . '/' . $userData->pp);
+                } else {
+                    $item->photo_url = null;
+                }
             } else {
                 $item->photo_url = null;
             }
-            $item->initials = $item->name ? strtoupper(substr($item->name, 0, 2)) : 'NA';
+            $item->initials = $item->nama ? strtoupper(substr($item->nama, 0, 2)) : 'NA';
             return $item;
         });
 
-        // Summary stats - serdik: sertifikasi / non-sertifikasi / non-guru / unknown
+        // Summary stats - serdik: sertifikasi / non-sertifikasi
         $stats = [
             'total' => $guruList->total(),
-            'sertifikasi' => DB::table('users')->where('dept_id', $deptId)->whereIn('kat_jabatan', ['guru', 'kepala'])->where('serdik', 'sertifikasi')->count(),
-            'belum_sertifikasi' => DB::table('users')->where('dept_id', $deptId)->whereIn('kat_jabatan', ['guru', 'kepala'])->whereIn('serdik', ['non-sertifikasi', 'non-guru', 'unknown'])->count(),
+            'sertifikasi' => DB::table('tenaga_ktd')->where('dept_id', $deptId)->where('kat_jabatan', 'guru')->where('serdik', 'sertifikasi')->count(),
+            'belum_sertifikasi' => DB::table('tenaga_ktd')->where('dept_id', $deptId)->where('kat_jabatan', 'guru')->whereIn('serdik', ['non-sertifikasi', 'non-guru', 'unknown'])->count(),
         ];
 
         return view('madrasah.gurumadrasah', [

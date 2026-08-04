@@ -74,6 +74,23 @@ Fitur Laporan Madrasah adalah modul untuk mengelola pelaporan semester madrasah 
 - [x] Total Data Mutasi hanya hitung jika Nama Siswa terisi
 - [x] Ambil data terbaru jika belum ada untuk periode dipilih
 
+### Phase 6: Konsolidasi Tabel Tenaga Kependidikan
+- [x] Analisis struktur `guru_madrasah` dan `pegawai_madrasah`
+- [x] Rancang tabel unified `tenaga_ktd` dengan semua field
+- [x] Buat migration `2026_08_04_000001_create_tenaga_ktd_table.php`
+- [x] Buat migration `2026_08_04_000002_add_users_columns_to_tenaga_ktd.php`
+- [x] Buat Artisan command `MigrateTenagaKtd.php` untuk migrasi data
+- [x] Buat Artisan command `CleanupUsersColumns.php` untuk cleanup kolom
+- [x] Update `pegawaiMadrasah()` di PageController - baca dari `tenaga_ktd`
+- [x] Update `guruMadrasah()` di PageController - baca dari `tenaga_ktd`
+- [x] Update view `pegawaimadrasah.blade.php` - $pegawai->name jadi $pegawai->nama
+- [x] Update view `gurumadrasah.blade.php` - $guru->name jadi $guru->nama
+- [x] Fix migration `personal_access_tokens` - add if-not-exists check
+- [x] Fix command untuk handle invalid dates (0000-00-00)
+- [x] Cek area lain yang terpengaruh - tidak ada yang perlu diubah
+- [ ] Update modal form Tambah Pegawai untuk simpan ke `tenaga_ktd`
+- [ ] Phase 3: Admin-Side views (list & verify laporan)
+
 ## Data Flow
 
 ### Input (User-Side)
@@ -111,24 +128,30 @@ Approve / Reject
 |------|-----------|
 | `resources/views/components/layouts/site-header.blade.php` | Tambah menu Laporan Madrasah |
 | `resources/views/madrasah/profilmadrasah.blade.php` | Full NEO MIRAI theme + form action + CSRF + alert |
-| `resources/views/madrasah/pegawaimadrasah.blade.php` | Full NEO MIRAI theme dengan CSS classes |
-| `resources/views/madrasah/gurumadrasah.blade.php` | Full NEO MIRAI theme dengan CSS classes |
+| `resources/views/madrasah/pegawaimadrasah.blade.php` | Full NEO MIRAI theme + change $pegawai->name to $pegawai->nama |
+| `resources/views/madrasah/gurumadrasah.blade.php` | Full NEO MIRAI theme + change $guru->name to $guru->nama |
 | `resources/views/madrasah/laporansemester.blade.php` | Full NEO MIRAI theme + form action + CSRF + alert |
 | `resources/views/madrasah/laporanbulanan.blade.php` | Full NEO MIRAI theme + form action + CSRF + alert |
-| `app/Http/Controllers/PageController.php` | Method saveProfilMadrasah, fix saveLaporanSemesterMadrasah |
+| `app/Http/Controllers/PageController.php` | Method saveProfilMadrasah, saveLaporanSemesterMadrasah, pegawaiMadrasah (read from tenaga_ktd), guruMadrasah (read from tenaga_ktd) |
 | `routes/web.php` | Route POST untuk saveProfilMadrasah |
 | `resources/css/neo-mirai-home.css` | Komponen baru: `.hero-label`, `.hero-title`, `.hero-desc`, `.hero-actions`, `.neo-stat-*`, `.neo-table-*`, `.neo-avatar-*`, `.neo-badge-*`, `.neo-action-btn`, `.neo-user-cell`, `.neo-pagination-*` |
+| `MADRASAH_PROGRESS.md` | Update progress Phase 6 |
+| `database/migrations/2026_08_02_062924_create_personal_access_tokens_table.php` | Add if-not-exists check |
 
 ## Files Baru
 
 | File | Purpose |
 |------|---------|
 | `resources/views/madrasah/laporanbulanan.blade.php` | View laporan bulanan |
+| `database/migrations/2026_08_04_000001_create_tenaga_ktd_table.php` | Migration tabel tenaga_ktd |
+| `database/migrations/2026_08_04_000002_add_users_columns_to_tenaga_ktd.php` | Migration tambah kolom dari users ke tenaga_ktd |
+| `app/Console/Commands/MigrateTenagaKtd.php` | Command migrasi data ke tenaga_ktd |
+| `app/Console/Commands/CleanupUsersColumns.php` | Command cleanup kolom users |
 | `resources/views/admin/madrasah/index.blade.php` | View list laporan (belum dibuat) |
 | `resources/views/admin/madrasah/show.blade.php` | View detail & verifikasi (belum dibuat) |
 | `MADRASAH_ADMIN_PROGRESS.md` | Progress admin-side (belum dibuat) |
 
-**Note:** Tabel database sudah ada di database - tidak perlu buat migrasi baru.
+**Note:** Tabel database sudah ada di database - tidak perlu buat migrasi baru (kecuali tenaga_ktd).
 
 ## TODO (Next Steps)
 - [x] Cek struktur database yang sudah ada (tabel ktd_department, ktd_laporan_bulanan_madrasah, ktd_laporan_semester_madrasah)
@@ -137,6 +160,11 @@ Approve / Reject
 - [x] Fix saveLaporanBulananMadrasah - sudah ada
 - [x] Tambah POST route untuk saveProfilMadrasah
 - [x] Update views dengan form action dan CSRF token
+- [x] Phase 6: Buat migration & command untuk konsolidasi tenaga_ktd
+- [ ] Jalankan migrasi: `php artisan migrate`
+- [ ] Jalankan command migrasi: `php artisan madrasah:migrate-tenaga --migrate-all`
+- [ ] Update PageController untuk baca dari `tenaga_ktd` (bukan users)
+- [ ] Update view Pegawai & Guru Madrasah
 - [ ] Phase 3: Admin-Side views (list & verify laporan)
 
 ## Changelog
@@ -406,3 +434,67 @@ Approve / Reject
     - Status tetap "Belum dikirim"
   - Jika data ada untuk periode tersebut, tampilkan semua data
 - Ini mengikuti pola yang sama dengan Laporan Semester
+
+### 2026-08-04 (Konsolidasi Tabel Tenaga Kependidikan)
+- **Analisis & Perancangan:**
+  - Bandingkan struktur `guru_madrasah` dan `pegawai_madrasah`
+  - Temukan field duplikat: `name/nama`, `jk/jenis_kelamin`, dll
+  - Rancang tabel unified `tenaga_ktd` dengan semua field yang diperlukan
+
+- **File Baru:**
+  - `database/migrations/2026_08_04_000001_create_tenaga_ktd_table.php` - Migration untuk tabel baru
+  - `app/Console/Commands/MigrateTenagaKtd.php` - Command migrasi data
+  - `app/Console/Commands/CleanupUsersColumns.php` - Command cleanup kolom
+
+- **Tabel `tenaga_ktd`:**
+  - `id`, `dept_id`, `created_by`, `user_id` - Relasi
+  - `nama`, `kat_jabatan` (guru/staf/honorer), `status` (PNS/PPPK/Honorer)
+  - `nomor_induk`, `nik`, `npwp`, `nuptk`, `npk`, `nrg` - Berbagai ID
+  - `tempat_lahir`, `tanggal_lahir`, `jenis_kelamin`, `nama_ibu` - Data personal
+  - `golongan`, `jabatan`, `pekerjaan`, `bidang_studi_diajar`, `serdik` - Jabatan
+  - `pendidikan`, `jurusan`, `fakultas`, `universitas`, `tahun_lulus` - Pendidikan
+  - `tmt_tugas`, `kgb`, `masa_kerja_tahun/bulan` - Kepegawaian
+  - `email`, `telp`, `alamat_ktp`, `alamat`, `keterangan` - Kontak
+  - `is_active`, `source_table` - Meta
+
+- **Artisan Commands:**
+  1. `php artisan madrasah:migrate-tenaga --migrate-all` - Migrasi semua data
+  2. `php artisan madrasah:migrate-tenaga --create-table` - Buat tabel saja
+  3. `php artisan madrasah:migrate-tenaga --migrate-guru` - Migrasi guru_madrasah
+  4. `php artisan madrasah:migrate-tenaga --migrate-pegawai` - Migrasi pegawai_madrasah
+  5. `php artisan madrasah:migrate-tenaga --migrate-users` - Migrasi users
+  6. `php artisan madrasah:cleanup-users --list` - List kolom yang bisa dihapus
+  7. `php artisan madrasah:cleanup-users --remove-duplicates` - Hapus kolom duplikat
+  8. `php artisan madrasah:cleanup-users --drop-old-tables` - Hapus tabel lama
+
+- **Pattern Sinkronisasi:**
+  - `users` - untuk login & akses aplikasi
+  - `tenaga_ktd` - untuk data lengkap tenaga kependidikan
+
+### 2026-08-04 (Lanjutan Konsolidasi)
+- **Migration tambahan:**
+  - `2026_08_04_000002_add_users_columns_to_tenaga_ktd.php` - Tambah kolom dari users
+  - Kolom ditambahkan: `tmt_cpns`, `tmt_pns`, `nikah`, `jenis_pjob`, `pjob`, `req_tunjangan`, `jml_anak`, `nama_istri_suami`, `kk`, `bio`, `facebook`, `twitter`, `linkedin`, `instagram`
+  - Fix: migration `personal_access_tokens` add if-not-exists check
+
+- **Perbaikan Command:**
+  - Fix: `safeDate()` function untuk handle invalid dates (0000-00-00)
+  - Fix: semua field menggunakan `?? null` untuk avoid undefined property error
+  - Fix: `golongan` fallback dari `golongan ?? $record->gol`
+
+- **Update PageController:**
+  - `pegawaiMadrasah()` - query dari `tenaga_ktd`, filter `kat_jabatan IN ('staf', 'honorer')`
+  - `guruMadrasah()` - query dari `tenaga_ktd`, filter `kat_jabatan = 'guru'`
+  - Photo URL diambil dari `users` via `user_id`
+  - Stats dihitung dari `tenaga_ktd`
+
+- **Update Views:**
+  - `pegawaimadrasah.blade.php`: `$pegawai->name` → `$pegawai->nama`, `$pegawai->asn` → `$pegawai->status`
+  - `gurumadrasah.blade.php`: `$guru->name` → `$guru->nama`
+
+- **Pengecekan Area Terpengaruh:**
+  - PenilaianKinerjaController - TIDAK PERLU DIUBAH (untuk pejabat struktural Kantor)
+  - PageController (laporan bawahan, signature) - TIDAK PERLU DIUBAH
+  - Admin UserController - TIDAK PERLU DIUBAH (untuk login system)
+  - API UserController - TIDAK PERLU DIUBAH (untuk mobile app)
+  - MadrasahController (Admin) - TIDAK PERLU DIUBAH (untuk profil madrasah)

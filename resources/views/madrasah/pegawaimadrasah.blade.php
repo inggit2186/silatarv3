@@ -117,13 +117,13 @@
                                             <div class="neo-user-cell">
                                                 <div class="neo-avatar neo-avatar-lg">
                                                     @if($pegawai->photo_url)
-                                                        <img src="{{ $pegawai->photo_url }}" alt="{{ $pegawai->name }}" onerror="this.parentElement.innerHTML = '<span class=\'neo-avatar-initials\'>{{ $pegawai->initials }}</span>'">
+                                                        <img src="{{ $pegawai->photo_url }}" alt="{{ $pegawai->nama }}" onerror="this.parentElement.innerHTML = '<span class=\'neo-avatar-initials\'>{{ $pegawai->initials }}</span>'">
                                                     @else
                                                         <span class="neo-avatar-initials">{{ $pegawai->initials }}</span>
                                                     @endif
                                                 </div>
                                                 <div class="neo-user-info">
-                                                    <p class="neo-user-name">{{ $pegawai->name ?? '-' }}</p>
+                                                    <p class="neo-user-name">{{ $pegawai->nama ?? '-' }}</p>
                                                     <p class="neo-user-nip">{{ $pegawai->nomor_induk ?? 'NIP belum terdaftar' }}</p>
                                                 </div>
                                             </div>
@@ -133,9 +133,9 @@
                                             <p class="neo-table-cell-secondary">{{ $pegawai->pekerjaan ?? '-' }}</p>
                                         </td>
                                         <td class="neo-table-cell">
-                                            <span class="neo-badge {{ $pegawai->asn === 'pns' || $pegawai->asn === 'cpns' || $pegawai->asn === 'pppk' ? 'neo-badge-success' : 'neo-badge-warning' }}">
+                                            <span class="neo-badge {{ in_array($pegawai->status, ['PNS', 'CPNS', 'PPPK']) ? 'neo-badge-success' : 'neo-badge-warning' }}">
                                                 <span class="neo-badge-dot"></span>
-                                                {{ strtoupper($pegawai->asn ?? 'Honorer') }}
+                                                {{ strtoupper($pegawai->status ?? 'Honorer') }}
                                             </span>
                                         </td>
                                         <td class="neo-table-cell">

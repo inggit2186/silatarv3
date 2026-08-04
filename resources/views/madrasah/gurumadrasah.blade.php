@@ -117,13 +117,13 @@
                                             <div class="neo-user-cell">
                                                 <div class="neo-avatar neo-avatar-lg">
                                                     @if($guru->photo_url)
-                                                        <img src="{{ $guru->photo_url }}" alt="{{ $guru->name }}" onerror="this.parentElement.innerHTML = '<span class=\'neo-avatar-initials\'>{{ $guru->initials }}</span>'">
+                                                        <img src="{{ $guru->photo_url }}" alt="{{ $guru->nama }}" onerror="this.parentElement.innerHTML = '<span class=\'neo-avatar-initials\'>{{ $guru->initials }}</span>'">
                                                     @else
                                                         <span class="neo-avatar-initials">{{ $guru->initials }}</span>
                                                     @endif
                                                 </div>
                                                 <div class="neo-user-info">
-                                                    <p class="neo-user-name">{{ $guru->name ?? '-' }}</p>
+                                                    <p class="neo-user-name">{{ $guru->nama ?? '-' }}</p>
                                                     <p class="neo-user-nip">{{ $guru->nomor_induk ?? 'NIP belum terdaftar' }}</p>
                                                 </div>
                                             </div>
