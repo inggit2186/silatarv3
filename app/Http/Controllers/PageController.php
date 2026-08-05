@@ -3203,7 +3203,21 @@ class PageController extends Controller
         $signatureName = '..................................';
         $signatureNip = '';
 
-        if ($pltPlh) {
+        // Cek apakah user adalah atasan (kepala, kasi, kasubbag)
+        $atasanJabatan = ['kepala', 'kasi', 'kasubbag'];
+        $isUserAtasan = in_array($user->kat_jabatan, $atasanJabatan);
+
+        if ($isUserAtasan) {
+            // Jika user adalah atasan, penandatangan adalah Kepala Kankemenag
+            $kepalaKankemenag = DB::table('users')
+                ->where('role', 'kepala')
+                ->first();
+
+            if ($kepalaKankemenag) {
+                $signatureName = $kepalaKankemenag->name;
+                $signatureNip = $kepalaKankemenag->nomor_induk ? 'NIP. ' . $kepalaKankemenag->nomor_induk : '';
+            }
+        } elseif ($pltPlh) {
             // PLT exist - gunakan user PLT
             $pltUser = DB::table('users')->where('id', $pltPlh->user_id)->first();
             if ($pltUser) {
@@ -3213,10 +3227,9 @@ class PageController extends Controller
             }
         } else {
             // Cari kepala/kasi/kasubbag berdasarkan dept_id
-            $kepalaJabatan = ['kepala', 'kasi', 'kasubbag'];
             $kepala = DB::table('users')
                 ->where('dept_id', $user->dept_id)
-                ->whereIn('kat_jabatan', $kepalaJabatan)
+                ->whereIn('kat_jabatan', $atasanJabatan)
                 ->first();
 
             if ($kepala) {
@@ -3225,12 +3238,19 @@ class PageController extends Controller
             }
         }
 
-        // Determine signature label based on dept_id
+        // Determine signature label based on user role and dept_id
         $specialDeptIds = [998, 999];
         $kepalaLabel = in_array((int) $user->dept_id, $specialDeptIds)
             ? ($user->satker ?? $unitName)
             : ($unitName ?: '-');
-        $signatureLabel = $isPlh ? 'Mengetahui<br>PLT Kepala,' : "Mengetahui<br>Kepala {$kepalaLabel},";
+
+        if ($isUserAtasan) {
+            $signatureLabel = 'Mengetahui<br>Kepala Kankemenag Kab. Tanah Datar,';
+        } elseif ($isPlh) {
+            $signatureLabel = 'Mengetahui<br>PLT Kepala,';
+        } else {
+            $signatureLabel = "Mengetahui<br>Kepala {$kepalaLabel},";
+        }
 
         $pdfData = [
             'userName' => $user->name,
