@@ -505,6 +505,7 @@
     .silatar-report-summary {
         border-radius: 1.75rem;
         border: 1px solid var(--line);
+        background: linear-gradient(135deg, rgba(247, 246, 243, 0.5), var(--paper-soft));
         background: linear-gradient(135deg, oklch(94% 0.035 78 / 0.5), var(--paper-soft));
         padding: 1.25rem;
     }
@@ -522,6 +523,7 @@
     }
 
     .silatar-report-summary-badge-ready {
+        background-color: rgba(212, 168, 83, 0.2);
         background-color: oklch(68% 0.145 74 / 0.2);
         color: var(--gold);
     }
@@ -532,6 +534,7 @@
         height: 3.5rem;
         place-items: center;
         border-radius: 1rem;
+        background-color: rgba(247, 246, 243, 0.6);
         background-color: oklch(94% 0.035 78 / 0.6);
         color: var(--ink);
     }
@@ -1378,7 +1381,9 @@ body {
 }
 
 .neo-mirai .silatar-report-summary-badge-pending {
+    background: rgba(180, 100, 70, 0.15);
     background: oklch(58% 0.15 30 / 0.15);
+    color: #8a5040;
     color: oklch(45% 0.15 30);
 }
 
@@ -1435,17 +1440,23 @@ body {
 }
 
 .neo-mirai .cyber-status-disetujui {
+    background: rgba(80, 160, 100, 0.15);
     background: oklch(72% 0.15 145 / 0.15);
+    color: #2a8a50;
     color: oklch(45% 0.15 145);
 }
 
 .neo-mirai .cyber-status-dikirim {
+    background: rgba(200, 160, 80, 0.15);
     background: oklch(72% 0.15 80 / 0.15);
+    color: #9a7030;
     color: oklch(55% 0.15 65);
 }
 
 .neo-mirai .cyber-status-ditolak {
+    background: rgba(180, 80, 60, 0.15);
     background: oklch(65% 0.15 25 / 0.15);
+    color: #8a4030;
     color: oklch(45% 0.15 25);
 }
 
@@ -1467,8 +1478,11 @@ body {
 }
 
 .neo-mirai .silatar-report-action-delete:hover {
+    background: rgba(180, 80, 60, 0.15);
     background: oklch(65% 0.15 25 / 0.15);
+    border-color: rgba(180, 80, 60, 0.3);
     border-color: oklch(65% 0.15 25);
+    color: #8a4030;
     color: oklch(45% 0.15 25);
 }
 
