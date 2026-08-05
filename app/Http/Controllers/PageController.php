@@ -3756,6 +3756,9 @@ class PageController extends Controller
             ]);
         }
 
+        // Logika duplikasi kegiatan ke atasan/supervisor (migrate dari format lama)
+        $this->duplicateKegiatanToAtasan($user, $tanggal, $rows, $submittedAt);
+
         return redirect()
             ->route('laporan-kinerja', [
                 'tab' => 'harian',
@@ -3763,6 +3766,119 @@ class PageController extends Controller
             ])
             ->with('success', 'Kegiatan harian berhasil ditambahkan.');
     }
+
+    /**
+     * Duplicate kegiatan to atasan/supervisor based on specific conditions
+     * Migrated from old format (kegiatan table) to new format (satker_kegiatan table)
+     */
+    private function duplicateKegiatanToAtasan($user, string $tanggal, $rows, $submittedAt)
+    {
+        // Helper function to insert/update duplicate kegiatan
+        $insertDuplicate = function (int $targetUserId, string $prefix, array $items) use ($tanggal, $submittedAt) {
+            // Build JSON items with prefix
+            $duplicateItems = array_map(function ($item, $index) use ($prefix) {
+                return [
+                    'id' => $index + 1,
+                    'k' => $prefix . ' ' . $item['kegiatan'],
+                    'v' => (int) ($item['volume'] ?? 0),
+                    's' => $item['satuan'],
+                ];
+            }, $items, array_keys($items));
+
+            $duplicateJsonData = json_encode(['items' => $duplicateItems], JSON_UNESCAPED_UNICODE);
+
+            // Check if record exists for target user + date
+            $existing = DB::table('satker_kegiatan')
+                ->where('user_id', $targetUserId)
+                ->whereDate('tanggal', $tanggal)
+                ->first();
+
+            if ($existing) {
+                // Merge with existing data
+                $existingData = json_decode((string) ($existing->data_json ?? '{"items":[]}'), true) ?: ['items' => []];
+                $existingItems = $existingData['items'] ?? [];
+
+                // Get max ID
+                $maxId = 0;
+                foreach ($existingItems as $item) {
+                    if (isset($item['id']) && $item['id'] > $maxId) {
+                        $maxId = $item['id'];
+                    }
+                }
+
+                // Assign IDs to new items
+                foreach ($duplicateItems as &$item) {
+                    $item['id'] = ++$maxId;
+                }
+                unset($item);
+
+                $allItems = array_merge($existingItems, $duplicateItems);
+                $newJsonData = json_encode(['items' => $allItems], JSON_UNESCAPED_UNICODE);
+
+                DB::table('satker_kegiatan')
+                    ->where('id', $existing->id)
+                    ->update([
+                        'data_json' => $newJsonData,
+                        'updated_at' => $submittedAt,
+                    ]);
+            } else {
+                $firstItem = !empty($itemsArray) ? $itemsArray[0] : null;
+                DB::table('satker_kegiatan')->insert([
+                    'user_id' => $targetUserId,
+                    'tanggal' => $tanggal,
+                    'kegiatan' => $firstItem['kegiatan'] ?? '',
+                    'volume' => $firstItem['volume'] ?? 0,
+                    'satuan' => $firstItem['satuan'] ?? 'Kegiatan',
+                    'staff_id' => $user->id ?? null,
+                    'data_json' => $duplicateJsonData,
+                    'created_at' => $submittedAt,
+                    'updated_at' => $submittedAt,
+                ]);
+            }
+        };
+
+        // Convert rows collection to array for reuse
+        $itemsArray = $rows->toArray();
+
+        // Kondisi 1: dept_id = 5 + role petugas/pegawai -> koordinasi ke atasan
+        if ($user->dept_id == 5 && in_array($user->role, ['petugas', 'pegawai'])) {
+            $atasan = DB::table('users')
+                ->where(function ($query) {
+                    $query->where('kat_jabatan', 'kasi')
+                        ->orWhere('kat_jabatan', 'kepala')
+                        ->orWhere('kat_jabatan', 'kasubbag');
+                })
+                ->where('dept_id', 5)
+                ->first();
+
+            if ($atasan) {
+                $insertDuplicate($atasan->id, 'Mengkoordinir staff dalam', $itemsArray);
+            }
+        }
+
+        // Kondisi 2: user_id IN (10, 15, 2478) + dalam periode tertentu -> bantu ke user_id 16
+        $specialUserIds = [10, 15, 2478];
+        if (in_array($user->id, $specialUserIds)) {
+            $date = Carbon::now()->format('Y-m-d H:i');
+            $start = Carbon::parse($date)->startOfMonth()->addDays(2)->format('Y-m-d 07:00');
+            $end = Carbon::parse($date)->endOfMonth()->format('Y-m-d 23:00');
+
+            if ($date > $start && $date < $end) {
+                $insertDuplicate(16, 'Membantu dalam', $itemsArray);
+            }
+        }
+
+        // Kondisi 3: user_id = 15 -> bantu ke user_id 45
+        if ($user->id == 15) {
+            $insertDuplicate(45, 'Membantu dalam', $itemsArray);
+        }
+
+        // Kondisi 4: dept_id = 6 + role petugas/pegawai -> koordinasi ke user_id 29
+        if ($user->dept_id == 6 && in_array($user->role, ['petugas', 'pegawai'])) {
+            $insertDuplicate(29, 'Mengkoordinir staff dalam', $itemsArray);
+        }
+    }
+
     public function storeHumas(Request $request)
     {
         $user = $request->user();
