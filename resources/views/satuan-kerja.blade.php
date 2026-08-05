@@ -112,7 +112,7 @@
                                     <div class="neo-unit-card-footer">
                                         <h3 class="neo-unit-card-title">{{ $card['title'] }}</h3>
                                         @if(!empty($card['subtitle']))
-                                            <p class="neo-unit-card-leader" style="color: oklch(90% 0.01 76); font-size: 0.8rem;">
+                                            <p class="neo-unit-card-leader" style="color: rgba(230, 228, 224, 1); color: oklch(90% 0.01 76); font-size: 0.8rem;">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
                                                 {{ $card['subtitle'] }}
                                             </p>

@@ -497,7 +497,7 @@
 
         .neo-tabs-large .neo-tab.is-active {
             color: var(--gold);
-            background: oklch(68% 0.145 74 / 0.1);
+            background: rgba(212, 168, 83, 0.1); background: oklch(68% 0.145 74 / 0.1);
         }
 
         .neo-tabs-large .neo-tab svg {
@@ -537,7 +537,7 @@
 
         .stat-card:hover {
             border-color: var(--gold);
-            box-shadow: 0 4px 20px oklch(18% 0.03 76 / 0.08);
+            box-shadow: 0 4px 20px rgba(42, 38, 35, 0.08); box-shadow: 0 4px 20px oklch(18% 0.03 76 / 0.08);
             transform: translateY(-2px);
         }
 
@@ -558,18 +558,18 @@
             align-items: center;
             justify-content: center;
             border-radius: 0.75rem;
-            background: oklch(68% 0.145 74 / 0.1);
+            background: rgba(212, 168, 83, 0.1); background: oklch(68% 0.145 74 / 0.1);
             color: var(--gold);
             flex-shrink: 0;
         }
 
         .stat-icon.stat-icon-success {
-            background: oklch(65% 0.15 145 / 0.1);
+            background: rgba(70, 160, 100, 0.1); background: oklch(65% 0.15 145 / 0.1);
             color: var(--success);
         }
 
         .stat-icon.stat-icon-warning {
-            background: oklch(60% 0.2 25 / 0.1);
+            background: rgba(184, 110, 40, 0.1); background: oklch(60% 0.2 25 / 0.1);
             color: var(--warning);
         }
 
@@ -686,7 +686,7 @@
 
         /* Action Button */
         .neo-action-btn-primary {
-            background: oklch(68% 0.145 74 / 0.1);
+            background: rgba(212, 168, 83, 0.1); background: oklch(68% 0.145 74 / 0.1);
             color: var(--gold);
             border: 1px solid var(--gold);
         }
@@ -991,7 +991,7 @@
             .neo-field-select:focus {
                 outline: none;
                 border-color: var(--gold);
-                box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
+                box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15); box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
             }
 
             .neo-field-input::placeholder {
@@ -1039,7 +1039,7 @@
 
             .radio-item:has(input:checked) {
                 border-color: var(--gold);
-                background: oklch(68% 0.145 74 / 0.1);
+                background: rgba(212, 168, 83, 0.1); background: oklch(68% 0.145 74 / 0.1);
             }
 
             .neo-btn-modal-cancel {

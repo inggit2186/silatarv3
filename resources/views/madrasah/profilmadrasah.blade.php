@@ -572,7 +572,7 @@
 
             .neo-tabs-large .neo-tab.is-active {
                 color: var(--gold);
-                background: oklch(68% 0.145 74 / 0.1);
+                background: rgba(212, 168, 83, 0.1); background: oklch(68% 0.145 74 / 0.1);
             }
 
             .neo-tabs-large .neo-tab svg {

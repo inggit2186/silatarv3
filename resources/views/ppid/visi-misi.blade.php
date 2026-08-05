@@ -11,7 +11,7 @@
 
             <section class="ppid-section" data-reveal>
                 <h2 class="ppid-section-title">Visi</h2>
-                <div class="ppid-info-box" style="background: linear-gradient(135deg, oklch(8% 0.15 190 / 0.1), oklch(8% 0.15 190 / 0.05)); border-radius: 1.5rem; padding: 2rem; text-align: center;">
+                <div class="ppid-info-box" style="background: linear-gradient(135deg, rgba(10, 100, 150, 0.1), rgba(10, 100, 150, 0.05)), linear-gradient(135deg, oklch(8% 0.15 190 / 0.1), oklch(8% 0.15 190 / 0.05)); border-radius: 1.5rem; padding: 2rem; text-align: center;">
                     <p style="font-family: var(--font-display); font-size: clamp(1.1rem, 2vw, 1.4rem); font-weight: 500; color: var(--ink); line-height: 1.6; margin: 0;">"Terwujudnya Government Transformation melalui optimalisasi keterbukaan informasi publik yang profesional, transparan, dan akuntabel untuk mendukung good governance di Kementerian Agama Kabupaten Tanah Datar."</p>
                 </div>
             </section>

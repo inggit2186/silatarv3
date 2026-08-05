@@ -231,7 +231,7 @@
 
     .bottom-nav-dropdown-header {
         padding: 0.75rem 1rem;
-        background: oklch(68% 0.145 74 / 0.05);
+        background: rgba(212, 168, 83, 0.05); background: oklch(68% 0.145 74 / 0.05);
     }
 
     .dropdown-user-name {
@@ -269,7 +269,7 @@
     }
 
     .bottom-nav-dropdown-item:hover {
-        background: oklch(68% 0.145 74 / 0.08);
+        background: rgba(212, 168, 83, 0.08); background: oklch(68% 0.145 74 / 0.08);
     }
 
     .bottom-nav-dropdown-item svg {
@@ -579,7 +579,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: oklch(68% 0.145 74 / 0.1);
+        background: rgba(212, 168, 83, 0.1); background: oklch(68% 0.145 74 / 0.1);
         border-radius: 0.75rem;
         color: var(--gold);
     }
@@ -651,7 +651,7 @@
     .input-custom:focus {
         outline: none;
         border-color: var(--gold);
-        box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
+        box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15); box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
     }
     .input-custom::placeholder {
         color: var(--ash);
@@ -678,18 +678,18 @@
         align-items: flex-start;
         gap: 0.75rem;
         padding: 0.875rem 1rem;
-        background: oklch(97% 0.06 25 / 0.15);
-        border: 1px solid oklch(70% 0.18 25 / 0.3);
+        background: rgba(250, 245, 240, 0.15); background: oklch(97% 0.06 25 / 0.15);
+        border: 1px solid rgba(180, 80, 60, 0.3); border: 1px solid oklch(70% 0.18 25 / 0.3);
         border-radius: 0.5rem;
         font-size: 0.875rem;
-        color: oklch(45% 0.2 25);
+        color: rgba(139, 64, 48, 1); color: oklch(45% 0.2 25);
         margin-top: 0.5rem;
     }
     .error-alert svg {
         width: 18px;
         height: 18px;
         flex-shrink: 0;
-        color: oklch(55% 0.2 25);
+        color: rgba(160, 100, 70, 1); color: oklch(55% 0.2 25);
         margin-top: 0.125rem;
     }
     .error-alert.hidden {
@@ -737,7 +737,7 @@
     }
     .btn-primary:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px oklch(68% 0.145 74 / 0.4);
+        box-shadow: 0 4px 12px rgba(212, 168, 83, 0.4); box-shadow: 0 4px 12px oklch(68% 0.145 74 / 0.4);
     }
     .btn-primary:disabled {
         opacity: 0.6;
@@ -760,11 +760,11 @@
         gap: 0.75rem;
         padding: 1rem 1.25rem;
         background: var(--rice);
-        border: 1px solid oklch(70% 0.18 145 / 0.4);
+        border: 1px solid rgba(70, 160, 100, 0.4); border: 1px solid oklch(70% 0.18 145 / 0.4);
         border-radius: 0.75rem;
         font-size: 0.9375rem;
         font-weight: 500;
-        color: oklch(45% 0.15 145);
+        color: rgba(70, 160, 100, 1); color: oklch(45% 0.15 145);
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
         animation: toastIn 0.3s var(--ease);
     }
@@ -781,7 +781,7 @@
     .toast-notification svg {
         width: 20px;
         height: 20px;
-        color: oklch(50% 0.15 145);
+        color: rgba(70, 160, 100, 1); color: oklch(50% 0.15 145);
         flex-shrink: 0;
     }
 </style>

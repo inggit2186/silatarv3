@@ -454,7 +454,7 @@
                                                     <button
                                                         type="button"
                                                         @click="if(confirm('Yakin ingin hapus file ini?')) { deleteExistingFile({{ $requirement['id'] }}); }"
-                                                        style="padding: 0.5rem 0.75rem; font-size: 0.7rem; background: oklch(60% 0.2 25); color: white; border: none; border-radius: 0.35rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600;"
+                                                        style="padding: 0.5rem 0.75rem; font-size: 0.7rem; background: rgba(184, 110, 40, 1); background: oklch(60% 0.2 25); color: white; border: none; border-radius: 0.35rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600;"
                                                     >
                                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                             <polyline points="3 6 5 6 21 6"/>
@@ -632,7 +632,7 @@
                             :href="previewModal.url"
                             download
                             class="neo-btn"
-                            style="padding: 0.5rem 1rem; font-size: 0.7rem; background: oklch(65% 0.15 145); color: white; display: inline-flex; align-items: center; gap: 0.35rem;"
+                            style="padding: 0.5rem 1rem; font-size: 0.7rem; background: rgba(70, 160, 100, 1); background: oklch(65% 0.15 145); color: white; display: inline-flex; align-items: center; gap: 0.35rem;"
                         >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
@@ -681,7 +681,7 @@
         >
             <div
                 @click.stop
-                style="background: linear-gradient(135deg, oklch(60% 0.2 25) 0%, oklch(55% 0.18 20) 100%); border-radius: 1rem; max-width: 480px; width: 100%; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);"
+                style="background: linear-gradient(135deg, rgba(184, 110, 40, 1) 0%, rgba(165, 100, 40, 1) 100%), linear-gradient(135deg, oklch(60% 0.2 25) 0%, oklch(55% 0.18 20) 100%); border-radius: 1rem; max-width: 480px; width: 100%; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);"
             >
                 <!-- Modal Header -->
                 <div style="padding: 1.5rem 1.5rem 1rem; text-align: center;">
@@ -712,7 +712,7 @@
                     <button
                         type="button"
                         @click="closeValidationModal()"
-                        style="width: 100%; padding: 1rem; background: white; color: oklch(60% 0.2 25); border: none; border-radius: 0.75rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
+                        style="width: 100%; padding: 1rem; background: white; color: rgba(184, 110, 40, 1); color: oklch(60% 0.2 25); border: none; border-radius: 0.75rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
                     >
                         Saya Mengerti!
                     </button>

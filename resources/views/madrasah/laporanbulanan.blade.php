@@ -607,7 +607,7 @@
 
             .neo-tabs-large .neo-tab.is-active {
                 color: var(--gold);
-                background: oklch(68% 0.145 74 / 0.1);
+                background: rgba(212, 168, 83, 0.1); background: oklch(68% 0.145 74 / 0.1);
             }
 
             .neo-tabs-large .neo-tab svg {
@@ -630,7 +630,7 @@
                 border-radius: 1rem;
                 padding: 1.25rem;
                 margin-bottom: 1.5rem;
-                box-shadow: 0 2px 12px oklch(18% 0.03 76 / 0.06);
+                box-shadow: 0 2px 12px rgba(42, 38, 35, 0.06); box-shadow: 0 2px 12px oklch(18% 0.03 76 / 0.06);
             }
 
             .filter-header {
@@ -701,13 +701,13 @@
 
             .filter-select:hover {
                 border-color: var(--gold);
-                background-color: oklch(68% 0.145 74 / 0.05);
+                background-color: rgba(212, 168, 83, 0.05); background: oklch(68% 0.145 74 / 0.05);
             }
 
             .filter-select:focus {
                 outline: none;
                 border-color: var(--gold);
-                box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
+                box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15); box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15); background: oklch(68% 0.145 74 / 0.15);
             }
 
             /* Info Period Banner */
@@ -717,13 +717,13 @@
                 justify-content: center;
                 gap: 1rem;
                 padding: 1.25rem 2rem;
-                background: linear-gradient(135deg, oklch(68% 0.145 74 / 0.12), oklch(68% 0.145 74 / 0.06));
+                background: linear-gradient(135deg, rgba(212, 168, 83, 0.12); background: oklch(68% 0.145 74 / 0.12), rgba(212, 168, 83, 0.06); background: linear-gradient(135deg, oklch(68% 0.145 74 / 0.06));
                 border: 2px solid var(--gold);
                 border-radius: 1rem;
                 margin: 0 auto 2rem;
                 max-width: 560px;
                 text-align: center;
-                box-shadow: 0 4px 20px oklch(68% 0.145 74 / 0.15);
+                box-shadow: 0 4px 20px rgba(212, 168, 83, 0.15); box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15); background: oklch(68% 0.145 74 / 0.15);
             }
 
             .info-period-banner svg {
@@ -762,7 +762,7 @@
                 align-items: center;
                 gap: 0.5rem;
                 padding: 0.5rem 1rem;
-                background: oklch(68% 0.145 74 / 0.15);
+                background: rgba(212, 168, 83, 0.15); box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15); background: oklch(68% 0.145 74 / 0.15);
                 color: var(--gold);
                 font-family: var(--font-mono);
                 font-size: 0.7rem;
@@ -794,7 +794,7 @@
 
             .madrasah-bulanan .hero-title svg {
                 flex-shrink: 0;
-                filter: drop-shadow(0 2px 8px oklch(50% 0.15 50 / 0.3));
+                filter: drop-shadow(0 2px 8px rgba(212, 168, 83, 0.3); filter: drop-shadow(0 2px 8px oklch(50% 0.15 50 / 0.3));
             }
 
             .madrasah-bulanan .hero-subtitle {
@@ -807,8 +807,8 @@
 
             /* Info Hero Card */
             .madrasah-bulanan .info-hero-card {
-                background: linear-gradient(135deg, var(--paper-soft) 0%, oklch(94% 0.035 78 / 0.5) 100%);
-                border: 1px solid oklch(68% 0.145 74 / 0.2);
+                background: linear-gradient(135deg, var(--paper-soft) 0%, rgba(247, 246, 243, 0.5); background: linear-gradient(135deg, oklch(94% 0.035 78 / 0.5) 100%);
+                border: 1px solid rgba(212, 168, 83, 0.2); border: 1px solid oklch(68% 0.145 74 / 0.2);
                 margin-bottom: 2rem;
             }
 
@@ -932,7 +932,7 @@
             }
 
             .madrasah-bulanan .section-card:hover {
-                box-shadow: 0 8px 30px oklch(18% 0.03 76 / 0.1);
+                box-shadow: 0 8px 30px rgba(42, 38, 35, 0.1); box-shadow: 0 8px 30px oklch(18% 0.03 76 / 0.1);
                 border-color: var(--gold);
             }
 
@@ -1002,7 +1002,7 @@
             .neo-form-select:focus {
                 outline: none;
                 border-color: var(--gold);
-                box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
+                box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15); box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15); background: oklch(68% 0.145 74 / 0.15);
             }
 
             /* Neo Form Input */
@@ -1021,7 +1021,7 @@
             .neo-form-input:focus {
                 outline: none;
                 border-color: var(--gold);
-                box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
+                box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15); box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15); background: oklch(68% 0.145 74 / 0.15);
             }
 
             .neo-form-input::placeholder {
@@ -1030,7 +1030,7 @@
             }
 
             .neo-form-input[readonly] {
-                background: oklch(68% 0.145 74 / 0.05);
+                background: rgba(212, 168, 83, 0.05); background: oklch(68% 0.145 74 / 0.05);
                 cursor: not-allowed;
             }
 
@@ -1074,7 +1074,7 @@
 
             .stat-card.stat-success {
                 border-color: var(--success);
-                background: oklch(65% 0.15 145 / 0.05);
+                background: rgba(70, 160, 100, 0.05); background: oklch(65% 0.15 145 / 0.05);
             }
 
             .stat-card.stat-success .stat-value {
@@ -1083,7 +1083,7 @@
 
             .stat-card.stat-info-bg {
                 border-color: var(--info);
-                background: oklch(8% 0.15 190 / 0.05);
+                background: rgba(10, 100, 150, 0.05); background: oklch(8% 0.15 190 / 0.05);
             }
 
             .stat-card.stat-info-bg .stat-value {
@@ -1092,7 +1092,7 @@
 
             .stat-card.stat-warning {
                 border-color: var(--danger);
-                background: oklch(60% 0.2 25 / 0.05);
+                background: rgba(184, 110, 40, 0.05); background: oklch(60% 0.2 25 / 0.05);
             }
 
             .stat-card.stat-warning .stat-value {
@@ -1154,7 +1154,7 @@
 
             .rombel-card:hover {
                 border-color: var(--gold);
-                box-shadow: 0 4px 16px oklch(18% 0.03 76 / 0.1);
+                box-shadow: 0 4px 16px rgba(42, 38, 35, 0.1); box-shadow: 0 8px 30px oklch(18% 0.03 76 / 0.1);
                 transform: translateY(-2px);
             }
 
@@ -1305,7 +1305,7 @@
 
             .mutation-card:hover {
                 border-color: var(--gold);
-                box-shadow: 0 4px 16px oklch(18% 0.03 76 / 0.08);
+                box-shadow: 0 4px 16px rgba(42, 38, 35, 0.08); box-shadow: 0 4px 20px rgba(42, 38, 35, 0.08); box-shadow: 0 4px 16px oklch(18% 0.03 76 / 0.08);
             }
 
             .mutation-card-header {
@@ -1483,7 +1483,7 @@
             .btn-action-save:hover {
                 background: var(--gold-dark);
                 transform: translateY(-2px);
-                box-shadow: 0 8px 24px oklch(50% 0.15 50 / 0.25);
+                box-shadow: 0 8px 24px rgba(212, 168, 83, 0.25); box-shadow: 0 8px 24px oklch(50% 0.15 50 / 0.25);
             }
 
             .btn-action-primary {
@@ -1507,7 +1507,7 @@
             .btn-action-primary:hover {
                 background: var(--night);
                 transform: translateY(-2px);
-                box-shadow: 0 8px 24px oklch(18% 0.03 76 / 0.25);
+                box-shadow: 0 8px 24px rgba(212, 168, 83, 0.25); box-shadow: 0 8px 24px oklch(18% 0.03 76 / 0.25);
             }
 
             /* Margin utility */

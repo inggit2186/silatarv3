@@ -11,7 +11,7 @@
 
             <section class="ppid-section" data-reveal>
                 <h2 class="ppid-section-title">Jam Operasional</h2>
-                <div style="background: white; border: 1px solid oklch(58% 0.06 76 / 0.15); border-radius: 1.5rem; overflow: hidden;">
+                <div style="background: white; border: 1px solid rgba(140, 135, 130, 0.15); border: 1px solid oklch(58% 0.06 76 / 0.15); border-radius: 1.5rem; overflow: hidden;">
                     <table class="ppid-table" style="border-radius: 0;">
                         <thead><tr><th>Hari</th><th>Jam Buka</th><th>Istirahat</th><th>Status</th></tr></thead>
                         <tbody>

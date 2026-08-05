@@ -16,7 +16,7 @@
                 <div style="max-width: 48rem; margin: 0 auto; text-align: center; padding-top: 80px;">
                     <!-- Header -->
                     <div style="margin-bottom: 3rem;">
-                        <div style="display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1.25rem; border: 1px solid var(--gold); background: oklch(68% 0.145 74 / 0.1); border-radius: 9999px; margin-bottom: 1.5rem;">
+                        <div style="display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1.25rem; border: 1px solid var(--gold); background: rgba(212, 168, 83, 0.1); background: oklch(68% 0.145 74 / 0.1); border-radius: 9999px; margin-bottom: 1.5rem;">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5">
                                 <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
                                 <circle cx="12" cy="7" r="4"/>
@@ -63,7 +63,7 @@
                             </div>
 
                             <h2 style="font-family: var(--font-display); font-size: 2rem; font-weight: 600; color: var(--ink); margin: 0;">Visi</h2>
-                            <div style="width: 4rem; height: 4px; background: linear-gradient(90deg, var(--gold), oklch(72% 0.15 145)); border-radius: 2px; margin-top: 0.5rem;"></div>
+                            <div style="width: 4rem; height: 4px; background: linear-gradient(90deg, var(--gold), rgba(70, 160, 100, 1)), linear-gradient(90deg, var(--gold), oklch(72% 0.15 145)); border-radius: 2px; margin-top: 0.5rem;"></div>
                         </div>
 
                         <!-- Right: Content -->

@@ -11,7 +11,7 @@
 
             <section class="ppid-section" data-reveal>
                 <div class="ppid-info-box" style="margin-bottom: 1.5rem;"><p class="ppid-info-box-text"><strong>Perhatian:</strong> Keberatan dapat diajukan dalam waktu 30 hari kerja.</p></div>
-                <div style="background: white; border: 1px solid oklch(58% 0.06 76 / 0.15); border-radius: 1.5rem; padding: 2rem;">
+                <div style="background: white; border: 1px solid rgba(140, 135, 130, 0.15); border: 1px solid oklch(58% 0.06 76 / 0.15); border-radius: 1.5rem; padding: 2rem;">
                     <form>
                         <div class="ppid-form-group"><label class="ppid-form-label">Nama Lengkap</label><input type="text" class="ppid-form-input" placeholder="Masukkan nama" required></div>
                         <div class="ppid-form-group"><label class="ppid-form-label">Nomor Pendaftaran</label><input type="text" class="ppid-form-input" placeholder="No pendaftaran sebelumnya" required></div>

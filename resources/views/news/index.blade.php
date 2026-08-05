@@ -52,7 +52,7 @@
             <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                 @foreach($news as $item)
                 <article>
-                    <a href="{{ route('news.show', $item->slug ?? $item->id) }}" style="display: flex; flex-direction: row; gap: 1.5rem; background: var(--paper-soft); border: 1px solid var(--line); text-decoration: none; color: var(--ink); transition: border-color 180ms, box-shadow 240ms; overflow: hidden; border-radius: 0.5rem;" onmouseover="this.style.borderColor='var(--gold)'; this.style.boxShadow='0 8px 30px oklch(18% 0.03 76 / 0.08)'" onmouseout="this.style.borderColor='var(--line)'; this.style.boxShadow='none'">
+                    <a href="{{ route('news.show', $item->slug ?? $item->id) }}" style="display: flex; flex-direction: row; gap: 1.5rem; background: var(--paper-soft); border: 1px solid var(--line); text-decoration: none; color: var(--ink); transition: border-color 180ms, box-shadow 240ms; overflow: hidden; border-radius: 0.5rem;" onmouseover="this.style.borderColor='var(--gold)'; this.style.boxShadow='0 8px 30px rgba(42, 38, 35, 0.08), 0 8px 30px rgba(42, 38, 35, 0.08), 0 8px 30px oklch(18% 0.03 76 / 0.08)'" onmouseout="this.style.borderColor='var(--line)'; this.style.boxShadow='none'">
                         <!-- Image -->
                         <div style="width: 280px; min-width: 280px; aspect-ratio: 16/10; overflow: hidden; flex-shrink: 0; position: relative;">
                             @if($item->image)

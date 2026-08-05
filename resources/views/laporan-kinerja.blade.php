@@ -800,7 +800,7 @@
                 </div>
 
                 {{-- Hummas Modal --}}
-                <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: oklch(20% 0.015 80 / 0.85); backdrop-filter: blur(4px);">
+                <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(45, 40, 36, 0.85); background: oklch(20% 0.015 80 / 0.85); backdrop-filter: blur(4px);">
                     <div class="neo-modal humas-modal">
                         <div class="neo-modal-header">
                             <div>

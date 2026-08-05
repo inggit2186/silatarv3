@@ -14,7 +14,7 @@
             </section>
 
             <section class="ppid-section" data-reveal>
-                <div style="background: white; border: 1px solid oklch(58% 0.06 76 / 0.15); border-radius: 1.5rem; padding: 2rem;">
+                <div style="background: white; border: 1px solid rgba(140, 135, 130, 0.15); border: 1px solid oklch(58% 0.06 76 / 0.15); border-radius: 1.5rem; padding: 2rem;">
                     <form>
                         <div class="ppid-form-group"><label class="ppid-form-label">Nama</label><input type="text" class="ppid-form-input" placeholder="Nama lengkap" required></div>
                         <div class="ppid-form-group"><label class="ppid-form-label">Email</label><input type="email" class="ppid-form-input" placeholder="email@contoh.com" required></div>

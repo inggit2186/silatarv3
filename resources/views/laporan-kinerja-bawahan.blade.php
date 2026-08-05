@@ -606,7 +606,7 @@
                 x-show="pdfPreviewOpen"
                 x-cloak
                 class="fixed inset-0 z-50 flex items-center justify-center p-4"
-                style="background: oklch(20% 0.015 80 / 0.8); backdrop-filter: blur(8px);"
+                style="background: rgba(45, 40, 36, 0.8); background: oklch(20% 0.015 80 / 0.8); backdrop-filter: blur(8px);"
                 @keydown.escape.window="closePdfPreview()"
             >
                 <div class="neo-modal" style="max-width: 56rem; width: 100%; max-height: 92vh;">
@@ -645,7 +645,7 @@
                     <div class="px-6 py-5 border-b" style="border-color: var(--line);">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: oklch(94% 0.035 78 / 0.5);">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(247, 246, 243, 0.5); background: oklch(94% 0.035 78 / 0.5);">
                                     <svg class="w-5 h-5" style="color: var(--gold);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                                     </svg>

@@ -712,7 +712,7 @@
 
             .neo-tabs-large .neo-tab.is-active {
                 color: var(--gold);
-                background: oklch(68% 0.145 74 / 0.1);
+                background: rgba(212, 168, 83, 0.1); background: oklch(68% 0.145 74 / 0.1);
             }
 
             .neo-tabs-large .neo-tab svg {
@@ -781,7 +781,7 @@
             .filter-select:focus {
                 outline: none;
                 border-color: var(--gold);
-                box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
+                box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15); box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
             }
 
             .status-display {
@@ -868,7 +868,7 @@
             .btn-action-save:hover {
                 background: var(--gold-dark);
                 transform: translateY(-2px);
-                box-shadow: 0 8px 24px oklch(50% 0.15 50 / 0.25);
+                box-shadow: 0 8px 24px rgba(212, 168, 83, 0.25); box-shadow: 0 8px 24px oklch(50% 0.15 50 / 0.25);
             }
 
             .btn-action-primary {
@@ -892,7 +892,7 @@
             .btn-action-primary:hover {
                 background: var(--night);
                 transform: translateY(-2px);
-                box-shadow: 0 8px 24px oklch(18% 0.03 76 / 0.25);
+                box-shadow: 0 8px 24px rgba(42, 38, 35, 0.25); box-shadow: 0 8px 24px oklch(18% 0.03 76 / 0.25);
             }
 
             /* Bottom Action Buttons */
@@ -928,7 +928,7 @@
                 min-width: 80px;
                 width: 12%;
                 text-align: center;
-                background: oklch(68% 0.145 74 / 0.08);
+                background: rgba(212, 168, 83, 0.08); background: oklch(68% 0.145 74 / 0.08);
             }
 
             .neo-table .col-action {
@@ -951,7 +951,7 @@
             .neo-table td.col-label input[type="text"]:focus {
                 outline: none;
                 border-color: var(--gold);
-                box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
+                box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15); box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
             }
 
             .neo-table td.col-num input[type="number"],
@@ -972,7 +972,7 @@
             .neo-table td.col-gender input[type="number"]:focus {
                 outline: none;
                 border-color: var(--gold);
-                box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
+                box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15); box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
             }
 
             /* Table cell total styling */
@@ -983,7 +983,7 @@
                 color: var(--ink);
                 text-align: center;
                 padding: 0.75rem;
-                background: oklch(68% 0.145 74 / 0.05);
+                background: rgba(212, 168, 83, 0.05); background: oklch(68% 0.145 74 / 0.05);
                 border-radius: 0.4rem;
             }
 
