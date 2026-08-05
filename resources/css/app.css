@@ -505,7 +505,6 @@
     .silatar-report-summary {
         border-radius: 1.75rem;
         border: 1px solid var(--line);
-        background: linear-gradient(135deg, rgba(247, 246, 243, 0.5), var(--paper-soft));
         background: linear-gradient(135deg, oklch(94% 0.035 78 / 0.5), var(--paper-soft));
         padding: 1.25rem;
     }
