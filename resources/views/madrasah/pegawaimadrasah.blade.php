@@ -162,11 +162,11 @@
                                                     title="Lihat Detail" onclick='openViewPegawai({{ json_encode($pegawai) }})'>
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                                 </button>
+                                                <button type="button" class="neo-action-btn neo-action-btn-edit"
+                                                    title="{{ $pegawai->user_id ? 'Edit Data Pendukung' : 'Edit' }}" onclick='openEditPegawai({{ json_encode($pegawai) }}, {{ $pegawai->user_id ? "true" : "false" }})'>
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                </button>
                                                 @if(!$pegawai->user_id)
-                                                    <button type="button" class="neo-action-btn neo-action-btn-edit"
-                                                        title="Edit" onclick='openEditPegawai({{ json_encode($pegawai) }})'>
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                                    </button>
                                                     <button type="button" class="neo-action-btn neo-action-btn-delete"
                                                         title="Hapus" onclick='openDeletePegawai({{ json_encode($pegawai) }})'>
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
@@ -295,7 +295,7 @@
                                         <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">NIP / NIK</label>
                                         <input type="text" name="nomor_induk" placeholder="NIP" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box; font-family: var(--font-mono);">
                                     </div>
-                                    <div>
+                                    <div id="nik-field">
                                         <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">NIK</label>
                                         <input type="text" name="nik" placeholder="NIK" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box; font-family: var(--font-mono);">
                                     </div>
@@ -1483,6 +1483,7 @@
         // Toggle ASN fields visibility based on status
         function toggleAsnFields(status, prefix = '') {
             const nipField = document.getElementById((prefix || '') + 'nip-field');
+            const nikField = document.getElementById((prefix || '') + 'nik-field');
             const golonganField = document.getElementById((prefix || '') + 'golongan-field');
             const kgbField = document.getElementById((prefix || '') + 'kgb-field');
             const nipLabel = nipField ? nipField.querySelector('label') : null;
@@ -1490,9 +1491,10 @@
 
             const isHonor = status === 'honor';
 
-            // Hide/show Golongan and KGB for Honor
+            // Hide/show Golongan, KGB, and separate NIK for Honor
             if (golonganField) golonganField.style.display = isHonor ? 'none' : '';
             if (kgbField) kgbField.style.display = isHonor ? 'none' : '';
+            if (nikField) nikField.style.display = isHonor ? 'none' : '';
 
             // Update NIP label and placeholder
             if (nipLabel) {
@@ -1536,29 +1538,26 @@
             }
         }
 
-        function openEditPegawai(data) {
+        function openEditPegawai(data, hasUserId = false) {
             selectedPegawai = data;
+            selectedPegawai._hasUserId = hasUserId;
             const modal = document.getElementById('editModal');
             if (modal) {
-                // Fill in the form - only fields that exist in the edit modal
+                // Fill in the form
                 const setVal = (name, value) => {
                     const el = modal.querySelector(`[name="${name}"]`);
                     if (el) el.value = value || '';
                 };
-                // Helper to set select value
                 const setSelect = (name, value) => {
                     const el = modal.querySelector(`[name="${name}"]`);
-                    if (el) {
-                        el.value = value || '';
-                    }
+                    if (el) el.value = value || '';
                 };
+
                 setVal('edit_id', data.id);
                 setVal('edit_name', data.nama);
-                // Normalize status: "PNS" -> "pns", "PPPK" -> "pppk", "Honorer" -> "honor"
                 const statusMap = { 'PNS': 'pns', 'PPPK': 'pppk', 'Honorer': 'honor' };
                 const normalizedStatus = statusMap[data.status] || data.status || '';
                 setSelect('edit_status', normalizedStatus);
-                // Toggle ASN fields based on status
                 toggleAsnFields(normalizedStatus, 'edit_');
                 setVal('edit_nomor_induk', data.nomor_induk);
                 setVal('edit_nik', data.nik);
@@ -1575,12 +1574,31 @@
                 setVal('edit_alamat_ktp', data.alamat_ktp);
                 setVal('edit_alamat', data.alamat);
                 setVal('edit_keterangan', data.keterangan);
-                // Masa kerja (stored separately as masa_kerja_tahun and masa_kerja_bulan)
                 setVal('edit_masa_kerja_tahun', data.masa_kerja_tahun || '');
                 setVal('edit_masa_kerja_bulan', data.masa_kerja_bulan || '');
                 setVal('edit_jurusan', data.jurusan);
                 setVal('edit_fakultas', data.fakultas);
                 setVal('edit_universitas', data.universitas);
+
+                // If has user_id: make Nama, Status, NIP read-only
+                const readOnlyFields = ['edit_name', 'edit_status', 'edit_nomor_induk'];
+                readOnlyFields.forEach(name => {
+                    const el = modal.querySelector(`[name="${name}"]`);
+                    if (el) {
+                        el.readOnly = hasUserId;
+                        el.disabled = hasUserId;
+                        el.style.opacity = hasUserId ? '0.6' : '1';
+                        el.style.cursor = hasUserId ? 'not-allowed' : '';
+                    }
+                });
+
+                // Update modal title
+                const title = modal.querySelector('h3');
+                if (title) {
+                    title.innerHTML = hasUserId
+                        ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Data Pendukung'
+                        : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Pegawai';
+                }
                 // Show modal
                 modal.style.cssText = '';
                 modal.style.display = 'flex';
@@ -1608,6 +1626,15 @@
         function submitForm() {
             const form = document.getElementById('pegawaiForm');
             const formData = new FormData(form);
+
+            // If status is honor, copy nomor_induk to nik (both columns get same value)
+            const status = formData.get('status');
+            if (status === 'honor') {
+                const nomorInduk = formData.get('nomor_induk');
+                if (nomorInduk) {
+                    formData.set('nik', nomorInduk);
+                }
+            }
 
             const saveBtn = document.querySelector('button[class="neo-btn-action-save"]') ||
                            document.querySelector('button[style*="background: linear-gradient"]') ||
@@ -1652,9 +1679,28 @@
             const form = modal.querySelector('form');
             const formData = new FormData(form);
             formData.append('_token', '{{ csrf_token() }}');
-            // Rename edit_* fields to match controller expectations
-            // Normalize status: "pns" -> "PNS", "pppk" -> "PPPK", "honor" -> "Honorer"
+
+            // If hasUserId: re-add read-only fields that FormData skips
+            if (selectedPegawai && selectedPegawai._hasUserId) {
+                const nameEl = modal.querySelector('[name="edit_name"]');
+                const statusEl = modal.querySelector('[name="edit_status"]');
+                const nipEl = modal.querySelector('[name="edit_nomor_induk"]');
+                if (nameEl && !formData.has('edit_name')) formData.append('edit_name', nameEl.value);
+                if (statusEl && !formData.has('edit_status')) formData.append('edit_status', statusEl.value);
+                if (nipEl && !formData.has('edit_nomor_induk')) formData.append('edit_nomor_induk', nipEl.value);
+            }
+
+            // If status is honor, copy nomor_induk to nik (both columns get same value)
             const statusNorm = { 'pns': 'PNS', 'pppk': 'PPPK', 'honor': 'Honorer' };
+            const rawStatus = formData.get('edit_status') || '';
+            if (rawStatus === 'honor') {
+                const nomorInduk = formData.get('edit_nomor_induk');
+                if (nomorInduk) {
+                    formData.set('edit_nik', nomorInduk);
+                }
+            }
+
+            // Rename edit_* fields to match controller expectations
             const renameField = (from, to) => {
                 if (formData.has(from)) {
                     let value = formData.get(from);
@@ -1934,7 +1980,7 @@
                                         <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">NIP / NIK</label>
                                         <input type="text" name="edit_nomor_induk" placeholder="NIP" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box; font-family: var(--font-mono);">
                                     </div>
-                                    <div>
+                                    <div id="edit_nik-field">
                                         <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">NIK</label>
                                         <input type="text" name="edit_nik" placeholder="NIK" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box; font-family: var(--font-mono);">
                                     </div>

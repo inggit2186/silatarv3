@@ -1,4 +1,4 @@
-<x-layouts.app title="Guru Madrasah - SILATAR">
+﻿<x-layouts.app title="Guru Madrasah - SILATAR">
     @php
         $stats = $stats ?? ['total' => 0, 'sertifikasi' => 0, 'belum_sertifikasi' => 0];
         $deptName = $deptName ?? 'Madrasah';
@@ -165,12 +165,17 @@
                                                 </button>
                                                 @if(!$guru->user_id)
                                                     <button type="button" class="neo-action-btn neo-action-btn-edit"
-                                                        title="Edit" onclick='openEditGuru({{ json_encode($guru) }})'>
+                                                        title="Edit" onclick='openEditGuru({{ json_encode($guru) }}, false)'>
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                                     </button>
                                                     <button type="button" class="neo-action-btn neo-action-btn-delete"
                                                         title="Hapus" onclick='openDeleteGuru({{ json_encode($guru) }})'>
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                                    </button>
+                                                @else
+                                                    <button type="button" class="neo-action-btn neo-action-btn-edit"
+                                                        title="Edit Data Pendukung Guru" onclick='openEditGuru({{ json_encode($guru) }}, true)'>
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                                     </button>
                                                 @endif
                                             </div>
@@ -233,11 +238,192 @@
                 </div>
             </div>
         </section>
-    </main>
+
+        <!-- Modal Tambah Guru -->
+        <template x-if="showModal">
+            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease-out;"
+                 @click.self="showModal = false"
+                 @keydown.escape.window="showModal = false">
+                <div style="display: flex; flex-direction: column; max-height: 90vh; background: var(--paper); border-radius: 16px; width: 95%; max-width: 650px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1); animation: slideUp 0.3s ease-out;">
+                    <!-- Header -->
+                    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(234, 179, 8, 0.4);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                            </div>
+                            <div>
+                                <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #f8fafc; font-family: var(--font-display);">Tambah Guru Baru</h3>
+                                <p style="margin: 0; font-size: 0.7rem; color: #94a3b8;">Lengkapi data guru baru</p>
+                            </div>
+                        </div>
+                        <button type="button" @click="showModal = false" style="background: rgba(255,255,255,0.1); border: none; color: #94a3b8; cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: all 0.2s;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Body - Scrollable -->
+                    <div style="padding: 1.25rem; overflow-y: auto; flex: 1;">
+                        <form @submit.prevent="submitFormGuru" id="guruForm">
+                            @csrf
+                            <!-- Section 1: Data Wajib -->
+                            <div style="margin-bottom: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--gold);">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                                    <span style="font-family: var(--font-display); font-weight: 600; color: var(--ink); font-size: 0.85rem;">1. Data Wajib</span>
+                                    <span style="margin-left: auto; background: #fef3c7; color: #92400e; font-size: 0.6rem; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 600;">WAJIB</span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                    <div>
+                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">Nama Lengkap *</label>
+                                        <input type="text" name="name" required placeholder="Nama lengkap" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box;">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">Status *</label>
+                                        <select name="status" required onchange="toggleAsnFieldsGuru(this.value)" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box; cursor: pointer;">
+                                            <option value="">Pilih Status</option>
+                                            <option value="PNS">PNS</option>
+                                            <option value="PPPK">PPPK</option>
+                                            <option value="Honorer">Honorer</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem;">
+                                    <div>
+                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">Jabatan *</label>
+                                        <select name="kat_jabatan" required style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box; cursor: pointer;">
+                                            <option value="">Pilih</option>
+                                            <option value="guru">Guru</option>
+                                            <option value="kepala">Kepala</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">Sertifikasi</label>
+                                        <select name="serdik" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box; cursor: pointer;">
+                                            <option value="">Pilih</option>
+                                            <option value="sertifikasi">Sertifikasi</option>
+                                            <option value="non-sertifikasi">Non Sertifikasi</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <br/>
+                            <!-- Section 2: Data Pribadi -->
+                            <div style="margin-bottom: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--gold);">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a4 4 0 004 4h2"/><circle cx="8.5" cy="7" r="4"/></svg>
+                                    <span style="font-family: var(--font-display); font-weight: 600; color: var(--ink); font-size: 0.85rem;">2. Data Pribadi</span>
+                                    <span style="margin-left: auto; background: #e2e8f0; color: #64748b; font-size: 0.6rem; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 600;">OPSIONAL</span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <div>
+                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">NUPTK</label>
+                                        <input type="text" name="nuptk" placeholder="NUPTK" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box; font-family: var(--font-mono);">
+                                    </div>
+                                    <div id="nip-field">
+                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">NIP / NIK</label>
+                                        <input type="text" name="nomor_induk" placeholder="NIP" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box; font-family: var(--font-mono);">
+                                    </div>
+                                    <div id="nik-field">
+                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">NIK</label>
+                                        <input type="text" name="nik" placeholder="NIK" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box; font-family: var(--font-mono);">
+                                    </div>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
+                                    <div>
+                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">Tempat Lahir</label>
+                                        <input type="text" name="tempat_lahir" placeholder="Tempat Lahir" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box;">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">Tanggal Lahir</label>
+                                        <input type="date" name="tanggal_lahir" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box;">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">Jenis Kelamin</label>
+                                        <select name="jk" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box; cursor: pointer;">
+                                            <option value="">Pilih</option>
+                                            <option value="Pria">Laki-laki</option>
+                                            <option value="Wanita">Perempuan</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <br/>
+                            <!-- Section 3: Data Mengajar -->
+                            <div style="margin-bottom: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--gold);">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+                                    <span style="font-family: var(--font-display); font-weight: 600; color: var(--ink); font-size: 0.85rem;">3. Data Mengajar</span>
+                                    <span style="margin-left: auto; background: #e2e8f0; color: #64748b; font-size: 0.6rem; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 600;">OPSIONAL</span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
+                                    <div>
+                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">Bidang Studi</label>
+                                        <input type="text" name="bidang_studi_diajar" placeholder="Bidang Studi" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box;">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">TMT Tugas</label>
+                                        <input type="date" name="tmt_tugas" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box;">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">Pendidikan</label>
+                                        <input type="text" name="pendidikan" placeholder="Pendidikan" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box;">
+                                    </div>
+                                </div>
+                            </div>
+                            <br/>
+                            <!-- Section 4: Kontak -->
+                            <div style="margin-bottom: 0;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--gold);">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+                                    <span style="font-family: var(--font-display); font-weight: 600; color: var(--ink); font-size: 0.85rem;">4. Kontak</span>
+                                    <span style="margin-left: auto; background: #e2e8f0; color: #64748b; font-size: 0.6rem; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 600;">OPSIONAL</span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                    <div>
+                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">Email</label>
+                                        <input type="email" name="email" placeholder="email@contoh.com" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box;">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">No. HP</label>
+                                        <input type="tel" name="telp" placeholder="08xxxxxxxxxx" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box; font-family: var(--font-mono);">
+                                    </div>
+                                </div>
+                                <div style="margin-top: 0.75rem;">
+                                    <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">Alamat</label>
+                                    <textarea name="alamat" rows="2" placeholder="Alamat lengkap" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box; resize: vertical;"></textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Footer - Fixed -->
+                    <div style="padding: 1rem 1.25rem; background: #f8fafc; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 0.75rem; flex-shrink: 0;">
+                        <button type="button" @click="showModal = false" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: white; color: #64748b; font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; border: 2px solid #e2e8f0; border-radius: 10px; cursor: pointer; transition: all 0.2s;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                            Batal
+                        </button>
+                        <button type="button" @click="submitFormGuru" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); color: #0f172a; font-family: var(--font-display); font-size: 0.85rem; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(234, 179, 8, 0.4);">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            Simpan Guru
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
 
     <script>
         // Store selected data
         let selectedGuru = null;
+
+        // Toggle ASN fields visibility based on status for Guru
+        function toggleAsnFieldsGuru(status, prefix = '') {
+            const nikField = document.getElementById((prefix || '') + 'nik-field');
+
+            const isHonor = status === 'Honorer';
+
+            // Hide separate NIK for Honor
+            if (nikField) nikField.style.display = isHonor ? 'none' : '';
+        }
 
         function openViewGuru(data) {
             selectedGuru = data;
@@ -256,8 +442,9 @@
             }
         }
 
-        function openEditGuru(data) {
+        function openEditGuru(data, hasUserId = false) {
             selectedGuru = data;
+            selectedGuru._hasUserId = hasUserId;
             const modal = document.getElementById('editGuruModal');
             if (modal) {
                 const setVal = (name, value) => {
@@ -267,6 +454,8 @@
                 setVal('edit_id', data.id);
                 setVal('edit_name', data.nama);
                 setVal('edit_status', data.status);
+                // Toggle ASN fields based on status
+                toggleAsnFieldsGuru(data.status, 'edit_');
                 setVal('edit_jabatan', data.jabatan);
                 setVal('edit_serdik', data.serdik);
                 setVal('edit_nuptk', data.nuptk);
@@ -280,6 +469,27 @@
                 setVal('edit_pendidikan', data.pendidikan);
                 setVal('edit_email', data.email);
                 setVal('edit_telp', data.telp);
+
+                // If has user_id: make Nama, Status, NIP read-only
+                const readOnlyFields = ['edit_name', 'edit_status', 'edit_nomor_induk'];
+                readOnlyFields.forEach(name => {
+                    const el = modal.querySelector(`[name="${name}"]`);
+                    if (el) {
+                        el.readOnly = hasUserId;
+                        el.disabled = hasUserId;
+                        el.style.opacity = hasUserId ? '0.6' : '1';
+                        el.style.cursor = hasUserId ? 'not-allowed' : '';
+                    }
+                });
+
+                // Update modal title
+                const title = modal.querySelector('h3');
+                if (title) {
+                    title.innerHTML = hasUserId
+                        ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Data Pendukung Guru'
+                        : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Guru';
+                }
+
                 modal.style.cssText = '';
                 modal.style.display = 'flex';
             }
@@ -302,11 +512,67 @@
             }
         }
 
+        function submitFormGuru() {
+            const form = document.getElementById('guruForm');
+            const formData = new FormData(form);
+
+            // If status is Honorer, copy nomor_induk to nik (both columns get same value)
+            const status = formData.get('status');
+            if (status === 'Honorer') {
+                const nomorInduk = formData.get('nomor_induk');
+                if (nomorInduk) {
+                    formData.set('nik', nomorInduk);
+                }
+            }
+
+            fetch('{{ route("madrasah.guru.save") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Guru berhasil ditambahkan!');
+                    location.reload();
+                } else {
+                    alert('Gagal menyimpan: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menyimpan data');
+            });
+        }
+
         function submitEditGuruForm() {
             const modal = document.getElementById('editGuruModal');
             const form = modal.querySelector('form');
             const formData = new FormData(form);
             formData.append('_token', '{{ csrf_token() }}');
+
+            // If hasUserId: re-add read-only fields that FormData skips
+            if (selectedGuru && selectedGuru._hasUserId) {
+                const nameEl = modal.querySelector('[name="edit_name"]');
+                const statusEl = modal.querySelector('[name="edit_status"]');
+                const nipEl = modal.querySelector('[name="edit_nomor_induk"]');
+                if (nameEl && !formData.has('edit_name')) formData.append('edit_name', nameEl.value);
+                if (statusEl && !formData.has('edit_status')) formData.append('edit_status', statusEl.value);
+                if (nipEl && !formData.has('edit_nomor_induk')) formData.append('edit_nomor_induk', nipEl.value);
+            }
+
+            // If status is Honorer, copy nomor_induk to nik (both columns get same value)
+            const rawStatus = formData.get('edit_status') || '';
+            if (rawStatus === 'Honorer') {
+                const nomorInduk = formData.get('edit_nomor_induk');
+                if (nomorInduk) {
+                    formData.set('edit_nik', nomorInduk);
+                }
+            }
+
             // Rename edit_* fields to match controller expectations
             const renameField = (from, to) => {
                 if (formData.has(from)) {
@@ -400,7 +666,7 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                         Detail Guru
                     </h3>
-                    <button type="button" onclick="closeGuruModal('viewGuruModal')" style="background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:#94a3b8;cursor:pointer;padding:8px 12px;font-size:14px;font-weight:600;">✕</button>
+                    <button type="button" onclick="closeGuruModal('viewGuruModal')" style="background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:#94a3b8;cursor:pointer;padding:8px 12px;font-size:14px;font-weight:600;">âœ•</button>
                 </div>
                 <div class="modal-body">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -452,7 +718,7 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         Edit Guru
                     </h3>
-                    <button type="button" onclick="closeGuruModal('editGuruModal')" style="background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:#94a3b8;cursor:pointer;padding:8px 12px;font-size:14px;font-weight:600;">✕</button>
+                    <button type="button" onclick="closeGuruModal('editGuruModal')" style="background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:#94a3b8;cursor:pointer;padding:8px 12px;font-size:14px;font-weight:600;">âœ•</button>
                 </div>
                 <form onsubmit="event.preventDefault(); submitEditGuruForm();" style="display:contents">
                 <input type="hidden" name="edit_id" value="">
@@ -466,7 +732,7 @@
                             </div>
                             <div>
                                 <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Status</label>
-                                <select name="edit_status" required style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff">
+                                <select name="edit_status" required onchange="toggleAsnFieldsGuru(this.value, 'edit_')" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff">
                                     <option value="PNS">PNS</option>
                                     <option value="PPPK">PPPK</option>
                                     <option value="Honorer">Honorer</option>
@@ -495,11 +761,11 @@
                                 <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">NUPTK</label>
                                 <input type="text" name="edit_nuptk" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:monospace">
                             </div>
-                            <div>
+                            <div id="edit_nip-field">
                                 <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">NIP</label>
                                 <input type="text" name="edit_nomor_induk" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:monospace">
                             </div>
-                            <div>
+                            <div id="edit_nik-field">
                                 <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">NIK</label>
                                 <input type="text" name="edit_nik" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:monospace">
                             </div>
@@ -568,7 +834,7 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                         Konfirmasi Hapus
                     </h3>
-                    <button type="button" onclick="closeGuruModal('deleteGuruModal')" style="background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:#fecaca;cursor:pointer;padding:8px 12px;font-size:14px;font-weight:600;">✕</button>
+                    <button type="button" onclick="closeGuruModal('deleteGuruModal')" style="background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:#fecaca;cursor:pointer;padding:8px 12px;font-size:14px;font-weight:600;">âœ•</button>
                 </div>
                 <div class="modal-body" style="text-align:center;padding:32px">
                     <div style="width:64px;height:64px;background:rgba(239,68,68,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
