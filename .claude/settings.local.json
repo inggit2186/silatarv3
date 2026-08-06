@@ -89,7 +89,18 @@
       "Bash(git remote *)",
       "Bash(git commit -m 'Initial commit: SILATAR V3 Flutter Mobile App *)",
       "Bash(gh auth *)",
-      "Bash(git ls-remote *)"
+      "Bash(git ls-remote *)",
+      "Bash(git -C \"d:/work/SourceCode/silatarV2\" checkout resources/css/app.css)",
+      "Bash(npm search *)",
+      "WebSearch",
+      "Bash(git -C \"d:/work/SourceCode/silatarV2\" checkout resources/css/neo-mirai-home.css resources/css/app.css)",
+      "Bash(git -C \"d:/work/SourceCode/silatarV2\" checkout resources/css/neo-mirai-home.css)",
+      "Bash(git -C \"d:/work/SourceCode/silatarV2\" diff resources/css/neo-mirai-home.css)",
+      "Bash(git -C \"d:/work/SourceCode/silatarV2\" diff --stat resources/css/neo-mirai-home.css)",
+      "Bash(git commit *)",
+      "PowerShell(Get-Content \"d:\\\\work\\\\SourceCode\\\\silatarV2\\\\resources\\\\css\\\\neo-mirai-home.css\" | Select-String -Pattern \"background:\" | Group-Object | Where-Object { $_.Count -gt 1 } | ForEach-Object { $_.Group | Select-Object -First 5 | ForEach-Object { \"$\\($_.LineNumber\\): $\\($_.Matches.Value\\)\" } })",
+      "Bash(git checkout *)",
+      "PowerShell(Select-String -Path \"d:\\\\work\\\\SourceCode\\\\silatarV2\\\\resources\\\\css\\\\neo-mirai-home.css\" -Pattern \"oklch\\\\\\(\" -Context 1,0 | Select-Object -First 20 | Format-Table LineNumber, @{N='Prev Line';E={\\(Get-Content \"d:\\\\work\\\\SourceCode\\\\silatarV2\\\\resources\\\\css\\\\neo-mirai-home.css\" -TotalCount \\($_.LineNumber - 1\\) -Tail 1\\)}}, Line)"
     ]
   },
   "hooks": {

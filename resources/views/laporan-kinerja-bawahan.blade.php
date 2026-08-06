@@ -202,22 +202,7 @@
                         this.showToast('Terjadi kesalahan: ' + err.message, 'error');
                     });
                 },
-                async openPdfPreview(url, title, reportId, userId, bulan) {
-                    // Check if file exists first
-                    try {
-                        const response = await fetch(url, { method: 'HEAD' });
-                        if (!response.ok) {
-                            // File not found - redirect to regenerate
-                            const urlParts = url.split('/');
-                            const filename = urlParts[urlParts.length - 1];
-                            // For bawahan, show message or regenerate
-                            alert('File tidak ditemukan. File akan digenerate ulang.');
-                            return;
-                        }
-                    } catch (e) {
-                        // Network error, try to open anyway
-                    }
-                    // File exists or check failed - open preview
+                openPdfPreview(url, title, reportId, userId, bulan) {
                     this.pdfPreviewUrl = url;
                     this.pdfPreviewTitle = title || 'Preview PDF';
                     this.currentReportId = reportId;
@@ -606,93 +591,95 @@
                 x-show="pdfPreviewOpen"
                 x-cloak
                 class="fixed inset-0 z-50 flex items-center justify-center p-4"
-                style="background: rgba(45, 40, 36, 0.8); background: oklch(20% 0.015 80 / 0.8); backdrop-filter: blur(8px);"
+                style="background: rgba(45, 40, 36, 0.8); backdrop-filter: blur(8px);"
                 @keydown.escape.window="closePdfPreview()"
+                @click.self="closePdfPreview()"
             >
-                <div class="neo-modal" style="max-width: 56rem; width: 100%; max-height: 92vh;">
+                <div
+                    class="neo-modal w-full"
+                    style="max-width: 56rem; background: var(--rice); border: 1px solid var(--line); border-radius: 1rem; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;"
+                >
                     {{-- Header --}}
-                    <div class="neo-modal-header">
+                    <div class="flex items-center justify-between gap-4 p-6 border-b" style="border-color: var(--line); flex-shrink: 0;">
                         <div class="flex items-center gap-4">
-                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background: var(--gold);">
-                                <svg class="w-7 h-7" style="color: var(--night);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--gold);">
+                                <svg class="w-6 h-6" style="color: var(--night);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                                     <path d="M9 13h6M9 17h4"/>
                                 </svg>
                             </div>
-                            <div>
-                                <span class="neo-modal-badge" style="background: var(--gold); color: var(--night);">
-                                    <svg class="neo-modal-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                    </svg>
+                            <div class="min-w-0">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider" style="background: var(--gold); color: var(--night);">
                                     Preview Laporan
-                                </span>
-                                <p class="neo-modal-subtitle" x-text="pdfPreviewTitle"></p>
+                                </div>
+                                <p class="mt-1 font-medium truncate" style="color: var(--ink);" x-text="pdfPreviewTitle"></p>
                             </div>
                         </div>
                         <button
                             type="button"
                             @click="closePdfPreview()"
-                            class="neo-modal-close"
+                            class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition hover:bg-gray-100"
+                            style="color: var(--ink-soft);"
                         >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
                     </div>
 
                     {{-- Verifikasi Section --}}
-                    <div class="px-6 py-5 border-b" style="border-color: var(--line);">
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="px-6 py-4 border-b flex-shrink-0" style="border-color: var(--line);">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(247, 246, 243, 0.5); background: oklch(94% 0.035 78 / 0.5);">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--rice); border: 1px solid var(--line);">
                                     <svg class="w-5 h-5" style="color: var(--gold);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                                     </svg>
                                 </div>
                                 <div>
-                                    <h3 class="font-semibold text-lg" style="color: var(--ink); font-family: var(--font-display);">Verifikasi Laporan</h3>
+                                    <h3 class="font-semibold" style="color: var(--ink);">Verifikasi Laporan</h3>
                                     <p class="text-sm" style="color: var(--ink-soft);">Periksa dan setujui atau tolak laporan kinerja bawahan</p>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-4 w-full sm:w-auto">
+                            <div class="flex items-center gap-3">
                                 <button
                                     type="button"
                                     @click="rejectReport()"
                                     :disabled="isProcessing"
-                                    class="flex-1 sm:flex-none inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-semibold text-base transition-all"
+                                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition"
                                     style="background: transparent; border: 2px solid #f43f5e; color: #f43f5e;"
                                 >
-                                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M6 18L18 6M6 6l12 12"/>
                                     </svg>
-                                    Tolak Laporan
+                                    Tolak
                                 </button>
                                 <button
                                     type="button"
                                     @click="approveReport()"
                                     :disabled="isProcessing"
-                                    class="flex-1 sm:flex-none inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-semibold text-base transition-all"
+                                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition"
                                     style="background: var(--gold); color: var(--night);"
                                 >
-                                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M5 13l4 4L19 7"/>
                                     </svg>
-                                    Setujui Laporan
+                                    Setujui
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    {{-- PDF Content --}}
-                    <div class="flex-1 overflow-hidden" style="height: calc(92vh - 200px);">
+                    {{-- PDF Content - Scrollable --}}
+                    <div class="flex-1 overflow-auto" style="min-height: 0;">
                         <iframe
                             x-show="pdfPreviewUrl"
                             :src="pdfPreviewUrl"
-                            class="w-full h-full border-0"
+                            class="w-full border-0"
+                            style="height: 70vh; min-height: 400px;"
                             title="PDF Preview"
                         ></iframe>
-                        <div x-show="!pdfPreviewUrl" class="flex items-center justify-center h-full">
+                        <div x-show="!pdfPreviewUrl" class="flex items-center justify-center" style="height: 70vh; min-height: 400px;">
                             <div class="text-center">
                                 <svg class="w-16 h-16 mx-auto mb-4" style="color: var(--ink-soft); opacity: 0.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                     <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>

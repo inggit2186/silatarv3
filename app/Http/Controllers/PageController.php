@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -3277,7 +3278,29 @@ class PageController extends Controller
         $storagePath = "satker_ckh/{$user->id}/{$filename}";
         $pdfBinary = $pdf->output();
 
-        Storage::disk('public')->put($storagePath, $pdfBinary);
+        // Ensure directory exists before saving
+        $fullDirPath = storage_path('app/public/satker_ckh/' . $user->id);
+        if (! is_dir($fullDirPath)) {
+            if (! mkdir($fullDirPath, 0755, true) && ! is_dir($fullDirPath)) {
+                Log::error('Gagal membuat direktori untuk PDF CKH', [
+                    'user_id' => $user->id,
+                    'path' => $fullDirPath,
+                ]);
+            }
+        }
+
+        // Save PDF with error handling
+        $saved = Storage::disk('public')->put($storagePath, $pdfBinary);
+        if (! $saved) {
+            Log::error('Gagal menyimpan PDF CKH ke storage', [
+                'user_id' => $user->id,
+                'storage_path' => $storagePath,
+                'full_path' => $fullDirPath,
+                'file_exists' => file_exists($fullDirPath),
+                'is_writable' => is_writable($fullDirPath ?? ''),
+            ]);
+            // Still return the PDF to user even if storage fails
+        }
 
         $reportData = [
             'item_id' => 1,
@@ -3435,7 +3458,28 @@ class PageController extends Controller
         $storagePath = "satker_ckh/{$user->id}/{$filename}";
         $pdfBinary = $pdf->output();
 
-        Storage::disk('public')->put($storagePath, $pdfBinary);
+        // Ensure directory exists before saving
+        $fullDirPath = storage_path('app/public/satker_ckh/' . $user->id);
+        if (! is_dir($fullDirPath)) {
+            if (! mkdir($fullDirPath, 0755, true) && ! is_dir($fullDirPath)) {
+                Log::error('Gagal membuat direktori untuk PDF CKH', [
+                    'user_id' => $user->id,
+                    'path' => $fullDirPath,
+                ]);
+            }
+        }
+
+        // Save PDF with error handling
+        $saved = Storage::disk('public')->put($storagePath, $pdfBinary);
+        if (! $saved) {
+            Log::error('Gagal menyimpan PDF CKH ke storage', [
+                'user_id' => $user->id,
+                'storage_path' => $storagePath,
+                'full_path' => $fullDirPath,
+                'file_exists' => file_exists($fullDirPath),
+                'is_writable' => is_writable($fullDirPath ?? ''),
+            ]);
+        }
 
         $reportData = [
             'item_id' => 1,
@@ -3533,8 +3577,28 @@ class PageController extends Controller
         $filename = sprintf('%s.kinerja-%s.pdf', $user->id, $report->bulan);
         $storagePath = "satker_ckh/{$user->id}/{$filename}";
 
-        // Store new file
-        Storage::disk('public')->put($storagePath, file_get_contents($uploadedFile->getRealPath()));
+        // Ensure directory exists before saving
+        $fullDirPath = storage_path('app/public/satker_ckh/' . $user->id);
+        if (! is_dir($fullDirPath)) {
+            if (! mkdir($fullDirPath, 0755, true) && ! is_dir($fullDirPath)) {
+                Log::error('Gagal membuat direktori untuk PDF CKH', [
+                    'user_id' => $user->id,
+                    'path' => $fullDirPath,
+                ]);
+            }
+        }
+
+        // Store new file with error handling
+        $fileContent = file_get_contents($uploadedFile->getRealPath());
+        $saved = Storage::disk('public')->put($storagePath, $fileContent);
+        if (! $saved) {
+            Log::error('Gagal menyimpan PDF CKH (replace) ke storage', [
+                'user_id' => $user->id,
+                'report_id' => $reportId,
+                'storage_path' => $storagePath,
+            ]);
+            return back()->with('error', 'Gagal menyimpan file. Silakan coba lagi.');
+        }
 
         // Update record - set status to DIKIRIM
         DB::table('satker_ckh')
@@ -3603,8 +3667,28 @@ class PageController extends Controller
         $filename = sprintf('%s.kinerja-%s.pdf', $user->id, $bulanDate->format('m-Y'));
         $storagePath = "satker_ckh/{$user->id}/{$filename}";
 
-        // Store file
-        Storage::disk('public')->put($storagePath, file_get_contents($uploadedFile->getRealPath()));
+        // Ensure directory exists before saving
+        $fullDirPath = storage_path('app/public/satker_ckh/' . $user->id);
+        if (! is_dir($fullDirPath)) {
+            if (! mkdir($fullDirPath, 0755, true) && ! is_dir($fullDirPath)) {
+                Log::error('Gagal membuat direktori untuk PDF CKH', [
+                    'user_id' => $user->id,
+                    'path' => $fullDirPath,
+                ]);
+            }
+        }
+
+        // Store file with error handling
+        $fileContent = file_get_contents($uploadedFile->getRealPath());
+        $saved = Storage::disk('public')->put($storagePath, $fileContent);
+        if (! $saved) {
+            Log::error('Gagal menyimpan PDF CKH (upload manual) ke storage', [
+                'user_id' => $user->id,
+                'bulan' => $data['bulan'],
+                'storage_path' => $storagePath,
+            ]);
+            return back()->with('error', 'Gagal menyimpan file. Silakan coba lagi.');
+        }
 
         // Update or insert record
         $reportData = [
