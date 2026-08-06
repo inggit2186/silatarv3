@@ -2741,14 +2741,14 @@ class PageController extends Controller
                 'tabLabels' => [
                     'harian' => ['label' => 'Kinerja Harian'],
                     'bulanan' => ['label' => 'Laporan Bulanan'],
-                    'humas' => ['label' => 'Laporan Hizmat'],
+                    'humas' => ['label' => 'Laporan Kehumasan'],
                 ],
             ]);
         }
 
         $selectedMonth = $request->string('month')->toString();
         if (!preg_match('/^\d{4}-\d{2}$/', $selectedMonth)) {
-            $selectedMonth = now()->format('Y-m');
+            $selectedMonth = now()->subMonth()->format('Y-m');
         }
 
         $monthStart = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
@@ -2913,7 +2913,7 @@ class PageController extends Controller
             'tabLabels' => [
                 'harian' => ['label' => 'Kinerja Harian'],
                 'bulanan' => ['label' => 'Laporan Bulanan'],
-                'humas' => ['label' => 'Laporan Hizmat'],
+                'humas' => ['label' => 'Laporan Kehumasan'],
             ],
         ]);
     }
