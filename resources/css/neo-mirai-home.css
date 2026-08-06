@@ -4408,7 +4408,7 @@ html {
 /* Auth Card Container */
 .neo-auth-card {
   width: 100%;
-  max-width: 28rem;
+  max-width: 32rem;
   margin-top: 6rem;
 }
 
@@ -4977,6 +4977,263 @@ html {
 
 .forgot-back-btn:hover {
   background: var(--ink);
+}
+
+/* ============================================
+   REGISTER MODAL STYLES
+   ============================================ */
+
+.neo-register-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.neo-register-modal.is-open {
+  display: flex;
+}
+
+.neo-register-modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 32rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 2rem;
+  border-radius: 0.5rem;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Register Choice Grid */
+.register-choice-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-top: 1.5rem;
+}
+
+.register-choice-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1.125rem 1.25rem;
+  background: var(--paper-soft);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.register-choice-card:hover {
+  border-color: var(--gold);
+  background: var(--paper);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.register-choice-icon {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--sun) 100%);
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.register-choice-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.register-choice-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.register-choice-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 0.25rem;
+}
+
+.register-choice-desc {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.register-choice-arrow {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--ink-soft);
+  transition: transform 0.2s ease;
+}
+
+.register-choice-card:hover .register-choice-arrow {
+  transform: translateX(4px);
+  color: var(--gold);
+}
+
+.register-modal-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.register-modal-login-link {
+  color: var(--gold);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.register-modal-login-link:hover {
+  color: var(--sun);
+  text-decoration: underline;
+}
+
+/* Auth Register Text */
+.neo-auth-register-text {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.neo-auth-register-link {
+  color: var(--gold);
+  font-weight: 600;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.neo-auth-register-link:hover {
+  color: var(--sun);
+  text-decoration: underline;
+}
+
+/* Register Type Badge */
+.register-type-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+
+.register-type-badge svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.register-type-honorer {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+  color: #92400e;
+}
+
+.register-type-guru_pai {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border: 1px solid #3b82f6;
+  color: #1e40af;
+}
+
+.register-type-masyarakat {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border: 1px solid #22c55e;
+  color: #166534;
+}
+
+/* Auth Form Section */
+.neo-auth-form-section {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.neo-auth-form-section:last-of-type {
+  border-bottom: none;
+}
+
+.neo-auth-section-title {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed var(--line);
+}
+
+/* Field Error */
+.neo-field-error {
+  display: block;
+  font-size: 0.7rem;
+  color: #ef4444;
+  margin-top: 0.25rem;
+}
+
+/* Register Type Selector */
+.register-type-selector {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.register-type-selector-text {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin: 0 0 0.75rem;
+}
+
+.register-type-links {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.register-type-link {
+  font-size: 0.8rem;
+  color: var(--gold);
+  text-decoration: none;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--gold);
+  transition: all 0.2s ease;
+}
+
+.register-type-link:hover {
+  background: var(--gold);
+  color: white;
 }
 
 .forgot-result.is-visible > * {
