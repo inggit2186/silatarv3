@@ -4,7 +4,11 @@
         $deptName = $deptName ?? 'Madrasah';
     @endphp
 
-    <main class="neo-mirai madrasah-guru madrasah-fullwidth" x-data="{ expandedRows: [], showModal: false }">
+    <main class="neo-mirai madrasah-guru madrasah-fullwidth" x-data="{ expandedRows: [], showModal: false, showViewModal: false, showEditModal: false, showDeleteModal: false, selectedGuru: null }">
+        <!-- Hidden data for JavaScript -->
+        <script type="application/json" id="guruData">
+            {!! json_encode($guruList->keyBy('id')) !!}
+        </script>
         <!-- Hero Section -->
         <section class="hero-page has-bg-image">
             <div class="hero-content-wrapper">
@@ -154,10 +158,22 @@
                                             @endif
                                         </td>
                                         <td class="neo-table-cell">
-                                            <button type="button" class="neo-action-btn neo-action-btn-primary"
-                                                title="Detail" @click.stop="expandedRows.includes({{ $guru->id }}) ? expandedRows = expandedRows.filter(id => id !== {{ $guru->id }}) : expandedRows.push({{ $guru->id }})">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                            </button>
+                                            <div class="neo-table-actions">
+                                                <button type="button" class="neo-action-btn neo-action-btn-primary"
+                                                    title="Lihat Detail" onclick='openViewGuru({{ json_encode($guru) }})'>
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                </button>
+                                                @if(!$guru->user_id)
+                                                    <button type="button" class="neo-action-btn neo-action-btn-edit"
+                                                        title="Edit" onclick='openEditGuru({{ json_encode($guru) }})'>
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                    </button>
+                                                    <button type="button" class="neo-action-btn neo-action-btn-delete"
+                                                        title="Hapus" onclick='openDeleteGuru({{ json_encode($guru) }})'>
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                                    </button>
+                                                @endif
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
@@ -219,958 +235,353 @@
         </section>
     </main>
 
-    <!-- Page Styles -->
-    <style>
-        /* Madrasah Full Width Layout */
-        .madrasah-fullwidth .page-content {
-            padding: 0;
-            max-width: none;
-        }
+    <script>
+        // Store selected data
+        let selectedGuru = null;
 
-        .madrasah-fullwidth .page-content-expanded {
-            padding: 0;
-        }
-
-        .madrasah-fullwidth .content-inner {
-            padding: 2rem;
-            max-width: 100%;
-            margin: 0 auto;
-        }
-
-        /* Large Tabs Navigation */
-        .neo-tabs-large {
-            display: flex;
-            gap: 0;
-            padding: 1rem 2rem;
-            background: var(--paper);
-            border-bottom: 2px solid var(--line);
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 0;
-        }
-
-        .neo-tabs-large .neo-tab {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 1rem 1.5rem;
-            font-family: var(--font-display);
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--ink-soft);
-            border-radius: 0.5rem;
-            margin: 0 0.25rem;
-            transition: all 200ms var(--ease);
-            text-decoration: none;
-        }
-
-        .neo-tabs-large .neo-tab:hover {
-            color: var(--ink);
-            background: var(--paper-soft);
-        }
-
-        .neo-tabs-large .neo-tab.is-active {
-            color: var(--gold);
-            background: rgba(212, 168, 83, 0.1); background: oklch(68% 0.145 74 / 0.1);
-        }
-
-        .neo-tabs-large .neo-tab svg {
-            flex-shrink: 0;
-        }
-
-        .neo-tabs-large .neo-tab span {
-            white-space: nowrap;
-        }
-
-        /* Space between tabs and content */
-        .neo-tabs-large {
-            margin-bottom: 1.5rem;
-        }
-
-        /* Stat Cards */
-        .stat-grid {
-            display: grid;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-grid-3 {
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        }
-
-        .stat-card {
-            display: flex;
-            align-items: center;
-            gap: 1.25rem;
-            padding: 1.5rem;
-            background: var(--paper);
-            border: 1px solid var(--line);
-            border-radius: 1rem;
-            transition: all 200ms var(--ease);
-        }
-
-        .stat-card:hover {
-            border-color: var(--gold);
-            box-shadow: 0 4px 20px rgba(42, 38, 35, 0.08); box-shadow: 0 4px 20px oklch(18% 0.03 76 / 0.08);
-            transform: translateY(-2px);
-        }
-
-        .stat-card.stat-primary {
-            background: linear-gradient(135deg, var(--ink) 0%, var(--night) 100%);
-            border-color: var(--ink);
-        }
-
-        .stat-card.stat-primary .stat-label,
-        .stat-card.stat-primary .stat-value {
-            color: var(--paper);
-        }
-
-        .stat-icon {
-            width: 56px;
-            height: 56px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.75rem;
-            background: rgba(212, 168, 83, 0.1); background: oklch(68% 0.145 74 / 0.1);
-            color: var(--gold);
-            flex-shrink: 0;
-        }
-
-        .stat-icon.stat-icon-success {
-            background: rgba(70, 160, 100, 0.1); background: oklch(65% 0.15 145 / 0.1);
-            color: var(--success);
-        }
-
-        .stat-icon.stat-icon-warning {
-            background: rgba(184, 110, 40, 0.1); background: oklch(60% 0.2 25 / 0.1);
-            color: var(--warning);
-        }
-
-        .stat-info {
-            flex: 1;
-        }
-
-        .stat-label {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--ink-soft);
-            margin-bottom: 0.25rem;
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--ink);
-            font-family: var(--font-display);
-            line-height: 1;
-        }
-
-        .stat-value-success {
-            color: var(--success);
-        }
-
-        .stat-value-warning {
-            color: var(--warning);
-        }
-
-        /* Table Card */
-        .table-card {
-            margin-bottom: 0;
-        }
-
-        .table-card .neo-card-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--line);
-        }
-
-        /* Table Styles */
-        .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .table-responsive .neo-table {
-            min-width: 800px;
-        }
-
-        .neo-table .col-user {
-            min-width: 250px;
-            width: 25%;
-        }
-
-        .neo-table .col-mapel {
-            min-width: 200px;
-            width: 22%;
-        }
-
-        .neo-table .col-status {
-            min-width: 130px;
-            width: 13%;
-            text-align: center;
-        }
-
-        .neo-table .col-kontak {
-            min-width: 200px;
-            width: 25%;
-        }
-
-        .neo-table .col-aksi {
-            min-width: 80px;
-            width: 8%;
-            text-align: center;
-        }
-
-        /* User Cell */
-        .neo-avatar-lg {
-            width: 48px;
-            height: 48px;
-            font-size: 1rem;
-        }
-
-        .neo-user-cell {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .neo-user-name {
-            font-weight: 600;
-            color: var(--ink);
-            font-size: 0.9rem;
-        }
-
-        .neo-user-nip {
-            font-size: 0.75rem;
-            color: var(--ink-soft);
-            font-family: var(--font-mono);
-        }
-
-        /* Badge Styles */
-        .neo-badge-success {
-            background: var(--success);
-            color: white;
-        }
-
-        .neo-badge-warning {
-            background: var(--warning);
-            color: var(--night);
-        }
-
-        /* Action Button */
-        .neo-action-btn-primary {
-            background: rgba(212, 168, 83, 0.1); background: oklch(68% 0.145 74 / 0.1);
-            color: var(--gold);
-            border: 1px solid var(--gold);
-        }
-
-        .neo-action-btn-primary:hover {
-            background: var(--gold);
-            color: var(--night);
-        }
-
-        /* Neo Empty State */
-        .neo-empty-state {
-            text-align: center;
-            padding: 3rem 1rem;
-        }
-
-        .neo-empty-state svg {
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-
-        .neo-empty-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--ink);
-            margin-bottom: 0.5rem;
-        }
-
-        .neo-empty-text {
-            font-size: 0.9rem;
-            color: var(--ink-soft);
-        }
-
-        /* Neo Text Muted */
-        .neo-text-muted {
-            color: var(--ink-soft);
-            font-style: italic;
-        }
-
-        /* Pagination */
-        .neo-pagination-wrap {
-            padding: 1.25rem 1.5rem;
-            border-top: 1px solid var(--line);
-        }
-
-        .neo-pagination-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .neo-pagination-info {
-            font-size: 0.85rem;
-            color: var(--ink-soft);
-        }
-
-        .neo-pagination-nav {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }
-
-        .neo-pagination-link {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 36px;
-            height: 36px;
-            padding: 0 0.5rem;
-            border-radius: 0.5rem;
-            font-size: 0.85rem;
-            font-family: var(--font-mono);
-            color: var(--ink);
-            background: var(--paper);
-            border: 1px solid var(--line);
-            text-decoration: none;
-            transition: all 180ms;
-        }
-
-        .neo-pagination-link:hover:not(.is-disabled):not(.is-active) {
-            border-color: var(--gold);
-            color: var(--gold);
-        }
-
-        .neo-pagination-link.is-active {
-            background: var(--gold);
-            color: var(--night);
-            border-color: var(--gold);
-            font-weight: 600;
-        }
-
-        .neo-pagination-link.is-disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .neo-tabs-large {
-                padding: 0.5rem 1rem;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
+        function openViewGuru(data) {
+            selectedGuru = data;
+            const modal = document.getElementById('viewGuruModal');
+            if (modal) {
+                modal.querySelector('.modal-guru-nama').textContent = data.nama || '-';
+                modal.querySelector('.modal-guru-jabatan').textContent = data.jabatan || '-';
+                modal.querySelector('.modal-guru-status').textContent = data.status || '-';
+                modal.querySelector('.modal-guru-serdik').textContent = data.serdik || '-';
+                modal.querySelector('.modal-guru-nuptk').textContent = data.nuptk || '-';
+                modal.querySelector('.modal-guru-mapel').textContent = data.bidang_studi_diajar || '-';
+                modal.querySelector('.modal-guru-email').textContent = data.email || '-';
+                modal.querySelector('.modal-guru-telp').textContent = data.telp || '-';
+                modal.style.cssText = '';
+                modal.style.display = 'flex';
             }
+        }
 
-            .neo-tabs-large .neo-tab {
-                padding: 0.75rem 1rem;
-                font-size: 0.85rem;
-                gap: 0.5rem;
+        function openEditGuru(data) {
+            selectedGuru = data;
+            const modal = document.getElementById('editGuruModal');
+            if (modal) {
+                const setVal = (name, value) => {
+                    const el = modal.querySelector(`[name="${name}"]`);
+                    if (el) el.value = value || '';
+                };
+                setVal('edit_id', data.id);
+                setVal('edit_name', data.nama);
+                setVal('edit_status', data.status);
+                setVal('edit_jabatan', data.jabatan);
+                setVal('edit_serdik', data.serdik);
+                setVal('edit_nuptk', data.nuptk);
+                setVal('edit_nomor_induk', data.nomor_induk);
+                setVal('edit_nik', data.nik);
+                setVal('edit_tempat_lahir', data.tempat_lahir);
+                setVal('edit_tanggal_lahir', data.tanggal_lahir);
+                setVal('edit_jk', data.jenis_kelamin);
+                setVal('edit_bidang_studi', data.bidang_studi_diajar);
+                setVal('edit_tmt_tugas', data.tmt_tugas);
+                setVal('edit_pendidikan', data.pendidikan);
+                setVal('edit_email', data.email);
+                setVal('edit_telp', data.telp);
+                modal.style.cssText = '';
+                modal.style.display = 'flex';
             }
+        }
 
-            .neo-tabs-large .neo-tab svg {
-                width: 20px;
-                height: 20px;
+        function openDeleteGuru(data) {
+            selectedGuru = data;
+            const modal = document.getElementById('deleteGuruModal');
+            if (modal) {
+                modal.querySelector('.delete-guru-name').textContent = data.nama || '';
+                modal.style.cssText = '';
+                modal.style.display = 'flex';
             }
+        }
 
-            .madrasah-fullwidth .content-inner {
-                padding: 1rem 0.5rem;
+        function closeGuruModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
             }
+        }
 
-            .stat-grid-3 {
-                grid-template-columns: 1fr;
-            }
-
-            .stat-card {
-                padding: 1.25rem;
-            }
-
-            .stat-value {
-                font-size: 1.5rem;
-            }
-
-            .neo-pagination-row {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            /* Modal Styles */
-            .modal-overlay {
-                position: fixed;
-                inset: 0;
-                background: rgba(0, 0, 0, 0.6);
-                backdrop-filter: blur(4px);
-                display: flex;
-                align-items: flex-start;
-                justify-content: center;
-                z-index: 1000;
-                padding: 2rem 1rem;
-                overflow-y: auto;
-            }
-
-            .modal-content {
-                background: var(--paper);
-                border-radius: 1rem;
-                width: 100%;
-                max-width: 900px;
-                max-height: calc(100vh - 4rem);
-                overflow-y: auto;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            }
-
-            .modal-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 1.5rem;
-                border-bottom: 1px solid var(--line);
-                background: linear-gradient(135deg, var(--ink) 0%, var(--night) 100%);
-                color: var(--paper);
-                position: sticky;
-                top: 0;
-                z-index: 10;
-            }
-
-            .modal-header h3 {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                margin: 0;
-                font-family: var(--font-display);
-                font-size: 1.1rem;
-                font-weight: 600;
-            }
-
-            .modal-body {
-                padding: 1.5rem;
-            }
-
-            .modal-footer {
-                display: flex;
-                justify-content: flex-end;
-                gap: 1rem;
-                padding: 1.5rem;
-                border-top: 1px solid var(--line);
-                background: var(--paper-soft);
-                position: sticky;
-                bottom: 0;
-            }
-
-            .form-section {
-                margin-bottom: 2rem;
-                padding-bottom: 1.5rem;
-                border-bottom: 1px solid var(--line);
-            }
-
-            .form-section:last-child {
-                margin-bottom: 0;
-                padding-bottom: 0;
-                border-bottom: none;
-            }
-
-            .form-section-title {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                font-family: var(--font-display);
-                font-size: 0.95rem;
-                font-weight: 600;
-                color: var(--ink);
-                margin-bottom: 1rem;
-                padding-bottom: 0.5rem;
-                border-bottom: 2px solid var(--gold);
-            }
-
-            .form-section-title svg {
-                color: var(--gold);
-            }
-
-            .form-required-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.25rem;
-                padding: 0.2rem 0.5rem;
-                background: var(--danger);
-                color: white;
-                font-size: 0.65rem;
-                font-weight: 600;
-                border-radius: 0.25rem;
-                margin-left: auto;
-            }
-
-            .form-grid-2 {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
-            }
-
-            .form-grid-3 {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 1rem;
-            }
-
-            .form-grid-4 {
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 1rem;
-            }
-
-            .form-full {
-                grid-column: 1 / -1;
-            }
-
-            .neo-field-group {
-                display: flex;
-                flex-direction: column;
-                gap: 0.4rem;
-            }
-
-            .neo-field-label {
-                display: flex;
-                align-items: center;
-                gap: 0.4rem;
-                font-family: var(--font-display);
-                font-size: 0.8rem;
-                font-weight: 600;
-                color: var(--ink);
-            }
-
-            .neo-field-label svg {
-                color: var(--gold);
-                opacity: 0.7;
-            }
-
-            .neo-field-label .required {
-                color: var(--danger);
-            }
-
-            .neo-field-input,
-            .neo-field-select {
-                width: 100%;
-                padding: 0.65rem 0.875rem;
-                border: 1px solid var(--line);
-                border-radius: 0.5rem;
-                font-size: 0.85rem;
-                background: var(--paper);
-                color: var(--ink);
-                transition: border-color 180ms, box-shadow 180ms;
-            }
-
-            .neo-field-input:focus,
-            .neo-field-select:focus {
-                outline: none;
-                border-color: var(--gold);
-                box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15); box-shadow: 0 0 0 3px oklch(68% 0.145 74 / 0.15);
-            }
-
-            .neo-field-input::placeholder {
-                color: var(--ink-soft);
-                opacity: 0.6;
-            }
-
-            .neo-field-select {
-                appearance: none;
-                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-                background-repeat: no-repeat;
-                background-position: right 0.75rem center;
-                padding-right: 2.5rem;
-            }
-
-            textarea.neo-field-input {
-                resize: vertical;
-                min-height: 60px;
-            }
-
-            .radio-group {
-                display: flex;
-                gap: 1rem;
-                flex-wrap: wrap;
-            }
-
-            .radio-item {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                padding: 0.5rem 1rem;
-                border: 1px solid var(--line);
-                border-radius: 0.5rem;
-                cursor: pointer;
-                transition: all 180ms;
-            }
-
-            .radio-item:hover {
-                border-color: var(--gold);
-            }
-
-            .radio-item input {
-                accent-color: var(--gold);
-            }
-
-            .radio-item:has(input:checked) {
-                border-color: var(--gold);
-                background: rgba(212, 168, 83, 0.1); background: oklch(68% 0.145 74 / 0.1);
-            }
-
-            .neo-btn-modal-cancel {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-                padding: 0.75rem 1.5rem;
-                background: transparent;
-                color: var(--ink);
-                font-family: var(--font-mono);
-                font-size: 0.8rem;
-                font-weight: 600;
-                border: 1px solid var(--line);
-                border-radius: 0.5rem;
-                cursor: pointer;
-                transition: all 180ms;
-            }
-
-            .neo-btn-modal-cancel:hover {
-                border-color: var(--ink);
-                background: var(--paper-soft);
-            }
-
-            .neo-btn-modal-save {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-                padding: 0.75rem 1.5rem;
-                background: var(--gold);
-                color: var(--night);
-                font-family: var(--font-mono);
-                font-size: 0.8rem;
-                font-weight: 700;
-                border: none;
-                border-radius: 0.5rem;
-                cursor: pointer;
-                transition: all 180ms;
-            }
-
-            .neo-btn-modal-save:hover {
-                background: var(--gold-dark);
-                transform: translateY(-1px);
-            }
-
-            .neo-card-actions {
-                margin-left: auto;
-            }
-
-            .neo-btn-add {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-                padding: 0.65rem 1rem;
-                background: var(--gold);
-                color: var(--night);
-                font-family: var(--font-mono);
-                font-size: 0.75rem;
-                font-weight: 600;
-                border: none;
-                border-radius: 0.5rem;
-                cursor: pointer;
-                transition: all 180ms;
-            }
-
-            .neo-btn-add:hover {
-                background: var(--gold-dark);
-                transform: translateY(-1px);
-            }
-
-            @media (max-width: 768px) {
-                .modal-overlay {
-                    padding: 1rem 0.5rem;
+        function submitEditGuruForm() {
+            const modal = document.getElementById('editGuruModal');
+            const form = modal.querySelector('form');
+            const formData = new FormData(form);
+            formData.append('_token', '{{ csrf_token() }}');
+            // Rename edit_* fields to match controller expectations
+            const renameField = (from, to) => {
+                if (formData.has(from)) {
+                    formData.append(to, formData.get(from));
+                    formData.delete(from);
                 }
+            };
+            renameField('edit_id', 'id');
+            renameField('edit_name', 'nama');
+            renameField('edit_status', 'status');
+            renameField('edit_jabatan', 'kat_jabatan');
+            renameField('edit_serdik', 'serdik');
+            renameField('edit_nuptk', 'nuptk');
+            renameField('edit_nomor_induk', 'nomor_induk');
+            renameField('edit_nik', 'nik');
+            renameField('edit_tempat_lahir', 'tempat_lahir');
+            renameField('edit_tanggal_lahir', 'tanggal_lahir');
+            renameField('edit_jk', 'jenis_kelamin');
+            renameField('edit_bidang_studi', 'bidang_studi_diajar');
+            renameField('edit_tmt_tugas', 'tmt_tugas');
+            renameField('edit_pendidikan', 'pendidikan');
+            renameField('edit_email', 'email');
+            renameField('edit_telp', 'telp');
 
-                .modal-content {
-                    max-height: calc(100vh - 2rem);
+            fetch('{{ route("madrasah.guru.update") }}', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Guru berhasil diperbarui!');
+                    location.reload();
+                } else {
+                    alert('Gagal menyimpan: ' + (data.message || 'Unknown error'));
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menyimpan data');
+            });
+        }
 
-                .form-grid-2,
-                .form-grid-3,
-                .form-grid-4 {
-                    grid-template-columns: 1fr;
+        function submitDeleteGuruForm() {
+            if (!confirm('Yakin ingin menghapus data ini?')) return;
+
+            const formData = new FormData();
+            formData.append('_token', '{{ csrf_token() }}');
+            formData.append('id', selectedGuru.id);
+
+            fetch('{{ route("madrasah.guru.delete") }}', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
                 }
-
-                .form-full {
-                    grid-column: span 1;
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('Guru berhasil dihapus!');
+                    location.reload();
+                } else {
+                    alert('Gagal menghapus: ' + (data.message || 'Unknown error'));
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menghapus data');
+            });
+        }
+    </script>
 
-                .modal-footer {
-                    flex-direction: column;
-                }
+</x-layouts.app>
 
-                .modal-footer button {
-                    width: 100%;
-                    justify-content: center;
-                }
-            }
-        </style>
+        <!-- MODALS (Vanilla JS) -->
 
-        <!-- Modal Tambah Guru -->
-        <div class="modal-overlay" x-show="showModal" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click.self="showModal = false" @keydown.escape.window="showModal = false">
-            <div class="modal-content" x-show="showModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
+        <!-- View Guru Modal -->
+        <div id="viewGuruModal" class="modal-overlay">
+            <div class="modal-content" style="max-width:550px">
                 <div class="modal-header">
                     <h3>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                        Tambah Guru Baru
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        Detail Guru
                     </h3>
-                    <button type="button" @click="showModal = false" style="background: transparent; border: none; color: white; cursor: pointer; padding: 0.5rem; border-radius: 0.5rem;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
+                    <button type="button" onclick="closeGuruModal('viewGuruModal')" style="background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:#94a3b8;cursor:pointer;padding:8px 12px;font-size:14px;font-weight:600;">✕</button>
                 </div>
-
-                <form @submit.prevent="submitForm">
-                    <div class="modal-body">
-                        <!-- Section 1: Identitas Guru (Wajib) -->
-                        <div class="form-section">
-                            <h4 class="form-section-title">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg>
-                                1. Identitas Guru
-                                <span class="form-required-badge">
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 22h20L12 2z"/></svg>
-                                    Wajib
-                                </span>
-                            </h4>
-                            <div class="form-grid-2">
-                                <div class="neo-field-group form-full">
-                                    <label class="neo-field-label">Nama Lengkap <span class="required">*</span></label>
-                                    <input type="text" name="nama" class="neo-field-input" placeholder="Masukkan nama lengkap" required>
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Kategori Jabatan <span class="required">*</span></label>
-                                    <select name="kat_jabatan" class="neo-field-select" required>
-                                        <option value="">Pilih Jabatan</option>
-                                        <option value="guru">Guru</option>
-                                        <option value="kepala">Kepala Sekolah</option>
-                                    </select>
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Status Kepegawaian <span class="required">*</span></label>
-                                    <select name="status" class="neo-field-select" required>
-                                        <option value="">Pilih Status</option>
-                                        <option value="PNS">PNS</option>
-                                        <option value="PPPK">PPPK</option>
-                                        <option value="HONOR">HONOR</option>
-                                    </select>
-                                </div>
-                            </div>
+                <div class="modal-body">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                        <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0">
+                            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Nama</div>
+                            <div style="font-size:15px;font-weight:600;color:#1e293b" class="modal-guru-nama">-</div>
                         </div>
-
-                        <!-- Section 2: Data Guru & SIMPATIKA -->
-                        <div class="form-section">
-                            <h4 class="form-section-title">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M7 20h10"/><rect x="5" y="3" width="14" height="16" rx="2"/></svg>
-                                2. Data Guru & SIMPATIKA
-                            </h4>
-                            <div class="form-grid-3">
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Bidang Studi Yang Diajar</label>
-                                    <input type="text" name="bidang_studi_diajar" class="neo-field-input" placeholder="Contoh: Matematika">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Bidang Studi Sertifikasi</label>
-                                    <input type="text" name="bidang_sertifikasi" class="neo-field-input" placeholder="Contoh: Pendidikan Matematika">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Sertifikasi</label>
-                                    <select name="serdik" class="neo-field-select">
-                                        <option value="">Pilih Status</option>
-                                        <option value="sertifikasi">Sudah Sertifikasi</option>
-                                        <option value="non-sertifikasi">Belum Sertifikasi</option>
-                                    </select>
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">NUPTK</label>
-                                    <input type="text" name="nuptk" class="neo-field-input" placeholder="Nomor NUPTK">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">NPK</label>
-                                    <input type="text" name="npk" class="neo-field-input" placeholder="Nomor NPK">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">NRG</label>
-                                    <input type="text" name="nrg" class="neo-field-input" placeholder="Nomor NRG">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Nama Gadis Ibu Kandung</label>
-                                    <input type="text" name="nama_ibu" class="neo-field-input" placeholder="Nama ibu kandung">
-                                </div>
-                            </div>
+                        <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0">
+                            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Jabatan</div>
+                            <div style="font-size:15px;font-weight:600;color:#1e293b" class="modal-guru-jabatan">-</div>
                         </div>
-
-                        <!-- Section 3: Data Pribadi (Opsional) -->
-                        <div class="form-section">
-                            <h4 class="form-section-title">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a4 4 0 004 4z"/><circle cx="12" cy="7" r="4"/></svg>
-                                3. Data Pribadi (Opsional)
-                            </h4>
-                            <div class="form-grid-3">
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">NIP / NUPTK</label>
-                                    <input type="text" name="nomor_induk" class="neo-field-input" placeholder="NIP atau NUPTK">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">NIK / No. KTP</label>
-                                    <input type="text" name="nik" class="neo-field-input" placeholder="Nomor KTP">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">NPWP</label>
-                                    <input type="text" name="npwp" class="neo-field-input" placeholder="Nomor NPWP">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Tempat Lahir</label>
-                                    <input type="text" name="tempat_lahir" class="neo-field-input" placeholder="Kota kelahiran">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Tanggal Lahir</label>
-                                    <input type="date" name="tanggal_lahir" class="neo-field-input">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Jenis Kelamin</label>
-                                    <div class="radio-group">
-                                        <label class="radio-item">
-                                            <input type="radio" name="jenis_kelamin" value="L"> Laki-laki
-                                        </label>
-                                        <label class="radio-item">
-                                            <input type="radio" name="jenis_kelamin" value="P"> Perempuan
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
+                        <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0">
+                            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Status</div>
+                            <div style="font-size:15px;font-weight:600;color:#1e293b" class="modal-guru-status">-</div>
                         </div>
-
-                        <!-- Section 4: Data Kepegawaian (Opsional) -->
-                        <div class="form-section">
-                            <h4 class="form-section-title">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                                4. Data Kepegawaian (Opsional)
-                            </h4>
-                            <div class="form-grid-4">
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Golongan</label>
-                                    <select name="golongan" class="neo-field-select">
-                                        <option value="">Pilih Golongan</option>
-                                        <option value="I/a">I/a - Juru</option>
-                                        <option value="I/b">I/b - Juru Tk.I</option>
-                                        <option value="I/c">I/c - Pengatur</option>
-                                        <option value="I/d">I/d - Pengatur Tk.I</option>
-                                        <option value="II/a">II/a - Penata Muda</option>
-                                        <option value="II/b">II/b - Penata Muda Tk.I</option>
-                                        <option value="II/c">II/c - Penata</option>
-                                        <option value="II/d">II/d - Penata Tk.I</option>
-                                        <option value="III/a">III/a - Pembina</option>
-                                        <option value="III/b">III/b - Pembina Tk.I</option>
-                                        <option value="III/c">III/c - Pembina Utama</option>
-                                        <option value="III/d">III/d - Pembina Utama Muda</option>
-                                        <option value="IV/a">IV/a - Pembina Utama</option>
-                                    </select>
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Jabatan</label>
-                                    <input type="text" name="jabatan" class="neo-field-input" placeholder="Nama jabatan">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">TMT Tempat Tugas</label>
-                                    <input type="date" name="tmt_tugas" class="neo-field-input">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">KGB</label>
-                                    <input type="date" name="kgb" class="neo-field-input">
-                                </div>
-                            </div>
+                        <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0">
+                            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Sertifikasi</div>
+                            <div style="font-size:15px;font-weight:600;color:#1e293b" class="modal-guru-serdik">-</div>
                         </div>
-
-                        <!-- Section 5: Pendidikan (Opsional) -->
-                        <div class="form-section">
-                            <h4 class="form-section-title">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                                5. Data Pendidikan (Opsional)
-                            </h4>
-                            <div class="form-grid-3">
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Pendidikan Terakhir</label>
-                                    <select name="pendidikan" class="neo-field-select">
-                                        <option value="">Pilih Pendidikan</option>
-                                        <option value="SMA/SMK">SMA/SMK</option>
-                                        <option value="D1">D1</option>
-                                        <option value="D2">D2</option>
-                                        <option value="D3">D3</option>
-                                        <option value="D4">D4</option>
-                                        <option value="S1">S1 - Sarjana</option>
-                                        <option value="S2">S2 - Magister</option>
-                                        <option value="S3">S3 - Doktor</option>
-                                    </select>
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Jurusan</label>
-                                    <input type="text" name="jurusan" class="neo-field-input" placeholder="Nama jurusan">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Fakultas</label>
-                                    <input type="text" name="fakultas" class="neo-field-input" placeholder="Nama fakultas">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Universitas</label>
-                                    <input type="text" name="universitas" class="neo-field-input" placeholder="Nama universitas">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Tahun Lulus</label>
-                                    <input type="number" name="tahun_lulus" class="neo-field-input" placeholder="2020" min="1970" max="2030">
-                                </div>
-                            </div>
+                        <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0">
+                            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">NUPTK</div>
+                            <div style="font-size:15px;font-weight:600;color:#1e293b;font-family:monospace" class="modal-guru-nuptk">-</div>
                         </div>
+                        <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0">
+                            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Mapel</div>
+                            <div style="font-size:15px;font-weight:600;color:#1e293b" class="modal-guru-mapel">-</div>
+                        </div>
+                        <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0">
+                            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Email</div>
+                            <div style="font-size:15px;font-weight:600;color:#1e293b" class="modal-guru-email">-</div>
+                        </div>
+                        <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0">
+                            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">No. HP</div>
+                            <div style="font-size:15px;font-weight:600;color:#1e293b;font-family:monospace" class="modal-guru-telp">-</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeGuruModal('viewGuruModal')" style="padding:10px 20px;background:#f1f5f9;color:#475569;font-weight:600;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;font-size:14px">Tutup</button>
+                </div>
+            </div>
+        </div>
 
-                        <!-- Section 6: Kontak & Alamat (Opsional) -->
-                        <div class="form-section">
-                            <h4 class="form-section-title">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                6. Kontak & Alamat (Opsional)
-                            </h4>
-                            <div class="form-grid-2">
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">Email</label>
-                                    <input type="email" name="email" class="neo-field-input" placeholder="email@contoh.com">
-                                </div>
-                                <div class="neo-field-group">
-                                    <label class="neo-field-label">No. HP</label>
-                                    <input type="tel" name="telp" class="neo-field-input" placeholder="08xxxxxxxxxx">
-                                </div>
-                                <div class="neo-field-group form-full">
-                                    <label class="neo-field-label">Alamat</label>
-                                    <textarea name="alamat" class="neo-field-input" rows="2" placeholder="Alamat lengkap"></textarea>
-                                </div>
+        <!-- Edit Guru Modal -->
+        <div id="editGuruModal" class="modal-overlay">
+            <div class="modal-content" style="max-width:650px">
+                <div class="modal-header">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        Edit Guru
+                    </h3>
+                    <button type="button" onclick="closeGuruModal('editGuruModal')" style="background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:#94a3b8;cursor:pointer;padding:8px 12px;font-size:14px;font-weight:600;">✕</button>
+                </div>
+                <form onsubmit="event.preventDefault(); submitEditGuruForm();" style="display:contents">
+                <input type="hidden" name="edit_id" value="">
+                <div class="modal-body" style="overflow-y:auto;max-height:60vh">
+                    <div style="margin-bottom:20px">
+                        <div style="font-weight:700;color:#d4a106;font-size:13px;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #d4a106">Data Wajib</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Nama Lengkap</label>
+                                <input type="text" name="edit_name" required style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff">
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Status</label>
+                                <select name="edit_status" required style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff">
+                                    <option value="PNS">PNS</option>
+                                    <option value="PPPK">PPPK</option>
+                                    <option value="Honorer">Honorer</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Jabatan</label>
+                                <select name="edit_jabatan" required style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff">
+                                    <option value="Guru">Guru</option>
+                                    <option value="Kepala">Kepala Madrasah</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Sertifikasi</label>
+                                <select name="edit_serdik" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff">
+                                    <option value="sertifikasi">Sertifikasi</option>
+                                    <option value="non-sertifikasi">Non Sertifikasi</option>
+                                </select>
                             </div>
                         </div>
                     </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="neo-btn-modal-cancel" @click="showModal = false">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                            Batal
-                        </button>
-                        <button type="submit" class="neo-btn-modal-save">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
-                            Simpan Guru
-                        </button>
+                    <div style="margin-bottom:20px">
+                        <div style="font-weight:700;color:#d4a106;font-size:13px;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #d4a106">Data Pribadi</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">NUPTK</label>
+                                <input type="text" name="edit_nuptk" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:monospace">
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">NIP</label>
+                                <input type="text" name="edit_nomor_induk" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:monospace">
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">NIK</label>
+                                <input type="text" name="edit_nik" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:monospace">
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Tempat Lahir</label>
+                                <input type="text" name="edit_tempat_lahir" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Tanggal Lahir</label>
+                                <input type="date" name="edit_tanggal_lahir" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Jenis Kelamin</label>
+                                <select name="edit_jk" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff">
+                                    <option value="">Pilih</option>
+                                    <option value="Pria">Laki-laki</option>
+                                    <option value="Wanita">Perempuan</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
+                    <div style="margin-bottom:20px">
+                        <div style="font-weight:700;color:#d4a106;font-size:13px;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #d4a106">Data Mengajar</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Bidang Studi</label>
+                                <input type="text" name="edit_bidang_studi" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">TMT Tugas</label>
+                                <input type="date" name="edit_tmt_tugas" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Pendidikan</label>
+                                <input type="text" name="edit_pendidikan" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-weight:700;color:#d4a106;font-size:13px;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #d4a106">Kontak</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Email</label>
+                                <input type="email" name="edit_email" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">No. HP</label>
+                                <input type="tel" name="edit_telp" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:monospace">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeGuruModal('editGuruModal')" style="padding:10px 20px;background:#f1f5f9;color:#475569;font-weight:600;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;font-size:14px">Batal</button>
+                    <button type="submit" style="padding:10px 24px;background:#d4a106;color:#0f172a;font-weight:700;border:none;border-radius:8px;cursor:pointer;font-size:14px">Simpan</button>
+                </div>
                 </form>
             </div>
         </div>
 
-        <script>
-            function submitForm() {
-                const form = event.target;
-                const formData = new FormData(form);
-                const data = Object.fromEntries(formData.entries());
-                console.log("Data yang akan disimpan:", data);
-                alert("Fitur simpan belum diimplementasikan. Data:\n" + JSON.stringify(data, null, 2));
-            }
-        </script>
+        <!-- Delete Guru Modal -->
+        <div id="deleteGuruModal" class="modal-overlay">
+            <div class="modal-content" style="max-width:400px">
+                <div class="modal-header" style="background:linear-gradient(135deg,#dc2626,#991b1b)">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                        Konfirmasi Hapus
+                    </h3>
+                    <button type="button" onclick="closeGuruModal('deleteGuruModal')" style="background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:#fecaca;cursor:pointer;padding:8px 12px;font-size:14px;font-weight:600;">✕</button>
+                </div>
+                <div class="modal-body" style="text-align:center;padding:32px">
+                    <div style="width:64px;height:64px;background:rgba(239,68,68,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                    </div>
+                    <h4 style="margin:0 0 8px;font-size:18px;color:#1e293b">Hapus Data Guru?</h4>
+                    <p style="color:#64748b;margin:0;font-size:14px">Anda yakin ingin menghapus <strong style="color:#dc2626" class="delete-guru-name">-</strong>?<br>Tindakan ini tidak dapat dibatalkan.</p>
+                </div>
+                <div class="modal-footer" style="justify-content:center">
+                    <button type="button" onclick="closeGuruModal('deleteGuruModal')" style="padding:10px 20px;background:#f1f5f9;color:#475569;font-weight:600;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;font-size:14px">Batal</button>
+                    <button type="button" onclick="submitDeleteGuruForm()" style="padding:10px 20px;background:#dc2626;color:#fff;font-weight:600;border:none;border-radius:8px;cursor:pointer;font-size:14px">Ya, Hapus</button>
+                </div>
+            </div>
+        </div>
+
     </main>
-</x-layouts.app>

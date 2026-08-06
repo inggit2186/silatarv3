@@ -77,8 +77,15 @@ Route::middleware('auth')->group(function () {
     Route::put('/laporan-kinerja/{activityId}', [PageController::class, 'updateLaporanKinerja'])->whereNumber('activityId')->name('laporan-kinerja.update');
     Route::delete('/laporan-kinerja/{activityId}', [PageController::class, 'deleteLaporanKinerja'])->whereNumber('activityId')->name('laporan-kinerja.delete');
     Route::get('/madrasah/profil', [PageController::class, 'profilMadrasah'])->name('madrasah.profil');
+    Route::post('/madrasah/profil/save', [PageController::class, 'saveProfilMadrasah'])->name('madrasah.profil.save');
     Route::get('/madrasah/pegawai', [PageController::class, 'pegawaiMadrasah'])->name('madrasah.pegawai');
+    Route::post('/madrasah/pegawai/save', [PageController::class, 'savePegawaiMadrasah'])->name('madrasah.pegawai.save');
+    Route::post('/madrasah/pegawai/update', [PageController::class, 'updatePegawaiMadrasah'])->name('madrasah.pegawai.update');
+    Route::post('/madrasah/pegawai/delete', [PageController::class, 'deletePegawaiMadrasah'])->name('madrasah.pegawai.delete');
     Route::get('/madrasah/guru', [PageController::class, 'guruMadrasah'])->name('madrasah.guru');
+    Route::post('/madrasah/guru/save', [PageController::class, 'saveGuruMadrasah'])->name('madrasah.guru.save');
+    Route::post('/madrasah/guru/update', [PageController::class, 'updateGuruMadrasah'])->name('madrasah.guru.update');
+    Route::post('/madrasah/guru/delete', [PageController::class, 'deleteGuruMadrasah'])->name('madrasah.guru.delete');
     Route::get('/madrasah/laporan-semester', [PageController::class, 'laporanSemesterMadrasah'])->name('madrasah.laporan-semester');
     Route::post('/madrasah/laporan-semester/save', [PageController::class, 'saveLaporanSemesterMadrasah'])->name('madrasah.laporan-semester.save');
     Route::get('/madrasah/laporan-bulanan', [PageController::class, 'laporanBulananMadrasah'])->name('madrasah.laporan-bulanan');

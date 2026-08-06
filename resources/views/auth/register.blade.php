@@ -368,8 +368,8 @@
                                 </label>
                                 <select id="jk" name="jenis_kelamin" class="neo-auth-input" required>
                                     <option value="">-- Pilih --</option>
-                                    <option value="L" {{ old('jenis_kelamin') == 'L' ? 'selected' : '' }}>Laki-laki</option>
-                                    <option value="P" {{ old('jenis_kelamin') == 'P' ? 'selected' : '' }}>Perempuan</option>
+                                    <option value="Pria" {{ old('jenis_kelamin') == 'Pria' ? 'selected' : '' }}>Laki-laki</option>
+                                    <option value="Wanita" {{ old('jenis_kelamin') == 'Wanita' ? 'selected' : '' }}>Perempuan</option>
                                 </select>
                                 @error('jenis_kelamin')
                                     <span class="neo-field-error">{{ $message }}</span>

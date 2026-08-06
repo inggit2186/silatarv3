@@ -58,7 +58,7 @@ class RegisterController extends Controller
                 'pekerjaan' => ['required', 'string', 'max:255'],
                 'tempat_lahir' => ['required', 'string', 'max:100'],
                 'tanggal_lahir' => ['required', 'date', 'before:today'],
-                'jenis_kelamin' => ['required', 'in:L,P'],
+                'jenis_kelamin' => ['required', 'in:Pria,Wanita'],
                 'alamat' => ['required', 'string', 'max:500'],
             ]);
         } elseif ($type === 'guru_pai') {
@@ -71,7 +71,7 @@ class RegisterController extends Controller
                 'pekerjaan' => ['required', 'string', 'max:255'],
                 'tempat_lahir' => ['required', 'string', 'max:100'],
                 'tanggal_lahir' => ['required', 'date', 'before:today'],
-                'jenis_kelamin' => ['required', 'in:L,P'],
+                'jenis_kelamin' => ['required', 'in:Pria,Wanita'],
                 'nuptk' => ['nullable', 'string', 'max:20'],
                 'alamat' => ['required', 'string', 'max:500'],
                 'satker' => ['required', 'string', 'max:255'],
@@ -84,7 +84,7 @@ class RegisterController extends Controller
                 'tempat_bekerja' => ['required', 'string', 'max:255'],
                 'tempat_lahir' => ['required', 'string', 'max:100'],
                 'tanggal_lahir' => ['required', 'date', 'before:today'],
-                'jenis_kelamin' => ['required', 'in:L,P'],
+                'jenis_kelamin' => ['required', 'in:Pria,Wanita'],
                 'alamat' => ['required', 'string', 'max:500'],
             ]);
         }

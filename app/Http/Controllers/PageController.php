@@ -6309,6 +6309,457 @@ class PageController extends Controller
     }
 
     /**
+     * Save Pegawai Madrasah - insert/update ke tabel tenaga_ktd.
+     */
+    public function savePegawaiMadrasah(Request $request)
+    {
+        $user = auth()->user();
+        $deptId = $user->dept_id ?? null;
+
+        if (!$deptId) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan'], 400);
+            }
+            return redirect()->back()->with('error', 'Unit kerja tidak ditemukan');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'status' => 'required|in:pns,pppk,honor,honorer',
+            'nomor_induk' => 'nullable|string|max:50',
+            'nik' => 'nullable|string|max:20',
+            'npwp' => 'nullable|string|max:30',
+            'tempat_lahir' => 'nullable|string|max:100',
+            'tanggal_lahir' => 'nullable|date',
+            'jk' => 'nullable|in:Pria,Wanita',
+            'golongan' => 'nullable|string|max:20',
+            'jabatan' => 'nullable|string|max:100',
+            'tmt_tugas' => 'nullable|date',
+            'kgb' => 'nullable|date',
+            'masa_kerja_tahun' => 'nullable|string|max:10',
+            'masa_kerja_bulan' => 'nullable|string|max:10',
+            'jurusan' => 'nullable|string|max:100',
+            'fakultas' => 'nullable|string|max:100',
+            'universitas' => 'nullable|string|max:100',
+            'email' => 'nullable|email|max:255',
+            'telp' => 'nullable|string|max:20',
+            'alamat_ktp' => 'nullable|string',
+            'alamat' => 'nullable|string',
+            'keterangan' => 'nullable|string',
+        ]);
+
+        // Map status values
+        $statusMap = [
+            'pns' => 'PNS',
+            'pppk' => 'PPPK',
+            'honor' => 'Honorer',
+            'honorer' => 'Honorer',
+        ];
+
+        $data = [
+            'dept_id' => $deptId,
+            'created_by' => $user->id,
+            'nama' => $validated['name'],
+            'kat_jabatan' => 'staf',
+            'status' => $statusMap[$validated['status']] ?? 'Honorer',
+            'nomor_induk' => $validated['nomor_induk'] ?? null,
+            'nik' => $validated['nik'] ?? null,
+            'npwp' => $validated['npwp'] ?? null,
+            'tempat_lahir' => $validated['tempat_lahir'] ?? null,
+            'tanggal_lahir' => $validated['tanggal_lahir'] ?? null,
+            'jenis_kelamin' => $validated['jk'] ?? null,
+            'golongan' => $validated['golongan'] ?? null,
+            'jabatan' => $validated['jabatan'] ?? null,
+            'tmt_tugas' => $validated['tmt_tugas'] ?? null,
+            'kgb' => $validated['kgb'] ?? null,
+            'masa_kerja_tahun' => $validated['masa_kerja_tahun'] ?? null,
+            'masa_kerja_bulan' => $validated['masa_kerja_bulan'] ?? null,
+            'jurusan' => $validated['jurusan'] ?? null,
+            'fakultas' => $validated['fakultas'] ?? null,
+            'universitas' => $validated['universitas'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'telp' => $validated['telp'] ?? null,
+            'alamat_ktp' => $validated['alamat_ktp'] ?? null,
+            'alamat' => $validated['alamat'] ?? null,
+            'keterangan' => $validated['keterangan'] ?? null,
+            'is_active' => true,
+            'source_table' => 'manual',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        // Filter out null values
+        $data = array_filter($data, fn($v) => $v !== null);
+
+        DB::table('tenaga_ktd')->insert($data);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Pegawai berhasil ditambahkan']);
+        }
+
+        return redirect()->back()->with('success', 'Pegawai berhasil ditambahkan!');
+    }
+
+    /**
+     * Update Pegawai Madrasah.
+     */
+    public function updatePegawaiMadrasah(Request $request)
+    {
+        $user = auth()->user();
+        $deptId = $user->dept_id ?? null;
+
+        if (!$deptId) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan'], 400);
+            }
+            return redirect()->back()->with('error', 'Unit kerja tidak ditemukan');
+        }
+
+        $validated = $request->validate([
+            'id' => 'required|integer',
+            'name' => 'required|string|max:255',
+            'status' => 'required|in:PNS,PPPK,Honorer,pns,pppk,honorer',
+            'nomor_induk' => 'nullable|string|max:50',
+            'nik' => 'nullable|string|max:20',
+            'npwp' => 'nullable|string|max:30',
+            'tempat_lahir' => 'nullable|string|max:100',
+            'tanggal_lahir' => 'nullable|date',
+            'jk' => 'nullable|in:Pria,Wanita',
+            'golongan' => 'nullable|string|max:20',
+            'jabatan' => 'nullable|string|max:100',
+            'tmt_tugas' => 'nullable|date',
+            'kgb' => 'nullable|date',
+            'masa_kerja_tahun' => 'nullable|integer|min:0',
+            'masa_kerja_bulan' => 'nullable|integer|min:0|max:11',
+            'jurusan' => 'nullable|string|max:100',
+            'fakultas' => 'nullable|string|max:100',
+            'universitas' => 'nullable|string|max:100',
+            'email' => 'nullable|email|max:255',
+            'telp' => 'nullable|string|max:20',
+            'alamat_ktp' => 'nullable|string',
+            'alamat' => 'nullable|string',
+            'keterangan' => 'nullable|string',
+        ]);
+
+        $id = $validated['id'];
+
+        // Check if record exists and has no user_id
+        $existing = DB::table('tenaga_ktd')->where('id', $id)->first();
+        if (!$existing) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
+            }
+            return redirect()->back()->with('error', 'Data tidak ditemukan');
+        }
+
+        if ($existing->user_id) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Tidak dapat mengedit data yang sudah terhubung dengan user'], 403);
+            }
+            return redirect()->back()->with('error', 'Tidak dapat mengedit data yang sudah terhubung dengan user');
+        }
+
+        // Map status values
+        $statusMap = [
+            'pns' => 'PNS', 'pppk' => 'PPPK', 'honorer' => 'Honorer',
+            'honor' => 'Honorer', 'PNS' => 'PNS', 'PPPK' => 'PPPK', 'Honorer' => 'Honorer',
+        ];
+
+        $data = [
+            'nama' => $validated['name'],
+            'status' => $statusMap[strtolower($validated['status'])] ?? $validated['status'],
+            'nomor_induk' => $validated['nomor_induk'] ?? null,
+            'nik' => $validated['nik'] ?? null,
+            'npwp' => $validated['npwp'] ?? null,
+            'tempat_lahir' => $validated['tempat_lahir'] ?? null,
+            'tanggal_lahir' => $validated['tanggal_lahir'] ?? null,
+            'jenis_kelamin' => $validated['jk'] ?? null,
+            'golongan' => $validated['golongan'] ?? null,
+            'jabatan' => $validated['jabatan'] ?? null,
+            'tmt_tugas' => $validated['tmt_tugas'] ?? null,
+            'kgb' => $validated['kgb'] ?? null,
+            'masa_kerja_tahun' => $validated['masa_kerja_tahun'] ?? null,
+            'masa_kerja_bulan' => $validated['masa_kerja_bulan'] ?? null,
+            'jurusan' => $validated['jurusan'] ?? null,
+            'fakultas' => $validated['fakultas'] ?? null,
+            'universitas' => $validated['universitas'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'telp' => $validated['telp'] ?? null,
+            'alamat_ktp' => $validated['alamat_ktp'] ?? null,
+            'alamat' => $validated['alamat'] ?? null,
+            'keterangan' => $validated['keterangan'] ?? null,
+            'updated_at' => now(),
+        ];
+
+        $data = array_filter($data, fn($v) => $v !== null);
+
+        DB::table('tenaga_ktd')->where('id', $id)->update($data);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Pegawai berhasil diperbarui']);
+        }
+
+        return redirect()->back()->with('success', 'Pegawai berhasil diperbarui!');
+    }
+
+    /**
+     * Delete Pegawai Madrasah.
+     */
+    public function deletePegawaiMadrasah(Request $request)
+    {
+        $user = auth()->user();
+
+        try {
+            $validated = $request->validate([
+                'id' => 'required|integer',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['success' => false, 'message' => 'Validasi gagal: ' . collect($e->errors())->flatten()->first()], 422);
+        }
+
+        $id = $validated['id'];
+
+        // Check if record exists
+        $existing = DB::table('tenaga_ktd')->where('id', $id)->first();
+        if (!$existing) {
+            return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
+        }
+
+        // Check if has user_id
+        if ($existing->user_id) {
+            return response()->json(['success' => false, 'message' => 'Tidak dapat menghapus data yang sudah terhubung dengan user'], 403);
+        }
+
+        DB::table('tenaga_ktd')->where('id', $id)->delete();
+
+        return response()->json(['success' => true, 'message' => 'Pegawai berhasil dihapus']);
+    }
+
+    /**
+     * Save Guru Madrasah - insert/update ke tabel tenaga_ktd.
+     */
+    public function saveGuruMadrasah(Request $request)
+    {
+        $user = auth()->user();
+        $deptId = $user->dept_id ?? null;
+
+        if (!$deptId) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan'], 400);
+            }
+            return redirect()->back()->with('error', 'Unit kerja tidak ditemukan');
+        }
+
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'kat_jabatan' => 'required|in:guru,kepala',
+            'status' => 'required|in:PNS,PPPK,HONOR',
+            'nomor_induk' => 'nullable|string|max:50',
+            'nik' => 'nullable|string|max:20',
+            'npwp' => 'nullable|string|max:30',
+            'nuptk' => 'nullable|string|max:20',
+            'npk' => 'nullable|string|max:20',
+            'nrg' => 'nullable|string|max:20',
+            'tempat_lahir' => 'nullable|string|max:100',
+            'tanggal_lahir' => 'nullable|date',
+            'jenis_kelamin' => 'nullable|in:Pria,Wanita',
+            'nama_ibu' => 'nullable|string|max:100',
+            'golongan' => 'nullable|string|max:20',
+            'jabatan' => 'nullable|string|max:100',
+            'bidang_studi_diajar' => 'nullable|string|max:100',
+            'bidang_sertifikasi' => 'nullable|string|max:100',
+            'serdik' => 'nullable|in:sertifikasi,non-sertifikasi',
+            'tmt_tugas' => 'nullable|date',
+            'kgb' => 'nullable|date',
+            'pendidikan' => 'nullable|string|max:20',
+            'jurusan' => 'nullable|string|max:100',
+            'fakultas' => 'nullable|string|max:100',
+            'universitas' => 'nullable|string|max:100',
+            'tahun_lulus' => 'nullable|string|max:10',
+            'email' => 'nullable|email|max:255',
+            'telp' => 'nullable|string|max:20',
+            'alamat' => 'nullable|string',
+        ]);
+
+        $data = [
+            'dept_id' => $deptId,
+            'created_by' => $user->id,
+            'nama' => $validated['nama'],
+            'kat_jabatan' => $validated['kat_jabatan'],
+            'status' => $validated['status'],
+            'nomor_induk' => $validated['nomor_induk'] ?? null,
+            'nik' => $validated['nik'] ?? null,
+            'npwp' => $validated['npwp'] ?? null,
+            'nuptk' => $validated['nuptk'] ?? null,
+            'npk' => $validated['npk'] ?? null,
+            'nrg' => $validated['nrg'] ?? null,
+            'tempat_lahir' => $validated['tempat_lahir'] ?? null,
+            'tanggal_lahir' => $validated['tanggal_lahir'] ?? null,
+            'jenis_kelamin' => $validated['jenis_kelamin'] ?? null,
+            'nama_ibu' => $validated['nama_ibu'] ?? null,
+            'golongan' => $validated['golongan'] ?? null,
+            'jabatan' => $validated['jabatan'] ?? null,
+            'bidang_studi_diajar' => $validated['bidang_studi_diajar'] ?? null,
+            'bidang_sertifikasi' => $validated['bidang_sertifikasi'] ?? null,
+            'serdik' => $validated['serdik'] ?? null,
+            'tmt_tugas' => $validated['tmt_tugas'] ?? null,
+            'kgb' => $validated['kgb'] ?? null,
+            'pendidikan' => $validated['pendidikan'] ?? null,
+            'jurusan' => $validated['jurusan'] ?? null,
+            'fakultas' => $validated['fakultas'] ?? null,
+            'universitas' => $validated['universitas'] ?? null,
+            'tahun_lulus' => $validated['tahun_lulus'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'telp' => $validated['telp'] ?? null,
+            'alamat' => $validated['alamat'] ?? null,
+            'is_active' => true,
+            'source_table' => 'manual',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        // Filter out null values
+        $data = array_filter($data, fn($v) => $v !== null);
+
+        DB::table('tenaga_ktd')->insert($data);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Guru berhasil ditambahkan']);
+        }
+
+        return redirect()->back()->with('success', 'Guru berhasil ditambahkan!');
+    }
+
+    /**
+     * Update Guru Madrasah.
+     */
+    public function updateGuruMadrasah(Request $request)
+    {
+        $user = auth()->user();
+
+        $validated = $request->validate([
+            'id' => 'required|integer',
+            'nama' => 'required|string|max:255',
+            'kat_jabatan' => 'nullable|in:guru,kepala',
+            'status' => 'nullable|in:PNS,PPPK,HONOR',
+            'nomor_induk' => 'nullable|string|max:50',
+            'nik' => 'nullable|string|max:20',
+            'npwp' => 'nullable|string|max:30',
+            'nuptk' => 'nullable|string|max:20',
+            'npk' => 'nullable|string|max:20',
+            'nrg' => 'nullable|string|max:20',
+            'tempat_lahir' => 'nullable|string|max:100',
+            'tanggal_lahir' => 'nullable|date',
+            'jenis_kelamin' => 'nullable|in:Pria,Wanita',
+            'nama_ibu' => 'nullable|string|max:100',
+            'golongan' => 'nullable|string|max:20',
+            'jabatan' => 'nullable|string|max:100',
+            'bidang_studi_diajar' => 'nullable|string|max:100',
+            'bidang_sertifikasi' => 'nullable|string|max:100',
+            'serdik' => 'nullable|in:sertifikasi,non-sertifikasi',
+            'tmt_tugas' => 'nullable|date',
+            'kgb' => 'nullable|date',
+            'pendidikan' => 'nullable|string|max:20',
+            'jurusan' => 'nullable|string|max:100',
+            'fakultas' => 'nullable|string|max:100',
+            'universitas' => 'nullable|string|max:100',
+            'tahun_lulus' => 'nullable|string|max:10',
+            'email' => 'nullable|email|max:255',
+            'telp' => 'nullable|string|max:20',
+            'alamat' => 'nullable|string',
+        ]);
+
+        $id = $validated['id'];
+
+        // Check if record exists
+        $existing = DB::table('tenaga_ktd')->where('id', $id)->first();
+        if (!$existing) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
+            }
+            return redirect()->back()->with('error', 'Data tidak ditemukan');
+        }
+
+        if ($existing->user_id) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Tidak dapat mengedit data yang sudah terhubung dengan user'], 403);
+            }
+            return redirect()->back()->with('error', 'Tidak dapat mengedit data yang sudah terhubung dengan user');
+        }
+
+        $data = [
+            'nama' => $validated['nama'],
+            'kat_jabatan' => $validated['kat_jabatan'] ?? $existing->kat_jabatan,
+            'status' => $validated['status'] ?? $existing->status,
+            'nomor_induk' => $validated['nomor_induk'] ?? null,
+            'nik' => $validated['nik'] ?? null,
+            'npwp' => $validated['npwp'] ?? null,
+            'nuptk' => $validated['nuptk'] ?? null,
+            'npk' => $validated['npk'] ?? null,
+            'nrg' => $validated['nrg'] ?? null,
+            'tempat_lahir' => $validated['tempat_lahir'] ?? null,
+            'tanggal_lahir' => $validated['tanggal_lahir'] ?? null,
+            'jenis_kelamin' => $validated['jenis_kelamin'] ?? null,
+            'nama_ibu' => $validated['nama_ibu'] ?? null,
+            'golongan' => $validated['golongan'] ?? null,
+            'jabatan' => $validated['jabatan'] ?? null,
+            'bidang_studi_diajar' => $validated['bidang_studi_diajar'] ?? null,
+            'bidang_sertifikasi' => $validated['bidang_sertifikasi'] ?? null,
+            'serdik' => $validated['serdik'] ?? null,
+            'tmt_tugas' => $validated['tmt_tugas'] ?? null,
+            'kgb' => $validated['kgb'] ?? null,
+            'pendidikan' => $validated['pendidikan'] ?? null,
+            'jurusan' => $validated['jurusan'] ?? null,
+            'fakultas' => $validated['fakultas'] ?? null,
+            'universitas' => $validated['universitas'] ?? null,
+            'tahun_lulus' => $validated['tahun_lulus'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'telp' => $validated['telp'] ?? null,
+            'alamat' => $validated['alamat'] ?? null,
+            'updated_at' => now(),
+        ];
+
+        $data = array_filter($data, fn($v) => $v !== null);
+
+        DB::table('tenaga_ktd')->where('id', $id)->update($data);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Guru berhasil diperbarui']);
+        }
+
+        return redirect()->back()->with('success', 'Guru berhasil diperbarui!');
+    }
+
+    /**
+     * Delete Guru Madrasah.
+     */
+    public function deleteGuruMadrasah(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'id' => 'required|integer',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['success' => false, 'message' => 'Validasi gagal: ' . collect($e->errors())->flatten()->first()], 422);
+        }
+
+        $id = $validated['id'];
+
+        $existing = DB::table('tenaga_ktd')->where('id', $id)->first();
+        if (!$existing) {
+            return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
+        }
+
+        if ($existing->user_id) {
+            return response()->json(['success' => false, 'message' => 'Tidak dapat menghapus data yang sudah terhubung dengan user'], 403);
+        }
+
+        DB::table('tenaga_ktd')->where('id', $id)->delete();
+
+        return response()->json(['success' => true, 'message' => 'Guru berhasil dihapus']);
+    }
+
+    /**
      * Laporan Semester Madrasah page.
      */
     public function laporanSemesterMadrasah(Request $request)

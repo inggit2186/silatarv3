@@ -88,7 +88,10 @@ Fitur Laporan Madrasah adalah modul untuk mengelola pelaporan semester madrasah 
 - [x] Fix migration `personal_access_tokens` - add if-not-exists check
 - [x] Fix command untuk handle invalid dates (0000-00-00)
 - [x] Cek area lain yang terpengaruh - tidak ada yang perlu diubah
-- [ ] Update modal form Tambah Pegawai untuk simpan ke `tenaga_ktd`
+- [x] Update modal form Tambah Pegawai untuk simpan ke `tenaga_ktd`
+- [x] Update modal form Tambah Guru untuk simpan ke `tenaga_ktd`
+- [x] Modal View, Edit, Delete untuk pegawai (hanya yang user_id = null)
+- [x] Modal View, Delete untuk guru (hanya yang user_id = null)
 - [ ] Phase 3: Admin-Side views (list & verify laporan)
 
 ## Data Flow
@@ -498,3 +501,30 @@ Approve / Reject
   - Admin UserController - TIDAK PERLU DIUBAH (untuk login system)
   - API UserController - TIDAK PERLU DIUBAH (untuk mobile app)
   - MadrasahController (Admin) - TIDAK PERLU DIUBAH (untuk profil madrasah)
+
+### 2026-08-06 (Implementasi Simpan Pegawai & Guru)
+- **Route baru:**
+  - `POST /madrasah/pegawai/save` -> savePegawaiMadrasah
+  - `POST /madrasah/guru/save` -> saveGuruMadrasah
+
+- **Controller methods baru:**
+  - `savePegawaiMadrasah(Request $request)` - Simpan data pegawai ke tabel `tenaga_ktd`
+  - `saveGuruMadrasah(Request $request)` - Simpan data guru ke tabel `tenaga_ktd`
+  - Validasi input sesuai field di tabel `tenaga_ktd`
+  - Response JSON untuk AJAX calls
+
+- **Update View:**
+  - `pegawaimadrasah.blade.php`:
+    - Tambah `@csrf` token di form modal
+    - Update JavaScript `submitForm()` untuk fetch AJAX
+    - Loading state saat menyimpan
+    - Reload halaman setelah sukses
+  - `gurumadrasah.blade.php`:
+    - Tambah `@csrf` token di form modal
+    - Update JavaScript `submitForm()` untuk fetch AJAX
+    - Loading state saat menyimpan
+    - Reload halaman setelah sukses
+
+- **Field yang disimpan:**
+  - Pegawai: nama, status (pns/pppk/honorer), nomor_induk, nik, npwp, tempat_lahir, tanggal_lahir, jk, golongan, jabatan, tmt_tugas, kgb, masa_kerja, pendidikan, email, telp, alamat, keterangan
+  - Guru: nama, kat_jabatan (guru/kepala), status (PNS/PPPK/HONOR), nomor_induk, nik, npwp, nuptk, npk, nrg, bidang_studi, sertifikasi, pendidikan, dll
