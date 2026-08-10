@@ -174,6 +174,13 @@ class UserController extends Controller
             ->orderBy('nama')
             ->get(['id', 'nama']);
 
+        // Get madrasah list for assignment
+        $madrasahs = DB::table('ktd_madrasah')
+            ->where('status', 1)
+            ->orderBy('kategori')
+            ->orderBy('nama')
+            ->get(['id', 'nama', 'nsm', 'kategori']);
+
         return view('admin.users.edit', [
             'title' => 'Edit Pengguna - SILATAR Admin',
             'breadcrumbs' => [
@@ -184,6 +191,7 @@ class UserController extends Controller
             'user' => $user,
             'roles' => $roles,
             'departments' => $departments,
+            'madrasahs' => $madrasahs,
         ]);
     }
 
@@ -205,6 +213,7 @@ class UserController extends Controller
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'string', Rule::in(['superadmin', 'admin', 'kasubbag', 'kasi', 'kepala', 'petugas', 'pegawai', 'frontdesk', 'pensiun', 'pindah'])],
             'dept_id' => ['nullable', 'numeric'],
+            'madrasah_id' => ['nullable', 'numeric', 'exists:ktd_madrasah,id'],
             'jk' => ['nullable', 'string', Rule::in(['Pria', 'Wanita'])],
             'pekerjaan' => ['nullable', 'string', 'max:255'],
             'telp' => ['nullable', 'string', 'max:50'],
@@ -224,6 +233,7 @@ class UserController extends Controller
             'nomor_induk' => $validated['nomor_induk'],
             'role' => $validated['role'],
             'dept_id' => $validated['dept_id'] ?? 0,
+            'madrasah_id' => $validated['madrasah_id'] ?? null,
             'jk' => $validated['jk'] ?? 'Pria',
             'pekerjaan' => $validated['pekerjaan'] ?? '',
             'telp' => $validated['telp'] ?? null,

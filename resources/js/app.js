@@ -305,19 +305,55 @@ document.addEventListener('alpine:init', () => {
             }
 
             const rect = trigger.getBoundingClientRect();
-            const width = 304;
-            const height = 356;
+            const width = 336;
+            const height = 380;
             const margin = 12;
-            const left = Math.min(
-                Math.max(rect.left, margin),
-                Math.max(margin, window.innerWidth - width - margin)
-            );
-            const shouldOpenAbove = window.innerHeight - rect.bottom < height + margin;
-            const top = shouldOpenAbove
-                ? Math.max(margin, rect.top - height - margin)
-                : Math.min(window.innerHeight - height - margin, rect.bottom + margin);
+
+            // Check if trigger is visible in viewport
+            if (rect.width === 0 || rect.height === 0) {
+                // Trigger is not visible, close the picker
+                this.open = false;
+                return;
+            }
+
+            // Calculate horizontal position
+            let left = rect.left;
+            if (left + width + margin > window.innerWidth) {
+                // Would overflow right, align to right edge
+                left = window.innerWidth - width - margin;
+            }
+            if (left < margin) {
+                // Would overflow left, align to left edge
+                left = margin;
+            }
+
+            // Calculate vertical position
+            let top;
+            let position;
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+
+            if (spaceBelow >= height + margin) {
+                // Enough space below
+                top = rect.bottom + margin;
+                position = 'bottom';
+            } else if (spaceAbove >= height + margin) {
+                // Enough space above
+                top = rect.top - height - margin;
+                position = 'top';
+            } else {
+                // Not enough space either way, default to below
+                top = rect.bottom + margin;
+                position = 'bottom';
+            }
+
+            // Ensure top doesn't go off-screen
+            if (top < margin) {
+                top = margin;
+            }
 
             this.popoverStyle = `position:fixed;left:${Math.round(left)}px;top:${Math.round(top)}px;width:${width}px;z-index:110;`;
+            this.popoverPosition = position;
         },
         init() {
             // Parse the value to get year and month
@@ -448,11 +484,43 @@ document.addEventListener('alpine:init', () => {
             this.open = true;
             this.$nextTick(() => {
                 this.updatePlacement();
+
+                // Add scroll listener to update position when modal scrolls
+                const modalBody = this.$el.closest('.modal-body, .modal-content, [style*="overflow"]');
+                if (modalBody) {
+                    this._scrollHandler = () => {
+                        if (this.open) {
+                            this.updatePlacement();
+                        }
+                    };
+                    modalBody.addEventListener('scroll', this._scrollHandler, { passive: true });
+                }
+
+                // Also update on window scroll
+                this._windowScrollHandler = () => {
+                    if (this.open) {
+                        this.updatePlacement();
+                    }
+                };
+                window.addEventListener('scroll', this._windowScrollHandler, { passive: true });
             });
         },
         closePicker() {
             this.open = false;
             this.popoverStyle = '';
+
+            // Remove scroll listeners
+            if (this._scrollHandler) {
+                const modalBody = this.$el.closest('.modal-body, .modal-content, [style*="overflow"]');
+                if (modalBody) {
+                    modalBody.removeEventListener('scroll', this._scrollHandler);
+                }
+                this._scrollHandler = null;
+            }
+            if (this._windowScrollHandler) {
+                window.removeEventListener('scroll', this._windowScrollHandler);
+                this._windowScrollHandler = null;
+            }
         },
         togglePicker() {
             this.open = !this.open;

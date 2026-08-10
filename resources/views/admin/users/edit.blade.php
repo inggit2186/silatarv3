@@ -166,6 +166,49 @@
                             @enderror
                         </div>
                     </div>
+
+                    {{-- Madrasah Assignment --}}
+                    <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold text-blue-800">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                            Assign ke Madrasah
+                        </h4>
+                        <p class="text-xs text-blue-600 mb-3">
+                            Untuk user yang berada di madrasah (MI, MTs, MA), pilih madrasah yang sesuai.
+                        </p>
+                        <div class="form-group mb-0">
+                            <label for="madrasah_id" class="form-label">Madrasah</label>
+                            <select
+                                id="madrasah_id"
+                                name="madrasah_id"
+                                class="form-select @error('madrasah_id') error @enderror"
+                            >
+                                <option value="">-- Pilih Madrasah (opsional) --</option>
+                                @php
+                                    $groupedMadrasah = $madrasahs->groupBy('kategori');
+                                @endphp
+                                @foreach($groupedMadrasah as $kategori => $madrasahList)
+                                    <optgroup label="{{ strtoupper($kategori) }}">
+                                        @foreach($madrasahList as $madrasah)
+                                            <option value="{{ $madrasah->id }}" {{ old('madrasah_id', $user->madrasah_id) == $madrasah->id ? 'selected' : '' }}>
+                                                {{ $madrasah->nama }} ({{ $madrasah->nsm ?? 'Tanpa NSM' }})
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
+                            @error('madrasah_id')
+                                <p class="form-error">
+                                    <svg class="form-error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Password Section --}}

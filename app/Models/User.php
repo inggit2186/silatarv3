@@ -12,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'nomor_induk', 'password', 'dept_id', 'kat_jabatan', 'pekerjaan', 'satker', 'role', 'jk', 'tempat_lahir', 'tanggal_lahir', 'alamat', 'telp', 'nip', 'npwp', 'rekening', 'pp', 'bio', 'facebook', 'twitter', 'linkedin', 'instagram', 'nikah', 'jenis_pjob', 'pjob', 'jml_anak', 'req_tunjangan', 'status', 'asn', 'gol', 'jabatan', 'tmt_cpns', 'tmt_pns', 'tmt_tugas', 'kgb', 'masa_kerja_tahun', 'masa_kerja_bulan', 'ijazah_jurusan', 'ijazah_fakultas', 'ijazah_universitas', 'ijazah_pendidikan', 'ijazah_tahun_lulus'])]
+#[Fillable(['name', 'email', 'nomor_induk', 'password', 'dept_id', 'madrasah_id', 'kat_jabatan', 'pekerjaan', 'satker', 'role', 'jk', 'tempat_lahir', 'tanggal_lahir', 'alamat', 'telp', 'nip', 'npwp', 'rekening', 'pp', 'bio', 'facebook', 'twitter', 'linkedin', 'instagram', 'nikah', 'jenis_pjob', 'pjob', 'jml_anak', 'req_tunjangan', 'status', 'asn', 'gol', 'jabatan', 'tmt_cpns', 'tmt_pns', 'tmt_tugas', 'kgb', 'masa_kerja_tahun', 'masa_kerja_bulan', 'ijazah_jurusan', 'ijazah_fakultas', 'ijazah_universitas', 'ijazah_pendidikan', 'ijazah_tahun_lulus'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -74,6 +74,14 @@ class User extends Authenticatable
     public function dept()
     {
         return $this->belongsTo(Department::class, 'dept_id');
+    }
+
+    /**
+     * Get madrasah (for madrasah users)
+     */
+    public function madrasah()
+    {
+        return $this->belongsTo(Madrasah::class, 'madrasah_id');
     }
 
     /**

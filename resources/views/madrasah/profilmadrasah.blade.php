@@ -92,7 +92,8 @@
 
                 <div class="content-inner">
 
-                <form action="#" method="POST" class="space-y-8">
+                <form action="{{ route('madrasah.profil.save') }}" method="POST" class="space-y-8">
+                    @csrf
 
                     <!-- Section 1: Identitas Madrasah -->
                     <div class="neo-card section-card">
@@ -116,7 +117,12 @@
                                         <input type="text" name="nama" value="{{ old('nama', $formData['nama']) }}" readonly disabled class="neo-field-input opacity-70 cursor-not-allowed">
                                         <span class="neo-field-hint">Data auto-fill dari sistem</span>
                                     @else
-                                        <input type="text" name="nama" value="{{ old('nama', $formData['nama']) }}" class="neo-field-input" placeholder="Contoh: Madrasah Ibtidaiyah Negeri 1 Tanjung">
+                                        <input type="text" name="nama" value="{{ old('nama', $formData['nama']) }}" class="neo-field-input" placeholder="Contoh: Madrasah Ibtidaiyah Negeri 1 Tanjung" required>
+                                        @if(empty($formData['nama']))
+                                            <span class="neo-field-hint" style="color: #f59e0b; font-weight: 600;">⚠️ Silakan isi nama madrasah Anda</span>
+                                        @else
+                                            <span class="neo-field-hint">Anda bisa mengubah nama madrasah</span>
+                                        @endif
                                     @endif
                                 </div>
                                 <div class="neo-field-group">
@@ -165,11 +171,12 @@
                                     <input type="text" name="akreditasi" value="{{ old('akreditasi', $formData['akreditasi']) }}" class="neo-field-input akreditasi-badge" placeholder="Contoh: A">
                                 </div>
                                 <div class="neo-field-group">
-                                    <label class="neo-field-label">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                        Tanggal Akreditasi
-                                    </label>
-                                    <input type="date" name="tanggal_akreditasi" value="{{ old('tanggal_akreditasi', $formData['tanggal_akreditasi']) }}" class="neo-field-input">
+                                    <x-ui.datepicker
+                                        name="tanggal_akreditasi"
+                                        label="Tanggal Akreditasi"
+                                        value="{{ old('tanggal_akreditasi', $formData['tanggal_akreditasi']) }}"
+                                        placeholder="Pilih tanggal akreditasi"
+                                    />
                                 </div>
                                 <div class="neo-field-group">
                                     <label class="neo-field-label">
@@ -298,11 +305,12 @@
                                     <input type="text" name="sk_pendirian" value="{{ old('sk_pendirian', $formData['sk_pendirian']) }}" class="neo-field-input" placeholder="Contoh: SK.1234/PP.03.03/2008">
                                 </div>
                                 <div class="neo-field-group">
-                                    <label class="neo-field-label">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                        Tanggal SK
-                                    </label>
-                                    <input type="date" name="tanggal_sk" value="{{ old('tanggal_sk', $formData['tanggal_sk']) }}" class="neo-field-input">
+                                    <x-ui.datepicker
+                                        name="tanggal_sk"
+                                        label="Tanggal SK"
+                                        value="{{ old('tanggal_sk', $formData['tanggal_sk']) }}"
+                                        placeholder="Pilih tanggal SK"
+                                    />
                                 </div>
                             </div>
                             <div class="form-full mt-4">

@@ -23,9 +23,16 @@ class MadrasahController extends Controller
             'min' => 'Madrasah Ibtidaiyah Negeri (MIN)',
         ];
 
-        // Get all madrasah units
-        $madrasahs = DB::table('ktd_department')
-            ->whereIn('kategori', ['mi', 'mts', 'ma', 'man', 'mtsn', 'min'])
+        // Get all madrasah from ktd_madrasah table
+        $madrasahs = DB::table('ktd_madrasah')
+            ->where('status', 1)
+            ->orderBy('kategori')
+            ->orderBy('nama')
+            ->get();
+
+        // Get departments for dropdown
+        $departments = DB::table('ktd_department')
+            ->whereIn('kategori', ['kantor', 'kua'])
             ->where('status', '!=', 0)
             ->orderBy('nama')
             ->get();
@@ -37,13 +44,14 @@ class MadrasahController extends Controller
         $statusKKM = ['Induk', 'Anggota'];
 
         return view('admin.madrasah.index', [
-            'title' => 'Laporan Madrasah - SILATAR Admin',
+            'title' => 'Manajemen Madrasah - SILATAR Admin',
             'breadcrumbs' => [
                 ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
-                ['label' => 'Laporan Madrasah', 'url' => null],
+                ['label' => 'Manajemen Madrasah', 'url' => null],
             ],
             'madrasahCategories' => $madrasahCategories,
             'madrasahs' => $madrasahs,
+            'departments' => $departments,
             'statusLembaga' => $statusLembaga,
             'waktuBelajar' => $waktuBelajar,
             'komiteLembaga' => $komiteLembaga,
@@ -57,12 +65,13 @@ class MadrasahController extends Controller
     public function saveProfile(Request $request)
     {
         $validated = $request->validate([
-            'dept_id' => 'nullable|string',
+            'madrasah_id' => 'nullable|integer',
+            'dept_id' => 'nullable|integer',
             'nama' => 'required|string|max:255',
-            'nsm' => 'required|string|max:50',
-            'npsm' => 'required|string|max:50',
+            'nsm' => 'nullable|string|max:50',
+            'npsm' => 'nullable|string|max:50',
             'status_lembaga' => 'nullable|string',
-            'kategori' => 'nullable|string',
+            'kategori' => 'required|in:mi,mts,ma,man,mtsn,min,ra',
             'jalan' => 'nullable|string|max:255',
             'jorong' => 'nullable|string|max:100',
             'nagari' => 'nullable|string|max:100',
@@ -79,71 +88,66 @@ class MadrasahController extends Controller
             'akreditasi' => 'nullable|string|max:10',
             'tanggal_akreditasi' => 'nullable|date',
             'status_kkm' => 'nullable|string',
+            'jarak_pusat_provinsi' => 'nullable|string|max:50',
+            'jarak_pusat_kabupaten' => 'nullable|string|max:50',
+            'jarak_kecamatan' => 'nullable|string|max:50',
+            'jarak_kanwil_kemenag' => 'nullable|string|max:50',
+            'jarak_kemenag_kab' => 'nullable|string|max:50',
+            'jarak_kua' => 'nullable|string|max:50',
         ]);
 
+        $data = [
+            'dept_id' => $validated['dept_id'] ?? null,
+            'nama' => $validated['nama'],
+            'nsm' => $validated['nsm'] ?? null,
+            'npsm' => $validated['npsm'] ?? null,
+            'status_lembaga' => $validated['status_lembaga'] ?? null,
+            'kategori' => $validated['kategori'],
+            'jalan' => $validated['jalan'] ?? null,
+            'jorong' => $validated['jorong'] ?? null,
+            'nagari' => $validated['nagari'] ?? null,
+            'kecamatan' => $validated['kecamatan'] ?? null,
+            'koordinat' => $validated['koordinat'] ?? null,
+            'telepon' => $validated['telepon'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'website' => $validated['website'] ?? null,
+            'waktu_belajar' => $validated['waktu_belajar'] ?? null,
+            'visi' => $validated['visi'] ?? null,
+            'sk_pendirian' => $validated['sk_pendirian'] ?? null,
+            'tanggal_sk' => $validated['tanggal_sk'] ?? null,
+            'komite_lembaga' => $validated['komite_lembaga'] ?? null,
+            'akreditasi' => $validated['akreditasi'] ?? null,
+            'tanggal_akreditasi' => $validated['tanggal_akreditasi'] ?? null,
+            'status_kkm' => $validated['status_kkm'] ?? null,
+            'jarak_pusat_provinsi' => $validated['jarak_pusat_provinsi'] ?? null,
+            'jarak_pusat_kabupaten' => $validated['jarak_pusat_kabupaten'] ?? null,
+            'jarak_kecamatan' => $validated['jarak_kecamatan'] ?? null,
+            'jarak_kanwil_kemenag' => $validated['jarak_kanwil_kemenag'] ?? null,
+            'jarak_kemenag_kab' => $validated['jarak_kemenag_kab'] ?? null,
+            'jarak_kua' => $validated['jarak_kua'] ?? null,
+            'updated_at' => now(),
+        ];
+
         // Check if madrasah exists
-        $existing = DB::table('ktd_department')
-            ->where('id', $validated['dept_id'] ?? null)
-            ->first();
+        $madrasahId = $validated['madrasah_id'] ?? null;
+        $existing = null;
+
+        if ($madrasahId) {
+            $existing = DB::table('ktd_madrasah')->where('id', $madrasahId)->first();
+        }
 
         if ($existing) {
             // Update existing
-            DB::table('ktd_department')
+            DB::table('ktd_madrasah')
                 ->where('id', $existing->id)
-                ->update([
-                    'nama' => $validated['nama'],
-                    'nsm' => $validated['nsm'],
-                    'npsm' => $validated['npsm'],
-                    'status_lembaga' => $validated['status_lembaga'] ?? null,
-                    'kategori' => $validated['kategori'] ?? $existing->kategori ?? null,
-                    'jalan' => $validated['jalan'] ?? null,
-                    'jorong' => $validated['jorong'] ?? null,
-                    'nagari' => $validated['nagari'] ?? null,
-                    'kecamatan' => $validated['kecamatan'] ?? null,
-                    'koordinat' => $validated['koordinat'] ?? null,
-                    'telepon' => $validated['telepon'] ?? null,
-                    'email' => $validated['email'] ?? null,
-                    'website' => $validated['website'] ?? null,
-                    'waktu_belajar' => $validated['waktu_belajar'] ?? null,
-                    'visi' => $validated['visi'] ?? null,
-                    'sk_pendirian' => $validated['sk_pendirian'] ?? null,
-                    'tanggal_sk' => $validated['tanggal_sk'] ?? null,
-                    'komite_lembaga' => $validated['komite_lembaga'] ?? null,
-                    'akreditasi' => $validated['akreditasi'] ?? null,
-                    'tanggal_akreditasi' => $validated['tanggal_akreditasi'] ?? null,
-                    'status_kkm' => $validated['status_kkm'] ?? null,
-                    'updated_at' => now(),
-                ]);
+                ->update($data);
 
             return redirect()->back()->with('success', 'Data madrasah berhasil diperbarui!');
         } else {
             // Create new
-            $insertId = DB::table('ktd_department')->insertGetId([
-                'nama' => $validated['nama'],
-                'nsm' => $validated['nsm'],
-                'npsm' => $validated['npsm'],
-                'status_lembaga' => $validated['status_lembaga'] ?? 'Negeri',
-                'kategori' => $validated['kategori'] ?? 'mts',
-                'jalan' => $validated['jalan'] ?? null,
-                'jorong' => $validated['jorong'] ?? null,
-                'nagari' => $validated['nagari'] ?? null,
-                'kecamatan' => $validated['kecamatan'] ?? null,
-                'koordinat' => $validated['koordinat'] ?? null,
-                'telepon' => $validated['telepon'] ?? null,
-                'email' => $validated['email'] ?? null,
-                'website' => $validated['website'] ?? null,
-                'waktu_belajar' => $validated['waktu_belajar'] ?? null,
-                'visi' => $validated['visi'] ?? null,
-                'sk_pendirian' => $validated['sk_pendirian'] ?? null,
-                'tanggal_sk' => $validated['tanggal_sk'] ?? null,
-                'komite_lembaga' => $validated['komite_lembaga'] ?? null,
-                'akreditasi' => $validated['akreditasi'] ?? null,
-                'tanggal_akreditasi' => $validated['tanggal_akreditasi'] ?? null,
-                'status_kkm' => $validated['status_kkm'] ?? null,
-                'status' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            $data['status'] = 1;
+            $data['created_at'] = now();
+            $insertId = DB::table('ktd_madrasah')->insertGetId($data);
 
             return redirect()->back()->with('success', 'Data madrasah berhasil disimpan!');
         }
@@ -154,7 +158,7 @@ class MadrasahController extends Controller
      */
     public function getProfile($id)
     {
-        $madrasah = DB::table('ktd_department')
+        $madrasah = DB::table('ktd_madrasah')
             ->where('id', $id)
             ->first();
 
@@ -166,5 +170,44 @@ class MadrasahController extends Controller
             'success' => true,
             'data' => $madrasah,
         ]);
+    }
+
+    /**
+     * Delete madrasah.
+     */
+    public function destroy($id)
+    {
+        $madrasah = DB::table('ktd_madrasah')->where('id', $id)->first();
+
+        if (!$madrasah) {
+            return redirect()->back()->with('error', 'Madrasah tidak ditemukan');
+        }
+
+        // Soft delete - set status to 0
+        DB::table('ktd_madrasah')
+            ->where('id', $id)
+            ->update(['status' => 0, 'updated_at' => now()]);
+
+        return redirect()->back()->with('success', 'Madrasah berhasil dihapus!');
+    }
+
+    /**
+     * Assign user to madrasah.
+     */
+    public function assignUser(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'madrasah_id' => 'required|exists:ktd_madrasah,id',
+        ]);
+
+        DB::table('users')
+            ->where('id', $validated['user_id'])
+            ->update([
+                'madrasah_id' => $validated['madrasah_id'],
+                'updated_at' => now(),
+            ]);
+
+        return redirect()->back()->with('success', 'User berhasil di-assign ke madrasah!');
     }
 }

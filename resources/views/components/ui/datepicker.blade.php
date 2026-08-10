@@ -62,16 +62,15 @@
             </svg>
         </button>
 
-        <template x-teleport="body">
-            <div
-                x-show="open"
-                x-cloak
-                x-transition.opacity.scale.origin.top.left
-                @click.outside="closePicker()"
-                class="silatar-datepicker-popover"
-                :style="popoverStyle"
-                :data-name="'{{ $name }}'"
-            >
+        <div
+            x-show="open"
+            x-cloak
+            x-transition.opacity.scale.origin.top.left
+            @click.outside="closePicker()"
+            class="silatar-datepicker-popover"
+            :style="popoverStyle"
+            :data-name="'{{ $name }}'"
+        >
             <div class="silatar-datepicker-popover-header">
                 <button type="button" @click="prevMonth()" class="silatar-datepicker-nav" aria-label="Bulan sebelumnya">
                     <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -135,7 +134,6 @@
                 </button>
             </div>
             </div>
-        </template>
     </div>
 
     @if ($help)

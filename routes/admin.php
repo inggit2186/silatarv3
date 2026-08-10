@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\TpgController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\NewsController;
 use App\Http\Controllers\Admin\PenilaianKinerjaController;
+use App\Http\Controllers\Admin\MadrasahController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -124,5 +125,15 @@ Route::middleware(['auth', 'admin'])
             Route::post('/{id}/reject', [TpgController::class, 'reject'])->name('reject');
             Route::get('/{id}/file/{syaratId}', [TpgController::class, 'downloadFile'])->name('file');
             Route::get('/{id}/preview/{syaratId}', [TpgController::class, 'previewFile'])->name('preview');
+        });
+
+        // Madrasah Management Routes
+        Route::prefix('madrasah')->name('madrasah.')->group(function () {
+            Route::get('/', [MadrasahController::class, 'index'])->name('index');
+            Route::post('/', [MadrasahController::class, 'saveProfile'])->name('store');
+            Route::put('/{id}', [MadrasahController::class, 'saveProfile'])->name('update');
+            Route::delete('/{id}', [MadrasahController::class, 'destroy'])->name('destroy');
+            Route::get('/{id}/profile', [MadrasahController::class, 'getProfile'])->name('profile');
+            Route::post('/assign-user', [MadrasahController::class, 'assignUser'])->name('assign-user');
         });
     });

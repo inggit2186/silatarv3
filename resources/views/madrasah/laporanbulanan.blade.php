@@ -465,8 +465,12 @@
                                         <input type="text" name="mutationRows[{{ $idx }}][tempat_lahir]" value="{{ $row['tempat_lahir'] ?? '' }}" class="neo-form-input" placeholder="Tempat lahir">
                                     </div>
                                     <div class="neo-field-group">
-                                        <label class="neo-field-label">Tanggal Lahir</label>
-                                        <input type="date" name="mutationRows[{{ $idx }}][tanggal_lahir]" value="{{ $row['tanggal_lahir'] ?? '' }}" class="neo-form-input">
+                                        <x-ui.datepicker
+                                            name="mutationRows[{{ $idx }}][tanggal_lahir]"
+                                            label="Tanggal Lahir"
+                                            value="{{ $row['tanggal_lahir'] ?? '' }}"
+                                            placeholder="Pilih tanggal lahir"
+                                        />
                                     </div>
                                     <div class="neo-field-group span-2">
                                         <label class="neo-field-label">Nama Ibu Kandung</label>
@@ -532,8 +536,11 @@
                                         <input type="text" name="mutationRows[0][tempat_lahir]" class="neo-form-input" placeholder="Tempat lahir">
                                     </div>
                                     <div class="neo-field-group">
-                                        <label class="neo-field-label">Tanggal Lahir</label>
-                                        <input type="date" name="mutationRows[0][tanggal_lahir]" class="neo-form-input">
+                                        <x-ui.datepicker
+                                            name="mutationRows[0][tanggal_lahir]"
+                                            label="Tanggal Lahir"
+                                            placeholder="Pilih tanggal lahir"
+                                        />
                                     </div>
                                     <div class="neo-field-group span-2">
                                         <label class="neo-field-label">Nama Ibu Kandung</label>

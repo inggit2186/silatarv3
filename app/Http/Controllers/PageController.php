@@ -6018,77 +6018,178 @@ class PageController extends Controller
             'jarak_sma_terdekat' => '',
         ];
 
-        // Get department data based on user's dept_id
-        if ($user && $user->dept_id) {
-            $dept = DB::table('ktd_department')->where('id', $user->dept_id)->first();
+        // Check if user is from madrasah category (mi, mts, ma, man, mtsn, min, ra) OR dept_id 999/998
+        $dept = $user && $user->dept_id ? DB::table('ktd_department')->where('id', $user->dept_id)->first() : null;
+        $kategoriLower = strtolower($dept->kategori ?? '');
+        $isMadrasahCategory = in_array($kategoriLower, ['mi', 'mts', 'ma', 'man', 'mtsn', 'min', 'ra']);
+        $isSwastaDept = in_array($user->dept_id, [999, 998]); // Dept untuk madrasah swasta
+        $shouldAutoCreate = ($isMadrasahCategory || $isSwastaDept) && !$user->madrasah_id;
 
-            if ($dept) {
-                // Nama Madrasah selalu read-only (dari ktd_department)
+        // Auto-create madrasah for users without madrasah_id but with madrasah category dept or swasta dept
+        if ($shouldAutoCreate) {
+            // Use satker as default name, fallback to dept->nama
+            $defaultNama = $user->satker ?? $dept->nama ?? 'Madrasah Baru';
+
+            // Create new madrasah entry
+            $madrasahId = DB::table('ktd_madrasah')->insertGetId([
+                'dept_id' => $user->dept_id,
+                'nama' => $defaultNama,
+                'kategori' => $kategoriLower ?: 'other',
+                'status_lembaga' => $dept->status_lembaga ?? 'Swasta',
+                'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Update user's madrasah_id
+            DB::table('users')->where('id', $user->id)->update([
+                'madrasah_id' => $madrasahId,
+                'updated_at' => now(),
+            ]);
+
+            // Refresh user data
+            $user = auth()->user()->fresh();
+        }
+
+        // Get madrasah data based on user's madrasah_id (preferred) or dept_id (fallback)
+        $madrasah = null;
+        if ($user && $user->madrasah_id) {
+            $madrasah = DB::table('ktd_madrasah')->where('id', $user->madrasah_id)->first();
+        } elseif ($user && $user->dept_id) {
+            // Backward compatibility: fallback to ktd_department if madrasah_id not set
+            $madrasah = DB::table('ktd_department')->where('id', $user->dept_id)->first();
+        }
+
+        if ($madrasah) {
+            // Nama Madrasah bisa diedit untuk user dengan dept_id madrasah (mi, mts, ma, dll)
+            // Tapi read-only untuk madrasah negeri (man, min, mtsn)
+            $kategoriLower = strtolower($madrasah->kategori ?? '');
+            if (in_array($kategoriLower, ['man', 'min', 'mtsn'])) {
+                // Madrasah negeri - nama read-only
                 $formData['is_nama_readonly'] = true;
-                $formData['nama'] = $dept->nama ?? '';
+            } else {
+                // Madrasah swasta atau lainnya - nama bisa diedit
+                $formData['is_nama_readonly'] = false;
+            }
+            $formData['nama'] = $madrasah->nama ?? '';
 
-                // Map ktd_department columns to form fields
-                $formData['status_lembaga'] = $dept->status ?? '';
-                $formData['jarak_kecamatan'] = $dept->jarak_kecamatan ?? '';
-                $formData['jarak_kua'] = $dept->jarak_kua ?? '';
-                $formData['jarak_kemenag_kab'] = $dept->jarak_kemenag_kab ?? '';
-                $formData['jarak_kanwil_kemenag'] = $dept->jarak_kanwil_kemenag ?? '';
+            // Map columns to form fields
+            $formData['status_lembaga'] = $madrasah->status_lembaga ?? $madrasah->status ?? '';
+            $formData['jarak_kecamatan'] = $madrasah->jarak_kecamatan ?? '';
+            $formData['jarak_kua'] = $madrasah->jarak_kua ?? '';
+            $formData['jarak_kemenag_kab'] = $madrasah->jarak_kemenag_kab ?? '';
+            $formData['jarak_kanwil_kemenag'] = $madrasah->jarak_kanwil_kemenag ?? '';
 
-                // Handle alamat field (might contain multiple parts)
-                if (!empty($dept->alamat)) {
-                    $alamatParts = explode(',', $dept->alamat);
-                    $formData['jalan'] = trim($alamatParts[0] ?? '');
-                    $formData['jorong'] = trim($alamatParts[1] ?? '');
-                    $formData['nagari'] = trim($alamatParts[2] ?? '');
-                    $formData['kecamatan'] = trim($alamatParts[3] ?? '');
-                }
+            // Handle alamat field (might contain multiple parts)
+            if (!empty($madrasah->alamat)) {
+                $alamatParts = explode(',', $madrasah->alamat);
+                $formData['jalan'] = trim($alamatParts[0] ?? '');
+                $formData['jorong'] = trim($alamatParts[1] ?? '');
+                $formData['nagari'] = trim($alamatParts[2] ?? '');
+                $formData['kecamatan'] = trim($alamatParts[3] ?? '');
+            } else {
+                // Use individual fields if available
+                $formData['jalan'] = $madrasah->jalan ?? '';
+                $formData['jorong'] = $madrasah->jorong ?? '';
+                $formData['nagari'] = $madrasah->nagari ?? '';
+                $formData['kecamatan'] = $madrasah->kecamatan ?? '';
+            }
 
-                // Map telepon if available
-                if (!empty($dept->telepon)) {
-                    $formData['telepon'] = $dept->telepon;
-                }
+            // Map other fields if available
+            if (!empty($madrasah->telepon)) {
+                $formData['telepon'] = $madrasah->telepon;
+            }
+            if (!empty($madrasah->email)) {
+                $formData['email'] = $madrasah->email;
+            }
+            if (!empty($madrasah->website)) {
+                $formData['website'] = $madrasah->website;
+            }
+            if (!empty($madrasah->koordinat)) {
+                $formData['koordinat'] = $madrasah->koordinat;
+            }
+            if (!empty($madrasah->akreditasi)) {
+                $formData['akreditasi'] = $madrasah->akreditasi;
+            }
+            if (!empty($madrasah->waktu_belajar)) {
+                $formData['waktu_belajar'] = $madrasah->waktu_belajar;
+            }
+            if (!empty($madrasah->nsm)) {
+                $formData['nsm'] = $madrasah->nsm;
+            }
+            if (!empty($madrasah->npsm)) {
+                $formData['npsm'] = $madrasah->npsm;
+            }
 
-                // Map email if available
-                if (!empty($dept->email)) {
-                    $formData['email'] = $dept->email;
-                }
+            // Map missing fields
+            if (!empty($madrasah->tanggal_akreditasi)) {
+                $formData['tanggal_akreditasi'] = $madrasah->tanggal_akreditasi;
+            }
+            if (!empty($madrasah->status_kkm)) {
+                $formData['status_kkm'] = $madrasah->status_kkm;
+            }
+            if (!empty($madrasah->tanggal_sk)) {
+                $formData['tanggal_sk'] = $madrasah->tanggal_sk;
+            }
+            if (!empty($madrasah->komite_lembaga)) {
+                $formData['komite_lembaga'] = $madrasah->komite_lembaga;
+            }
+            if (!empty($madrasah->visi)) {
+                $formData['visi'] = $madrasah->visi;
+            }
 
-                // Map website if available
-                if (!empty($dept->website)) {
-                    $formData['website'] = $dept->website;
-                }
+            // Map jarak fields
+            if (!empty($madrasah->jarak_pusat_provinsi)) {
+                $formData['jarak_pusat_provinsi'] = $madrasah->jarak_pusat_provinsi;
+            }
+            if (!empty($madrasah->jarak_pusat_kabupaten)) {
+                $formData['jarak_pusat_kabupaten'] = $madrasah->jarak_pusat_kabupaten;
+            }
+            if (!empty($madrasah->jarak_kecamatan)) {
+                $formData['jarak_kecamatan'] = $madrasah->jarak_kecamatan;
+            }
+            if (!empty($madrasah->jarak_kanwil_kemenag)) {
+                $formData['jarak_kanwil_kemenag'] = $madrasah->jarak_kanwil_kemenag;
+            }
+            if (!empty($madrasah->jarak_kemenag_kab)) {
+                $formData['jarak_kemenag_kab'] = $madrasah->jarak_kemenag_kab;
+            }
+            if (!empty($madrasah->jarak_kua)) {
+                $formData['jarak_kua'] = $madrasah->jarak_kua;
+            }
+            if (!empty($madrasah->jarak_ra_terdekat)) {
+                $formData['jarak_ra_terdekat'] = $madrasah->jarak_ra_terdekat;
+            }
+            if (!empty($madrasah->jarak_mi_terdekat)) {
+                $formData['jarak_mi_terdekat'] = $madrasah->jarak_mi_terdekat;
+            }
+            if (!empty($madrasah->jarak_mts_terdekat)) {
+                $formData['jarak_mts_terdekat'] = $madrasah->jarak_mts_terdekat;
+            }
+            if (!empty($madrasah->jarak_ma_terdekat)) {
+                $formData['jarak_ma_terdekat'] = $madrasah->jarak_ma_terdekat;
+            }
+            if (!empty($madrasah->jarak_pontren_terdekat)) {
+                $formData['jarak_pontren_terdekat'] = $madrasah->jarak_pontren_terdekat;
+            }
+            if (!empty($madrasah->jarak_tk_terdekat)) {
+                $formData['jarak_tk_terdekat'] = $madrasah->jarak_tk_terdekat;
+            }
+            if (!empty($madrasah->jarak_sd_terdekat)) {
+                $formData['jarak_sd_terdekat'] = $madrasah->jarak_sd_terdekat;
+            }
+            if (!empty($madrasah->jarak_smp_terdekat)) {
+                $formData['jarak_smp_terdekat'] = $madrasah->jarak_smp_terdekat;
+            }
+            if (!empty($madrasah->jarak_sma_terdekat)) {
+                $formData['jarak_sma_terdekat'] = $madrasah->jarak_sma_terdekat;
+            }
 
-                // Map koordinat if available
-                if (!empty($dept->koordinat)) {
-                    $formData['koordinat'] = $dept->koordinat;
-                }
-
-                // Map akreditasi if available
-                if (!empty($dept->akreditasi)) {
-                    $formData['akreditasi'] = $dept->akreditasi;
-                }
-
-                // Map waktu_belajar if available
-                if (!empty($dept->waktu_belajar)) {
-                    $formData['waktu_belajar'] = $dept->waktu_belajar;
-                }
-
-                // Map nsm if available
-                if (!empty($dept->nsm)) {
-                    $formData['nsm'] = $dept->nsm;
-                }
-
-                // Map npsm if available
-                if (!empty($dept->npsm)) {
-                    $formData['npsm'] = $dept->npsm;
-                }
-
-                // Check kategori: jika MAN/MIN/MTSN, status lembaga = NEGERI dan read-only
-                $kategoriLower = strtolower($dept->kategori ?? '');
-                if (in_array($kategoriLower, ['man', 'min', 'mtsn'])) {
-                    $formData['status_lembaga'] = 'NEGERI';
-                    $formData['is_status_readonly'] = true;
-                }
+            // Check kategori: jika MAN/MIN/MTSN, status lembaga = NEGERI dan read-only
+            $kategoriLower = strtolower($madrasah->kategori ?? '');
+            if (in_array($kategoriLower, ['man', 'min', 'mtsn'])) {
+                $formData['status_lembaga'] = 'NEGERI';
+                $formData['is_status_readonly'] = true;
             }
         }
 
@@ -6103,13 +6204,17 @@ class PageController extends Controller
     public function saveProfilMadrasah(Request $request)
     {
         $user = auth()->user();
-        $deptId = $user->dept_id ?? $request->input('dept_id');
 
-        if (!$deptId) {
+        // Determine madrasah_id (preferred) or dept_id (fallback)
+        $madrasahId = $user->madrasah_id ?? null;
+        $deptId = $user->dept_id ?? null;
+
+        if (!$madrasahId && !$deptId) {
             return redirect()->back()->with('error', 'Unit kerja tidak ditemukan');
         }
 
         $validated = $request->validate([
+            'nama' => 'required|string|max:255',
             'nsm' => 'nullable|string|max:50',
             'npsm' => 'nullable|string|max:50',
             'status_lembaga' => 'nullable|string|max:20',
@@ -6142,20 +6247,15 @@ class PageController extends Controller
             'status_kkm' => 'nullable|string|max:20',
         ]);
 
-        // Build alamat from parts
-        $alamatParts = array_filter([
-            trim($request->input('jalan', '')),
-            trim($request->input('jorong', '')),
-            trim($request->input('nagari', '')),
-            trim($request->input('kecamatan', '')),
-        ]);
-        $alamat = implode(', ', $alamatParts);
-
         $data = [
+            'nama' => $request->input('nama'),
             'nsm' => $request->input('nsm'),
             'npsm' => $request->input('npsm'),
             'status_lembaga' => $request->input('status_lembaga'),
-            'alamat' => $alamat ?: null,
+            'jalan' => $request->input('jalan'),
+            'jorong' => $request->input('jorong'),
+            'nagari' => $request->input('nagari'),
+            'kecamatan' => $request->input('kecamatan'),
             'telepon' => $request->input('telepon'),
             'email' => $request->input('email'),
             'website' => $request->input('website'),
@@ -6189,7 +6289,21 @@ class PageController extends Controller
         // Filter out null values
         $data = array_filter($data, fn($v) => $v !== null);
 
-        DB::table('ktd_department')->where('id', $deptId)->update($data);
+        // Update madrasah table (preferred) or department table (fallback)
+        if ($madrasahId) {
+            DB::table('ktd_madrasah')->where('id', $madrasahId)->update($data);
+        } elseif ($deptId) {
+            DB::table('ktd_department')->where('id', $deptId)->update($data);
+        }
+
+        // Sync nama madrasah ke users.satker jika nama berubah
+        $namaMadrasah = $request->input('nama');
+        if ($namaMadrasah && $user->satker !== $namaMadrasah) {
+            DB::table('users')->where('id', $user->id)->update([
+                'satker' => $namaMadrasah,
+                'updated_at' => now(),
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Profil madrasah berhasil disimpan!');
     }
@@ -6197,28 +6311,67 @@ class PageController extends Controller
     /**
      * Pegawai Madrasah page - daftar pegawai berdasarkan dept_id user.
      */
+    /**
+     * Pegawai Madrasah page - daftar pegawai/staf berdasarkan madrasah_id user.
+     */
     public function pegawaiMadrasah(Request $request)
     {
         $user = auth()->user();
+        $madrasahId = $user->madrasah_id ?? null;
         $deptId = $user->dept_id ?? null;
         $deptName = 'Madrasah';
         $isMadrasahType = false;
 
-        // Get department info
-        if ($deptId) {
+        // Auto-create madrasah if needed (same logic as profilMadrasah)
+        if (!$madrasahId && $deptId) {
             $dept = DB::table('ktd_department')->where('id', $deptId)->first();
-            if ($dept) {
-                $deptName = $dept->nama ?? 'Madrasah';
-                $kategoriLower = strtolower($dept->kategori ?? '');
-                $isMadrasahType = in_array($kategoriLower, ['man', 'min', 'mtsn', 'ra']);
+            $kategoriLower = strtolower($dept->kategori ?? '');
+            $isMadrasahCategory = in_array($kategoriLower, ['mi', 'mts', 'ma', 'man', 'mtsn', 'min', 'ra']);
+            $isSwastaDept = in_array($deptId, [999, 998]);
+
+            if (($isMadrasahCategory || $isSwastaDept) && !$user->madrasah_id) {
+                $defaultNama = $user->satker ?? $dept->nama ?? 'Madrasah Baru';
+                $madrasahId = DB::table('ktd_madrasah')->insertGetId([
+                    'dept_id' => $deptId,
+                    'nama' => $defaultNama,
+                    'kategori' => $kategoriLower ?: 'other',
+                    'status_lembaga' => $dept->status_lembaga ?? 'Swasta',
+                    'status' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                DB::table('users')->where('id', $user->id)->update([
+                    'madrasah_id' => $madrasahId,
+                    'updated_at' => now(),
+                ]);
+                $user = auth()->user()->fresh();
             }
         }
 
-        // Get tenaga_ktd based on dept_id - Filter untuk Staff (kat_jabatan = staf/honorer)
+        // Get madrasah info (preferred) or fallback to department
+        $madrasah = null;
+        if ($madrasahId) {
+            $madrasah = DB::table('ktd_madrasah')->where('id', $madrasahId)->first();
+        } elseif ($deptId) {
+            $madrasah = DB::table('ktd_department')->where('id', $deptId)->first();
+        }
+
+        if ($madrasah) {
+            $deptName = $madrasah->nama ?? 'Madrasah';
+            $kategoriLower = strtolower($madrasah->kategori ?? '');
+            $isMadrasahType = in_array($kategoriLower, ['man', 'min', 'mtsn', 'ra']);
+        }
+
+        // Query with madrasah_id (preferred) or dept_id (fallback)
         $query = DB::table('tenaga_ktd')
-            ->where('dept_id', $deptId)
             ->whereIn('kat_jabatan', ['staf', 'honorer'])
             ->where('is_active', true);
+
+        if ($madrasahId) {
+            $query->where('madrasah_id', $madrasahId);
+        } else {
+            $query->where('dept_id', $deptId);
+        }
 
         $pegawaiList = $query->orderBy('nama')->paginate(15);
 
@@ -6239,10 +6392,24 @@ class PageController extends Controller
         });
 
         // Summary stats - ASN: PNS/CPNS/PPPK, Non ASN: Honorer
+        // Helper closure for building the stats query
+        $buildStatsQuery = function ($query) use ($madrasahId, $deptId) {
+            if ($madrasahId) {
+                $query->where('madrasah_id', $madrasahId);
+            } else {
+                $query->where('dept_id', $deptId);
+            }
+            return $query;
+        };
+
         $stats = [
             'total' => $pegawaiList->total(),
-            'asn' => DB::table('tenaga_ktd')->where('dept_id', $deptId)->whereIn('kat_jabatan', ['staf', 'honorer'])->whereIn('status', ['PNS', 'CPNS', 'PPPK'])->count(),
-            'honorer' => DB::table('tenaga_ktd')->where('dept_id', $deptId)->whereIn('kat_jabatan', ['staf', 'honorer'])->whereNotIn('status', ['PNS', 'CPNS', 'PPPK'])->count(),
+            'asn' => $buildStatsQuery(
+                DB::table('tenaga_ktd')->whereIn('kat_jabatan', ['staf', 'honorer'])->whereIn('status', ['PNS', 'CPNS', 'PPPK'])
+            )->count(),
+            'honorer' => $buildStatsQuery(
+                DB::table('tenaga_ktd')->whereIn('kat_jabatan', ['staf', 'honorer'])->whereNotIn('status', ['PNS', 'CPNS', 'PPPK'])
+            )->count(),
         ];
 
         return view('madrasah.pegawaimadrasah', [
@@ -6254,27 +6421,63 @@ class PageController extends Controller
     }
 
     /**
-     * Guru Madrasah page - daftar guru berdasarkan dept_id user.
+     * Guru Madrasah page - daftar guru berdasarkan madrasah_id user.
      */
     public function guruMadrasah(Request $request)
     {
         $user = auth()->user();
+        $madrasahId = $user->madrasah_id ?? null;
         $deptId = $user->dept_id ?? null;
         $deptName = 'Madrasah';
 
-        // Get department info
-        if ($deptId) {
+        // Auto-create madrasah if needed (same logic as profilMadrasah)
+        if (!$madrasahId && $deptId) {
             $dept = DB::table('ktd_department')->where('id', $deptId)->first();
-            if ($dept) {
-                $deptName = $dept->nama ?? 'Madrasah';
+            $kategoriLower = strtolower($dept->kategori ?? '');
+            $isMadrasahCategory = in_array($kategoriLower, ['mi', 'mts', 'ma', 'man', 'mtsn', 'min', 'ra']);
+            $isSwastaDept = in_array($deptId, [999, 998]);
+
+            if (($isMadrasahCategory || $isSwastaDept) && !$user->madrasah_id) {
+                $defaultNama = $user->satker ?? $dept->nama ?? 'Madrasah Baru';
+                $madrasahId = DB::table('ktd_madrasah')->insertGetId([
+                    'dept_id' => $deptId,
+                    'nama' => $defaultNama,
+                    'kategori' => $kategoriLower ?: 'other',
+                    'status_lembaga' => $dept->status_lembaga ?? 'Swasta',
+                    'status' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                DB::table('users')->where('id', $user->id)->update([
+                    'madrasah_id' => $madrasahId,
+                    'updated_at' => now(),
+                ]);
+                $user = auth()->user()->fresh();
             }
         }
 
-        // Get only guru based on dept_id from tenaga_ktd
+        // Get madrasah info (preferred) or fallback to department
+        $madrasah = null;
+        if ($madrasahId) {
+            $madrasah = DB::table('ktd_madrasah')->where('id', $madrasahId)->first();
+        } elseif ($deptId) {
+            $madrasah = DB::table('ktd_department')->where('id', $deptId)->first();
+        }
+
+        if ($madrasah) {
+            $deptName = $madrasah->nama ?? 'Madrasah';
+        }
+
+        // Get only guru based on madrasah_id (preferred) or dept_id (fallback) from tenaga_ktd
         $guruQuery = DB::table('tenaga_ktd')
-            ->where('dept_id', $deptId)
             ->where('kat_jabatan', 'guru')
             ->where('is_active', true);
+
+        if ($madrasahId) {
+            $guruQuery->where('madrasah_id', $madrasahId);
+        } else {
+            $guruQuery->where('dept_id', $deptId);
+        }
 
         $guruList = $guruQuery->orderBy('nama')->paginate(15);
 
@@ -6294,11 +6497,25 @@ class PageController extends Controller
             return $item;
         });
 
+        // Helper closure for building the stats query
+        $buildStatsQuery = function ($query) use ($madrasahId, $deptId) {
+            if ($madrasahId) {
+                $query->where('madrasah_id', $madrasahId);
+            } else {
+                $query->where('dept_id', $deptId);
+            }
+            return $query;
+        };
+
         // Summary stats - serdik: sertifikasi / non-sertifikasi
         $stats = [
             'total' => $guruList->total(),
-            'sertifikasi' => DB::table('tenaga_ktd')->where('dept_id', $deptId)->where('kat_jabatan', 'guru')->where('serdik', 'sertifikasi')->count(),
-            'belum_sertifikasi' => DB::table('tenaga_ktd')->where('dept_id', $deptId)->where('kat_jabatan', 'guru')->whereIn('serdik', ['non-sertifikasi', 'non-guru', 'unknown'])->count(),
+            'sertifikasi' => $buildStatsQuery(
+                DB::table('tenaga_ktd')->where('kat_jabatan', 'guru')->where('serdik', 'sertifikasi')
+            )->count(),
+            'belum_sertifikasi' => $buildStatsQuery(
+                DB::table('tenaga_ktd')->where('kat_jabatan', 'guru')->whereIn('serdik', ['non-sertifikasi', 'non-guru', 'unknown'])
+            )->count(),
         ];
 
         return view('madrasah.gurumadrasah', [
@@ -6310,13 +6527,15 @@ class PageController extends Controller
 
     /**
      * Save Pegawai Madrasah - insert/update ke tabel tenaga_ktd.
+     * Uses madrasah_id from user (preferred) or dept_id (fallback).
      */
     public function savePegawaiMadrasah(Request $request)
     {
         $user = auth()->user();
+        $madrasahId = $user->madrasah_id ?? null;
         $deptId = $user->dept_id ?? null;
 
-        if (!$deptId) {
+        if (!$madrasahId && !$deptId) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan'], 400);
             }
@@ -6357,7 +6576,8 @@ class PageController extends Controller
         ];
 
         $data = [
-            'dept_id' => $deptId,
+            'madrasah_id' => $madrasahId,
+            'dept_id' => $deptId, // Keep for backward compatibility
             'created_by' => $user->id,
             'nama' => $validated['name'],
             'kat_jabatan' => 'staf',
@@ -6537,13 +6757,15 @@ class PageController extends Controller
 
     /**
      * Save Guru Madrasah - insert/update ke tabel tenaga_ktd.
+     * Uses madrasah_id from user (preferred) or dept_id (fallback).
      */
     public function saveGuruMadrasah(Request $request)
     {
         $user = auth()->user();
+        $madrasahId = $user->madrasah_id ?? null;
         $deptId = $user->dept_id ?? null;
 
-        if (!$deptId) {
+        if (!$madrasahId && !$deptId) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan'], 400);
             }
@@ -6582,7 +6804,8 @@ class PageController extends Controller
         ]);
 
         $data = [
-            'dept_id' => $deptId,
+            'madrasah_id' => $madrasahId,
+            'dept_id' => $deptId, // Keep for backward compatibility
             'created_by' => $user->id,
             'nama' => $validated['nama'],
             'kat_jabatan' => $validated['kat_jabatan'],
@@ -6762,18 +6985,52 @@ class PageController extends Controller
     /**
      * Laporan Semester Madrasah page.
      */
+    /**
+     * Laporan Semester Madrasah page - uses madrasah_id (preferred) or dept_id (fallback).
+     */
     public function laporanSemesterMadrasah(Request $request)
     {
         $user = auth()->user();
+        $madrasahId = $user->madrasah_id ?? null;
         $deptId = $user->dept_id ?? null;
         $deptName = 'Madrasah';
 
-        // Get department info
-        if ($deptId) {
+        // Auto-create madrasah if needed (same logic as profilMadrasah)
+        if (!$madrasahId && $deptId) {
             $dept = DB::table('ktd_department')->where('id', $deptId)->first();
-            if ($dept) {
-                $deptName = $dept->nama ?? 'Madrasah';
+            $kategoriLower = strtolower($dept->kategori ?? '');
+            $isMadrasahCategory = in_array($kategoriLower, ['mi', 'mts', 'ma', 'man', 'mtsn', 'min', 'ra']);
+            $isSwastaDept = in_array($deptId, [999, 998]);
+
+            if (($isMadrasahCategory || $isSwastaDept) && !$user->madrasah_id) {
+                $defaultNama = $user->satker ?? $dept->nama ?? 'Madrasah Baru';
+                $madrasahId = DB::table('ktd_madrasah')->insertGetId([
+                    'dept_id' => $deptId,
+                    'nama' => $defaultNama,
+                    'kategori' => $kategoriLower ?: 'other',
+                    'status_lembaga' => $dept->status_lembaga ?? 'Swasta',
+                    'status' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                DB::table('users')->where('id', $user->id)->update([
+                    'madrasah_id' => $madrasahId,
+                    'updated_at' => now(),
+                ]);
+                $user = auth()->user()->fresh();
             }
+        }
+
+        // Get madrasah info (preferred) or fallback to department
+        $madrasah = null;
+        if ($madrasahId) {
+            $madrasah = DB::table('ktd_madrasah')->where('id', $madrasahId)->first();
+        } elseif ($deptId) {
+            $madrasah = DB::table('ktd_department')->where('id', $deptId)->first();
+        }
+
+        if ($madrasah) {
+            $deptName = $madrasah->nama ?? 'Madrasah';
         }
 
         // Get selected semester and tahun ajaran
@@ -6783,20 +7040,29 @@ class PageController extends Controller
         // Get existing report if any
         $existingReport = null;
         $latestReport = null;
-        if ($deptId) {
-            // Check exact match for selected period
-            $existingReport = DB::table('ktd_laporan_semester_madrasah')
-                ->where('dept_id', $deptId)
-                ->where('semester', $selectedSemester)
-                ->where('tahun_ajaran', $tahunAjaran)
-                ->first();
+        if ($madrasahId || $deptId) {
+            // Helper closure for building the report query with madrasah_id or dept_id
+            $buildReportQuery = function ($query) use ($madrasahId, $deptId) {
+                if ($madrasahId) {
+                    $query->where('madrasah_id', $madrasahId);
+                } else {
+                    $query->where('dept_id', $deptId);
+                }
+                return $query;
+            };
 
-            // If no exact match, get the latest data from same department (for template)
+            // Check exact match for selected period
+            $existingReport = $buildReportQuery(
+                DB::table('ktd_laporan_semester_madrasah')
+                    ->where('semester', $selectedSemester)
+                    ->where('tahun_ajaran', $tahunAjaran)
+            )->first();
+
+            // If no exact match, get the latest data from same madrasah (for template)
             if (!$existingReport) {
-                $latestReport = DB::table('ktd_laporan_semester_madrasah')
-                    ->where('dept_id', $deptId)
-                    ->orderBy('created_at', 'desc')
-                    ->first();
+                $latestReport = $buildReportQuery(
+                    DB::table('ktd_laporan_semester_madrasah')
+                )->orderBy('created_at', 'desc')->first();
             }
         }
 
@@ -7040,13 +7306,15 @@ class PageController extends Controller
 
     /**
      * Save Laporan Semester Madrasah.
+     * Uses madrasah_id from user (preferred) or dept_id (fallback).
      */
     public function saveLaporanSemesterMadrasah(Request $request)
     {
         $user = auth()->user();
+        $madrasahId = $user->madrasah_id ?? null;
         $deptId = $user->dept_id ?? $request->input('dept_id');
 
-        if (!$deptId) {
+        if (!$madrasahId && !$deptId) {
             return redirect()->back()->with('error', 'Unit kerja tidak ditemukan');
         }
 
@@ -7063,7 +7331,8 @@ class PageController extends Controller
         $status = $action === 'submit' ? 'submitted' : 'draft';
 
         $data = [
-            'dept_id' => $deptId,
+            'madrasah_id' => $madrasahId,
+            'dept_id' => $deptId, // Keep for backward compatibility
             'semester' => $semester,
             'tahun_ajaran' => $validated['tahun_ajaran'],
             'status' => $status,
@@ -7084,12 +7353,22 @@ class PageController extends Controller
             $data['submitted_at'] = now();
         }
 
+        // Helper closure for building the report query with madrasah_id or dept_id
+        $buildReportQuery = function ($query) use ($madrasahId, $deptId) {
+            if ($madrasahId) {
+                $query->where('madrasah_id', $madrasahId);
+            } else {
+                $query->where('dept_id', $deptId);
+            }
+            return $query;
+        };
+
         // Check if record exists
-        $existing = DB::table('ktd_laporan_semester_madrasah')
-            ->where('dept_id', $deptId)
-            ->where('semester', $semester)
-            ->where('tahun_ajaran', $validated['tahun_ajaran'])
-            ->first();
+        $existing = $buildReportQuery(
+            DB::table('ktd_laporan_semester_madrasah')
+                ->where('semester', $semester)
+                ->where('tahun_ajaran', $validated['tahun_ajaran'])
+        )->first();
 
         if ($existing) {
             $data['updated_at'] = now();
@@ -7110,22 +7389,53 @@ class PageController extends Controller
     }
 
     /**
-     * Laporan Bulanan Madrasah page.
+     * Laporan Bulanan Madrasah page - uses madrasah_id (preferred) or dept_id (fallback).
      */
     public function laporanBulananMadrasah(Request $request)
     {
         $user = auth()->user();
+        $madrasahId = $user->madrasah_id ?? null;
         $deptId = $user->dept_id ?? null;
         $deptName = 'Madrasah';
         $kategori = 'min';
 
-        // Get department info
-        if ($deptId) {
+        // Auto-create madrasah if needed (same logic as profilMadrasah)
+        if (!$madrasahId && $deptId) {
             $dept = DB::table('ktd_department')->where('id', $deptId)->first();
-            if ($dept) {
-                $deptName = $dept->nama ?? 'Madrasah';
-                $kategori = strtolower($dept->kategori ?? 'min');
+            $kategoriLower = strtolower($dept->kategori ?? '');
+            $isMadrasahCategory = in_array($kategoriLower, ['mi', 'mts', 'ma', 'man', 'mtsn', 'min', 'ra']);
+            $isSwastaDept = in_array($deptId, [999, 998]);
+
+            if (($isMadrasahCategory || $isSwastaDept) && !$user->madrasah_id) {
+                $defaultNama = $user->satker ?? $dept->nama ?? 'Madrasah Baru';
+                $madrasahId = DB::table('ktd_madrasah')->insertGetId([
+                    'dept_id' => $deptId,
+                    'nama' => $defaultNama,
+                    'kategori' => $kategoriLower ?: 'other',
+                    'status_lembaga' => $dept->status_lembaga ?? 'Swasta',
+                    'status' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                DB::table('users')->where('id', $user->id)->update([
+                    'madrasah_id' => $madrasahId,
+                    'updated_at' => now(),
+                ]);
+                $user = auth()->user()->fresh();
             }
+        }
+
+        // Get madrasah info (preferred) or fallback to department
+        $madrasah = null;
+        if ($madrasahId) {
+            $madrasah = DB::table('ktd_madrasah')->where('id', $madrasahId)->first();
+        } elseif ($deptId) {
+            $madrasah = DB::table('ktd_department')->where('id', $deptId)->first();
+        }
+
+        if ($madrasah) {
+            $deptName = $madrasah->nama ?? 'Madrasah';
+            $kategori = strtolower($madrasah->kategori ?? 'min');
         }
 
         // Get form parameters
@@ -7139,17 +7449,27 @@ class PageController extends Controller
         // Check if user selected a period (form submitted)
         $isUserSelection = $request->has('bulan') || $request->has('tahun') || $request->has('tahun_ajaran') || $request->has('semester');
 
+        // Helper closure for building the report query with madrasah_id or dept_id
+        $buildReportQuery = function ($query) use ($madrasahId, $deptId) {
+            if ($madrasahId) {
+                $query->where('madrasah_id', $madrasahId);
+            } else {
+                $query->where('dept_id', $deptId);
+            }
+            return $query;
+        };
+
         // Get existing report for selected period
         $existingReport = null;
-        if ($deptId) {
+        if ($madrasahId || $deptId) {
             $semesterLower = strtolower($semester);
-            $existingReport = DB::table('ktd_laporan_bulanan_madrasah')
-                ->where('dept_id', $deptId)
-                ->where('bulan_laporan', $bulanLaporan)
-                ->where('tahun_laporan', $tahunLaporan)
-                ->where('tahun_ajaran', $tahunAjaran)
-                ->where('semester', $semesterLower)
-                ->first();
+            $existingReport = $buildReportQuery(
+                DB::table('ktd_laporan_bulanan_madrasah')
+                    ->where('bulan_laporan', $bulanLaporan)
+                    ->where('tahun_laporan', $tahunLaporan)
+                    ->where('tahun_ajaran', $tahunAjaran)
+                    ->where('semester', $semesterLower)
+            )->first();
         }
 
         // If no data for selected period and user selected a period, get latest data
@@ -7160,11 +7480,11 @@ class PageController extends Controller
         $adminNote = null;
         $templateInfo = null;
 
-        if (!$existingReport && $isUserSelection && $deptId) {
+        if (!$existingReport && $isUserSelection && ($madrasahId || $deptId)) {
             // Get the latest report for student counts (ignore mutation rows)
-            $latestReport = DB::table('ktd_laporan_bulanan_madrasah')
-                ->where('dept_id', $deptId)
-                ->orderBy('tahun_laporan', 'desc')
+            $latestReport = $buildReportQuery(
+                DB::table('ktd_laporan_bulanan_madrasah')
+            )->orderBy('tahun_laporan', 'desc')
                 ->orderByRaw("FIELD(bulan_laporan, 'Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember') desc")
                 ->first();
 
@@ -7314,14 +7634,16 @@ class PageController extends Controller
 
     /**
      * Save Laporan Bulanan Madrasah.
+     * Uses madrasah_id from user (preferred) or dept_id (fallback).
      */
     public function saveLaporanBulananMadrasah(Request $request)
     {
         $user = auth()->user();
+        $madrasahId = $user->madrasah_id ?? null;
         $deptId = $user->dept_id ?? $request->input('dept_id');
 
-        if (!$deptId) {
-            return redirect()->back()->with('error', 'Dept ID diperlukan');
+        if (!$madrasahId && !$deptId) {
+            return redirect()->back()->with('error', 'Dept ID atau Madrasah ID diperlukan');
         }
 
         $validated = $request->validate([
@@ -7334,14 +7656,23 @@ class PageController extends Controller
         $action = $request->input('action', 'draft');
         $status = $action === 'submit' ? 'submitted' : 'draft';
 
+        // Get madrasah name for snapshot
+        $madrasahName = '';
+        if ($madrasahId) {
+            $madrasahName = DB::table('ktd_madrasah')->where('id', $madrasahId)->value('nama') ?? '';
+        } elseif ($deptId) {
+            $madrasahName = DB::table('ktd_department')->where('id', $deptId)->value('nama') ?? '';
+        }
+
         $data = [
-            'dept_id' => $deptId,
+            'madrasah_id' => $madrasahId,
+            'dept_id' => $deptId, // Keep for backward compatibility
             'bulan_laporan' => $validated['bulan_laporan'],
             'tahun_laporan' => $validated['tahun_laporan'],
             'tahun_ajaran' => $validated['tahun_ajaran'],
             'semester' => strtolower($validated['semester']),
             'status' => $status,
-            'nama_madrasah_snapshot' => DB::table('ktd_department')->where('id', $deptId)->value('nama') ?? '',
+            'nama_madrasah_snapshot' => $madrasahName,
             'instansi_snapshot' => 'Kantor Kementerian Agama Kab. Tanah Datar',
             'student_counts_json' => json_encode($request->input('studentCounts', [])),
             'mutation_rows_json' => json_encode($request->input('mutationRows', [])),
@@ -7355,14 +7686,24 @@ class PageController extends Controller
         // Normalize semester for query (lowercase to match DB enum)
         $semesterLower = strtolower($validated['semester']);
 
+        // Helper closure for building the report query with madrasah_id or dept_id
+        $buildReportQuery = function ($query) use ($madrasahId, $deptId) {
+            if ($madrasahId) {
+                $query->where('madrasah_id', $madrasahId);
+            } else {
+                $query->where('dept_id', $deptId);
+            }
+            return $query;
+        };
+
         // Check if record exists
-        $existing = DB::table('ktd_laporan_bulanan_madrasah')
-            ->where('dept_id', $deptId)
-            ->where('bulan_laporan', $validated['bulan_laporan'])
-            ->where('tahun_laporan', $validated['tahun_laporan'])
-            ->where('tahun_ajaran', $validated['tahun_ajaran'])
-            ->where('semester', $semesterLower)
-            ->first();
+        $existing = $buildReportQuery(
+            DB::table('ktd_laporan_bulanan_madrasah')
+                ->where('bulan_laporan', $validated['bulan_laporan'])
+                ->where('tahun_laporan', $validated['tahun_laporan'])
+                ->where('tahun_ajaran', $validated['tahun_ajaran'])
+                ->where('semester', $semesterLower)
+        )->first();
 
         if ($existing) {
             $data['updated_at'] = now();

@@ -5,6 +5,28 @@ Fitur Laporan Madrasah adalah modul untuk mengelola pelaporan semester madrasah 
 
 ## Status: DALAM PROGRES
 
+## Penting: Multiple Madrasah Implementation ✅
+**Untuk detail lengkap, lihat: [MULTIPLE_MADRASAH_PROGRESS.md](MULTIPLE_MADRASAH_PROGRESS.md)**
+
+Implementasi untuk menangani multiple madrasah under satu dept_id sudah selesai:
+- ✅ Tabel `ktd_madrasah` sudah dibuat
+- ✅ Kolom `madrasah_id` sudah ditambahkan ke users, tenaga_ktd, dan laporan tables
+- ✅ Semua controller sudah diupdate untuk gunakan `madrasah_id`
+- ✅ Data migration sudah berhasil (24 madrasah, 1008 users, 843 tenaga)
+- ✅ Admin routes sudah ditambahkan
+- ✅ Auto-create madrasah untuk user dept_id=999/998
+- ✅ Default nama dari users.satker
+- ✅ Sync nama ke users.satker
+- ✅ Datepicker sudah diupdate ke NEO MIRAI theme
+
+**Catatan Penting:**
+- Setiap madrasah sekarang punya data terpisah di `ktd_madrasah`
+- User di-assign ke madrasah tertentu via `users.madrasah_id`
+- Semua query sudah gunakan `madrasah_id` dengan fallback ke `dept_id`
+- Backward compatible - data existing tetap bisa diakses
+- User dept_id=999/998 bisa langsung akses halaman madrasah (auto-create)
+- Semua field profil madrasah sudah di-mapping dengan benar
+
 ## Target User
 - User dari madrasah (kategori: min, mtsn, man, other)
 - Admin/Kasubbag untuk verifikasi laporan

@@ -334,8 +334,11 @@
                                         <input type="text" name="tempat_lahir" placeholder="Tempat Lahir" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box;">
                                     </div>
                                     <div>
-                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">Tanggal Lahir</label>
-                                        <input type="date" name="tanggal_lahir" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box;">
+                                        <x-ui.datepicker
+                                            name="tanggal_lahir"
+                                            label="Tanggal Lahir"
+                                            placeholder="Pilih tanggal lahir"
+                                        />
                                     </div>
                                     <div>
                                         <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">Jenis Kelamin</label>
@@ -361,8 +364,11 @@
                                         <input type="text" name="bidang_studi_diajar" placeholder="Bidang Studi" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box;">
                                     </div>
                                     <div>
-                                        <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">TMT Tugas</label>
-                                        <input type="date" name="tmt_tugas" style="width: 100%; padding: 0.6rem 0.75rem; border: 2px solid var(--line); border-radius: 8px; font-size: 0.85rem; background: var(--paper); color: var(--ink); transition: all 0.2s; box-sizing: border-box;">
+                                        <x-ui.datepicker
+                                            name="tmt_tugas"
+                                            label="TMT Tugas"
+                                            placeholder="Pilih TMT tugas"
+                                        />
                                     </div>
                                     <div>
                                         <label style="display: block; font-weight: 600; margin-bottom: 0.35rem; color: var(--ink); font-size: 0.8rem;">Pendidikan</label>
@@ -774,8 +780,11 @@
                                 <input type="text" name="edit_tempat_lahir" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">
                             </div>
                             <div>
-                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Tanggal Lahir</label>
-                                <input type="date" name="edit_tanggal_lahir" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">
+                                <x-ui.datepicker
+                                    name="edit_tanggal_lahir"
+                                    label="Tanggal Lahir"
+                                    placeholder="Pilih tanggal lahir"
+                                />
                             </div>
                             <div>
                                 <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Jenis Kelamin</label>
@@ -795,8 +804,11 @@
                                 <input type="text" name="edit_bidang_studi" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">
                             </div>
                             <div>
-                                <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">TMT Tugas</label>
-                                <input type="date" name="edit_tmt_tugas" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">
+                                <x-ui.datepicker
+                                    name="edit_tmt_tugas"
+                                    label="TMT Tugas"
+                                    placeholder="Pilih TMT tugas"
+                                />
                             </div>
                             <div>
                                 <label style="display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px">Pendidikan</label>

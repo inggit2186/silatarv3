@@ -24,6 +24,14 @@ class Department extends Model
         return $this->hasMany(User::class, 'dept_id');
     }
 
+    /**
+     * Get all madrasah under this department
+     */
+    public function madrasahs()
+    {
+        return $this->hasMany(Madrasah::class, 'dept_id');
+    }
+
     public function instansi()
     {
         return $this->hasOne(Instansi::class, 'dept_id');
