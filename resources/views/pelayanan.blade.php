@@ -265,76 +265,104 @@
 
         <!-- Service Selection Section -->
         <section x-ref="serviceFlow" x-show="selectedUnit" x-cloak class="page-content">
-            <div class="neo-card">
-                <div class="neo-card-header">
-                    <div>
-                        <p class="section-label-gold section-label-sm">Langkah 2</p>
-                        <h2 class="neo-card-title" x-text="selectedUnit ? selectedUnit.title : ''"></h2>
-                        <p class="text-sm text-ink-soft mt-1">Semua layanan untuk unit ini langsung ditampilkan sebagai kartu.</p>
+            <!-- Unit Header Bar -->
+            <div class="neo-service-topbar">
+                <div class="neo-service-topbar-left">
+                    <p class="section-label-gold section-label-sm">Langkah 2</p>
+                    <h2 class="neo-card-title" x-text="selectedUnit ? selectedUnit.title : ''"></h2>
+                    <p class="text-sm text-ink-soft mt-1">Pilih layanan yang ingin Anda ajukan pada unit kerja ini.</p>
+                </div>
+                <button type="button" @click="changeUnit()" class="neo-btn-secondary whitespace-nowrap">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7-7l-7 7 7 7"/></svg>
+                    Ganti Unit
+                </button>
+            </div>
+
+            <!-- General Services Grid -->
+            <div class="neo-service-grid-section">
+                <div class="neo-service-grid-header">
+                    <div class="neo-service-grid-icon-wrap">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
                     </div>
-                    <button type="button" @click="changeUnit()" class="neo-btn-secondary whitespace-nowrap">Ganti unit</button>
+                    <div>
+                        <h3 class="neo-service-grid-title">Layanan Umum</h3>
+                        <p class="neo-service-grid-subtitle">Tersedia untuk seluruh unit kerja</p>
+                    </div>
+                    <span class="neo-service-grid-count">{{ count($generalServices) }}</span>
                 </div>
 
-                <div class="mt-8">
-                    <!-- General Services -->
-                    <div class="mb-8">
-                        <h3 class="section-heading">Layanan Umum</h3>
-                        <div class="neo-grid neo-grid-3">
-                            @foreach($generalServices as $service)
-                                <button type="button" @click="selectService('umum', @js($service))" class="neo-service-card cursor-pointer">
-                                    <div class="neo-service-cover">
-                                        <img src="{{ $service['cover_path'] }}" alt="{{ $service['title'] }}" class="neo-service-img">
-                                        <div class="neo-service-cover-overlay"></div>
-                                        <span class="neo-service-tag">{{ $service['tag'] }}</span>
-                                    </div>
-                                    <div class="neo-service-body">
-                                        <h4 class="neo-service-title">{{ $service['title'] }}</h4>
-                                        <p class="neo-service-desc">{{ $service['description'] }}</p>
-                                    </div>
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <!-- Special Services -->
-                    <div>
-                        <h3 class="section-heading">Layanan Khusus</h3>
-                        <template x-if="specialServices.length === 0">
-                            <div class="neo-empty">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <p class="neo-empty-title">Belum ada layanan</p>
-                                <p class="neo-empty-text">Belum ada layanan khusus pada unit kerja yang dipilih.</p>
+                <div class="neo-service-grid">
+                    @foreach($generalServices as $index => $service)
+                        <button type="button" @click="selectService('umum', @js($service))" class="neo-cover-card cursor-pointer" style="--card-delay: {{ $index * 100 }}ms;">
+                            <img src="{{ $service['cover_path'] }}" alt="{{ $service['title'] }}" class="neo-cover-card-img">
+                            <div class="neo-cover-card-gradient"></div>
+                            <div class="neo-cover-card-content">
+                                <span class="neo-cover-card-tag">Umum</span>
+                                <h4 class="neo-cover-card-title">{{ $service['title'] }}</h4>
+                                <p class="neo-cover-card-desc">{{ $service['description'] }}</p>
+                                <span class="neo-cover-card-cta">
+                                    Ajukan Sekarang
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                </span>
                             </div>
-                        </template>
-                        <div class="neo-grid neo-grid-3">
-                            <template x-for="service in specialServices" :key="service.id">
-                                <button type="button" @click="selectService('khusus', service)" class="neo-service-card cursor-pointer">
-                                    <div class="neo-service-cover">
-                                        <img :src="service.cover_path" :alt="service.title" class="neo-service-img">
-                                        <div class="neo-service-cover-overlay"></div>
-                                        <span class="neo-service-tag" x-text="service.tag || 'Layanan Khusus'"></span>
-                                        <span x-show="service.is_spesial" class="neo-service-tag neo-service-tag-special" style="background: var(--sun);">Spesial</span>
-                                    </div>
-                                    <div class="neo-service-body">
-                                        <h4 class="neo-service-title" x-text="service.title"></h4>
-                                        <p class="neo-service-desc" x-text="service.description"></p>
-                                        <div class="neo-service-meta">
-                                            <div class="neo-service-meta-item">
-                                                <span class="neo-service-meta-label">Waktu</span>
-                                                <span class="neo-service-meta-value" x-text="service.waktu || '-'"></span>
-                                            </div>
-                                            <div class="neo-service-meta-item">
-                                                <span class="neo-service-meta-label">Biaya</span>
-                                                <span class="neo-service-meta-value" x-text="service.biaya || '-'"></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </button>
-                            </template>
-                        </div>
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Special Services Grid -->
+            <div class="neo-service-grid-section">
+                <div class="neo-service-grid-header">
+                    <div class="neo-service-grid-icon-wrap neo-service-grid-icon-accent">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                     </div>
+                    <div>
+                        <h3 class="neo-service-grid-title">Layanan Khusus</h3>
+                        <p class="neo-service-grid-subtitle">Layanan spesifik pada unit kerja ini</p>
+                    </div>
+                    <span class="neo-service-grid-count neo-service-grid-count-accent" x-text="specialServices.length"></span>
+                </div>
+
+                <template x-if="specialServices.length === 0">
+                    <div class="neo-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p class="neo-empty-title">Belum ada layanan</p>
+                        <p class="neo-empty-text">Belum ada layanan khusus pada unit kerja yang dipilih.</p>
+                    </div>
+                </template>
+
+                <div class="neo-service-grid">
+                    <template x-for="(service, idx) in specialServices" :key="service.id">
+                        <button type="button" @click="selectService('khusus', service)" class="neo-cover-card cursor-pointer" :style="'--card-delay:' + (idx * 100) + 'ms'">
+                            <img :src="service.cover_path" :alt="service.title" class="neo-cover-card-img">
+                            <div class="neo-cover-card-gradient"></div>
+                            <div class="neo-cover-card-tags-top">
+                                <span x-show="service.is_spesial" class="neo-cover-card-tag neo-cover-card-tag-featured">Spesial</span>
+                                <span x-show="service.status_label" class="neo-cover-card-tag neo-cover-card-tag-status" x-text="service.status_label"></span>
+                            </div>
+                            <div class="neo-cover-card-content">
+                                <h4 class="neo-cover-card-title" x-text="service.title"></h4>
+                                <p class="neo-cover-card-desc" x-text="service.description"></p>
+                                <div class="neo-cover-card-metrics">
+                                    <span class="neo-cover-card-metric" x-text="service.waktu || '-'"></span>
+                                    <span class="neo-cover-card-metric-dot"></span>
+                                    <span class="neo-cover-card-metric" x-text="service.biaya || '-'"></span>
+                                    <template x-if="service.output && service.output !== '-'">
+                                        <span class="neo-cover-card-metric-wrap">
+                                            <span class="neo-cover-card-metric-dot"></span>
+                                            <span class="neo-cover-card-metric" x-text="service.output"></span>
+                                        </span>
+                                    </template>
+                                </div>
+                                <span class="neo-cover-card-cta">
+                                    Ajukan Sekarang
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                </span>
+                            </div>
+                        </button>
+                    </template>
                 </div>
             </div>
         </section>
@@ -352,6 +380,9 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
+
+                <!-- Scrollable Content -->
+                <div class="neo-modal-scroll">
 
                 <!-- Meta Info -->
                 <div class="neo-modal-meta">
@@ -458,6 +489,7 @@
                         </template>
                     </div>
                 </div>
+                </div><!-- /neo-modal-scroll -->
 
                 <!-- Action Button -->
                 <div class="neo-modal-actions">
@@ -480,60 +512,108 @@
 
         <!-- Employee Selection Modal -->
         <div x-show="showEmployeeModal" x-cloak class="neo-modal-backdrop" @click="closeEmployeeModal()">
-            <div class="neo-modal neo-modal-sm" @click.stop>
+            <div class="neo-modal neo-modal-emp" @click.stop>
                 <div class="neo-modal-header">
-                    <div>
-                        <h3 class="neo-modal-title">Pilih Pegawai</h3>
-                        <p class="text-sm text-ink-soft">Unit: <span x-text="selectedUnit ? selectedUnit.title : '-'"></span></p>
+                    <div class="neo-modal-emp-header">
+                        <div class="neo-modal-emp-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="neo-modal-title">Pilih Pegawai</h3>
+                            <p class="text-sm text-ink-soft">Unit: <span x-text="selectedUnit ? selectedUnit.title : '-'"></span></p>
+                        </div>
                     </div>
                     <button type="button" @click="closeEmployeeModal()" class="neo-modal-close">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
-                <template x-if="loadingEmployees">
-                    <div class="loading-text">
-                        <p class="text-ink-soft">Memuat...</p>
-                    </div>
-                </template>
-                <template x-if="!loadingEmployees">
-                    <div>
-                        <template x-if="leaders.length > 0">
-                            <div class="mb-6">
-                                <h4 class="section-label-gold section-label-left text-center">Pimpinan</h4>
-                                <div class="neo-employee-grid neo-employee-grid-leader">
-                                    <template x-for="leader in leaders" :key="leader.id">
-                                        <button type="button" @click="selectEmployee(leader)" class="neo-employee-card neo-employee-card-center">
-                                            <div class="neo-avatar neo-avatar-md" x-text="leader.avatar_text || leader.name?.substring(0,2).toUpperCase()"></div>
-                                            <div class="neo-employee-info text-center">
-                                                <p class="neo-employee-name" x-text="leader.name"></p>
-                                                <p class="neo-employee-role" x-text="leader.role_label"></p>
-                                            </div>
-                                        </button>
-                                    </template>
+
+                <div class="neo-modal-scroll">
+                    <template x-if="loadingEmployees">
+                        <div class="neo-emp-loading">
+                            <div class="neo-emp-loading-spinner"></div>
+                            <p class="text-ink-soft">Memuat data pegawai...</p>
+                        </div>
+                    </template>
+                    <template x-if="!loadingEmployees">
+                        <div>
+                            <!-- Leaders Section (Centered) -->
+                            <template x-if="leaders.length > 0">
+                                <div class="neo-emp-section neo-emp-section-center">
+                                    <div class="neo-emp-section-header neo-emp-section-header-center">
+                                        <div class="neo-emp-section-icon neo-emp-section-icon-gold">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                        </div>
+                                        <span>Pimpinan Unit</span>
+                                    </div>
+                                    <div class="neo-emp-leader-center">
+                                        <template x-for="leader in leaders" :key="leader.id">
+                                            <button type="button" @click="selectEmployee(leader)" class="neo-emp-card-leader-center">
+                                                <div class="neo-emp-card-avatar-lg">
+                                                    <template x-if="leader.photo_path">
+                                                        <img :src="leader.photo_path" :alt="leader.name" class="neo-emp-card-photo">
+                                                    </template>
+                                                    <template x-if="!leader.photo_path">
+                                                        <div class="neo-emp-card-initials-lg neo-emp-card-initials-gold" x-text="leader.avatar_text || leader.name?.substring(0,2).toUpperCase()"></div>
+                                                    </template>
+                                                </div>
+                                                <p class="neo-emp-leader-name" x-text="leader.name"></p>
+                                                <p class="neo-emp-leader-role" x-text="leader.role_label"></p>
+                                                <span class="neo-emp-leader-cta">
+                                                    Pilih
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                                </span>
+                                            </button>
+                                        </template>
+                                    </div>
                                 </div>
-                            </div>
-                        </template>
-                        <button type="button" @click="goDirectlyToSeksi()" class="neo-btn-secondary w-full flex justify-center mb-4">
-                            Langsung ke Seksi (Tanpa Pilih Pegawai)
-                        </button>
-                        <template x-if="unitEmployees.length > 0">
-                            <div>
-                                <h4 class="section-label-gold section-label-left text-center">Pegawai</h4>
-                                <div class="neo-employee-grid">
-                                    <template x-for="employee in unitEmployees" :key="employee.id">
-                                        <button type="button" @click="selectEmployee(employee)" class="neo-employee-card">
-                                            <div class="neo-avatar neo-avatar-sm" x-text="employee.avatar_text || employee.name?.substring(0,2).toUpperCase()"></div>
-                                            <div class="neo-employee-info">
-                                                <p class="neo-employee-name" x-text="employee.name"></p>
-                                                <p class="neo-employee-role neo-employee-role-sm" x-text="employee.role_label"></p>
-                                            </div>
-                                        </button>
-                                    </template>
+                            </template>
+
+                            <!-- Direct to Section Button -->
+                            <button type="button" @click="goDirectlyToSeksi()" class="neo-emp-direct-btn">
+                                <div class="neo-emp-direct-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                                 </div>
-                            </div>
-                        </template>
-                    </div>
-                </template>
+                                <div class="neo-emp-direct-text">
+                                    <span class="neo-emp-direct-title">Langsung ke Seksi</span>
+                                    <span class="neo-emp-direct-sub">Tanpa memilih pegawai tertentu</span>
+                                </div>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="neo-emp-direct-arrow"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                            </button>
+
+                            <!-- Employees Section (2 Column Grid) -->
+                            <template x-if="unitEmployees.length > 0">
+                                <div class="neo-emp-section">
+                                    <div class="neo-emp-section-header">
+                                        <div class="neo-emp-section-icon">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                        </div>
+                                        <span>Pegawai</span>
+                                        <span class="neo-emp-count" x-text="unitEmployees.length"></span>
+                                    </div>
+                                    <div class="neo-emp-grid">
+                                        <template x-for="employee in unitEmployees" :key="employee.id">
+                                            <button type="button" @click="selectEmployee(employee)" class="neo-emp-card-grid">
+                                                <div class="neo-emp-card-avatar-sm">
+                                                    <template x-if="employee.photo_path">
+                                                        <img :src="employee.photo_path" :alt="employee.name" class="neo-emp-card-photo">
+                                                    </template>
+                                                    <template x-if="!employee.photo_path">
+                                                        <div class="neo-emp-card-initials-sm" x-text="employee.avatar_text || employee.name?.substring(0,2).toUpperCase()"></div>
+                                                    </template>
+                                                </div>
+                                                <div class="neo-emp-card-info-sm">
+                                                    <p class="neo-emp-card-name-sm" x-text="employee.name"></p>
+                                                    <p class="neo-emp-card-role-sm" x-text="employee.role_label"></p>
+                                                </div>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
             </div>
         </div>
 

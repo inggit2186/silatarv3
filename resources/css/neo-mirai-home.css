@@ -1674,6 +1674,615 @@ html {
   color: var(--ink);
 }
 
+/* ============================================
+   NEO Cover Card - Full-bleed image cards
+   ============================================ */
+
+/* Top Bar */
+.neo-service-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  background: var(--paper-soft);
+  border-bottom: 1px solid var(--line);
+}
+
+/* Grid Section Wrapper */
+.neo-service-grid-section {
+  margin-top: 2rem;
+}
+.neo-service-grid-section + .neo-service-grid-section {
+  margin-top: 2.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px dashed var(--line);
+}
+
+/* Section Header */
+.neo-service-grid-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+.neo-service-grid-icon-wrap {
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.625rem;
+  background: var(--gold);
+  color: var(--night);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 280ms var(--ease);
+}
+.neo-service-grid-section:hover .neo-service-grid-icon-wrap {
+  transform: scale(1.08);
+}
+.neo-service-grid-icon-accent {
+  background: var(--sun);
+}
+.neo-service-grid-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--ink);
+}
+.neo-service-grid-subtitle {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  margin: 0.125rem 0 0;
+}
+.neo-service-grid-count {
+  flex-shrink: 0;
+  margin-left: auto;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--night);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.neo-service-grid-count-accent {
+  background: var(--sun);
+}
+
+/* Service Grid */
+.neo-service-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+}
+@media (max-width: 1200px) {
+  .neo-service-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 900px) {
+  .neo-service-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 600px) {
+  .neo-service-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---- Cover Card ---- */
+.neo-cover-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border: 2px solid oklch(85% 0.04 76 / 0.35);
+  border-radius: 0.75rem;
+  text-align: left;
+  color: #fff;
+  cursor: pointer;
+  background: var(--paper-soft);
+  box-shadow:
+    0 2px 8px oklch(15% 0.02 80 / 0.08),
+    inset 0 0 0 1px oklch(100% 0 0 / 0.04);
+  animation: cardFadeUp 500ms var(--ease) both;
+  animation-delay: var(--card-delay, 0ms);
+  transition: transform 360ms var(--ease), box-shadow 360ms var(--ease), border-color 360ms var(--ease);
+}
+.neo-cover-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-4px);
+  box-shadow:
+    0 8px 28px oklch(15% 0.02 80 / 0.18),
+    0 0 0 1px oklch(85% 0.08 76 / 0.2);
+}
+@keyframes cardFadeUp {
+  from { opacity: 0; transform: translateY(1.25rem); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Cover image fills entire card */
+.neo-cover-card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 600ms var(--ease-quint);
+}
+.neo-cover-card:hover .neo-cover-card-img {
+  transform: scale(1.06);
+}
+
+/* Gradient overlay for text readability */
+.neo-cover-card-gradient {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(0deg,
+      oklch(8% 0.02 80 / 0.92) 0%,
+      oklch(8% 0.02 80 / 0.7) 30%,
+      oklch(8% 0.02 80 / 0.25) 55%,
+      transparent 75%
+    );
+  transition: opacity 320ms var(--ease);
+}
+.neo-cover-card:hover .neo-cover-card-gradient {
+  opacity: 0.92;
+}
+
+/* Content overlay */
+.neo-cover-card-content {
+  position: relative;
+  z-index: 2;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Tag */
+.neo-cover-card-tag {
+  align-self: flex-start;
+  padding: 0.15rem 0.45rem;
+  background: var(--gold);
+  color: var(--night);
+  font-family: var(--font-mono);
+  font-size: 0.45rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.neo-cover-card-tag-featured {
+  background: var(--sun);
+  color: var(--night);
+}
+.neo-cover-card-tag-status {
+  background: oklch(88% 0.1 150);
+  color: oklch(28% 0.12 150);
+}
+
+/* Tags top-right */
+.neo-cover-card-tags-top {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: flex-end;
+}
+
+/* Title */
+.neo-cover-card-title {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.3;
+  text-shadow: 0 1px 4px oklch(0% 0 0 / 0.3);
+}
+
+/* Description */
+.neo-cover-card-desc {
+  font-size: 0.72rem;
+  margin: 0;
+  line-height: 1.4;
+  opacity: 0.85;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 2px oklch(0% 0 0 / 0.2);
+}
+
+/* Metrics (special services) */
+.neo-cover-card-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+.neo-cover-card-metric {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+.neo-cover-card-metric-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.neo-cover-card-metric-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* CTA */
+.neo-cover-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  background: var(--gold);
+  color: var(--night);
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  align-self: flex-start;
+  transition: background 200ms var(--ease), gap 200ms var(--ease), transform 200ms var(--ease);
+}
+.neo-cover-card:hover .neo-cover-card-cta {
+  background: #fff;
+  gap: 0.6rem;
+  transform: translateX(2px);
+}
+.neo-cover-card-cta svg {
+  transition: transform 200ms var(--ease);
+}
+.neo-cover-card:hover .neo-cover-card-cta svg {
+  transform: translateX(2px);
+}
+
+/* ============================================
+   End Cover Card
+   ============================================ */
+
+/* ============================================
+   NEO Employee Modal
+   ============================================ */
+
+/* Modal size */
+.neo-modal-emp {
+  max-width: 32rem;
+}
+
+/* Header with icon */
+.neo-modal-emp-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.neo-modal-emp-icon {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  background: var(--gold);
+  color: var(--night);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Loading */
+.neo-emp-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+}
+.neo-emp-loading-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--line);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Section */
+.neo-emp-section {
+  margin-bottom: 1.25rem;
+}
+.neo-emp-section:last-child {
+  margin-bottom: 0;
+}
+.neo-emp-section-center {
+  text-align: center;
+}
+.neo-emp-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gold);
+}
+.neo-emp-section-header-center {
+  justify-content: center;
+}
+.neo-emp-section-icon {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.375rem;
+  background: oklch(92% 0.03 76);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.neo-emp-section-icon-gold {
+  background: var(--gold);
+  color: var(--night);
+}
+.neo-emp-count {
+  margin-left: auto;
+  padding: 0.15rem 0.5rem;
+  background: var(--paper-soft);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+/* Leader Centered Card */
+.neo-emp-leader-center {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.neo-emp-card-leader-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, oklch(95% 0.03 76) 0%, var(--paper-soft) 100%);
+  border: 1px solid oklch(82% 0.06 76 / 0.4);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  color: var(--ink);
+  transition: border-color 200ms var(--ease), box-shadow 200ms var(--ease), transform 200ms var(--ease);
+}
+.neo-emp-card-leader-center:hover {
+  border-color: var(--gold);
+  box-shadow: 0 6px 20px oklch(18% 0.02 76 / 0.12);
+  transform: translateY(-2px);
+}
+.neo-emp-card-avatar-lg {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--paper);
+  border: 2px solid var(--gold);
+}
+.neo-emp-card-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.neo-emp-card-initials-lg {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gold);
+  color: var(--night);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.neo-emp-card-initials-gold {
+  background: var(--gold);
+  color: var(--night);
+}
+.neo-emp-leader-name {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0.25rem 0 0;
+  color: var(--ink);
+}
+.neo-emp-leader-role {
+  font-size: 0.65rem;
+  color: var(--ink-soft);
+  margin: 0;
+}
+.neo-emp-leader-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  background: var(--gold);
+  color: var(--night);
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 1rem;
+  transition: background 200ms var(--ease), gap 200ms var(--ease);
+}
+.neo-emp-card-leader-center:hover .neo-emp-leader-cta {
+  background: var(--night);
+  color: var(--gold);
+  gap: 0.45rem;
+}
+
+/* Direct Button (Prominent) */
+.neo-emp-direct-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+  background: var(--paper-soft);
+  border: 2px dashed var(--line);
+  border-radius: 0.625rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: border-color 200ms var(--ease), background 200ms var(--ease), transform 200ms var(--ease);
+}
+.neo-emp-direct-btn:hover {
+  border-color: var(--gold);
+  background: oklch(96% 0.02 76);
+  transform: translateX(2px);
+}
+.neo-emp-direct-icon {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: var(--sun);
+  color: var(--night);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.neo-emp-direct-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+.neo-emp-direct-title {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.neo-emp-direct-sub {
+  font-size: 0.65rem;
+  color: var(--ink-soft);
+}
+.neo-emp-direct-arrow {
+  flex-shrink: 0;
+  color: var(--gold);
+  opacity: 0;
+  transition: opacity 200ms var(--ease), transform 200ms var(--ease);
+}
+.neo-emp-direct-btn:hover .neo-emp-direct-arrow {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+/* Employee Grid (2 Columns) */
+.neo-emp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+@media (max-width: 480px) {
+  .neo-emp-grid { grid-template-columns: 1fr; }
+}
+
+/* Employee Grid Card */
+.neo-emp-card-grid {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem;
+  background: var(--paper-soft);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 200ms var(--ease), box-shadow 200ms var(--ease), transform 180ms var(--ease);
+}
+.neo-emp-card-grid:hover {
+  border-color: var(--gold);
+  box-shadow: 0 3px 12px oklch(18% 0.02 76 / 0.08);
+  transform: translateY(-1px);
+}
+.neo-emp-card-avatar-sm {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--paper);
+  border: 1.5px solid var(--line);
+}
+.neo-emp-card-initials-sm {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper-deep);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+.neo-emp-card-info-sm {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+.neo-emp-card-name-sm {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.neo-emp-card-role-sm {
+  font-size: 0.55rem;
+  color: var(--ink-soft);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================
+   End Employee Modal
+   ============================================ */
 
 /* NEO Empty State */
 .neo-empty {
@@ -1708,14 +2317,41 @@ html {
   position: fixed;
   inset: 0;
   z-index: 50;
-  /* Fallback for older browsers */
-  background: rgba(42, 38, 35, 0.8);
-  background: oklch(20% 0.015 80 / 0.8);
-  backdrop-filter: blur(4px);
+  background: rgba(28, 25, 22, 0.85);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
+}
+.neo-modal {
+  position: relative;
+  width: 100%;
+  max-width: 42rem;
+  max-height: 88vh;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.neo-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  flex-shrink: 0;
+}
+.neo-modal-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.25rem 1.5rem;
 }
 .neo-modal-title {
   font-family: var(--font-display);
@@ -5518,8 +6154,10 @@ html {
 .neo-modal-actions {
   display: flex;
   gap: 0.75rem;
-  padding-top: 0.75rem;
+  padding: 1rem 1.5rem;
   border-top: 1px solid var(--line);
+  background: var(--paper);
+  flex-shrink: 0;
 }
 
 /* Modal Action Buttons */
@@ -7695,14 +8333,6 @@ a.neo-upload-preview:active {
 
 /* Flex Center Utilities */
 .flex-center { display: flex; align-items: center; justify-content: center; }
-
-/* Service Tag Special Position */
-.neo-service-tag-special {
-  position: absolute;
-  top: auto;
-  bottom: 0.75rem;
-  left: 0.75rem;
-}
 
 /* ============================================
    UTILITY CLASSES - Generic helpers
