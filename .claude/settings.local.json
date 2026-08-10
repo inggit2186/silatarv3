@@ -109,7 +109,10 @@
       "Bash(tail -n +612 resources/views/madrasah/pegawaimadrasah.blade.php)",
       "Read(//tmp/**)",
       "Bash(powershell -Command ' *)",
-      "Bash(php -l app/Http/Controllers/PageController.php)"
+      "Bash(php -l app/Http/Controllers/PageController.php)",
+      "Bash(grep -n '$tot.*+=' 'd:\\\\work\\\\SourceCode\\\\silatarV2\\\\resources\\\\views\\\\madrasah\\\\laporansemester.blade.php')",
+      "Bash(npx stylelint *)",
+      "Bash(dir public\\\\css)"
     ],
     "additionalDirectories": [
       "D:\\work\\SourceCode\\silatarV2\\bootstrap\\cache"

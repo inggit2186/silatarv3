@@ -44,7 +44,8 @@
                 </a>
             </div>
 
-            <div class="content-inner">
+            <div class="content-inner" x-data="{ selectedSemester: '{{ $selectedSemester ?? "ganjil" }}', tahunAjaran: '{{ $tahunAjaran ?? "" }}' }" x-init="$watch('selectedSemester', val => { window.location.href = '{{ route("madrasah.laporan-semester") }}?semester=' + val + '&tahun_ajaran=' + tahunAjaran; }); $watch('tahunAjaran', val => { window.location.href = '{{ route("madrasah.laporan-semester") }}?semester=' + selectedSemester + '&tahun_ajaran=' + val; });">
+                <form method="POST" action="{{ route('madrasah.laporan-semester.save') }}" id="semesterForm" x-ref="semesterForm">
                 @csrf
                 <input type="hidden" name="semester" x-model="selectedSemester">
                 <input type="hidden" name="tahun_ajaran" x-model="tahunAjaran">
@@ -69,7 +70,7 @@
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                     Semester
                                 </label>
-                                <select name="semester" class="neo-form-select filter-select" required>
+                                <select name="semester" class="neo-form-select filter-select" required x-model="selectedSemester">
                                     <option value="ganjil" {{ ($selectedSemester ?? 'genap') == 'ganjil' ? 'selected' : '' }}>Ganjil</option>
                                     <option value="genap" {{ ($selectedSemester ?? 'genap') == 'genap' ? 'selected' : '' }}>Genap</option>
                                 </select>
@@ -79,7 +80,7 @@
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                                     Tahun Ajaran
                                 </label>
-                                <select name="tahun_ajaran" class="neo-form-select filter-select" required>
+                                <select name="tahun_ajaran" class="neo-form-select filter-select" required x-model="tahunAjaran">
                                     @foreach($academicYearOptions ?? [] as $ta)
                                     <option value="{{ $ta }}" {{ ($tahunAjaran ?? '') == $ta ? 'selected' : '' }}>{{ $ta }}</option>
                                     @endforeach
@@ -95,6 +96,18 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Template Info Banner -->
+                        @if($templateInfo)
+                        <div class="template-info-banner" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.25rem; background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 0.5rem; margin-bottom: 1.5rem; color: #92400e;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; color: #d97706;">
+                                <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <span style="font-size: 0.9rem; font-weight: 500;">
+                                <strong>Peringatan:</strong> Data untuk periode ini belum ada di database. Menampilkan data template dari {{ $templateInfo }}. Silakan isi data untuk periode ini dan simpan.
+                            </span>
+                        </div>
+                        @endif
 
                         <!-- Submit Info & Action Buttons -->
                         <div class="submit-row">
@@ -161,7 +174,7 @@
                                             <td class="col-num"><input type="number" name="keadaanGedung[{{ $i }}][ringan]" value="{{ $row['ringan'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
                                             <td class="col-num"><input type="number" name="keadaanGedung[{{ $i }}][sedang]" value="{{ $row['sedang'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
                                             <td class="col-num"><input type="number" name="keadaanGedung[{{ $i }}][berat]" value="{{ $row['berat'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
-                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ ($row['baik'] ?? 0) + ($row['ringan'] ?? 0) + ($row['sedang'] ?? 0) + ($row['berat'] ?? 0) }}</td>
+                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ (int)($row['baik'] ?? 0) + (int)($row['ringan'] ?? 0) + (int)($row['sedang'] ?? 0) + (int)($row['berat'] ?? 0) }}</td>
                                             <td class="col-action"><button type="button" onclick="removeRow(this)" class="neo-btn-remove"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button></td>
                                         </tr>
                                         @endforeach
@@ -169,10 +182,10 @@
                                     <tfoot>
                                         <tr class="neo-table-footer">
                                             <td class="col-label neo-table-cell-primary neo-table-total">TOTAL</td>
-                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="baik">{{ array_sum(array_column($formData['keadaanGedung'], 'baik')) }}</td>
-                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="ringan">{{ array_sum(array_column($formData['keadaanGedung'], 'ringan')) }}</td>
-                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="sedang">{{ array_sum(array_column($formData['keadaanGedung'], 'sedang')) }}</td>
-                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="berat">{{ array_sum(array_column($formData['keadaanGedung'], 'berat')) }}</td>
+                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="baik">{{ array_sum(array_map('intval', array_column($formData['keadaanGedung'], 'baik'))) }}</td>
+                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="ringan">{{ array_sum(array_map('intval', array_column($formData['keadaanGedung'], 'ringan'))) }}</td>
+                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="sedang">{{ array_sum(array_map('intval', array_column($formData['keadaanGedung'], 'sedang'))) }}</td>
+                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="berat">{{ array_sum(array_map('intval', array_column($formData['keadaanGedung'], 'berat'))) }}</td>
                                             <td class="col-total neo-table-cell-mono neo-table-total highlight" data-grand-total>0</td>
                                             <td class="col-action"></td>
                                         </tr>
@@ -219,7 +232,7 @@
                                             <td class="col-num"><input type="number" name="saranaPendidikan[{{ $i }}][ringan]" value="{{ $row['ringan'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
                                             <td class="col-num"><input type="number" name="saranaPendidikan[{{ $i }}][sedang]" value="{{ $row['sedang'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
                                             <td class="col-num"><input type="number" name="saranaPendidikan[{{ $i }}][berat]" value="{{ $row['berat'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
-                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ ($row['baik'] ?? 0) + ($row['ringan'] ?? 0) + ($row['sedang'] ?? 0) + ($row['berat'] ?? 0) }}</td>
+                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ (int)($row['baik'] ?? 0) + (int)($row['ringan'] ?? 0) + (int)($row['sedang'] ?? 0) + (int)($row['berat'] ?? 0) }}</td>
                                             <td class="col-action"><button type="button" onclick="removeRow(this)" class="neo-btn-remove"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button></td>
                                         </tr>
                                         @endforeach
@@ -227,10 +240,10 @@
                                     <tfoot>
                                         <tr class="neo-table-footer">
                                             <td class="col-label neo-table-cell-primary neo-table-total">TOTAL</td>
-                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="baik">{{ array_sum(array_column($formData['saranaPendidikan'], 'baik')) }}</td>
-                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="ringan">{{ array_sum(array_column($formData['saranaPendidikan'], 'ringan')) }}</td>
-                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="sedang">{{ array_sum(array_column($formData['saranaPendidikan'], 'sedang')) }}</td>
-                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="berat">{{ array_sum(array_column($formData['saranaPendidikan'], 'berat')) }}</td>
+                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="baik">{{ array_sum(array_map('intval', array_column($formData['saranaPendidikan'], 'baik'))) }}</td>
+                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="ringan">{{ array_sum(array_map('intval', array_column($formData['saranaPendidikan'], 'ringan'))) }}</td>
+                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="sedang">{{ array_sum(array_map('intval', array_column($formData['saranaPendidikan'], 'sedang'))) }}</td>
+                                            <td class="col-num neo-table-cell-mono neo-table-total highlight" data-col-total="berat">{{ array_sum(array_map('intval', array_column($formData['saranaPendidikan'], 'berat'))) }}</td>
                                             <td class="col-total neo-table-cell-mono neo-table-total highlight" data-grand-total>0</td>
                                             <td class="col-action"></td>
                                         </tr>
@@ -273,12 +286,12 @@
                                     <tbody data-tbody="bantuanP">
                                         @php $totDiterima = 0; $totTerserap = 0; @endphp
                                         @foreach($formData['bantuanPemerintah'] as $i => $row)
-                                        @php $totDiterima += $row['diterima'] ?? 0; $totTerserap += $row['terserap'] ?? 0; @endphp
+                                        @php $totDiterima += (int)($row['diterima'] ?? 0); $totTerserap += (int)($row['terserap'] ?? 0); @endphp
                                         <tr class="neo-table-row">
                                             <td class="col-label"><input type="text" name="bantuanPemerintah[{{ $i }}][label]" value="{{ $row['label'] }}" class="neo-form-input" placeholder="Nama bantuan"></td>
                                             <td class="col-num"><input type="number" name="bantuanPemerintah[{{ $i }}][diterima]" value="{{ $row['diterima'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
                                             <td class="col-num"><input type="number" name="bantuanPemerintah[{{ $i }}][terserap]" value="{{ $row['terserap'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
-                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ max(0, ($row['diterima'] ?? 0) - ($row['terserap'] ?? 0)) }}</td>
+                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ max(0, (int)($row['diterima'] ?? 0) - (int)($row['terserap'] ?? 0)) }}</td>
                                             <td class="col-action"><button type="button" onclick="removeRow(this)" class="neo-btn-remove"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button></td>
                                         </tr>
                                         @endforeach
@@ -327,12 +340,12 @@
                                     <tbody data-tbody="bantuanNP">
                                         @php $totDiterima2 = 0; $totTerserap2 = 0; @endphp
                                         @foreach($formData['bantuanNonPemerintah'] as $i => $row)
-                                        @php $totDiterima2 += $row['diterima'] ?? 0; $totTerserap2 += $row['terserap'] ?? 0; @endphp
+                                        @php $totDiterima2 += (int)($row['diterima'] ?? 0); $totTerserap2 += (int)($row['terserap'] ?? 0); @endphp
                                         <tr class="neo-table-row">
                                             <td class="col-label"><input type="text" name="bantuanNonPemerintah[{{ $i }}][label]" value="{{ $row['label'] }}" class="neo-form-input" placeholder="Nama bantuan"></td>
                                             <td class="col-num"><input type="number" name="bantuanNonPemerintah[{{ $i }}][diterima]" value="{{ $row['diterima'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
                                             <td class="col-num"><input type="number" name="bantuanNonPemerintah[{{ $i }}][terserap]" value="{{ $row['terserap'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
-                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ max(0, ($row['diterima'] ?? 0) - ($row['terserap'] ?? 0)) }}</td>
+                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ max(0, (int)($row['diterima'] ?? 0) - (int)($row['terserap'] ?? 0)) }}</td>
                                             <td class="col-action"><button type="button" onclick="removeRow(this)" class="neo-btn-remove"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button></td>
                                         </tr>
                                         @endforeach
@@ -384,12 +397,12 @@
                                     <tbody data-tbody="guru">
                                         @php $totL = 0; $totP = 0; @endphp
                                         @foreach($formData['dataGuruPegawai'] as $i => $row)
-                                        @php $totL += $row['l'] ?? 0; $totP += $row['p'] ?? 0; @endphp
+                                        @php $totL += (int)($row['l'] ?? 0); $totP += (int)($row['p'] ?? 0); @endphp
                                         <tr class="neo-table-row">
                                             <td class="col-label"><input type="text" name="dataGuruPegawai[{{ $i }}][label]" value="{{ $row['label'] }}" class="neo-form-input" placeholder="Nama uraian"></td>
                                             <td class="col-gender"><input type="number" name="dataGuruPegawai[{{ $i }}][l]" value="{{ $row['l'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
                                             <td class="col-gender"><input type="number" name="dataGuruPegawai[{{ $i }}][p]" value="{{ $row['p'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
-                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ ($row['l'] ?? 0) + ($row['p'] ?? 0) }}</td>
+                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ (int)($row['l'] ?? 0) + (int)($row['p'] ?? 0) }}</td>
                                             <td class="col-action"><button type="button" onclick="removeRow(this)" class="neo-btn-remove"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button></td>
                                         </tr>
                                         @endforeach
@@ -438,12 +451,12 @@
                                     <tbody data-tbody="tingkat">
                                         @php $totLTp = 0; $totPTp = 0; @endphp
                                         @foreach($formData['tingkatPendidikan'] as $i => $row)
-                                        @php $totLTp += $row['l'] ?? 0; $totPTp += $row['p'] ?? 0; @endphp
+                                        @php $totLTp += (int)($row['l'] ?? 0); $totPTp += (int)($row['p'] ?? 0); @endphp
                                         <tr class="neo-table-row">
                                             <td class="col-label"><input type="text" name="tingkatPendidikan[{{ $i }}][label]" value="{{ $row['label'] }}" class="neo-form-input" placeholder="Nama tingkat"></td>
                                             <td class="col-gender"><input type="number" name="tingkatPendidikan[{{ $i }}][l]" value="{{ $row['l'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
                                             <td class="col-gender"><input type="number" name="tingkatPendidikan[{{ $i }}][p]" value="{{ $row['p'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
-                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ ($row['l'] ?? 0) + ($row['p'] ?? 0) }}</td>
+                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ (int)($row['l'] ?? 0) + (int)($row['p'] ?? 0) }}</td>
                                             <td class="col-action"><button type="button" onclick="removeRow(this)" class="neo-btn-remove"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button></td>
                                         </tr>
                                         @endforeach
@@ -495,12 +508,12 @@
                                     <tbody data-tbody="sertifikasi">
                                         @php $totLSert = 0; $totPSert = 0; @endphp
                                         @foreach($formData['sertifikasi'] as $i => $row)
-                                        @php $totLSert += $row['l'] ?? 0; $totPSert += $row['p'] ?? 0; @endphp
+                                        @php $totLSert += (int)($row['l'] ?? 0); $totPSert += (int)($row['p'] ?? 0); @endphp
                                         <tr class="neo-table-row">
                                             <td class="col-label"><input type="text" name="sertifikasi[{{ $i }}][label]" value="{{ $row['label'] }}" class="neo-form-input" placeholder="Nama kategori"></td>
                                             <td class="col-gender"><input type="number" name="sertifikasi[{{ $i }}][l]" value="{{ $row['l'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
                                             <td class="col-gender"><input type="number" name="sertifikasi[{{ $i }}][p]" value="{{ $row['p'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
-                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ ($row['l'] ?? 0) + ($row['p'] ?? 0) }}</td>
+                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ (int)($row['l'] ?? 0) + (int)($row['p'] ?? 0) }}</td>
                                             <td class="col-action"><button type="button" onclick="removeRow(this)" class="neo-btn-remove"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button></td>
                                         </tr>
                                         @endforeach
@@ -556,12 +569,12 @@
                                     <tbody data-tbody="absensi">
                                         @php $totLAbs = 0; $totPAbs = 0; @endphp
                                         @foreach($formData['absensiSiswa'] as $i => $row)
-                                        @php $totLAbs += $row['l'] ?? 0; $totPAbs += $row['p'] ?? 0; @endphp
+                                        @php $totLAbs += (int)($row['l'] ?? 0); $totPAbs += (int)($row['p'] ?? 0); @endphp
                                         <tr class="neo-table-row">
                                             <td class="col-label"><input type="text" name="absensiSiswa[{{ $i }}][label]" value="{{ $row['label'] }}" class="neo-form-input" placeholder="Nama keterangan"></td>
                                             <td class="col-gender"><input type="number" name="absensiSiswa[{{ $i }}][l]" value="{{ $row['l'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
                                             <td class="col-gender"><input type="number" name="absensiSiswa[{{ $i }}][p]" value="{{ $row['p'] ?? 0 }}" min="0" class="neo-form-input calc-input"></td>
-                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ ($row['l'] ?? 0) + ($row['p'] ?? 0) }}</td>
+                                            <td class="col-total neo-table-cell-mono neo-table-total highlight" data-row-total>{{ (int)($row['l'] ?? 0) + (int)($row['p'] ?? 0) }}</td>
                                             <td class="col-action"><button type="button" onclick="removeRow(this)" class="neo-btn-remove"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button></td>
                                         </tr>
                                         @endforeach

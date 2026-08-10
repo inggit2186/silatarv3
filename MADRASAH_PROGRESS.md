@@ -73,6 +73,7 @@ Fitur Laporan Madrasah adalah modul untuk mengelola pelaporan semester madrasah 
 - [x] Dropdown kelas dinamis berdasarkan rombel yang ada
 - [x] Total Data Mutasi hanya hitung jika Nama Siswa terisi
 - [x] Ambil data terbaru jika belum ada untuk periode dipilih
+- [x] Refactor CSS - ekstraksi inline CSS ke file eksternal (`public/css/laporan-madrasah.css`) untuk caching & performance
 
 ### Phase 6: Konsolidasi Tabel Tenaga Kependidikan
 - [x] Analisis struktur `guru_madrasah` dan `pegawai_madrasah`
@@ -134,7 +135,7 @@ Approve / Reject
 | `resources/views/madrasah/pegawaimadrasah.blade.php` | Full NEO MIRAI theme + change $pegawai->name to $pegawai->nama |
 | `resources/views/madrasah/gurumadrasah.blade.php` | Full NEO MIRAI theme + change $guru->name to $guru->nama |
 | `resources/views/madrasah/laporansemester.blade.php` | Full NEO MIRAI theme + form action + CSRF + alert |
-| `resources/views/madrasah/laporanbulanan.blade.php` | Full NEO MIRAI theme + form action + CSRF + alert |
+| `resources/views/madrasah/laporanbulanan.blade.php` | Full NEO MIRAI theme + form action + CSRF + alert + CSS ekstraksi ke file eksternal |
 | `app/Http/Controllers/PageController.php` | Method saveProfilMadrasah, saveLaporanSemesterMadrasah, pegawaiMadrasah (read from tenaga_ktd), guruMadrasah (read from tenaga_ktd) |
 | `routes/web.php` | Route POST untuk saveProfilMadrasah |
 | `resources/css/neo-mirai-home.css` | Komponen baru: `.hero-label`, `.hero-title`, `.hero-desc`, `.hero-actions`, `.neo-stat-*`, `.neo-table-*`, `.neo-avatar-*`, `.neo-badge-*`, `.neo-action-btn`, `.neo-user-cell`, `.neo-pagination-*` |
@@ -153,6 +154,7 @@ Approve / Reject
 | `resources/views/admin/madrasah/index.blade.php` | View list laporan (belum dibuat) |
 | `resources/views/admin/madrasah/show.blade.php` | View detail & verifikasi (belum dibuat) |
 | `MADRASAH_ADMIN_PROGRESS.md` | Progress admin-side (belum dibuat) |
+| `public/css/laporan-madrasah.css` | CSS eksternal untuk laporan bulanan madrasah (dipindahkan dari inline style) |
 
 **Note:** Tabel database sudah ada di database - tidak perlu buat migrasi baru (kecuali tenaga_ktd).
 
@@ -528,3 +530,44 @@ Approve / Reject
 - **Field yang disimpan:**
   - Pegawai: nama, status (pns/pppk/honorer), nomor_induk, nik, npwp, tempat_lahir, tanggal_lahir, jk, golongan, jabatan, tmt_tugas, kgb, masa_kerja, pendidikan, email, telp, alamat, keterangan
   - Guru: nama, kat_jabatan (guru/kepala), status (PNS/PPPK/HONOR), nomor_induk, nik, npwp, nuptk, npk, nrg, bidang_studi, sertifikasi, pendidikan, dll
+
+### 2026-08-10 (Refactor CSS - Ekstraksi ke File Eksternal)
+- **Masalah:** CSS inline di `laporanbulanan.blade.php` terlalu panjang (~1200 baris), menyebabkan:
+  - Blade file menjadi sangat besar (1783 baris)
+  - CSS tidak bisa di-cache browser
+  - Tidak bisa diakses tanpa Vite dev server
+  - Banyak CSS variables yang belum didefinisikan (oklch, font families, easing)
+
+- **Solusi: Ekstraksi CSS ke file eksternal**
+  - Buat file baru: `public/css/laporan-madrasah.css` (1199 baris)
+  - Semua CSS untuk laporan madrasah dipindahkan ke file ini
+  - CSS variables ditambahkan dengan fallback values: `:root` block
+  - Semua `oklch()` syntax diperbaiki/dihapus (tidak kompatibel)
+  - Duplicate `box-shadow` declarations dibersihkan
+  - Font families ditambahkan: `--font-mono`, `--font-display`
+  - Easing curve ditambahkan: `--ease`
+
+- **Perubahan di blade file:**
+  - Hapus `<style>` block (~1200 baris)
+  - Ganti dengan: `<link rel="stylesheet" href="{{ asset('css/laporan-madrasah.css') }}">`
+  - Blade file sekarang hanya 978 baris (reduced by ~805 baris)
+
+- **Manfaat:**
+  1. **Browser Caching** - CSS di-cache browser, tidak perlu reload setiap kali
+  2. **Lebih Ringan** - Blade file lebih kecil, lebih cepat di-render server
+  3. **Maintenance Lebih Mudah** - CSS bisa di-update terpisah dari template
+  4. **Tidak Butuh Vite Dev Server** - File CSS langsung diakses dari `public/css/`
+  5. **Kompresi Lebih Baik** - CSS bisa di-minify dan gzip di production
+  6. **Responsif** - Breakpoints tablet (1024px) dan mobile (768px, 480px) sudah diperbaiki
+
+- **CSS Components yang dipindahkan:**
+  - Layout: `.madrasah-fullwidth`, `.content-inner`, `.neo-tabs-large`
+  - Filter: `.filter-container`, `.filter-header`, `.filter-form`, `.filter-select`
+  - Info Period: `.info-period-banner`, `.info-period-text`, `.info-period-value`
+  - Hero Section: `.hero-badge`, `.hero-title`, `.hero-subtitle`, `.info-hero-card`
+  - Forms: `.form-grid`, `.form-grid-3`, `.neo-field-group`, `.neo-form-input`, `.neo-form-select`
+  - Stats: `.stat-grid`, `.stat-card`, `.stat-value`, `.stat-icon`
+  - Cards: `.rombel-card`, `.mutation-card`, `.gender-input-grid`
+  - Level: `.level-header`, `.level-footer`, `.level-badge`
+  - Buttons: `.neo-btn-add`, `.btn-action-save`, `.btn-action-primary`
+  - Responsive: `@media (max-width: 1024px)`, `@media (max-width: 768px)`, `@media (max-width: 480px)`

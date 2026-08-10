@@ -7158,6 +7158,7 @@ class PageController extends Controller
         $reportStatus = null;
         $submittedAt = null;
         $adminNote = null;
+        $templateInfo = null;
 
         if (!$existingReport && $isUserSelection && $deptId) {
             // Get the latest report for student counts (ignore mutation rows)
@@ -7169,6 +7170,7 @@ class PageController extends Controller
 
             if ($latestReport) {
                 $studentCounts = json_decode($latestReport->student_counts_json ?? '{}', true);
+                $templateInfo = "data dari {$latestReport->bulan_laporan} {$latestReport->tahun_laporan} (Semester {$latestReport->semester} TA {$latestReport->tahun_ajaran})";
             }
         } elseif ($existingReport) {
             // Has data for selected period
@@ -7229,6 +7231,7 @@ class PageController extends Controller
             'currentStatusLabel' => $hasExistingData ? ($statusLabels[$reportStatus] ?? 'Draft') : null,
             'formattedSubmittedAt' => $submittedAt ? \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Jakarta')->format('d M Y, H:i') : 'Belum dikirim',
             'currentAdminNote' => $adminNote ?? 'Belum ada catatan admin',
+            'templateInfo' => $templateInfo,
         ]);
     }
 
