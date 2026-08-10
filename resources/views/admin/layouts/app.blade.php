@@ -97,6 +97,15 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
                 </div>
                 <span>Laporan</span>
             </a>
+
+            <a href="{{ route('admin.madrasah.laporan.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.madrasah.laporan.*') ? 'active' : '' }}">
+                <div class="sidebar-nav-icon-wrap emerald">
+                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                </div>
+                <span>Laporan Madrasah</span>
+            </a>
             @endif
 
             <a href="{{ route('admin.news.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.news.*') ? 'active' : '' }}">
@@ -396,5 +405,6 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
         }
     </script>
     @stack('scripts')
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 </html>

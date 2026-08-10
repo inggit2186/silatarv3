@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\NewsController;
 use App\Http\Controllers\Admin\PenilaianKinerjaController;
 use App\Http\Controllers\Admin\MadrasahController;
+use App\Http\Controllers\Admin\MadrasahLaporanController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -135,5 +136,14 @@ Route::middleware(['auth', 'admin'])
             Route::delete('/{id}', [MadrasahController::class, 'destroy'])->name('destroy');
             Route::get('/{id}/profile', [MadrasahController::class, 'getProfile'])->name('profile');
             Route::post('/assign-user', [MadrasahController::class, 'assignUser'])->name('assign-user');
+        });
+
+        // Laporan Madrasah Verification Routes
+        Route::prefix('madrasah/laporan')->name('madrasah.laporan.')->group(function () {
+            Route::get('/', [MadrasahLaporanController::class, 'index'])->name('index');
+            Route::get('/{type}/{id}', [MadrasahLaporanController::class, 'show'])->name('show');
+            Route::post('/{type}/{id}/verify', [MadrasahLaporanController::class, 'verify'])->name('verify');
+            Route::post('/{type}/{id}/reject', [MadrasahLaporanController::class, 'reject'])->name('reject');
+            Route::post('/{type}/{id}/note', [MadrasahLaporanController::class, 'addNote'])->name('note');
         });
     });

@@ -60,11 +60,17 @@ Implementasi untuk menangani multiple madrasah under satu dept_id sudah selesai:
 - [x] Save Laporan Bulanan - update ktd_laporan_bulanan_madrasah
 
 ### Phase 3: Admin-Side (Verifikasi)
-- [ ] Buat view admin `resources/views/admin/madrasah/index.blade.php`
-- [ ] Buat view admin `resources/views/admin/madrasah/show.blade.php`
-- [ ] Buat controller method untuk list & verify laporan
-- [ ] Tambah route admin untuk madrasah
-- [ ] Tambah menu sidebar admin untuk Madrasah
+- [x] Buat view admin `resources/views/admin/madrasah/laporan-index.blade.php` (list laporan)
+- [x] Buat view admin `resources/views/admin/madrasah/laporan-show.blade.php` (detail & verifikasi)
+- [x] Buat controller `Admin/MadrasahLaporanController.php` dengan methods: index, show, verify, reject, addNote
+- [x] Tambah routes admin untuk laporan madrasah (`/admin/madrasah/laporan`)
+- [x] Tambah menu sidebar admin "Laporan Madrasah"
+- [x] Fitur Daftar Laporan: Tampilkan semua madrasah dengan status laporan (submitted/approved/revisi)
+- [x] Filter: Pencarian, Jenis Laporan (Bulanan/Semester), Status
+- [x] Detail Laporan: Info Umum, Data Madrasah, Profil Madrasah, Data Pegawai, Data Guru
+- [x] Collapse/Expandable sections untuk Profil Madrasah, Data Pegawai, Data Guru, dan semua section data laporan
+- [x] Fitur Verify/Reject laporan dengan catatan admin
+- [x] Indikator buka/tutup dengan teks "Buka/Tutup" dan icon arrow di sebelah kanan header
 
 ### Phase 4: Export & Report
 - [ ] Generate laporan ke PDF
@@ -593,3 +599,155 @@ Approve / Reject
   - Level: `.level-header`, `.level-footer`, `.level-badge`
   - Buttons: `.neo-btn-add`, `.btn-action-save`, `.btn-action-primary`
   - Responsive: `@media (max-width: 1024px)`, `@media (max-width: 768px)`, `@media (max-width: 480px)`
+
+### 2026-08-10 (Phase 3: Admin-Side Laporan Madrasah)
+- **File Baru:**
+  - `app/Http/Controllers/Admin/MadrasahLaporanController.php` - Controller untuk verifikasi laporan
+  - `resources/views/admin/madrasah/laporan-index.blade.php` - View list laporan
+  - `resources/views/admin/madrasah/laporan-show.blade.php` - View detail & verifikasi
+
+- **Controller Methods:**
+  - `index(Request $request)` - List semua laporan (bulanan + semester) dengan filter & pagination
+    - Union query untuk menggabungkan kedua tabel
+    - Filter: search, type, status, period
+    - Pagination 20 item per halaman
+    - Statistics: total, pending, approved, revisi
+  - `show(string $type, int $id)` - Detail laporan tertentu
+    - Handle both bulanan and semester types
+    - JSON decode untuk semua field JSON
+    - Return appropriate data structure per type
+  - `verify(Request $request, string $type, int $id)` - Setujui laporan
+    - Update status ke 'approved'
+    - Simpan catatan admin
+    - Validation: hanya bisa approve laporan dengan status 'submitted'
+  - `reject(Request $request, string $type, int $id)` - Minta revisi
+    - Update status ke 'revisi'
+    - Wajib isi catatan admin (validasi required)
+    - Validation: hanya bisa reject laporan dengan status 'submitted'
+  - `addNote(Request $request, string $type, int $id)` - Update catatan admin
+    - Update catatan_admin field
+    - Bisa digunakan untuk semua status laporan
+
+- **Routes Baru (routes/admin.php):**
+  ```php
+  Route::prefix('madrasah/laporan')->name('madrasah.laporan.')->group(function () {
+      Route::get('/', [MadrasahLaporanController::class, 'index'])->name('index');
+      Route::get('/{type}/{id}', [MadrasahLaporanController::class, 'show'])->name('show');
+      Route::post('/{type}/{id}/verify', [MadrasahLaporanController::class, 'verify'])->name('verify');
+      Route::post('/{type}/{id}/reject', [MadrasahLaporanController::class, 'reject'])->name('reject');
+      Route::post('/{type}/{id}/note', [MadrasahLaporanController::class, 'addNote'])->name('note');
+  });
+  ```
+
+- **View laporan-index.blade.php:**
+  - Page header dengan judul dan deskripsi
+  - Flash messages (success/error)
+  - Stats row (4 cards): Total, Menunggu Verifikasi, Disetujui, Perlu Revisi
+  - Filter card: search, type (bulanan/semester), status (submitted/approved/revisi)
+  - Table card dengan columns: No, Jenis, Madrasah, Periode, Status, Tanggal Submit, Aksi
+  - Pagination (20 items per page)
+  - Badge styling untuk status: warning (submitted), success (approved), danger (revisi)
+
+- **View laporan-show.blade.php:**
+  - Two-column grid layout (2fr 1fr) - pattern dari tpg/show.blade.php
+  - Left Column:
+    - Info Umum Laporan (jenis, periode, tahun ajaran, status, tanggal submit)
+    - Data Madrasah (nama, instansi, NSM, NPSM)
+    - Data Laporan (varies by type):
+      - Bulanan: Student counts table (Kelas, L, P, Total) + Mutation rows table
+      - Semester: 8 JSON sections (Gedung, Sarana, Bantuan P/NP, Guru, Pendidikan, Sertifikasi, Absensi)
+  - Right Column:
+    - Verification Form (jika status = submitted):
+      - Textarea catatan admin (opsional untuk approve)
+      - Button "Setujui Laporan" (btn-primary)
+      - Button "Minta Revisi" (btn-danger, wajib isi catatan)
+    - Update Note Form (jika status = approved/revisi):
+      - Textarea catatan admin
+      - Button "Simpan Catatan"
+    - Timeline Info (created_at, updated_at, submitted_at)
+    - Back button ke daftar laporan
+  - JavaScript untuk form confirmation (verify/reject)
+
+- **Sidebar Menu Item (layouts/app.blade.php):**
+  - Tambah menu "Laporan Madrasah" setelah "Laporan"
+  - Emerald color variant dengan book icon
+  - Route: `admin.madrasah.laporan.index`
+  - Active state: `request()->routeIs('admin.madrasah.laporan.*')`
+
+- **Database Queries Pattern:**
+  - Gunakan DB::table() query builder (bukan Eloquent)
+  - Union query untuk menggabungkan bulanan + semester
+  - JSON decode untuk data laporan: `json_decode($laporan->student_counts_json, true)`
+  - Statistics dengan selectRaw()
+  - Role-based filtering belum diimplementasi (semua admin bisa akses semua madrasah)
+
+- **Status Enum:**
+  - `draft` - Belum dikirim (tidak tampil di admin)
+  - `submitted` - Sudah dikirim, menunggu verifikasi
+  - `revisi` - Ditolak, perlu perbaikan
+  - `approved` - Disetujui admin
+
+- **Validasi:**
+  - Verify: hanya bisa approve laporan dengan status 'submitted'
+  - Reject: hanya bisa reject laporan dengan status 'submitted'
+  - Reject: catatan_admin_reject wajib diisi (max 1000 chars)
+  - Note: catatan_admin opsional (max 1000 chars)
+
+- **Manfaat:**
+  1. Admin bisa melihat semua laporan (bulanan & semester) di satu halaman
+  2. Admin bisa filter berdasarkan search, jenis, status, dan periode
+  3. Admin bisa verifikasi laporan dengan satu klik
+  4. Admin bisa meminta revisi dengan catatan yang jelas
+  5. Admin bisa menambah/update catatan untuk laporan yang sudah diverifikasi
+  6. User-friendly interface dengan stats, table, dan pagination
+  7. Responsive design menggunakan admin CSS classes
+  8. Flash messages untuk feedback operasi
+
+### 2026-08-10 (Enhancement: Admin Laporan - Profil, Pegawai, Guru & Collapse/Expand)
+- **Update Controller (MadrasahLaporanController.php):**
+  - `show()` method: Fetch profil madrasah dari `ktd_department` berdasarkan `dept_id`
+  - Fetch data pegawai (staf & honorer) dari `tenaga_ktd` berdasarkan `madrasah_id`
+  - Fetch data guru dari `tenaga_ktd` berdasarkan `madrasah_id`
+  - Kirim data ke view: `$profilMadrasah`, `$pegawai`, `$guru`
+
+- **Update View (laporan-show.blade.php):**
+  - Tambah card "Profil Madrasah" menampilkan: alamat (jalan, jorong, nagari, kecamatan), telepon, email, website, waktu belajar, akreditasi, visi
+  - Tambah card "Data Pegawai" menampilkan: tabel dengan nama, status (PNS/PPPK/Honorer), NIP/Nomor Induk, jabatan
+  - Tambah card "Data Guru" menampilkan: tabel dengan nama, status, NUPTK, bidang studi
+  - Semua card (kecuali Info Umum Laporan & Data Madrasah) menggunakan collapse/expand dengan Alpine.js
+  - Indikator buka/tutup: teks "Buka/Tutup" + icon arrow di sebelah kanan header
+  - Animasi fade transition saat buka/tutup (200ms)
+  - Default collapsed saat halaman dimuat
+
+- **Update View (laporan-index.blade.php):**
+  - Tambah filter "Jenis Laporan" (Bulanan/Semester) di form filter
+  - Grid filter dari 3 kolom menjadi 4 kolom (Pencarian, Jenis, Status, Tombol)
+
+- **Update Controller (index method):**
+  - Parameter `$type` untuk filter jenis laporan
+  - Logic: `if ($type && $jenis !== $type) { continue; }` untuk filter berdasarkan jenis
+
+- **Fix: Cursor Pointer**
+  - Hapus `style="cursor: pointer;"` dari card-header
+  - Tambah `style="cursor: pointer;"` hanya pada div indicator di sebelah kanan
+  - Pastikan `justify-content: space-between` agar indicator berada di kanan paling jauh
+
+- **Fix: Undefined Property Error**
+  - Tambah null coalescing operator `?? null` untuk semua property yang mungkin tidak ada
+  - Cegah error `Undefined property: stdClass::$tahun_laporan`
+
+- **Files Updated:**
+  - `app/Http/Controllers/Admin/MadrasahLaporanController.php` - Tambah fetch profil, pegawai, guru; update filter jenis
+  - `resources/views/admin/madrasah/laporan-show.blade.php` - Tambah 3 card collapsible + fix cursor
+  - `resources/views/admin/madrasah/laporan-index.blade.php` - Tambah filter jenis laporan
+  - `resources/views/admin/layouts/app.blade.php` - Tambah Alpine.js CDN script
+
+- **Fitur Lengkap Admin Laporan:**
+  1. ✅ Daftar Laporan: Semua madrasah dengan status laporan (submitted/approved/revisi)
+  2. ✅ Filter: Pencarian, Jenis Laporan (Bulanan/Semester), Status
+  3. ✅ Detail Laporan: Info Umum, Data Madrasah, Profil Madrasah, Data Pegawai, Data Guru
+  4. ✅ Collapse/Expandable: Profil Madrasah, Data Pegawai, Data Guru, semua section data laporan
+  5. ✅ Indikator Jelas: Teks "Buka/Tutup" + icon arrow di sebelah kanan header
+  6. ✅ Verify/Reject: Setujui atau minta revisi dengan catatan admin
+  7. ✅ Flash Messages: Feedback operasi sukses/error
+  8. ✅ Pagination: 20 item per halaman
