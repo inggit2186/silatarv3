@@ -415,6 +415,7 @@
                         <div class="neo-modal-field">
                             <label for="tahun_pelajaran" class="neo-modal-label">Tahun Pelajaran</label>
                             <select x-model="selectedTahunPelajaran" id="tahun_pelajaran" class="neo-form-select">
+                                <option value="">-- Pilih Salah Satu --</option>
                                 <template x-for="tahun in tahunPelajaranOptions" :key="tahun">
                                     <option :value="tahun" x-text="tahun"></option>
                                 </template>
@@ -423,6 +424,7 @@
                         <div class="neo-modal-field">
                             <label for="semester" class="neo-modal-label">Semester</label>
                             <select x-model="selectedSemester" id="semester" class="neo-form-select">
+                                <option value="">-- Pilih Salah Satu --</option>
                                 <template x-for="sem in semesterOptions" :key="sem">
                                     <option :value="sem" x-text="sem"></option>
                                 </template>
@@ -446,6 +448,7 @@
                         <div class="neo-modal-field">
                             <label for="tahun" class="neo-modal-label">Tahun</label>
                             <select x-model="selectedTahun" id="tahun" class="neo-form-select">
+                                <option value="">-- Pilih Salah Satu --</option>
                                 <template x-for="tahun in tahunOptions" :key="tahun">
                                     <option :value="tahun" x-text="tahun"></option>
                                 </template>
@@ -454,6 +457,7 @@
                         <div class="neo-modal-field">
                             <label for="bulan" class="neo-modal-label">Bulan</label>
                             <select x-model="selectedBulan" id="bulan" class="neo-form-select">
+                                <option value="">-- Pilih Salah Satu --</option>
                                 <template x-for="(bulan, index) in bulanOptions" :key="bulan">
                                     <option :value="bulan" x-text="bulan"></option>
                                 </template>
