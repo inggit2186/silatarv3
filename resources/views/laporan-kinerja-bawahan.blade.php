@@ -29,6 +29,7 @@
                 currentUserId: null,
                 currentBulan: '',
                 isProcessing: false,
+                processingAction: '',
                 // Toast notifications
                 toastMessage: '',
                 toastType: 'success',
@@ -202,13 +203,21 @@
                         this.showToast('Terjadi kesalahan: ' + err.message, 'error');
                     });
                 },
-                openPdfPreview(url, title, reportId, userId, bulan) {
-                    this.pdfPreviewUrl = url;
-                    this.pdfPreviewTitle = title || 'Preview PDF';
-                    this.currentReportId = reportId;
-                    this.currentUserId = userId;
-                    this.currentBulan = bulan;
+                openPdfPreview(payload) {
+                    this.pdfPreviewUrl = payload?.url || '';
+                    this.pdfPreviewTitle = payload?.title || 'Preview PDF';
+                    this.currentReportId = payload?.reportId ?? null;
+                    this.currentUserId = payload?.userId ?? null;
+                    this.currentBulan = payload?.bulan || '';
                     this.pdfPreviewOpen = true;
+                },
+                setProcessing(action) {
+                    this.processingAction = action;
+                    this.isProcessing = true;
+                },
+                clearProcessing() {
+                    this.processingAction = '';
+                    this.isProcessing = false;
                 },
                 closePdfPreview() {
                     this.pdfPreviewOpen = false;
@@ -217,10 +226,11 @@
                     this.currentReportId = null;
                     this.currentUserId = null;
                     this.currentBulan = '';
+                    this.clearProcessing();
                 },
                 approveReport() {
                     if (this.isProcessing || !this.currentUserId) return;
-                    this.isProcessing = true;
+                    this.setProcessing('approve');
 
                     const formData = new FormData();
                     formData.append('user_id', this.currentUserId);
@@ -239,13 +249,13 @@
                             window.location.reload();
                         } else {
                             this.showToast(data.message || 'Gagal menyetujui laporan', 'error');
-                            this.isProcessing = false;
+                            this.clearProcessing();
                         }
                     })
                     .catch(err => {
                         console.error(err);
                         this.showToast('Terjadi kesalahan server. Silakan coba lagi.', 'error');
-                        this.isProcessing = false;
+                        this.clearProcessing();
                     });
                 },
                 rejectReport() {
@@ -253,10 +263,9 @@
                     if (!confirm('Yakin ingin menolak laporan ini?')) return;
 
                     const alasan = prompt('Masukkan alasan penolakan (opsional):');
-                    // User cancelled prompt
                     if (alasan === null) return;
 
-                    this.isProcessing = true;
+                    this.setProcessing('reject');
 
                     const formData = new FormData();
                     formData.append('user_id', this.currentUserId);
@@ -276,13 +285,13 @@
                             window.location.reload();
                         } else {
                             this.showToast(data.message || 'Gagal menolak laporan', 'error');
-                            this.isProcessing = false;
+                            this.clearProcessing();
                         }
                     })
                     .catch(err => {
                         console.error(err);
                         this.showToast('Terjadi kesalahan server. Silakan coba lagi.', 'error');
-                        this.isProcessing = false;
+                        this.clearProcessing();
                     });
                 },
             };
@@ -536,7 +545,13 @@
                                                     @if($report['has_report'] && $report['filename'])
                                                         <button
                                                             type="button"
-                                                            @click="openPdfPreview('/storage/satker_ckh/{{ $report['user_id'] }}/{{ $report['filename'] }}', '{{ $report['user_name'] }} - {{ $report['bulan'] }}', {{ $report['id'] ?? 'null' }}, {{ $report['user_id'] }}, '{{ $report['bulan'] }}')"
+                                                            @click="openPdfPreview(@js([
+                                                                'url' => '/storage/satker_ckh/' . $report['user_id'] . '/' . $report['filename'],
+                                                                'title' => $report['user_name'] . ' - ' . $report['bulan'],
+                                                                'reportId' => $report['id'] ?? null,
+                                                                'userId' => $report['user_id'],
+                                                                'bulan' => $report['bulan'],
+                                                            ]))"
                                                             class="report-pdf-btn report-pdf-btn-primary"
                                                         >
                                                             <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
@@ -646,25 +661,31 @@
                                     type="button"
                                     @click="rejectReport()"
                                     :disabled="isProcessing"
-                                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition"
+                                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition disabled:cursor-not-allowed disabled:opacity-70"
                                     style="background: transparent; border: 2px solid #f43f5e; color: #f43f5e;"
                                 >
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <svg x-show="processingAction !== 'reject'" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                         <path d="M6 18L18 6M6 6l12 12"/>
                                     </svg>
-                                    Tolak
+                                    <svg x-show="processingAction === 'reject'" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M12 2v4m0 12v4m10-10h-4M6 12H2m15.071-7.071l-2.828 2.828M9.757 14.243l-2.828 2.828m12.142 0l-2.828-2.828M9.757 9.757 6.929 6.929"/>
+                                    </svg>
+                                    <span x-text="processingAction === 'reject' ? 'Menolak...' : 'Tolak'"></span>
                                 </button>
                                 <button
                                     type="button"
                                     @click="approveReport()"
                                     :disabled="isProcessing"
-                                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition"
+                                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition disabled:cursor-not-allowed disabled:opacity-70"
                                     style="background: var(--gold); color: var(--night);"
                                 >
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <svg x-show="processingAction !== 'approve'" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                         <path d="M5 13l4 4L19 7"/>
                                     </svg>
-                                    Setujui
+                                    <svg x-show="processingAction === 'approve'" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M12 2v4m0 12v4m10-10h-4M6 12H2m15.071-7.071l-2.828 2.828M9.757 14.243l-2.828 2.828m12.142 0l-2.828-2.828M9.757 9.757 6.929 6.929"/>
+                                    </svg>
+                                    <span x-text="processingAction === 'approve' ? 'Menyetujui...' : 'Setujui'"></span>
                                 </button>
                             </div>
                         </div>

@@ -2760,6 +2760,7 @@ class PageController extends Controller
             ->where('dept_id', $user->dept_id)
             ->where('id', '!=', $user->id)
             ->where('kat_jabatan', '!=', 'kepala')
+            ->whereNotIn('role', ['pindah', 'pensiun'])
             ->select(['id', 'name', 'kat_jabatan', 'pekerjaan'])
             ->get();
 
