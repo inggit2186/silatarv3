@@ -1052,7 +1052,7 @@ class PageController extends Controller
             'Mei' => 5, 'Juni' => 6, 'Juli' => 7, 'Agustus' => 8,
             'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12,
         ];
-        $itemId = $bulanMap[strtolower($bulan)] ?? date('n');
+        $itemId = $bulanMap[$bulan] ?? $bulanMap[ucfirst(strtolower($bulan))] ?? date('n');
 
         // Determine waktu (start date of the month)
         $waktuDate = Carbon::createFromDate($tahun, $itemId, 1)->startOfMonth();
@@ -1249,7 +1249,7 @@ class PageController extends Controller
             'Mei' => 5, 'Juni' => 6, 'Juli' => 7, 'Agustus' => 8,
             'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12,
         ];
-        $itemId = $bulanMap[strtolower($bulan)] ?? date('n');
+        $itemId = $bulanMap[$bulan] ?? $bulanMap[ucfirst(strtolower($bulan))] ?? date('n');
 
         // waktu: start date of the month
         $waktuDate = Carbon::createFromDate($tahun, $itemId, 1)->startOfMonth();
@@ -4808,6 +4808,78 @@ class PageController extends Controller
         } catch (\Exception $e) {
             Log::warning('WA notification to petugas failed', [
                 'petugas_id' => $petugasUserId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public static function notifyUserViaWhatsApp(int $userId, string $namaLayanan, string $noReq, string $status, ?string $keterangan = null): void
+    {
+        try {
+            $user = DB::table('users')->find($userId);
+            if (! $user || empty($user->telp)) {
+                return;
+            }
+
+            $phone = '62' . WhatsAppService::normalizePhoneNumber($user->telp);
+            $waService = new WhatsAppService();
+
+            $statusIcons = [
+                'SUBMITTED' => '📤',
+                'PENDING' => '⏳',
+                'DITERIMA' => '✅',
+                'DIPROSES' => '🔄',
+                'SUKSES' => '🎉',
+                'DITOLAK' => '❌',
+                'BATAL' => '🚫',
+            ];
+
+            $statusLabels = [
+                'SUBMITTED' => 'Terkirim',
+                'PENDING' => 'Menunggu Verifikasi',
+                'DITERIMA' => 'Diterima',
+                'DIPROSES' => 'Sedang Diproses',
+                'SUKSES' => 'Selesai',
+                'DITOLAK' => 'Ditolak',
+                'BATAL' => 'Dibatalkan',
+            ];
+
+            $icon = $statusIcons[$status] ?? '📋';
+            $label = $statusLabels[$status] ?? $status;
+
+            $lines = [
+                "{$icon} *Update Status Pengajuan Layanan*",
+                "━━━━━━━━━━━━━━━━━━━━━━",
+                "",
+                "👤 *Pemohon:* {$user->name}",
+                "🏢 *Layanan:* {$namaLayanan}",
+                "🔖 *No. Request:* {$noReq}",
+                "📊 *Status:* {$icon} *{$label}*",
+            ];
+
+            if ($keterangan && $status === 'DITOLAK') {
+                $lines[] = "";
+                $lines[] = "📝 *Keterangan:* " . Str::limit(strip_tags($keterangan), 200);
+            }
+
+            $lines[] = "";
+            $lines[] = "🕐 *Waktu:* " . now()->translatedFormat('d M Y, H:i');
+            $lines[] = "";
+            $lines[] = "━━━━━━━━━━━━━━━━━━━━━━";
+            $lines[] = "Yth. *{$user->name}*,";
+            $lines[] = "Silakan cek status pengajuan Anda melalui link berikut:";
+            $lines[] = "";
+            $lines[] = "🔗 https://kemenagtanahdatar.id/pengajuan-saya";
+            $lines[] = "";
+            $lines[] = "🙏 *Terima Kasih*";
+            $lines[] = "━━━━━━━━━━━━━━━━━━━━━━";
+
+            $message = implode("\n", $lines);
+
+            $waService->sendMessage($phone, $message);
+        } catch (\Exception $e) {
+            Log::warning('WA notification to user failed', [
+                'user_id' => $userId,
                 'error' => $e->getMessage(),
             ]);
         }

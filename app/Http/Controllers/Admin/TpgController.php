@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\PageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -448,6 +449,10 @@ class TpgController extends Controller
                 'updated_at' => now(),
             ]);
 
+        // Notify user via WhatsApp
+        $layananName = DB::table('ktd_layanan')->where('id', $item->layanan_id)->value('nama') ?? 'Layanan';
+        PageController::notifyUserViaWhatsApp($item->user_id, $layananName, $item->noreq, $request->status);
+
         return back()->with('success', "Pengajuan berhasil diverifikasi ke status {$request->status}");
     }
 
@@ -476,6 +481,10 @@ class TpgController extends Controller
                 'verifikator_id' => Auth::id(),
                 'updated_at' => now(),
             ]);
+
+        // Notify user via WhatsApp
+        $layananName = DB::table('ktd_layanan')->where('id', $item->layanan_id)->value('nama') ?? 'Layanan';
+        PageController::notifyUserViaWhatsApp($item->user_id, $layananName, $item->noreq, 'DITOLAK', $request->keterangan);
 
         return redirect()
             ->route('admin.tpg.index')
