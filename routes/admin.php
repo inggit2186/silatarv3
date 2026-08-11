@@ -121,6 +121,7 @@ Route::middleware(['auth', 'admin'])
         // TPG Verification Routes
         Route::prefix('tpg')->name('tpg.')->group(function () {
             Route::get('/', [TpgController::class, 'index'])->name('index');
+            Route::get('/semester', [TpgController::class, 'semesterIndex'])->name('semester.index');
             Route::get('/{id}', [TpgController::class, 'show'])->name('show');
             Route::post('/{id}/verify', [TpgController::class, 'verify'])->name('verify');
             Route::post('/{id}/reject', [TpgController::class, 'reject'])->name('reject');
