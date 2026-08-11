@@ -823,11 +823,11 @@ class PageController extends Controller
         $semester = $validated['semester'];
         $isDraft = $request->input('submit_action') === 'draft';
 
-        // item_id: 1=Ganjil, 2=Genap
+        // item_id: 1=Ganjil, 2=Genap (case-insensitive)
         $itemId = strtoupper($semester) === 'GENAP' ? 2 : 1;
 
-        // Parse tahun from tahun_pelajaran
-        $tahunParts = explode('/', $tahunPelajaran);
+        // Parse tahun from tahun_pelajaran (supports both "2026/2027" and "2026-2027")
+        $tahunParts = preg_split('[/-]', $tahunPelajaran);
         $tahun = (int) ($tahunParts[0] ?? date('Y'));
 
         // waktu: Ganjil=July, Genap=January (tahun berikutnya)
@@ -3988,8 +3988,8 @@ class PageController extends Controller
         // Determine item_id based on semester (1=Ganjil, 2=Genap)
         $itemId = strtoupper($semester) === 'GENAP' ? 2 : 1;
 
-        // Extract tahun from tahun_pelajaran (e.g., "2026/2027" -> 2026)
-        $tahunParts = explode('/', $tahunPelajaran);
+        // Extract tahun from tahun_pelajaran (supports both "2026/2027" and "2026-2027")
+        $tahunParts = preg_split('[/-]', $tahunPelajaran);
         $tahun = (int) ($tahunParts[0] ?? date('Y'));
 
         // Determine waktu (start date of semester)
