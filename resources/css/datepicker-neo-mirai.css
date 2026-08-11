@@ -27,6 +27,17 @@
     outline: none;
     transition: all 0.2s ease;
     cursor: pointer;
+    font-family: var(--font-mono);
+}
+
+/* Auth form specific styles */
+.neo-auth-form .silatar-datepicker-trigger,
+.silatar-datepicker.neo-auth-style .silatar-datepicker-trigger {
+    height: auto;
+    padding: 0.85rem 1rem;
+    border-radius: 0;
+    border: 1px solid var(--line, #e2e8f0);
+    font-size: 0.85rem;
 }
 
 .silatar-datepicker-trigger:hover {

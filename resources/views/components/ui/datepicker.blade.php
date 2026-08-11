@@ -9,11 +9,13 @@
     'min' => null,
     'max' => null,
     'help' => null,
+    'authStyle' => false,
 ])
 
 @php
     $datepickerConfig = config('ui.datepicker', []);
     $fieldId = $id ?? \Illuminate\Support\Str::slug($name . '-datepicker') . '-' . \Illuminate\Support\Str::random(5);
+    $datepickerClass = $authStyle ? 'silatar-datepicker neo-auth-style' : 'silatar-datepicker';
 @endphp
 
 <div x-data="silatarDatepicker(@js([
@@ -27,7 +29,7 @@
     'weekdays' => $datepickerConfig['weekdays'] ?? [],
     'min' => $min,
     'max' => $max,
-]))" x-init="init()" @keydown.escape.window="closePicker()" class="silatar-datepicker">
+]))" x-init="init()" @keydown.escape.window="closePicker()" class="{{ $datepickerClass }}">
     @if ($label)
         <label for="{{ $fieldId }}" class="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
             {{ $label }}@if ($required)<span class="text-rose-500"> *</span>@endif
