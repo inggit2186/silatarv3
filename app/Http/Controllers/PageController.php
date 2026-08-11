@@ -1126,7 +1126,7 @@ class PageController extends Controller
                     (int) $serviceData->petugas,
                     $service['title'],
                     $noreq,
-                    $user->name,
+                    $requester->name,
                     null,
                     "{$bulan} {$tahun}",
                     $request->input('deskripsi') ?? null
