@@ -31,4 +31,5 @@ Klik PDF/Verifikasi -> Alpine component -> request ke route verifikasi / preview
 - Menambahkan loading visual saat verifikasi laporan bawahan.
 - Mengganti pemanggilan preview PDF ke payload terenkode aman agar nama seperti `NUR'AINA` tidak memutus JavaScript.
 - Menambahkan filter `role` untuk daftar bawahan agar user `pindah` dan `pensiun` tidak ikut muncul.
+- Membuat verifikasi laporan tetap sukses walau regenerasi PDF gagal, lalu menampilkan toast sukses/gagal sebelum reload.
 - Menambahkan catatan progress perubahan ini.

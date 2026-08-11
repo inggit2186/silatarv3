@@ -4340,25 +4340,39 @@ class PageController extends Controller
                     'updated_at' => now(),
                 ]);
 
+            $pdfWarning = null;
+
             // If approved and signature is active, regenerate PDF
             if ($newStatus === 'DISETUJUI' && $signature) {
-                // Get period label
-                $bulanDate = Carbon::createFromFormat('Y-m-d', $reportInfo->bulan);
-                $periodLabel = $bulanDate->translatedFormat('F Y');
+                try {
+                    // Get period label
+                    $bulanDate = Carbon::createFromFormat('Y-m-d', $reportInfo->bulan);
+                    $periodLabel = $bulanDate->translatedFormat('F Y');
 
-                // Generate PDF with signature
-                $pdfBinary = $this->generateApprovedPdf($reportInfo, $user, $periodLabel);
+                    // Generate PDF with signature
+                    $pdfBinary = $this->generateApprovedPdf($reportInfo, $user, $periodLabel);
 
-                // Save new PDF with approved suffix
-                $filename = sprintf('%s.kinerja-%s-DISETUJUI.pdf', $data['user_id'], $bulanDate->format('m-Y'));
-                $storagePath = "satker_ckh/{$data['user_id']}/{$filename}";
+                    // Save new PDF with approved suffix
+                    $filename = sprintf('%s.kinerja-%s-DISETUJUI.pdf', $data['user_id'], $bulanDate->format('m-Y'));
+                    $storagePath = "satker_ckh/{$data['user_id']}/{$filename}";
 
-                Storage::disk('public')->put($storagePath, $pdfBinary);
+                    Storage::disk('public')->put($storagePath, $pdfBinary);
 
-                // Update filename in database
-                DB::table('satker_ckh')
-                    ->where('id', $report->id)
-                    ->update(['filename' => $filename]);
+                    // Update filename in database
+                    DB::table('satker_ckh')
+                        ->where('id', $report->id)
+                        ->update(['filename' => $filename]);
+                } catch (\Throwable $pdfException) {
+                    Log::error('Gagal regenerasi PDF verifikasi laporan', [
+                        'user_id' => $user->id,
+                        'bawahan_user_id' => $data['user_id'],
+                        'report_id' => $report->id,
+                        'bulan' => $data['bulan'],
+                        'error' => $pdfException->getMessage(),
+                    ]);
+
+                    $pdfWarning = 'Laporan berhasil disetujui, tetapi PDF gagal diperbarui.';
+                }
             }
 
             // Log activity (optional - skip if table doesn't exist)
@@ -4383,9 +4397,9 @@ class PageController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => $data['action'] === 'approve'
+            'message' => $pdfWarning ?? ($data['action'] === 'approve'
                 ? 'Laporan berhasil disetujui.'
-                : 'Laporan berhasil ditolak.',
+                : 'Laporan berhasil ditolak.'),
             'new_status' => $newStatus,
         ]);
     }

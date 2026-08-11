@@ -228,6 +228,11 @@
                     this.currentBulan = '';
                     this.clearProcessing();
                 },
+                finishVerification(message, type = 'success') {
+                    this.showToast(message, type);
+                    this.closePdfPreview();
+                    setTimeout(() => window.location.reload(), 900);
+                },
                 approveReport() {
                     if (this.isProcessing || !this.currentUserId) return;
                     this.setProcessing('approve');
@@ -242,19 +247,20 @@
                         method: 'POST',
                         body: formData
                     })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            this.closePdfPreview();
-                            window.location.reload();
-                        } else {
-                            this.showToast(data.message || 'Gagal menyetujui laporan', 'error');
-                            this.clearProcessing();
+                    .then(async res => {
+                        const data = await res.json().catch(() => ({}));
+                        if (!res.ok) {
+                            throw new Error(data.message || 'Gagal menyetujui laporan');
                         }
+                        return data;
+                    })
+                    .then(data => {
+                        this.clearProcessing();
+                        this.finishVerification(data.message || 'Laporan berhasil disetujui.', 'success');
                     })
                     .catch(err => {
                         console.error(err);
-                        this.showToast('Terjadi kesalahan server. Silakan coba lagi.', 'error');
+                        this.showToast(err.message || 'Terjadi kesalahan server. Silakan coba lagi.', 'error');
                         this.clearProcessing();
                     });
                 },
@@ -278,19 +284,20 @@
                         method: 'POST',
                         body: formData
                     })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            this.closePdfPreview();
-                            window.location.reload();
-                        } else {
-                            this.showToast(data.message || 'Gagal menolak laporan', 'error');
-                            this.clearProcessing();
+                    .then(async res => {
+                        const data = await res.json().catch(() => ({}));
+                        if (!res.ok) {
+                            throw new Error(data.message || 'Gagal menolak laporan');
                         }
+                        return data;
+                    })
+                    .then(data => {
+                        this.clearProcessing();
+                        this.finishVerification(data.message || 'Laporan berhasil ditolak.', 'success');
                     })
                     .catch(err => {
                         console.error(err);
-                        this.showToast('Terjadi kesalahan server. Silakan coba lagi.', 'error');
+                        this.showToast(err.message || 'Terjadi kesalahan server. Silakan coba lagi.', 'error');
                         this.clearProcessing();
                     });
                 },
