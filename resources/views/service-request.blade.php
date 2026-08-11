@@ -7,7 +7,7 @@
         $isPenmadTpgBulanan = ($service['id'] ?? 0) === 1081;
         $isPenmadPengawasBulanan = ($service['id'] ?? 0) === 1082;
         $isTpgService = $isTpgSemester || $isTpgBulanan || $isPenmadTpgBulanan || $isPenmadPengawasBulanan;
-        $isTpgEdit = ($isTpgBulanan || $isPenmadTpgBulanan || $isPenmadPengawasBulanan) && !empty($editPemberkasanId);
+        $isTpgEdit = ($isTpgSemester || $isTpgBulanan || $isPenmadTpgBulanan || $isPenmadPengawasBulanan) && !empty($editPemberkasanId);
         $formAction = $formAction ?? (
             $isPenmadPengawasBulanan && $isTpgEdit
                 ? route('pelayanan.penmad-pengawas-bulanan.update', $editPemberkasanId)
@@ -62,8 +62,10 @@
 
                         // Set submit_action from the clicked button
                         var clickedButton = event.submitter;
+                        var submitAction = '';
                         if (clickedButton && clickedButton.name === 'submit_action') {
-                            document.getElementById('submitActionInput').value = clickedButton.value;
+                            submitAction = clickedButton.value;
+                            document.getElementById('submitActionInput').value = submitAction;
                         }
 
                         var missingCount = 0;
@@ -101,12 +103,20 @@
                             return;
                         }
 
-                        if (missingCount > 0) {
+                        // Only block for final submission (Ajukan), not for draft
+                        if (submitAction === 'submit' && missingCount > 0) {
                             this.validationModal.message = 'Harap upload semua dokumen yang wajib sebelum mengajukan.';
                             this.validationModal.missingCount = missingCount;
                             this.validationModal.open = true;
                             document.body.style.overflow = 'hidden';
                             return;
+                        }
+
+                        // For draft, show warning but allow submission
+                        if (submitAction === 'draft' && missingCount > 0) {
+                            if (!confirm('Ada ' + missingCount + ' dokumen wajib yang belum diupload. Tetap simpan draft?')) {
+                                return;
+                            }
                         }
 
                         // Submit form
