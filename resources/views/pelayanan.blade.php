@@ -108,11 +108,11 @@
                     this.showPengaduanModal = true;
                 }
                 if (service.id === 1037) {
-                    this.selectedTahunPelajaran = this.tahunPelajaranOptions[0] || '';
-                    this.selectedSemester = this.semesterOptions[0] || '';
+                    this.selectedTahunPelajaran = '';
+                    this.selectedSemester = '';
                 } else if (service.id === 1038 || service.id === 1081 || service.id === 1082) {
-                    this.selectedTahun = this.tahunOptions[0] || '';
-                    this.selectedBulan = this.bulanOptions[0] || '';
+                    this.selectedTahun = '';
+                    this.selectedBulan = '';
                 } else {
                     this.selectedTahunPelajaran = '';
                     this.selectedSemester = '';
