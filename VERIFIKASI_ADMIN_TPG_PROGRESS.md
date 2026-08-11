@@ -22,7 +22,7 @@ Membuat halaman verifikasi admin untuk layanan TPG (1037, 1038, 1081, 1082) deng
 
 ## Status
 
-**SELESAI**
+**SELESAI** (dengan fitur bulanan & semester)
 
 ---
 
@@ -36,11 +36,28 @@ Membuat halaman verifikasi admin untuk layanan TPG (1037, 1038, 1081, 1082) deng
 - [x] Filter berdasarkan dept_id untuk petugas
 - [x] Exclude status DRAFT dari query
 
+### Tab Bulanan/Semester
+- [x] Tab navigasi Bulanan dengan icon calendar (cyan)
+- [x] Tab navigasi Semester dengan icon document (violet)
+- [x] Filter Bulan + Tahun untuk tab Bulanan
+- [x] Filter Periode (Ganjil/Genap) + Tahun Ajaran untuk tab Semester
+- [x] Default value: Bulan sebelumnya, Tahun saat ini, Status SUBMITTED
+- [x] Filter Nama Layanan dengan format [Dept] - [Nama Layanan]
+
+### Dynamic Service Filtering
+- [x] Ambil daftar layanan dari ktd_layanan berdasarkan kolom `tipe`
+- [x] Layanan bulanan: tipe = 'bulanan'
+- [x] Layanan semester: tipe = 'semester'
+- [x] Filter dept_id untuk petugas
+- [x] Kolom `tipe` di ktd_layanan dengan default 'normal'
+
 ### Table/List View
 - [x] Tampilkan list pengajuan
 - [x] Filter status
-- [x] Filter dept_id/unit
-- [x] Pagination
+- [x] Filter layanan (berdasarkan ID)
+- [x] Filter bulan/tahun atau semester/tahun ajaran
+- [x] Filter pencarian (nama, NIP, no req)
+- [x] Pagination dengan query string preserved
 - [x] Styling NEO MIRAI
 
 ### Detail View
@@ -104,14 +121,40 @@ Proses verifikasi (Terima/Tolak)
 
 ## Fitur Yang Sudah Selesai
 
-1. **Halaman Index**
-   - Statistik pengajuan (Total, Menunggu, Diterima, Sukses)
-   - Filter berdasarkan tipe layanan dan status
+1. **Tab Navigasi Bulanan/Semester**
+   - Tab Bulanan dengan icon calendar dan warna cyan
+   - Tab Semester dengan icon document dan warna violet
+   - Efek shadow dan transisi yang halus
+   - Default tab: Bulanan
+
+2. **Filter Bulanan**
+   - Filter Bulan (default: bulan sebelumnya)
+   - Filter Tahun (default: tahun saat ini)
+   - Filter Status (default: SUBMITTED)
+   - Filter Nama Layanan (format: [Dept] - [Nama])
+   - Filter pencarian (nama, NIP, no req)
+
+3. **Filter Semester**
+   - Filter Periode (Ganjil/Genap, default: Ganjil)
+   - Filter Tahun Ajaran (default: tahun ajaran aktif)
+   - Filter Status (default: SUBMITTED)
+   - Filter Nama Layanan (format: [Dept] - [Nama])
+   - Filter pencarian (nama, NIP, no req)
+
+4. **Dynamic Service Filtering**
+   - Ambil daftar layanan dari database berdasarkan kolom `tipe`
+   - Layanan bulanan: tipe = 'bulanan'
+   - Layanan semester: tipe = 'semester'
+   - Filter dept_id untuk petugas
+
+5. **Halaman Index (per tab)**
+   - Statistik pengajuan (Total, Draft, Pending, Diterima, Sukses, Ditolak)
+   - Periode Aktif yang sedang difilter
    - Tabel dengan styling NEO MIRAI
-   - Pagination
+   - Pagination dengan query string preserved
    - Empty state
 
-2. **Halaman Detail**
+6. **Halaman Detail**
    - Info pemohon (nama, unit, tipe layanan, periode)
    - Grid dokumen upload (max 3 per baris)
    - Modal preview file (gambar, PDF, file lain)
@@ -119,15 +162,26 @@ Proses verifikasi (Terima/Tolak)
    - Form verifikasi (Ubah Status, Tolak)
    - Info timeline
 
-3. **Controller**
-   - Role-based access
+7. **Controller**
+   - Role-based access (admin vs petugas)
    - Preview file (inline)
    - Download file
    - Verify & Reject
+   - Helper methods untuk dynamic service filtering
 
 ---
 
 ## Changelog
+
+### 2026-08-11
+- Implementasi tab Bulanan/Semester dengan icon dan styling menarik
+- Filter bulanan: Bulan + Tahun (default: bulan lalu + tahun ini)
+- Filter semester: Periode + Tahun Ajaran (default: Ganjil + tahun ajaran aktif)
+- Dynamic service filtering berdasarkan kolom `tipe` di ktd_layanan
+- Migration tambah kolom `tipe` di ktd_layanan dengan default 'normal'
+- Filter Nama Layanan dengan format [Dept] - [Nama Layanan]
+- Pagination dengan query string preserved
+- Default status: SUBMITTED
 
 ### 2026-07-09
 - Selesai styling halaman index dengan tema NEO MIRAI

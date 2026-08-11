@@ -13,8 +13,8 @@ class TpgController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $tipe = $request->get('tipe');
         $search = $request->get('search');
+        $layananId = $request->get('layanan_id');
 
         $bulanOptions = [
             'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -77,8 +77,8 @@ class TpgController extends Controller
             });
         }
 
-        if ($tipe) {
-            $query->where('p.tipe', $tipe);
+        if ($layananId) {
+            $query->where('p.layanan_id', $layananId);
         }
 
         if ($currentStatus) {
@@ -143,15 +143,15 @@ class TpgController extends Controller
             ],
             'pemberkasan' => $pemberkasan,
             'stats' => $stats,
-            'tipeOptions' => $this->getDynamicTipeOptions($user, 'bulanan'),
-            'tipeLabels' => $tipeLabels,
+            'layananOptions' => $this->getDynamicLayananOptions($user, 'bulanan'),
             'statusOptions' => $statusOptions,
             'bulanOptions' => $bulanOptions,
-            'currentTipe' => $tipe,
+            'currentLayananId' => $layananId,
             'currentStatus' => $currentStatus,
             'currentBulan' => $currentBulan,
             'currentTahun' => $currentTahun,
             'currentSearch' => $search,
+            'activeTab' => 'bulanan',
         ]);
     }
 
@@ -168,14 +168,7 @@ class TpgController extends Controller
         $currentSemester = $request->has('semester') ? ($request->get('semester') ?: null) : 'Ganjil';
         $currentTahunAjaran = $request->has('tahun_ajaran') ? ($request->get('tahun_ajaran') ?: null) : $defaultYear;
         $currentStatus = $request->has('status') ? ($request->get('status') ?: null) : 'SUBMITTED';
-        $currentTipe = $request->get('tipe');
-
-        $tipeLabels = [
-            'PAIS-TPG-SEMESTER' => 'TPG Semester',
-            'PAIS-TPG-BULANAN' => 'TPG Bulanan',
-            'PENMAD-TPG-BULANAN' => 'PENMAD TPG Bulanan',
-            'PENMAD-PENGAWAS-BULANAN' => 'PENMAD Pengawas Bulanan',
-        ];
+        $layananId = $request->get('layanan_id');
 
         $allowedServiceIds = $this->getDynamicServiceIds($user, 'semester');
 
@@ -216,8 +209,8 @@ class TpgController extends Controller
             });
         }
 
-        if ($currentTipe) {
-            $query->where('p.tipe', $currentTipe);
+        if ($layananId) {
+            $query->where('p.layanan_id', $layananId);
         }
 
         if ($currentSemester) {
@@ -267,7 +260,7 @@ class TpgController extends Controller
             ->first();
 
         $statusOptions = ['DRAFT', 'SUBMITTED', 'PENDING', 'DITERIMA', 'DIPROSES', 'SUKSES', 'DITOLAK'];
-        $tipeOptions = $this->getDynamicTipeOptions($user, 'semester');
+        $layananOptions = $this->getDynamicLayananOptions($user, 'semester');
 
         return view('admin.tpg.semester-index', [
             'title' => 'Verifikasi TPG Semester - SILATAR Admin',
@@ -280,12 +273,11 @@ class TpgController extends Controller
             'stats' => $stats,
             'semesterOptions' => $semesterOptions,
             'statusOptions' => $statusOptions,
-            'tipeOptions' => $tipeOptions,
-            'tipeLabels' => $tipeLabels,
+            'layananOptions' => $layananOptions,
             'currentSemester' => $currentSemester,
             'currentTahunAjaran' => $currentTahunAjaran,
             'currentStatus' => $currentStatus,
-            'currentTipe' => $currentTipe,
+            'currentLayananId' => $layananId,
             'currentSearch' => $search,
             'activeTab' => 'semester',
         ]);
@@ -325,20 +317,22 @@ class TpgController extends Controller
             ->all();
     }
 
-    private function getDynamicTipeOptions($user, string $mode): array
+    private function getDynamicLayananOptions($user, string $mode): array
     {
-        $query = DB::table('ktd_layanan as l')
-            ->select(['l.tipe'])
+        return DB::table('ktd_layanan as l')
+            ->leftJoin('ktd_department as d', 'd.id', '=', 'l.dept_id')
+            ->select([
+                'l.id',
+                DB::raw("CONCAT(d.nama, ' - ', l.nama) as full_name"),
+            ])
             ->where('l.status', 1)
             ->where('l.tipe', $mode)
-            ->whereNotNull('l.tipe')
-            ->groupBy('l.tipe');
-
-        if ($user->role !== 'admin') {
-            $query->where('l.dept_id', $user->dept_id);
-        }
-
-        return $query->pluck('l.tipe')->filter()->values()->all();
+            ->when($user->role !== 'admin', fn ($q) => $q->where('l.dept_id', $user->dept_id))
+            ->orderBy('d.nama')
+            ->orderBy('l.nama')
+            ->get()
+            ->pluck('full_name', 'id')
+            ->all();
     }
 
     private function formatTpgPeriode(object $item): string

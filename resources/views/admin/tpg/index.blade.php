@@ -18,16 +18,22 @@
 
     <div class="card mb-6">
         <div class="card-body" style="padding-bottom: 0;">
-            <div class="flex gap-3">
-                <a href="{{ route('admin.tpg.index') }}" class="btn btn-primary">Bulanan</a>
-                <a href="{{ route('admin.tpg.semester.index') }}" class="btn btn-secondary">Semester</a>
+            <div class="flex gap-4">
+                <a href="{{ route('admin.tpg.index') }}" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 {{ $activeTab === 'bulanan' ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Bulanan
+                </a>
+                <a href="{{ route('admin.tpg.semester.index') }}" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 {{ $activeTab === 'semester' ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/30' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-8H7v8M7 3v5h8"/></svg>
+                    Semester
+                </a>
             </div>
         </div>
     </div>
 
     @php
         $activeFilters = collect([
-            $currentTipe ? ($tipeLabels[$currentTipe] ?? $currentTipe) : null,
+            $currentLayananId ? ($layananOptions[$currentLayananId] ?? null) : null,
             $currentBulan ?: null,
             $currentTahun ? (string) $currentTahun : null,
             $currentStatus ?: null,
@@ -134,11 +140,11 @@
         <div class="card-body">
             <form method="GET" action="{{ route('admin.tpg.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div class="form-group">
-                    <label class="form-label">Tipe Layanan</label>
-                    <select name="tipe" class="form-select" onchange="this.form.submit()">
-                        <option value="">Semua Tipe</option>
-                        @foreach($tipeOptions ?? [] as $t)
-                            <option value="{{ $t }}" {{ $currentTipe === $t ? 'selected' : '' }}>{{ $tipeLabels[$t] ?? $t }}</option>
+                    <label class="form-label">Nama Layanan</label>
+                    <select name="layanan_id" class="form-select" onchange="this.form.submit()">
+                        <option value="">Semua Layanan</option>
+                        @foreach($layananOptions as $id => $nama)
+                            <option value="{{ $id }}" {{ $currentLayananId == $id ? 'selected' : '' }}>{{ $nama }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -183,8 +189,8 @@
             @if($activeFilters->isNotEmpty())
                 <div class="active-filters mt-4">
                     <span class="text-sm text-muted">Filter aktif:</span>
-                    @if($currentTipe)
-                        <span class="badge badge-info">{{ $tipeLabels[$currentTipe] ?? $currentTipe }}</span>
+                    @if($currentLayananId)
+                        <span class="badge badge-info">{{ $layananOptions[$currentLayananId] ?? null }}</span>
                     @endif
                     @if($currentBulan)
                         <span class="badge badge-neutral">{{ $currentBulan }}</span>
