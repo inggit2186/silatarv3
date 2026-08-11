@@ -1,11 +1,11 @@
 <x-admin.layouts.app>
-    <?php $title = 'Verifikasi TPG'; ?>
+    <?php $title = 'Verifikasi TPG Semester'; ?>
 
     <div class="page-header">
         <div class="page-header-content">
             <span class="page-label">// Verifikasi</span>
-            <h1 class="page-title">Verifikasi TPG</h1>
-            <p class="page-subtitle">Daftar pengajuan TPG yang perlu diverifikasi</p>
+            <h1 class="page-title">Verifikasi TPG Semester</h1>
+            <p class="page-subtitle">Daftar pengajuan TPG berdasarkan periode semester dan tahun ajaran</p>
         </div>
     </div>
 
@@ -19,8 +19,8 @@
     <div class="card mb-6">
         <div class="card-body" style="padding-bottom: 0;">
             <div class="flex gap-3">
-                <a href="{{ route('admin.tpg.index') }}" class="btn btn-primary">Bulanan</a>
-                <a href="{{ route('admin.tpg.semester.index') }}" class="btn btn-secondary">Semester</a>
+                <a href="{{ route('admin.tpg.index') }}" class="btn btn-secondary">Bulanan</a>
+                <a href="{{ route('admin.tpg.semester.index') }}" class="btn btn-primary">Semester</a>
             </div>
         </div>
     </div>
@@ -28,8 +28,8 @@
     @php
         $activeFilters = collect([
             $currentTipe ? ($tipeLabels[$currentTipe] ?? $currentTipe) : null,
-            $currentBulan ?: null,
-            $currentTahun ? (string) $currentTahun : null,
+            $currentSemester ?: null,
+            $currentTahunAjaran ?: null,
             $currentStatus ?: null,
             $currentSearch ?: null,
         ])->filter()->values();
@@ -41,7 +41,7 @@
                 <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
             </div>
             <div class="stat-content">
-                <span class="stat-label">Total Pengajuan</span>
+                <span class="stat-label">Total</span>
                 <span class="stat-value">{{ $stats->total ?? 0 }}</span>
             </div>
         </div>
@@ -114,7 +114,7 @@
             </div>
             <div class="stat-content">
                 <span class="stat-label">Periode Aktif</span>
-                <span class="stat-value">{{ $currentBulan ?? '-' }} {{ $currentTahun ?? '' }}</span>
+                <span class="stat-value">{{ $currentSemester ?? '-' }} {{ $currentTahunAjaran ?? '' }}</span>
             </div>
         </div>
     </div>
@@ -127,12 +127,12 @@
                 </div>
                 <div>
                     <h3 class="card-title">Filter Data</h3>
-                    <p class="text-sm text-muted">Cari pengajuan berdasarkan periode dan status</p>
+                    <p class="text-sm text-muted">Cari pengajuan semester berdasarkan periode dan status</p>
                 </div>
             </div>
         </div>
         <div class="card-body">
-            <form method="GET" action="{{ route('admin.tpg.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <form method="GET" action="{{ route('admin.tpg.semester.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div class="form-group">
                     <label class="form-label">Tipe Layanan</label>
                     <select name="tipe" class="form-select" onchange="this.form.submit()">
@@ -144,25 +144,25 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Bulan</label>
-                    <select name="bulan" class="form-select" onchange="this.form.submit()">
-                        <option value="">Semua Bulan</option>
-                        @foreach($bulanOptions ?? [] as $b)
-                            <option value="{{ $b }}" {{ $currentBulan === $b ? 'selected' : '' }}>{{ $b }}</option>
+                    <label class="form-label">Periode</label>
+                    <select name="semester" class="form-select" onchange="this.form.submit()">
+                        <option value="">Semua Periode</option>
+                        @foreach($semesterOptions as $s)
+                            <option value="{{ $s }}" {{ $currentSemester === $s ? 'selected' : '' }}>{{ $s }}</option>
                         @endforeach
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Tahun</label>
-                    <input type="number" name="tahun" value="{{ $currentTahun ?? date('Y') }}" class="form-input" min="2020" max="2099" onchange="this.form.submit()">
+                    <label class="form-label">Tahun Ajaran</label>
+                    <input type="text" name="tahun_ajaran" value="{{ $currentTahunAjaran ?? '' }}" placeholder="Contoh: 2025/2026" class="form-input" onchange="this.form.submit()">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Status</label>
                     <select name="status" class="form-select" onchange="this.form.submit()">
                         <option value="">Semua Status</option>
-                        @foreach($statusOptions ?? [] as $s)
+                        @foreach($statusOptions as $s)
                             <option value="{{ $s }}" {{ $currentStatus === $s ? 'selected' : '' }}>{{ $s }}</option>
                         @endforeach
                     </select>
@@ -175,7 +175,7 @@
 
                 <div class="col-span-1 md:col-span-2 lg:col-span-5 flex items-center gap-3">
                     @if($activeFilters->isNotEmpty())
-                        <a href="{{ route('admin.tpg.index') }}" class="btn btn-secondary">Reset</a>
+                        <a href="{{ route('admin.tpg.semester.index') }}" class="btn btn-secondary">Reset</a>
                     @endif
                 </div>
             </form>
@@ -186,11 +186,11 @@
                     @if($currentTipe)
                         <span class="badge badge-info">{{ $tipeLabels[$currentTipe] ?? $currentTipe }}</span>
                     @endif
-                    @if($currentBulan)
-                        <span class="badge badge-neutral">{{ $currentBulan }}</span>
+                    @if($currentSemester)
+                        <span class="badge badge-neutral">{{ $currentSemester }}</span>
                     @endif
-                    @if($currentTahun)
-                        <span class="badge badge-neutral">{{ $currentTahun }}</span>
+                    @if($currentTahunAjaran)
+                        <span class="badge badge-neutral">{{ $currentTahunAjaran }}</span>
                     @endif
                     @if($currentStatus)
                         <span class="badge badge-warning">{{ $currentStatus }}</span>
@@ -211,7 +211,7 @@
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                     </div>
                     <div>
-                        <h3 class="table-title">Daftar Pengajuan</h3>
+                        <h3 class="table-title">Daftar Pengajuan Semester</h3>
                         <p class="table-subtitle">Total {{ $pemberkasan->total() }} pengajuan</p>
                     </div>
                 </div>
@@ -245,14 +245,13 @@
                                     'DITOLAK' => 'badge-danger',
                                     default => 'badge-neutral'
                                 };
+                                $meta = $item->metadata_parsed ?? [];
                             @endphp
                             <tr>
                                 <td>
                                     <span class="nip-code">{{ $item->noreq }}</span>
                                     <br>
-                                    <span class="badge badge-neutral" style="font-size: 0.65rem; margin-top: 0.25rem;">
-                                        {{ $item->tipe_label }}
-                                    </span>
+                                    <span class="badge badge-neutral" style="font-size: 0.65rem; margin-top: 0.25rem;">{{ $item->tipe_label }}</span>
                                 </td>
                                 <td>
                                     <div class="table-user">
@@ -267,7 +266,8 @@
                                     <div class="font-medium">{{ $item->layanan_name ?? '-' }}</div>
                                 </td>
                                 <td>
-                                    <div class="font-medium">{{ $item->periode_label }}</div>
+                                    <div class="font-medium">{{ $meta['semester'] ?? '-' }}</div>
+                                    <div class="text-sm text-muted">{{ $meta['tahun_pelajaran'] ?? '-' }}</div>
                                 </td>
                                 <td>
                                     <span class="badge {{ $statusBadgeClass }}">{{ $item->status_label }}</span>
@@ -325,8 +325,8 @@
             <div class="text-center py-12">
                 <div class="empty-state">
                     <svg class="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                    <p class="empty-state-title">Belum Ada Pengajuan</p>
-                    <p class="empty-state-text">Tidak ada pengajuan TPG yang sesuai dengan filter saat ini.</p>
+                    <p class="empty-state-title">Belum Ada Pengajuan Semester</p>
+                    <p class="empty-state-text">Tidak ada pengajuan TPG semester yang sesuai dengan filter saat ini.</p>
                 </div>
             </div>
         </div>

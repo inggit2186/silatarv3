@@ -38,13 +38,7 @@ class TpgController extends Controller
             'PENMAD-PENGAWAS-BULANAN' => 'PENMAD Pengawas Bulanan',
         ];
 
-        $allowedServiceIds = DB::table('ktd_layanan as l')
-            ->where('l.status', 1)
-            ->where('l.nama', 'like', '%TPG%')
-            ->where('l.nama', 'like', '%BULANAN%')
-            ->when($user->role !== 'admin', fn ($q) => $q->where('l.dept_id', $user->dept_id))
-            ->pluck('l.id')
-            ->all();
+        $allowedServiceIds = $this->getDynamicServiceIds($user, 'bulanan');
 
         $query = DB::table('satker_pemberkasan as p')
             ->join('users as u', 'u.id', '=', 'p.user_id')
@@ -149,7 +143,7 @@ class TpgController extends Controller
             ],
             'pemberkasan' => $pemberkasan,
             'stats' => $stats,
-            'tipeOptions' => array_keys($tipeLabels),
+            'tipeOptions' => $this->getDynamicTipeOptions($user, 'bulanan'),
             'tipeLabels' => $tipeLabels,
             'statusOptions' => $statusOptions,
             'bulanOptions' => $bulanOptions,
@@ -158,6 +152,142 @@ class TpgController extends Controller
             'currentBulan' => $currentBulan,
             'currentTahun' => $currentTahun,
             'currentSearch' => $search,
+        ]);
+    }
+
+    public function semesterIndex(Request $request)
+    {
+        $user = Auth::user();
+        $search = $request->get('search');
+        $semesterOptions = ['Ganjil', 'Genap'];
+
+        $defaultYear = ((int) date('n') >= 7)
+            ? date('Y') . '/' . (date('Y') + 1)
+            : (date('Y') - 1) . '/' . date('Y');
+
+        $currentSemester = $request->has('semester') ? ($request->get('semester') ?: null) : 'Ganjil';
+        $currentTahunAjaran = $request->has('tahun_ajaran') ? ($request->get('tahun_ajaran') ?: null) : $defaultYear;
+        $currentStatus = $request->has('status') ? ($request->get('status') ?: null) : 'SUBMITTED';
+        $currentTipe = $request->get('tipe');
+
+        $tipeLabels = [
+            'PAIS-TPG-SEMESTER' => 'TPG Semester',
+            'PAIS-TPG-BULANAN' => 'TPG Bulanan',
+            'PENMAD-TPG-BULANAN' => 'PENMAD TPG Bulanan',
+            'PENMAD-PENGAWAS-BULANAN' => 'PENMAD Pengawas Bulanan',
+        ];
+
+        $allowedServiceIds = $this->getDynamicServiceIds($user, 'semester');
+
+        $query = DB::table('satker_pemberkasan as p')
+            ->join('users as u', 'u.id', '=', 'p.user_id')
+            ->leftJoin('ktd_layanan as l', 'l.id', '=', 'p.layanan_id')
+            ->leftJoin('ktd_department as d', 'd.id', '=', 'p.dept_id')
+            ->select([
+                'p.id',
+                'p.noreq',
+                'p.tipe',
+                'p.layanan_id',
+                'p.user_id',
+                'p.dept_id',
+                'p.waktu',
+                'p.item_id',
+                'p.keterangan',
+                'p.deskripsi',
+                'p.status',
+                'p.verifikator_id',
+                'p.created_at',
+                'p.updated_at',
+                'p.metadata',
+                'p.files',
+                'u.name as user_name',
+                'u.nomor_induk as user_nip',
+                'd.nama as dept_name',
+                'l.nama as layanan_name',
+            ])
+            ->whereIn('p.layanan_id', !empty($allowedServiceIds) ? $allowedServiceIds : [0]);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('u.name', 'like', "%{$search}%")
+                    ->orWhere('u.nomor_induk', 'like', "%{$search}%")
+                    ->orWhere('p.noreq', 'like', "%{$search}%")
+                    ->orWhere('p.deskripsi', 'like', "%{$search}%");
+            });
+        }
+
+        if ($currentTipe) {
+            $query->where('p.tipe', $currentTipe);
+        }
+
+        if ($currentSemester) {
+            $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(p.metadata, '$.semester')) = ?", [$currentSemester]);
+        }
+
+        if ($currentTahunAjaran) {
+            $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(p.metadata, '$.tahun_pelajaran')) = ?", [$currentTahunAjaran]);
+        }
+
+        if ($currentStatus) {
+            $query->where('p.status', $currentStatus);
+        }
+
+        if ($user->role !== 'admin') {
+            $query->where('p.dept_id', $user->dept_id);
+        }
+
+        $pemberkasan = $query
+            ->orderByDesc('p.waktu')
+            ->orderByDesc('p.created_at')
+            ->paginate(20);
+
+        foreach ($pemberkasan as $item) {
+            $item->metadata_parsed = json_decode($item->metadata ?? '{}', true) ?: [];
+            $item->files_parsed = json_decode($item->files ?? '[]', true) ?: [];
+            $item->tipe_label = $tipeLabels[$item->tipe] ?? $item->tipe;
+            $item->periode_label = $this->formatTpgPeriode($item);
+            $item->status_label = $item->status === 'DRAFT'
+                ? 'Draft'
+                : strtoupper($item->status ?? '');
+        }
+
+        $statsQuery = DB::table('satker_pemberkasan as p')
+            ->whereIn('p.layanan_id', !empty($allowedServiceIds) ? $allowedServiceIds : [0]);
+
+        if ($currentSemester) {
+            $statsQuery->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(p.metadata, '$.semester')) = ?", [$currentSemester]);
+        }
+
+        if ($currentTahunAjaran) {
+            $statsQuery->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(p.metadata, '$.tahun_pelajaran')) = ?", [$currentTahunAjaran]);
+        }
+
+        $stats = $statsQuery
+            ->selectRaw("\n                COUNT(*) as total,\n                SUM(p.status = 'DRAFT') as draft,\n                SUM(p.status IN ('SUBMITTED', 'PENDING')) as pending,\n                SUM(p.status = 'DITERIMA') as diterima,\n                SUM(p.status = 'DIPROSES') as diproses,\n                SUM(p.status = 'SUKSES') as sukses\n            ")
+            ->first();
+
+        $statusOptions = ['DRAFT', 'SUBMITTED', 'PENDING', 'DITERIMA', 'DIPROSES', 'SUKSES', 'DITOLAK'];
+        $tipeOptions = $this->getDynamicTipeOptions($user, 'semester');
+
+        return view('admin.tpg.semester-index', [
+            'title' => 'Verifikasi TPG Semester - SILATAR Admin',
+            'breadcrumbs' => [
+                ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
+                ['label' => 'Verifikasi TPG', 'url' => route('admin.tpg.index')],
+                ['label' => 'Semester', 'url' => null],
+            ],
+            'pemberkasan' => $pemberkasan,
+            'stats' => $stats,
+            'semesterOptions' => $semesterOptions,
+            'statusOptions' => $statusOptions,
+            'tipeOptions' => $tipeOptions,
+            'tipeLabels' => $tipeLabels,
+            'currentSemester' => $currentSemester,
+            'currentTahunAjaran' => $currentTahunAjaran,
+            'currentStatus' => $currentStatus,
+            'currentTipe' => $currentTipe,
+            'currentSearch' => $search,
+            'activeTab' => 'semester',
         ]);
     }
 
@@ -183,6 +313,32 @@ class TpgController extends Controller
         ];
 
         return $bulanMap[$bulan] ?? null;
+    }
+
+    private function getDynamicServiceIds($user, string $mode): array
+    {
+        return DB::table('ktd_layanan as l')
+            ->where('l.status', 1)
+            ->where('l.tipe', $mode)
+            ->when($user->role !== 'admin', fn ($q) => $q->where('l.dept_id', $user->dept_id))
+            ->pluck('l.id')
+            ->all();
+    }
+
+    private function getDynamicTipeOptions($user, string $mode): array
+    {
+        $query = DB::table('ktd_layanan as l')
+            ->select(['l.tipe'])
+            ->where('l.status', 1)
+            ->where('l.tipe', $mode)
+            ->whereNotNull('l.tipe')
+            ->groupBy('l.tipe');
+
+        if ($user->role !== 'admin') {
+            $query->where('l.dept_id', $user->dept_id);
+        }
+
+        return $query->pluck('l.tipe')->filter()->values()->all();
     }
 
     private function formatTpgPeriode(object $item): string
