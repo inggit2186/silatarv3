@@ -165,6 +165,14 @@ class TpgController extends Controller
             ? date('Y') . '/' . (date('Y') + 1)
             : (date('Y') - 1) . '/' . date('Y');
 
+        $tahunAjaranOptions = collect();
+        $startYear = (int) date('Y') - 3;
+        $endYear = (int) date('Y') + 1;
+        for ($y = $startYear; $y <= $endYear; $y++) {
+            $tahunAjaranOptions->push($y . '/' . ($y + 1));
+        }
+        $tahunAjaranOptions = $tahunAjaranOptions->unique()->values()->all();
+
         $currentSemester = $request->has('semester') ? ($request->get('semester') ?: null) : 'Ganjil';
         $currentTahunAjaran = $request->has('tahun_ajaran') ? ($request->get('tahun_ajaran') ?: null) : $defaultYear;
         $currentStatus = $request->has('status') ? ($request->get('status') ?: null) : 'SUBMITTED';
@@ -272,6 +280,7 @@ class TpgController extends Controller
             'pemberkasan' => $pemberkasan,
             'stats' => $stats,
             'semesterOptions' => $semesterOptions,
+            'tahunAjaranOptions' => $tahunAjaranOptions,
             'statusOptions' => $statusOptions,
             'layananOptions' => $layananOptions,
             'currentSemester' => $currentSemester,

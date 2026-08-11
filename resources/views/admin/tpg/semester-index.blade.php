@@ -161,7 +161,12 @@
 
                 <div class="form-group">
                     <label class="form-label">Tahun Ajaran</label>
-                    <input type="text" name="tahun_ajaran" value="{{ $currentTahunAjaran ?? '' }}" placeholder="Contoh: 2025/2026" class="form-input" onchange="this.form.submit()">
+                    <select name="tahun_ajaran" class="form-select" onchange="this.form.submit()">
+                        <option value="">Semua Tahun Ajaran</option>
+                        @foreach($tahunAjaranOptions as $ta)
+                            <option value="{{ $ta }}" {{ $currentTahunAjaran === $ta ? 'selected' : '' }}>{{ $ta }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="form-group">
