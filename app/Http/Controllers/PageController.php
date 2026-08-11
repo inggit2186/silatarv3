@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SatkerPemberkasan;
+use App\Services\WhatsAppService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -907,6 +908,21 @@ class PageController extends Controller
             ? "Draft {$service['title']} sudah diperbarui."
             : "Pengajuan {$service['title']} sudah diperbarui.";
 
+        if (! $isDraft) {
+            $serviceData = DB::table('ktd_layanan')->find($serviceId);
+            if ($serviceData && ! empty($serviceData->petugas)) {
+                $this->notifyPetugasViaWhatsApp(
+                    (int) $serviceData->petugas,
+                    $service['title'],
+                    $noreq,
+                    $requester->name,
+                    null,
+                    "Semester {$semester} TP. {$tahunPelajaran}",
+                    $request->input('deskripsi') ?? null
+                );
+            }
+        }
+
         return redirect()
             ->route('pengajuan-saya')
             ->with('success', $message);
@@ -1085,6 +1101,21 @@ class PageController extends Controller
         $message = $isDraft
             ? "Draft {$service['title']} sudah disimpan."
             : "Pengajuan {$service['title']} sudah diterima.";
+
+        if (! $isDraft) {
+            $serviceData = DB::table('ktd_layanan')->find($serviceId);
+            if ($serviceData && ! empty($serviceData->petugas)) {
+                $this->notifyPetugasViaWhatsApp(
+                    (int) $serviceData->petugas,
+                    $service['title'],
+                    $noreq,
+                    $requester->name,
+                    null,
+                    "{$bulan} {$tahun}",
+                    $request->input('deskripsi') ?? null
+                );
+            }
+        }
 
         return redirect()
             ->route('pengajuan-saya')
@@ -1277,6 +1308,21 @@ class PageController extends Controller
             ? "Draft {$service['title']} sudah diperbarui."
             : "Pengajuan {$service['title']} sudah diperbarui.";
 
+        if (! $isDraft) {
+            $serviceData = DB::table('ktd_layanan')->find($serviceId);
+            if ($serviceData && ! empty($serviceData->petugas)) {
+                $this->notifyPetugasViaWhatsApp(
+                    (int) $serviceData->petugas,
+                    $service['title'],
+                    $noreq,
+                    $requester->name,
+                    null,
+                    "{$bulan} {$tahun}",
+                    $request->input('deskripsi') ?? null
+                );
+            }
+        }
+
         return redirect()
             ->route('pengajuan-saya')
             ->with('success', $message);
@@ -1459,6 +1505,21 @@ class PageController extends Controller
         $message = $isDraft
             ? "Draft {$service['title']} sudah disimpan."
             : "Pengajuan {$service['title']} sudah diterima.";
+
+        if (! $isDraft) {
+            $serviceData = DB::table('ktd_layanan')->find($serviceId);
+            if ($serviceData && ! empty($serviceData->petugas)) {
+                $this->notifyPetugasViaWhatsApp(
+                    (int) $serviceData->petugas,
+                    $service['title'],
+                    $noreq,
+                    $requester->name,
+                    null,
+                    "{$bulan} {$tahun}",
+                    $request->input('deskripsi') ?? null
+                );
+            }
+        }
 
         return redirect()
             ->route('pengajuan-saya')
@@ -1651,6 +1712,21 @@ class PageController extends Controller
             ? "Draft {$service['title']} sudah diperbarui."
             : "Pengajuan {$service['title']} sudah diperbarui.";
 
+        if (! $isDraft) {
+            $serviceData = DB::table('ktd_layanan')->find($serviceId);
+            if ($serviceData && ! empty($serviceData->petugas)) {
+                $this->notifyPetugasViaWhatsApp(
+                    (int) $serviceData->petugas,
+                    $service['title'],
+                    $noreq,
+                    $requester->name,
+                    null,
+                    "{$bulan} {$tahun}",
+                    $request->input('deskripsi') ?? null
+                );
+            }
+        }
+
         return redirect()
             ->route('pengajuan-saya')
             ->with('success', $message);
@@ -1833,6 +1909,21 @@ class PageController extends Controller
         $message = $isDraft
             ? "Draft {$service['title']} sudah disimpan."
             : "Pengajuan {$service['title']} sudah diterima.";
+
+        if (! $isDraft) {
+            $serviceData = DB::table('ktd_layanan')->find($serviceId);
+            if ($serviceData && ! empty($serviceData->petugas)) {
+                $this->notifyPetugasViaWhatsApp(
+                    (int) $serviceData->petugas,
+                    $service['title'],
+                    $noreq,
+                    $requester->name,
+                    null,
+                    "{$bulan} {$tahun}",
+                    $request->input('deskripsi') ?? null
+                );
+            }
+        }
 
         return redirect()
             ->route('pengajuan-saya')
@@ -2024,6 +2115,21 @@ class PageController extends Controller
         $message = $isDraft
             ? "Draft {$service['title']} sudah diperbarui."
             : "Pengajuan {$service['title']} sudah diperbarui.";
+
+        if (! $isDraft) {
+            $serviceData = DB::table('ktd_layanan')->find($serviceId);
+            if ($serviceData && ! empty($serviceData->petugas)) {
+                $this->notifyPetugasViaWhatsApp(
+                    (int) $serviceData->petugas,
+                    $service['title'],
+                    $noreq,
+                    $requester->name,
+                    null,
+                    "{$bulan} {$tahun}",
+                    $request->input('deskripsi') ?? null
+                );
+            }
+        }
 
         return redirect()
             ->route('pengajuan-saya')
@@ -4729,6 +4835,21 @@ class PageController extends Controller
             ? "Draft {$service['title']} sudah disimpan."
             : "Pengajuan {$service['title']} sudah diterima.";
 
+        if (! $isDraft) {
+            $serviceData = DB::table('ktd_layanan')->find($serviceId);
+            if ($serviceData && ! empty($serviceData->petugas)) {
+                $this->notifyPetugasViaWhatsApp(
+                    (int) $serviceData->petugas,
+                    $service['title'],
+                    $noreq,
+                    $requester->name,
+                    null,
+                    "Semester {$semester} TP. {$tahunPelajaran}",
+                    $request->input('deskripsi') ?? null
+                );
+            }
+        }
+
         return redirect()
             ->route('pengajuan-saya')
             ->with('success', $message);
@@ -5092,6 +5213,19 @@ class PageController extends Controller
             ? "Draft {$service['title']} sudah disimpan."
             : "Pengajuan {$service['title']} sudah diterima.";
 
+        if (! $isDraft) {
+            $serviceData = DB::table('ktd_layanan')->find($service['id']);
+            if ($serviceData && ! empty($serviceData->petugas)) {
+                $this->notifyPetugasViaWhatsApp(
+                    (int) $serviceData->petugas,
+                    $service['title'],
+                    $requestNumber,
+                    $requester->name,
+                    $data['deskripsi'] ?? null
+                );
+            }
+        }
+
         return redirect()
             ->route('pengajuan-saya')
             ->with('success', $message);
@@ -5395,6 +5529,61 @@ class PageController extends Controller
         }
 
         return sprintf('%s-%s-%s-%03d', $departmentCode, $serviceId, now()->format('ymdHis'), random_int(0, 999));
+    }
+
+    private function notifyPetugasViaWhatsApp(int $petugasUserId, string $namaLayanan, string $noReq, string $pemohon, ?string $deskripsi = null, ?string $periode = null, ?string $keterangan = null): void
+    {
+        try {
+            $petugas = DB::table('users')->find($petugasUserId);
+            if (! $petugas || empty($petugas->telp)) {
+                return;
+            }
+
+            $phone = '62' . WhatsAppService::normalizePhoneNumber($petugas->telp);
+            $waService = new WhatsAppService();
+
+            $lines = [
+                "📣 *Notifikasi Pengajuan Layanan*",
+                "━━━━━━━━━━━━━━━━━━━━━━",
+                "",
+                "👤 *Pemohon:* {$pemohon}",
+                "🏢 *Layanan:* {$namaLayanan}",
+                "🔖 *No. Request:* {$noReq}",
+            ];
+
+            if ($deskripsi) {
+                $lines[] = "📝 *Deskripsi:* " . Str::limit(strip_tags($deskripsi), 100);
+            }
+
+            if ($keterangan) {
+                $lines[] = "💬 *Keterangan:* " . Str::limit(strip_tags($keterangan), 100);
+            }
+
+            if ($periode) {
+                $lines[] = "📅 *Periode:* {$periode}";
+            }
+
+            $lines[] = "";
+            $lines[] = "🕐 *Waktu:* " . now()->format('d M Y, H:i');
+            $lines[] = "";
+            $lines[] = "━━━━━━━━━━━━━━━━━━━━━━";
+            $lines[] = "Yth. *Bpk/Ibu Staff*,";
+            $lines[] = "Mohon Ditindaklanjuti melalui link berikut:";
+            $lines[] = "";
+            $lines[] = "🔗 https://kemenagtanahdatar.id/admin/dashboard";
+            $lines[] = "";
+            $lines[] = "🙏 *Terima Kasih*";
+            $lines[] = "━━━━━━━━━━━━━━━━━━━━━━";
+
+            $message = implode("\n", $lines);
+
+            $waService->sendMessage($phone, $message);
+        } catch (\Exception $e) {
+            Log::warning('WA notification to petugas failed', [
+                'petugas_id' => $petugasUserId,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function normalizedRequirementType(?string $type): string

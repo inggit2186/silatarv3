@@ -60,6 +60,12 @@
                     handleFormSubmit(event) {
                         event.preventDefault();
 
+                        // Set submit_action from the clicked button
+                        var clickedButton = event.submitter;
+                        if (clickedButton && clickedButton.name === 'submit_action') {
+                            document.getElementById('submitActionInput').value = clickedButton.value;
+                        }
+
                         var missingCount = 0;
                         var errorMessages = [];
                         var self = this;
@@ -271,6 +277,7 @@
                 <!-- Form -->
                 <form action="{{ $formAction }}" method="POST" class="neo-form-body" enctype="multipart/form-data" @submit.prevent="handleFormSubmit">
                     @csrf
+                    <input type="hidden" name="submit_action" id="submitActionInput" value="">
 
                     <!-- Existing Submission Info (TPG Service) -->
                     @if ($isTpgService && $existingSubmission)
