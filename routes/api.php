@@ -86,5 +86,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/day', [KegiatanController::class, 'deleteByDate']);
         Route::get('/rekap', [KegiatanController::class, 'rekap']);
         Route::get('/pdf', [KegiatanController::class, 'downloadPdf']);
+        Route::get('/bulanan', [KegiatanController::class, 'bulanan']);
     });
 });

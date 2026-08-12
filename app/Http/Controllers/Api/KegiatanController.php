@@ -345,6 +345,98 @@ class KegiatanController extends BaseApiController
     }
 
     /**
+     * Get laporan CKH bulanan (satker_ckh)
+     * GET /api/laporan-kinerja/bulanan?year=YYYY
+     */
+    public function bulanan(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $year = $request->input('year', Carbon::now()->format('Y'));
+
+            // Validate year format
+            if (!preg_match('/^\d{4}$/', $year)) {
+                return $this->error('Format tahun tidak valid', 400);
+            }
+
+            $yearStart = Carbon::createFromFormat('Y-m-d', $year . '-01-01')->startOfYear();
+            $yearEnd = Carbon::createFromFormat('Y-m-d', $year . '-12-31')->endOfYear();
+
+            // Get bulanan reports from satker_ckh
+            $reports = DB::table('satker_ckh as ck')
+                ->leftJoin('users as u', 'u.id', '=', 'ck.user_id')
+                ->leftJoin('ktd_department as dept', 'dept.id', '=', 'ck.dept_id')
+                ->whereBetween('ck.bulan', [$yearStart->toDateString(), $yearEnd->toDateString()])
+                ->where('ck.user_id', $user->id)
+                ->select([
+                    'ck.id',
+                    'ck.user_id',
+                    'ck.dept_id',
+                    'ck.bulan',
+                    'ck.filename',
+                    'ck.status',
+                    'ck.alasan',
+                    'ck.petugas',
+                    'ck.sending',
+                    'ck.created_at',
+                    'ck.updated_at',
+                    'u.name as user_name',
+                    'u.nomor_induk',
+                    'dept.nama as dept_name',
+                ])
+                ->orderBy('ck.bulan', 'desc')
+                ->get()
+                ->map(function ($item) {
+                    $statusConfig = [
+                        'KOSONG' => ['label' => 'Belum Kirim', 'color' => 'slate'],
+                        'DIKIRIM' => ['label' => 'Dikirim', 'color' => 'amber'],
+                        'DISETUJUI' => ['label' => 'Disetujui', 'color' => 'emerald'],
+                        'DITOLAK' => ['label' => 'Ditolak', 'color' => 'rose'],
+                    ];
+                    $status = $statusConfig[$item->status] ?? ['label' => $item->status, 'color' => 'slate'];
+
+                    $bulanRaw = is_string($item->bulan) ? substr($item->bulan, 0, 10) : $item->bulan;
+                    $bulanDate = Carbon::createFromFormat('Y-m-d', $bulanRaw);
+
+                    return [
+                        'id' => $item->id,
+                        'user_id' => $item->user_id,
+                        'user_name' => $item->user_name ?? 'Unknown',
+                        'nomor_induk' => $item->nomor_induk ?? '-',
+                        'dept_name' => $item->dept_name ?? '-',
+                        'bulan' => $bulanDate->format('F Y'),
+                        'bulan_raw' => $bulanRaw,
+                        'filename' => $item->filename,
+                        'status' => $item->status,
+                        'status_label' => $status['label'],
+                        'status_color' => $status['color'],
+                        'alasan' => $item->alasan,
+                        'sending' => $item->sending ? Carbon::parse($item->sending)->format('d/m/Y H:i') : null,
+                        'pdf_url' => $item->filename ? url('storage/satker_ckh/' . $item->user_id . '/' . $item->filename) : null,
+                    ];
+                });
+
+            // Calculate statistics
+            $stats = [
+                'total' => $reports->count(),
+                'disetujui' => $reports->where('status', 'DISETUJUI')->count(),
+                'dikirim' => $reports->where('status', 'DIKIRIM')->count(),
+                'ditolak' => $reports->where('status', 'DITOLAK')->count(),
+                'belum_kirim' => $reports->where('status', 'KOSONG')->count(),
+            ];
+
+            return $this->success([
+                'reports' => $reports->values(),
+                'stats' => $stats,
+                'year' => $year,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting bulanan reports: ' . $e->getMessage());
+            return $this->error('Gagal memuat laporan bulanan', 500);
+        }
+    }
+
+    /**
      * Get rekap bulanan
      * GET /api/laporan-kinerja/rekap?month=YYYY-MM
      */
@@ -615,10 +707,55 @@ class KegiatanController extends BaseApiController
                 ->setOption('isRemoteEnabled', true)
                 ->setOption('isHtml5ParserEnabled', true);
 
-            $filename = sprintf('Laporan_CKH_%s_%s.pdf', $user->id, $selectedMonthStart->format('m-Y'));
+            $filename = sprintf('%s.kinerja-%s.pdf', $user->id, $selectedMonthStart->format('m-Y'));
+            $storagePath = "satker_ckh/{$user->id}/{$filename}";
+            $pdfBinary = $pdf->output();
+
+            // Ensure directory exists before saving
+            $fullDirPath = storage_path('app/public/satker_ckh/' . $user->id);
+            if (! is_dir($fullDirPath)) {
+                if (! mkdir($fullDirPath, 0755, true) && ! is_dir($fullDirPath)) {
+                    Log::error('Gagal membuat direktori untuk PDF CKH', [
+                        'user_id' => $user->id,
+                        'path' => $fullDirPath,
+                    ]);
+                }
+            }
+
+            // Save PDF to storage
+            $saved = Storage::disk('public')->put($storagePath, $pdfBinary);
+            if (! $saved) {
+                Log::error('Gagal menyimpan PDF CKH ke storage', [
+                    'user_id' => $user->id,
+                    'storage_path' => $storagePath,
+                ]);
+            }
+
+            // Update or insert satker_ckh table
+            $reportData = [
+                'item_id' => 1,
+                'dept_id' => $user->dept_id,
+                'user_id' => $user->id,
+                'bulan' => $selectedMonthStart->toDateString(),
+                'filename' => $filename,
+                'status' => 'DIKIRIM',
+                'alasan' => null,
+                'petugas' => 777,
+                'sending' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            DB::table('satker_ckh')->updateOrInsert(
+                [
+                    'user_id' => $user->id,
+                    'bulan' => $selectedMonthStart->toDateString(),
+                ],
+                $reportData
+            );
 
             // Return PDF as download
-            return response($pdf->output(), 200, [
+            return response($pdfBinary, 200, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => "inline; filename=\"{$filename}\"",
             ]);
