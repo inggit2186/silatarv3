@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\KegiatanController;
 use App\Http\Controllers\Api\LayananController;
 use App\Http\Controllers\Api\PengajuanController;
 use App\Http\Controllers\Api\PresensiController;
@@ -75,5 +76,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/today', [PresensiController::class, 'today']);
         Route::get('/history', [PresensiController::class, 'history']);
         Route::get('/rekap', [PresensiController::class, 'rekap']);
+    });
+
+    // Laporan Kegiatan Harian (CKH)
+    Route::prefix('laporan-kinerja')->group(function () {
+        Route::get('/', [KegiatanController::class, 'index']);
+        Route::post('/harian', [KegiatanController::class, 'store']);
+        Route::put('/day', [KegiatanController::class, 'updateByDate']);
+        Route::delete('/day', [KegiatanController::class, 'deleteByDate']);
+        Route::get('/rekap', [KegiatanController::class, 'rekap']);
+        Route::get('/pdf', [KegiatanController::class, 'downloadPdf']);
     });
 });
