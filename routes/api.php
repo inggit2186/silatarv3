@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\JanjiTemuController;
 use App\Http\Controllers\Api\KegiatanController;
 use App\Http\Controllers\Api\LayananController;
 use App\Http\Controllers\Api\PengajuanController;
@@ -87,5 +88,33 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/rekap', [KegiatanController::class, 'rekap']);
         Route::get('/pdf', [KegiatanController::class, 'downloadPdf']);
         Route::get('/bulanan', [KegiatanController::class, 'bulanan']);
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // JANJI TEMU - User Side
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // Public endpoints (untuk list department & employees)
+    Route::get('/janji-temu/departments', [JanjiTemuController::class, 'departments']);
+    Route::get('/janji-temu/departments/{id}/employees', [JanjiTemuController::class, 'departmentEmployees']);
+
+    // Protected endpoints (auth required)
+    Route::prefix('janji-temu')->group(function () {
+        Route::post('/', [JanjiTemuController::class, 'store']);
+        Route::get('/my-appointments', [JanjiTemuController::class, 'myAppointments']);
+        Route::get('/{id}', [JanjiTemuController::class, 'show']);
+        Route::put('/{id}/cancel', [JanjiTemuController::class, 'cancel']);
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // JANJI TEMU - Admin/Staff Side
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    Route::prefix('admin/janji-temu')->group(function () {
+        Route::get('/', [JanjiTemuController::class, 'adminIndex']);
+        Route::get('/{id}', [JanjiTemuController::class, 'adminShow']);
+        Route::put('/{id}/approve', [JanjiTemuController::class, 'approve']);
+        Route::put('/{id}/reject', [JanjiTemuController::class, 'reject']);
+        Route::put('/{id}/assign', [JanjiTemuController::class, 'assignStaff']);
     });
 });

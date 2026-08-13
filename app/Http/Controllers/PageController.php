@@ -252,9 +252,464 @@ class PageController extends Controller
             'updated_at' => now(),
         ];
 
-        DB::table('ktd_bukutamu')->insert($insertData);
+        $janjiTemuId = DB::table('ktd_bukutamu')->insertGetId($insertData);
+
+        // Kirim WhatsApp notification
+        $this->sendWhatsAppNotification(
+            $janjiTemuId,
+            $tipex,
+            $request->input('nip_tujuan'),
+            $userName,
+            $userSatker,
+            $waktu,
+            $tujuan
+        );
 
         return redirect()->route('pelayanan')->with('success', 'Janji temu berhasil diajukan.');
+    }
+
+    /**
+     * Kirim WhatsApp notification ke tujuan tamu
+     */
+    private function sendWhatsAppNotification(
+        int $janjiTemuId,
+        string $tipe,
+        ?string $nipTujuan,
+        string $namaPengaju,
+        ?string $asal,
+        string $waktu,
+        string $keterangan
+    ): void {
+        try {
+            $waService = new WhatsAppService();
+            $waktuFormatted = Carbon::parse($waktu)->format('d M Y, H:i');
+
+            if ($tipe === 'asn' && $nipTujuan) {
+                // Notify pegawai tujuan
+                $pegawai = DB::table('users')
+                    ->where('nomor_induk', $nipTujuan)
+                    ->where('telp', '!=', null)
+                    ->first();
+
+                if ($pegawai) {
+                    $phone = WhatsAppService::normalizePhoneNumber($pegawai->telp);
+                    $message = "🗓️ *JANJI TEMU BARU* 🗓️\n\n".
+                               "Halo, {$pegawai->name}!\n\n".
+                               "Anda memiliki janji temu baru dari:\n\n".
+                               "👤 *Pengaju:* {$namaPengaju}\n".
+                               "🏢 *Asal:* {$asal}\n".
+                               "📅 *Waktu:* {$waktuFormatted}\n".
+                               "📝 *Keperluan:* {$keterangan}\n\n".
+                               "Silakan cek aplikasi SILATAR untuk detail dan konfirmasi.\n\n".
+                               "Terima kasih 🙏";
+
+                    $waService->sendMessage($phone, $message);
+                }
+            } elseif ($tipe === 'satker' && $nipTujuan) {
+                // Notify operator seksi
+                $dept = DB::table('ktd_department')
+                    ->where('id', $nipTujuan)
+                    ->first();
+
+                if ($dept) {
+                    // Get operator/admin in this department
+                    $operator = DB::table('users')
+                        ->where('dept_id', $nipTujuan)
+                        ->whereIn('role', ['admin', 'frontdesk'])
+                        ->where('telp', '!=', null)
+                        ->first();
+
+                    if ($operator) {
+                        $phone = WhatsAppService::normalizePhoneNumber($operator->telp);
+                        $message = "📋 *JANJI TEMU KE SEKSI* 📋\n\n".
+                                   "Halo Operator {$dept->nama}!\n\n".
+                                   "Ada janji temu baru yang masuk:\n\n".
+                                   "👤 *Pengaju:* {$namaPengaju}\n".
+                                   "🏢 *Asal:* {$asal}\n".
+                                   "📅 *Waktu:* {$waktuFormatted}\n".
+                                   "📝 *Keperluan:* {$keterangan}\n\n".
+                                   "⚠️ *Status:* Menunggu Penugasan\n\n".
+                                   "Silakan buka aplikasi SILATAR untuk menugaskan petugas.\n\n".
+                                   "Terima kasih 🙏";
+
+                        $waService->sendMessage($phone, $message);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send WA notification for janji temu', [
+                'janji_temu_id' => $janjiTemuId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // JANJI TEMU - History & Detail
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Halaman history janji temu user
+     */
+    public function janjiTemuHistory()
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $janjiTemuList = DB::table('ktd_bukutamu')
+            ->where('nomor_induk', $user->nomor_induk)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('janji-temu-history', [
+            'user' => $user,
+            'janjiTemuList' => $janjiTemuList,
+        ]);
+    }
+
+    /**
+     * Halaman detail janji temu
+     */
+    public function janjiTemuDetail(int $id)
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $janjiTemu = DB::table('ktd_bukutamu')
+            ->where('id', $id)
+            ->where('nomor_induk', $user->nomor_induk)
+            ->first();
+
+        abort_unless($janjiTemu, 404);
+
+        // Get target info
+        $targetNama = '-';
+        $targetDetail = '-';
+        $targetPhoto = null;
+
+        if ($janjiTemu->tipe === 'asn' && $janjiTemu->nip_tujuan) {
+            $pegawai = DB::table('users')
+                ->where('nomor_induk', $janjiTemu->nip_tujuan)
+                ->first();
+
+            if ($pegawai) {
+                $targetNama = $pegawai->name;
+                $targetDetail = $pegawai->kat_jabatan ?? '-';
+                $targetPhoto = $pegawai->foto ?? null;
+            }
+        } elseif ($janjiTemu->tipe === 'satker' && $janjiTemu->nip_tujuan) {
+            $dept = DB::table('ktd_department')
+                ->where('id', $janjiTemu->nip_tujuan)
+                ->first();
+
+            if ($dept) {
+                $targetNama = $dept->nama;
+                $targetDetail = 'Langsung ke Seksi';
+            }
+        }
+
+        // Get staff penangan
+        $staffNama = '-';
+        if ($janjiTemu->onStaff && $janjiTemu->onStaff != 999) {
+            $staff = DB::table('users')
+                ->where('id', $janjiTemu->onStaff)
+                ->first();
+            $staffNama = $staff->name ?? '-';
+        }
+
+        return view('janji-temu-detail', [
+            'user' => $user,
+            'janjiTemu' => $janjiTemu,
+            'targetNama' => $targetNama,
+            'targetDetail' => $targetDetail,
+            'targetPhoto' => $targetPhoto,
+            'staffNama' => $staffNama,
+        ]);
+    }
+
+    /**
+     * Batalkan janji temu
+     */
+    public function janjiTemuCancel(int $id, Request $request)
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $janjiTemu = DB::table('ktd_bukutamu')
+            ->where('id', $id)
+            ->where('nomor_induk', $user->nomor_induk)
+            ->first();
+
+        abort_unless($janjiTemu, 404);
+
+        // Check if can cancel
+        if (!in_array($janjiTemu->status, ['APPOINTMENT', 'PENDING'])) {
+            return back()->with('error', 'Janji temu tidak dapat dibatalkan');
+        }
+
+        $alasan = $request->input('alasan', 'Dibatalkan oleh pengguna');
+
+        DB::table('ktd_bukutamu')
+            ->where('id', $id)
+            ->update([
+                'status' => 'CANCELLED',
+                'komen' => $alasan,
+                'updated_at' => now(),
+            ]);
+
+        // Notify staff if assigned
+        if ($janjiTemu->onStaff && $janjiTemu->onStaff != 999) {
+            $this->sendCancelNotification($janjiTemu, $alasan);
+        }
+
+        return redirect()->route('janji-temu-history')
+            ->with('success', 'Janji temu berhasil dibatalkan');
+    }
+
+    /**
+     * Kirim notifikasi pembatalan ke staff
+     */
+    private function sendCancelNotification(object $janjiTemu, string $alasan): void
+    {
+        try {
+            $staff = DB::table('users')
+                ->where('id', $janjiTemu->onStaff)
+                ->where('telp', '!=', null)
+                ->first();
+
+            if (!$staff) {
+                return;
+            }
+
+            $waService = new WhatsAppService();
+            $phone = WhatsAppService::normalizePhoneNumber($staff->telp);
+            $waktuFormatted = Carbon::parse($janjiTemu->waktu)->format('d M Y, H:i');
+
+            $message = "🚫 *JANJI TEMU DIBATALKAN* 🚫\n\n".
+                       "Halo, {$staff->name}!\n\n".
+                       "Janji temu dari *{$janjiTemu->nama}* telah *DIBATALKAN*:\n\n".
+                       "📅 *Waktu:* {$waktuFormatted}\n".
+                       "💬 *Alasan:* {$alasan}\n\n".
+                       "Anda tidak perlu memproses janji temu ini.\n\n".
+                       "Terima kasih 🙏";
+
+            $waService->sendMessage($phone, $message);
+        } catch (\Exception $e) {
+            Log::error('Failed to send cancel notification', ['error' => $e->getMessage()]);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // JANJI TEMU - Admin/Staff
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Halaman admin - list janji temu
+     */
+    public function adminJanjiTemu()
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $isAdmin = in_array($user->role, ['superadmin', 'admin']);
+
+        $query = DB::table('ktd_bukutamu');
+
+        // Filter by department if not admin
+        if (!$isAdmin) {
+            $query->where(function ($q) use ($user) {
+                $q->where('nip_tujuan', $user->dept_id)
+                  ->orWhere('onStaff', $user->id);
+            });
+        }
+
+        $janjiTemuList = $query->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return view('admin.janji-temu-index', [
+            'user' => $user,
+            'janjiTemuList' => $janjiTemuList,
+        ]);
+    }
+
+    /**
+     * Halaman admin - detail janji temu
+     */
+    public function adminJanjiTemuDetail(int $id)
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $janjiTemu = DB::table('ktd_bukutamu')
+            ->where('id', $id)
+            ->first();
+
+        abort_unless($janjiTemu, 404);
+
+        // Get target info
+        $targetNama = '-';
+        $targetDetail = '-';
+        $targetTelp = null;
+
+        if ($janjiTemu->tipe === 'asn' && $janjiTemu->nip_tujuan) {
+            $pegawai = DB::table('users')
+                ->where('nomor_induk', $janjiTemu->nip_tujuan)
+                ->first();
+
+            if ($pegawai) {
+                $targetNama = $pegawai->name;
+                $targetDetail = $pegawai->kat_jabatan ?? '-';
+                $targetTelp = $pegawai->telp;
+            }
+        } elseif ($janjiTemu->tipe === 'satker' && $janjiTemu->nip_tujuan) {
+            $dept = DB::table('ktd_department')
+                ->where('id', $janjiTemu->nip_tujuan)
+                ->first();
+
+            if ($dept) {
+                $targetNama = $dept->nama;
+                $targetDetail = 'Unit Kerja';
+            }
+        }
+
+        // Get staff penangan
+        $staffNama = '-';
+        if ($janjiTemu->onStaff && $janjiTemu->onStaff != 999) {
+            $staff = DB::table('users')
+                ->where('id', $janjiTemu->onStaff)
+                ->first();
+            $staffNama = $staff->name ?? '-';
+        }
+
+        return view('admin.janji-temu-detail', [
+            'user' => $user,
+            'janjiTemu' => $janjiTemu,
+            'targetNama' => $targetNama,
+            'targetDetail' => $targetDetail,
+            'targetTelp' => $targetTelp,
+            'staffNama' => $staffNama,
+        ]);
+    }
+
+    /**
+     * Approve janji temu
+     */
+    public function adminJanjiTemuApprove(int $id, Request $request)
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $janjiTemu = DB::table('ktd_bukutamu')
+            ->where('id', $id)
+            ->first();
+
+        abort_unless($janjiTemu, 404);
+
+        if (!in_array($janjiTemu->status, ['APPOINTMENT', 'PENDING'])) {
+            return back()->with('error', 'Janji temu tidak dapat diproses');
+        }
+
+        $komen = $request->input('komen', 'Disetujui oleh petugas');
+
+        DB::table('ktd_bukutamu')
+            ->where('id', $id)
+            ->update([
+                'status' => 'APPROVED',
+                'onStaff' => $user->id,
+                'komen' => $komen,
+                'updated_at' => now(),
+            ]);
+
+        // Send approval notification
+        $this->sendApprovalNotification($janjiTemu, true, $komen);
+
+        return redirect()->route('admin.janji-temu.detail', $id)
+            ->with('success', 'Janji temu berhasil disetujui');
+    }
+
+    /**
+     * Reject janji temu
+     */
+    public function adminJanjiTemuReject(int $id, Request $request)
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $validator = Validator::make($request->all(), [
+            'komen' => ['required', 'max:500'],
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator);
+        }
+
+        $janjiTemu = DB::table('ktd_bukutamu')
+            ->where('id', $id)
+            ->first();
+
+        abort_unless($janjiTemu, 404);
+
+        if (!in_array($janjiTemu->status, ['APPOINTMENT', 'PENDING'])) {
+            return back()->with('error', 'Janji temu tidak dapat diproses');
+        }
+
+        DB::table('ktd_bukutamu')
+            ->where('id', $id)
+            ->update([
+                'status' => 'REJECTED',
+                'onStaff' => $user->id,
+                'komen' => $request->komen,
+                'updated_at' => now(),
+            ]);
+
+        // Send rejection notification
+        $this->sendApprovalNotification($janjiTemu, false, $request->komen);
+
+        return redirect()->route('admin.janji-temu.detail', $id)
+            ->with('success', 'Janji temu berhasil ditolak');
+    }
+
+    /**
+     * Kirim notifikasi approve/reject ke pengaju
+     */
+    private function sendApprovalNotification(object $janjiTemu, bool $isApproved, string $komen): void
+    {
+        try {
+            $pengaju = DB::table('users')
+                ->where('nomor_induk', $janjiTemu->nomor_induk)
+                ->where('telp', '!=', null)
+                ->first();
+
+            if (!$pengaju) {
+                return;
+            }
+
+            $waService = new WhatsAppService();
+            $phone = WhatsAppService::normalizePhoneNumber($pengaju->telp);
+            $waktuFormatted = Carbon::parse($janjiTemu->waktu)->format('d M Y, H:i');
+
+            if ($isApproved) {
+                $message = "✅ *JANJI TEMU DISETUJUI* ✅\n\n".
+                          "Halo, {$pengaju->name}!\n\n".
+                          "Janji temu Anda telah *DISETUJUI*:\n\n".
+                          "📅 *Waktu:* {$waktuFormatted}\n".
+                          "💬 *Keterangan:* {$komen}\n\n".
+                          "Silakan datang sesuai jadwal.\n\n".
+                          "Terima kasih 🙏";
+            } else {
+                $message = "❌ *JANJI TEMU DITOLAK* ❌\n\n".
+                          "Halo, {$pengaju->name}!\n\n".
+                          "Mohon maaf, janji temu Anda telah *DITOLAK*:\n\n".
+                          "📅 *Waktu:* {$waktuFormatted}\n".
+                          "💬 *Alasan:* {$komen}\n\n".
+                          "Silakan hubungi kami untuk informasi lebih lanjut.\n\n".
+                          "Terima kasih 🙏";
+            }
+
+            $waService->sendMessage($phone, $message);
+        } catch (\Exception $e) {
+            Log::error('Failed to send approval notification', ['error' => $e->getMessage()]);
+        }
     }
 
     public function whistleblowing()
@@ -1540,17 +1995,41 @@ class PageController extends Controller
             ')
             ->first();
 
+        // ==========================================
+        // QUERY 3: Janji Temu summary (ktd_bukutamu)
+        // ==========================================
+        $janjiTemuSummary = DB::table('ktd_bukutamu')
+            ->where('nomor_induk', $user->nomor_induk)
+            ->selectRaw('
+                COUNT(*) as total,
+                SUM(status = "APPOINTMENT") as appointment,
+                SUM(status = "PENDING") as pending,
+                SUM(status = "APPROVED") as approved,
+                SUM(status = "REJECTED") as rejected,
+                SUM(status = "CANCELLED") as cancelled
+            ')
+            ->first();
+
         // Combine summaries
         $summary = [
-            'total' => ($regularSummary->total ?? 0) + ($tpgSummary->total ?? 0),
+            'total' => ($regularSummary->total ?? 0) + ($tpgSummary->total ?? 0) + ($janjiTemuSummary->total ?? 0),
             'draft' => ($regularSummary->draft ?? 0) + ($tpgSummary->draft ?? 0),
-            'pending' => ($regularSummary->pending ?? 0) + ($tpgSummary->pending ?? 0),
-            'processed' => ($regularSummary->processed ?? 0) + ($tpgSummary->processed ?? 0),
-            'done' => ($regularSummary->done ?? 0) + ($tpgSummary->done ?? 0),
+            'pending' => ($regularSummary->pending ?? 0) + ($tpgSummary->pending ?? 0) + ($janjiTemuSummary->appointment ?? 0) + ($janjiTemuSummary->pending ?? 0),
+            'processed' => ($regularSummary->processed ?? 0) + ($tpgSummary->processed ?? 0) + ($janjiTemuSummary->approved ?? 0),
+            'done' => ($regularSummary->done ?? 0) + ($tpgSummary->done ?? 0) + ($janjiTemuSummary->rejected ?? 0) + ($janjiTemuSummary->cancelled ?? 0),
+            // Janji temu specific
+            'janji_temu' => [
+                'total' => $janjiTemuSummary->total ?? 0,
+                'appointment' => $janjiTemuSummary->appointment ?? 0,
+                'pending' => $janjiTemuSummary->pending ?? 0,
+                'approved' => $janjiTemuSummary->approved ?? 0,
+                'rejected' => $janjiTemuSummary->rejected ?? 0,
+                'cancelled' => $janjiTemuSummary->cancelled ?? 0,
+            ],
         ];
 
         // ==========================================
-        // QUERY 3: Combined paginated requests (union of regular + all TPG)
+        // QUERY 4: Combined paginated requests (union of regular + all TPG)
         // ==========================================
         $regularRequests = DB::table('users_request as ur')
             ->where('ur.user_id', $user->id)
@@ -1631,9 +2110,19 @@ class PageController extends Controller
             }
         }
 
+        // ==========================================
+        // QUERY 5: Janji Temu list (ktd_bukutamu)
+        // ==========================================
+        $janjiTemuList = DB::table('ktd_bukutamu')
+            ->where('nomor_induk', $user->nomor_induk)
+            ->orderByDesc('created_at')
+            ->paginate(12)
+            ->withQueryString();
+
         return view('pengajuan-saya', [
             'summary' => $summary,
             'requests' => $allRequests,
+            'janjiTemuList' => $janjiTemuList,
         ]);
     }
 

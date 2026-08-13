@@ -90,6 +90,25 @@ Route::middleware('auth')->group(function () {
     Route::post('/madrasah/laporan-semester/save', [PageController::class, 'saveLaporanSemesterMadrasah'])->name('madrasah.laporan-semester.save');
     Route::get('/madrasah/laporan-bulanan', [PageController::class, 'laporanBulananMadrasah'])->name('madrasah.laporan-bulanan');
     Route::post('/madrasah/laporan-bulanan/save', [PageController::class, 'saveLaporanBulananMadrasah'])->name('madrasah.laporan-bulanan.save');
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // JANJI TEMU - User Side
+    // ═══════════════════════════════════════════════════════════════════════
+
+    Route::get('/janji-temu/riwayat', fn() => redirect()->route('pengajuan-saya', ['tab' => 'janji-temu']))->name('janji-temu-history');
+    Route::get('/janji-temu/{id}', [PageController::class, 'janjiTemuDetail'])->name('janji-temu-detail')->whereNumber('id');
+    Route::post('/janji-temu/{id}/cancel', [PageController::class, 'janjiTemuCancel'])->name('janji-temu-cancel')->whereNumber('id');
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // JANJI TEMU - Admin Side
+    // ═══════════════════════════════════════════════════════════════════════
+
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/janji-temu', [PageController::class, 'adminJanjiTemu'])->name('janji-temu');
+        Route::get('/janji-temu/{id}', [PageController::class, 'adminJanjiTemuDetail'])->name('janji-temu.detail')->whereNumber('id');
+        Route::post('/janji-temu/{id}/approve', [PageController::class, 'adminJanjiTemuApprove'])->name('janji-temu.approve')->whereNumber('id');
+        Route::post('/janji-temu/{id}/reject', [PageController::class, 'adminJanjiTemuReject'])->name('janji-temu.reject')->whereNumber('id');
+    });
 });
 
 Route::get('/satuan-kerja', [PageController::class, 'satuanKerja'])->name('satuan-kerja');
