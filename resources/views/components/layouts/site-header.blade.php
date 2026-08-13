@@ -43,7 +43,12 @@
         </a>
     </nav>
 
-    @auth
+    @php
+    $userRole = auth()->user()->role ?? '';
+    $canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', 'petugas', 'kasi', 'kasubag', 'kasubbag', 'kepala']);
+@endphp
+
+@auth
         <div class="user-menu-wrapper" x-data="{ open: false }" @click.away="open = false">
             <button type="button" class="user-menu-btn" @click="open = !open" :aria-expanded="open">
                 @if(Auth::user()->pp && Auth::user()->nomor_induk)
@@ -58,10 +63,12 @@
                 <svg class="user-chevron" :class="open ? 'is-open' : ''" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
             </button>
             <div class="user-dropdown" x-show="open" x-transition>
+                @if($canAccessAdminPanel)
                 <a href="{{ route('admin.dashboard') }}" class="user-dropdown-item">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                    Dashboard
+                    Admin Panel
                 </a>
+                @endif
                 <a href="{{ route('profil') }}" class="user-dropdown-item">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     Profil Saya

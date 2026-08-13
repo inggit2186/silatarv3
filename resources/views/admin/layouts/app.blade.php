@@ -2,6 +2,10 @@
 use App\Http\Middleware\AdminAccess;
 $userAccess = AdminAccess::getUserAccess(auth()->id());
 $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess);
+
+// Get user role from users table
+$userRole = auth()->user()->role ?? '';
+$canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', 'petugas', 'kasi', 'kasubag', 'kasubbag', 'kepala']);
 ?>
 
 <!DOCTYPE html>
@@ -34,14 +38,16 @@ $isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess)
 
         <!-- Navigation -->
         <nav class="sidebar-nav">
+            @if($canAccessAdminPanel)
             <a href="{{ route('admin.dashboard') }}" class="sidebar-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                 <div class="sidebar-nav-icon-wrap cyan">
                     <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2v10m10-10a2 2 0 012 2v10a2 2 0 01-2 2h-2a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                 </div>
-                <span>Dashboard</span>
+                <span>Admin Panel</span>
             </a>
+            @endif
 
             @if($isAdmin)
             <a href="{{ route('admin.users.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
