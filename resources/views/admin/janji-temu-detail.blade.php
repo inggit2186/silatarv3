@@ -1,130 +1,142 @@
-<x-layouts.admin title="Detail Janji Temu - Admin SILATAR">
+<x-admin.layouts.app title="Detail Janji Temu - Admin SILATAR">
 
-    <div class="space-y-6">
-        {{-- Page Header --}}
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">Detail Janji Temu #{{ $janjiTemu->id }}</h1>
-                <p class="text-sm text-gray-500 mt-1">Informasi lengkap dan proses pengajuan janji temu</p>
-            </div>
-            <a href="{{ route('admin.janji-temu') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-sm rounded-lg transition-colors">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-content">
+            <span class="page-label">// Detail Janji Temu</span>
+            <h1 class="page-title">Detail Janji Temu #{{ $janjiTemu->id }}</h1>
+            <p class="page-subtitle">Informasi lengkap dan proses pengajuan janji temu</p>
+        </div>
+        <div class="page-actions">
+            <a href="{{ route('admin.janji-temu') }}" class="btn btn-secondary">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>
                 Kembali
             </a>
         </div>
+    </div>
 
-        {{-- Success/Error Message --}}
-        @if(session('success'))
-            <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700">
-                {{ session('success') }}
-            </div>
-        @endif
+    <!-- Success/Error Message -->
+    @if(session('success'))
+        <div class="alert alert-success">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {{ session('success') }}
+        </div>
+    @endif
 
-        @if(session('error'))
-            <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
-                {{ session('error') }}
-            </div>
-        @endif
+    @if(session('error'))
+        <div class="alert alert-error">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {{ session('error') }}
+        </div>
+    @endif
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {{-- Main Info --}}
-            <div class="lg:col-span-2 space-y-6">
-                {{-- Status Badge --}}
-                @php
-                    $statusColor = match($janjiTemu->status) {
-                        'APPOINTMENT' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
-                        'PENDING' => 'bg-blue-100 text-blue-800 border-blue-200',
-                        'APPROVED' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
-                        'REJECTED' => 'bg-red-100 text-red-800 border-red-200',
-                        'CANCELLED' => 'bg-gray-100 text-gray-800 border-gray-200',
-                        default => 'bg-gray-100 text-gray-800 border-gray-200',
-                    };
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Info -->
+        <div class="lg:col-span-2 space-y-6">
+            @php
+                $statusBadge = match($janjiTemu->status) {
+                    'APPOINTMENT' => 'badge-warning',
+                    'PENDING' => 'badge-info',
+                    'DITERIMA' => 'badge-success',
+                    'DITOLAK' => 'badge-danger',
+                    'BATAL' => 'badge-secondary',
+                    default => 'badge-secondary',
+                };
 
-                    $statusLabel = match($janjiTemu->status) {
-                        'APPOINTMENT' => 'Menunggu Konfirmasi',
-                        'PENDING' => 'Menunggu',
-                        'APPROVED' => 'Disetujui',
-                        'REJECTED' => 'Ditolak',
-                        'CANCELLED' => 'Dibatalkan',
-                        default => $janjiTemu->status,
-                    };
-                @endphp
+                $statusLabel = match($janjiTemu->status) {
+                    'APPOINTMENT' => 'Menunggu Konfirmasi',
+                    'PENDING' => 'Menunggu',
+                    'DITERIMA' => 'Disetujui',
+                    'DITOLAK' => 'Ditolak',
+                    'BATAL' => 'Dibatalkan',
+                    default => $janjiTemu->status,
+                };
+            @endphp
 
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <!-- Status Card -->
+            <div class="card">
+                <div class="card-body">
                     <div class="flex items-center gap-3 mb-6">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $statusColor }}">
-                            {{ $statusLabel }}
-                        </span>
+                        <span class="badge {{ $statusBadge }} badge-lg">{{ $statusLabel }}</span>
                         @if($janjiTemu->onStaff && $janjiTemu->onStaff != 999)
-                            <span class="text-sm text-gray-500">Ditangani oleh: <strong>{{ $staffNama }}</strong></span>
+                            <span class="text-sm text-muted">Ditangani oleh: <strong>{{ $staffNama }}</strong></span>
                         @endif
                     </div>
 
                     <div class="space-y-6">
-                        {{-- Pengaju --}}
+                        <!-- Pengaju -->
                         <div class="flex items-start gap-4">
-                            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            <div class="stat-icon cyan" style="width: 48px; height: 48px;">
+                                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                 </svg>
                             </div>
                             <div>
-                                <p class="text-sm font-semibold text-gray-500 mb-1">Pengaju</p>
+                                <p class="text-sm text-muted mb-1">Pengaju</p>
                                 <p class="text-lg font-bold text-gray-900">{{ $janjiTemu->nama }}</p>
-                                <p class="text-sm text-gray-500">NIP: {{ $janjiTemu->nomor_induk }}</p>
-                                <p class="text-sm text-gray-500">Asal: {{ $janjiTemu->asal ?: '-' }}</p>
+                                <p class="text-sm text-muted">NIP: {{ $janjiTemu->nomor_induk }}</p>
+                                <p class="text-sm text-muted">Asal: {{ $janjiTemu->asal ?: '-' }}</p>
                             </div>
                         </div>
 
                         <hr class="border-gray-200">
 
-                        {{-- Waktu --}}
+                        <!-- Waktu -->
                         <div class="flex items-start gap-4">
-                            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <svg class="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <div class="stat-icon violet" style="width: 48px; height: 48px;">
+                                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                             </div>
                             <div>
-                                <p class="text-sm font-semibold text-gray-500 mb-1">Waktu Janji Temu</p>
+                                <p class="text-sm text-muted mb-1">Waktu Janji Temu</p>
                                 <p class="text-xl font-bold text-gray-900">
-                                    {{ \Carbon\Carbon::parse($janjiTemu->waktu)->format('d M Y, H:i') }}
+                                    {{ \Carbon\Carbon::parse($janjiTemu->waktu)->format('d M Y, H:i') }} WIB
                                 </p>
                             </div>
                         </div>
 
                         <hr class="border-gray-200">
 
-                        {{-- Target --}}
+                        <!-- Target -->
                         <div class="flex items-start gap-4">
-                            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <svg class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            <div class="stat-icon emerald" style="width: 48px; height: 48px;">
+                                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                 </svg>
                             </div>
                             <div>
-                                <p class="text-sm font-semibold text-gray-500 mb-1">Tujuan Pertemuan</p>
+                                <p class="text-sm text-muted mb-1">Tujuan Pertemuan</p>
                                 <p class="text-lg font-bold text-gray-900">{{ $targetNama }}</p>
-                                <p class="text-sm text-gray-500">{{ $targetDetail }}</p>
+                                <p class="text-sm text-muted">{{ $targetDetail }}</p>
                                 @if($targetTelp)
-                                    <p class="text-sm text-gray-500">Telp: {{ $targetTelp }}</p>
+                                    <p class="text-sm text-muted flex items-center gap-1 mt-1">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                        </svg>
+                                        {{ $targetTelp }}
+                                    </p>
                                 @endif
                             </div>
                         </div>
 
                         <hr class="border-gray-200">
 
-                        {{-- Keperluan --}}
+                        <!-- Keperluan -->
                         <div class="flex items-start gap-4">
-                            <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <svg class="w-6 h-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            <div class="stat-icon amber" style="width: 48px; height: 48px;">
+                                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                             </div>
                             <div>
-                                <p class="text-sm font-semibold text-gray-500 mb-1">Keperluan / Alasan</p>
+                                <p class="text-sm text-muted mb-1">Keperluan / Alasan</p>
                                 <p class="text-gray-900 leading-relaxed">{{ $janjiTemu->tujuan }}</p>
                             </div>
                         </div>
@@ -132,67 +144,88 @@
                         @if($janjiTemu->komen)
                             <hr class="border-gray-200">
 
-                            {{-- Komentar --}}
+                            <!-- Komentar -->
                             <div class="flex items-start gap-4">
-                                <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                <div class="stat-icon secondary" style="width: 48px; height: 48px;">
+                                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                                     </svg>
                                 </div>
                                 <div>
-                                    <p class="text-sm font-semibold text-gray-500 mb-1">Komentar / Keterangan</p>
-                                    <p class="text-gray-900 italic">"{{ $janjiTemu->komen }}"</p>
+                                    <p class="text-sm text-muted mb-1">Komentar / Keterangan</p>
+                                    <p class="text-gray-900 italic bg-gray-50 p-3 rounded-lg">"{{ $janjiTemu->komen }}"</p>
                                 </div>
                             </div>
                         @endif
                     </div>
                 </div>
             </div>
+        </div>
 
-            {{-- Sidebar - Actions --}}
-            <div class="space-y-6">
-                {{-- Info Box --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Informasi</h3>
+        <!-- Sidebar - Actions -->
+        <div class="space-y-6">
+            <!-- Info Box -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="flex items-center gap-3">
+                        <div class="stat-icon cyan" style="width: 36px; height: 36px;">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <h3 class="card-title">Informasi</h3>
+                    </div>
+                </div>
+                <div class="card-body">
                     <div class="space-y-3 text-sm">
                         <div class="flex justify-between">
-                            <span class="text-gray-500">ID:</span>
+                            <span class="text-muted">ID:</span>
                             <span class="font-semibold text-gray-900">#{{ $janjiTemu->id }}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-500">Dibuat:</span>
+                            <span class="text-muted">Dibuat:</span>
                             <span class="font-semibold text-gray-900">{{ \Carbon\Carbon::parse($janjiTemu->created_at)->format('d M Y H:i') }}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-500">Update:</span>
+                            <span class="text-muted">Update:</span>
                             <span class="font-semibold text-gray-900">{{ \Carbon\Carbon::parse($janjiTemu->updated_at)->format('d M Y H:i') }}</span>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {{-- Action Buttons --}}
-                @if(in_array($janjiTemu->status, ['APPOINTMENT', 'PENDING']))
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                        <h3 class="text-lg font-bold text-gray-900 mb-4">Aksi</h3>
-                        <div class="space-y-3">
-                            {{-- Approve --}}
+            <!-- Action Buttons -->
+            @if(in_array($janjiTemu->status, ['APPOINTMENT', 'PENDING']))
+                <div class="card">
+                    <div class="card-header">
+                        <div class="flex items-center gap-3">
+                            <div class="stat-icon emerald" style="width: 36px; height: 36px;">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                                </svg>
+                            </div>
+                            <h3 class="card-title">Aksi</h3>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="space-y-4">
+                            <!-- Approve -->
                             <form action="{{ route('admin.janji-temu.approve', $janjiTemu->id) }}" method="POST" onsubmit="return confirm('Setujui janji temu ini?')">
                                 @csrf
                                 <div class="space-y-3">
-                                    <div>
-                                        <label for="komen_approve" class="block text-sm font-semibold text-gray-700 mb-1">Keterangan (Opsional)</label>
+                                    <div class="form-group">
+                                        <label class="form-label">Keterangan (Opsional)</label>
                                         <input
                                             type="text"
                                             name="komen"
-                                            id="komen_approve"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                            class="form-input"
                                             placeholder="Disetujui oleh petugas"
                                             value="Disetujui oleh petugas"
                                         >
                                     </div>
-                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-sm transition-colors">
-                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    <button type="submit" class="btn btn-success w-full">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                                         </svg>
                                         Setujui
                                     </button>
@@ -201,24 +234,23 @@
 
                             <hr class="border-gray-200">
 
-                            {{-- Reject --}}
+                            <!-- Reject -->
                             <form action="{{ route('admin.janji-temu.reject', $janjiTemu->id) }}" method="POST" onsubmit="return confirm('Tolak janji temu ini?')">
                                 @csrf
                                 <div class="space-y-3">
-                                    <div>
-                                        <label for="komen_reject" class="block text-sm font-semibold text-gray-700 mb-1">Alasan Penolakan <span class="text-red-500">*</span></label>
+                                    <div class="form-group">
+                                        <label class="form-label">Alasan Penolakan <span class="text-red-500">*</span></label>
                                         <textarea
                                             name="komen"
-                                            id="komen_reject"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                            class="form-textarea"
                                             rows="3"
                                             placeholder="Masukkan alasan penolakan..."
                                             required
                                         ></textarea>
                                     </div>
-                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-sm transition-colors">
-                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    <button type="submit" class="btn btn-danger w-full">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                                         </svg>
                                         Tolak
                                     </button>
@@ -226,16 +258,27 @@
                             </form>
                         </div>
                     </div>
-                @else
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                        <h3 class="text-lg font-bold text-gray-900 mb-4">Status</h3>
-                        <p class="text-sm text-gray-500">
+                </div>
+            @else
+                <div class="card">
+                    <div class="card-header">
+                        <div class="flex items-center gap-3">
+                            <div class="stat-icon secondary" style="width: 36px; height: 36px;">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <h3 class="card-title">Status</h3>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-sm text-muted">
                             Janji temu ini sudah dalam status <strong>{{ $statusLabel }}</strong> dan tidak dapat diproses lagi.
                         </p>
                     </div>
-                @endif
-            </div>
+                </div>
+            @endif
         </div>
     </div>
 
-</x-layouts.admin>
+</x-admin.layouts.app>

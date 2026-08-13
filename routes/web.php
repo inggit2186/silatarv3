@@ -103,12 +103,6 @@ Route::middleware('auth')->group(function () {
     // JANJI TEMU - Admin Side
     // ═══════════════════════════════════════════════════════════════════════
 
-    Route::prefix('admin')->name('admin.')->group(function () {
-        Route::get('/janji-temu', [PageController::class, 'adminJanjiTemu'])->name('janji-temu');
-        Route::get('/janji-temu/{id}', [PageController::class, 'adminJanjiTemuDetail'])->name('janji-temu.detail')->whereNumber('id');
-        Route::post('/janji-temu/{id}/approve', [PageController::class, 'adminJanjiTemuApprove'])->name('janji-temu.approve')->whereNumber('id');
-        Route::post('/janji-temu/{id}/reject', [PageController::class, 'adminJanjiTemuReject'])->name('janji-temu.reject')->whereNumber('id');
-    });
 });
 
 Route::get('/satuan-kerja', [PageController::class, 'satuanKerja'])->name('satuan-kerja');

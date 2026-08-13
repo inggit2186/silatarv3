@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\NewsController;
 use App\Http\Controllers\Admin\PenilaianKinerjaController;
 use App\Http\Controllers\Admin\MadrasahController;
 use App\Http\Controllers\Admin\MadrasahLaporanController;
+use App\Http\Controllers\Admin\JanjiTemuController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -60,6 +61,12 @@ Route::middleware(['auth', 'admin'])
         Route::post('/services/{id}/requirement', [ServiceController::class, 'addRequirement'])->name('services.add-requirement');
         Route::put('/services/{id}/requirement/{reqId}', [ServiceController::class, 'updateRequirement'])->name('services.update-requirement');
         Route::delete('/services/{id}/requirement/{reqId}', [ServiceController::class, 'deleteRequirement'])->name('services.delete-requirement');
+
+        // Janji Temu Management
+        Route::get('/janji-temu', [JanjiTemuController::class, 'index'])->name('janji-temu');
+        Route::get('/janji-temu/{id}', [JanjiTemuController::class, 'show'])->name('janji-temu.show');
+        Route::post('/janji-temu/{id}/approve', [JanjiTemuController::class, 'approve'])->name('janji-temu.approve');
+        Route::post('/janji-temu/{id}/reject', [JanjiTemuController::class, 'reject'])->name('janji-temu.reject');
 
         Route::get('/units', [UnitController::class, 'index'])->name('units.index');
 

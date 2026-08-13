@@ -252,17 +252,19 @@ class JanjiTemuController extends BaseApiController
             'staffPenangan:id,name',
         ]);
 
-        // If not admin, filter to user's department only
+        // If not admin, filter to show only relevant appointments
         if (!$isAdmin) {
             $query->where(function ($q) use ($user) {
-                // Appointments to pegawai in user's dept
-                $q->whereHas('pegawaiTujuan', function ($sub) use ($user) {
-                    $sub->where('dept_id', $user->dept_id);
+                // Appointments directed to this user (tipe asn, nip_tujuan = user's nomor_induk)
+                $q->where(function ($sub) use ($user) {
+                    $sub->where('tipe', 'asn')
+                        ->where('nip_tujuan', $user->nomor_induk);
                 })
-                // Or directly to user's satker
-                ->orWhere('nip_tujuan', $user->dept_id)
-                // Or assigned to user
-                ->orWhere('onStaff', $user->id);
+                // Or appointments directed to user's department (tipe satker, nip_tujuan = user's dept_id)
+                ->orWhere(function ($sub) use ($user) {
+                    $sub->where('tipe', 'satker')
+                        ->where('nip_tujuan', $user->dept_id);
+                });
             });
         }
 
@@ -371,7 +373,7 @@ class JanjiTemuController extends BaseApiController
         }
 
         $janjiTemu->update([
-            'status' => 'APPROVED',
+            'status' => 'DITERIMA',
             'onStaff' => $user->id,
             'komen' => $request->input('komen', 'Disetujui oleh petugas'),
             'updated_at' => now(),
@@ -406,7 +408,7 @@ class JanjiTemuController extends BaseApiController
         }
 
         $janjiTemu->update([
-            'status' => 'REJECTED',
+            'status' => 'DITOLAK',
             'onStaff' => $user->id,
             'komen' => $request->komen,
             'updated_at' => now(),
@@ -417,7 +419,7 @@ class JanjiTemuController extends BaseApiController
 
         return $this->success([
             'id' => $janjiTemu->id,
-            'status' => 'REJECTED',
+            'status' => 'DITOLAK',
             'status_label' => 'Ditolak',
         ], 'Janji temu berhasil ditolak');
     }
