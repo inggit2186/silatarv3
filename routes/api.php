@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\KegiatanController;
 use App\Http\Controllers\Api\LayananController;
 use App\Http\Controllers\Api\PengajuanController;
 use App\Http\Controllers\Api\PresensiController;
+use App\Http\Controllers\Api\SimpegController;
 use App\Http\Controllers\Api\UserController;
 
 /*
@@ -90,6 +91,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/bulanan', [KegiatanController::class, 'bulanan']);
     });
 
+    // SIMPEG - Reset Password
+    Route::prefix('simpeg')->group(function () {
+        Route::post('/reset-password', [SimpegController::class, 'submitResetPassword']);
+        Route::get('/my-requests', [SimpegController::class, 'myRequests']);
+        Route::get('/{id}', [SimpegController::class, 'show']);
+    });
+
     // ═══════════════════════════════════════════════════════════════════════════
     // JANJI TEMU - User Side
     // ═══════════════════════════════════════════════════════════════════════════
@@ -116,5 +124,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}/approve', [JanjiTemuController::class, 'approve']);
         Route::put('/{id}/reject', [JanjiTemuController::class, 'reject']);
         Route::put('/{id}/assign', [JanjiTemuController::class, 'assignStaff']);
+    });
+
+    // SIMPEG Admin
+    Route::prefix('admin/simpeg')->group(function () {
+        Route::get('/', [SimpegController::class, 'adminIndex']);
+        Route::get('/{id}', [SimpegController::class, 'adminShow']);
+        Route::put('/{id}/verify', [SimpegController::class, 'verify']);
     });
 });
