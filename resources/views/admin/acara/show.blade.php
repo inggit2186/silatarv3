@@ -66,7 +66,7 @@
                                 <p class="text-sm text-muted mb-1">Lokasi</p>
                                 <p class="text-lg font-bold text-gray-900">{{ $acara->lokasi }}</p>
                                 @if($acara->latitude && $acara->longitude)
-                                    <p class="text-sm text-muted">{{ $acara->latitude }}, {{ $acara->longitude }}</p>
+                                    <p class="text-sm text-muted">{{ number_format($acara->latitude, 6) }}, {{ number_format($acara->longitude, 6) }}</p>
                                 @endif
                             </div>
                         </div>
@@ -114,26 +114,67 @@
             </div>
 
             <!-- Daftar Kehadiran -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="flex items-center gap-3">
-                        <div class="stat-icon emerald" style="width: 36px; height: 36px;">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+            <div class="card" x-data="{ open: true }">
+                <div class="card-header cursor-pointer" @click="open = !open">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="stat-icon emerald" style="width: 36px; height: 36px;">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                                 </svg>
                             </div>
-                            <h3 class="card-title">Daftar Kehadiran</h3>
+                            <h3 class="card-title">Daftar Kehadiran ({{ $attendance->count() }})</h3>
                         </div>
+                        <svg class="w-5 h-5 text-gray-400 transition-transform" :class="open ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                        </svg>
                     </div>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
+
+                <div x-show="open" x-transition>
+                    <!-- Filter & Search -->
+                    <div class="card-body border-b">
+                        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="form-group">
+                                <label class="form-label">Cari</label>
+                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama atau NIP..." class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Unit Kerja</label>
+                                <select name="dept_filter" class="form-select">
+                                    <option value="">Semua Unit</option>
+                                    @foreach($departments as $dept)
+                                        <option value="{{ $dept->id }}" {{ request('dept_filter') == $dept->id ? 'selected' : '' }}>{{ $dept->nama }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select name="status_filter" class="form-select">
+                                    <option value="">Semua Status</option>
+                                    <option value="hadir" {{ request('status_filter') == 'hadir' ? 'selected' : '' }}>Hadir</option>
+                                    <option value="tidak_hadir" {{ request('status_filter') == 'tidak_hadir' ? 'selected' : '' }}>Tidak Hadir</option>
+                                </select>
+                            </div>
+                            <div class="form-group flex items-end gap-2">
+                                <button type="submit" class="btn btn-primary">Filter</button>
+                                @if(request('search') || request('status_filter') || request('dept_filter'))
+                                    <a href="{{ route('admin.acara.show', $acara->id) }}" class="btn btn-secondary">Reset</a>
+                                @endif
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
                         <table class="table">
                             <thead>
                                 <tr>
                                     <th>Nama</th>
+                                    <th>Unit Kerja</th>
                                     <th>Status</th>
                                     <th>Waktu</th>
+                                    <th>Lokasi</th>
                                     <th>Foto</th>
                                     <th>Keterangan</th>
                                 </tr>
@@ -157,19 +198,39 @@
                                             <div class="font-semibold text-gray-900">{{ $item->name }}</div>
                                         </td>
                                         <td>
+                                            <span class="text-sm text-gray-600">{{ $item->unit_kerja ?? '-' }}</span>
+                                        </td>
+                                        <td>
                                             <span class="badge {{ $statusBadge }}">{{ $statusLabel }}</span>
                                         </td>
                                         <td>
                                             <span class="text-sm">{{ $item->waktu_absen ?? '-' }}</span>
                                         </td>
                                         <td>
+                                            @if($item->latitude && $item->longitude && $item->latitude != 0 && $item->longitude != 0)
+                                                <a href="https://www.google.com/maps?q={{ $item->latitude }},{{ $item->longitude }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
+                                                    <svg class="w-3 h-3 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                    </svg>
+                                                    {{ $item->latitude }}, {{ $item->longitude }}
+                                                </a>
+                                                @if($item->distance)
+                                                    <div class="text-xs text-gray-500 mt-1">
+                                                        📍 Jarak: {{ round($item->distance) }}m
+                                                    </div>
+                                                @endif
+                                            @else
+                                                <span class="text-sm text-gray-400">Tidak ada lokasi</span>
+                                            @endif
+                                        </td>
+                                        <td>
                                             @if($item->foto)
-                                                <a href="{{ asset('storage/' . $item->foto) }}" target="_blank" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm">
+                                                <button type="button" onclick="showPhotoModal('{{ asset('storage/' . $item->foto) }}')" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm">
                                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                                     </svg>
                                                     Lihat Foto
-                                                </a>
+                                                </button>
                                             @else
                                                 <span class="text-sm text-gray-400">-</span>
                                             @endif
@@ -294,5 +355,33 @@
                 }, 2000);
             });
         }
+
+        // Photo Modal
+        function showPhotoModal(photoUrl) {
+            var modal = document.getElementById('photoModal');
+            var img = document.getElementById('modalPhoto');
+            img.src = photoUrl;
+            modal.style.display = 'flex';
+        }
+
+        function closePhotoModal() {
+            var modal = document.getElementById('photoModal');
+            modal.style.display = 'none';
+        }
+
+        // Close modal on outside click
+        document.getElementById('photoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePhotoModal();
+            }
+        });
     </script>
+
+    <!-- Photo Modal -->
+    <div id="photoModal" style="display:none;" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="closePhotoModal()">
+        <div class="relative max-w-4xl max-h-[90vh]">
+            <button onclick="closePhotoModal()" class="absolute -top-10 right-0 text-white text-2xl font-bold hover:text-gray-300">&times;</button>
+            <img id="modalPhoto" src="" alt="Foto Presensi" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl">
+        </div>
+    </div>
 </x-admin.layouts.app>

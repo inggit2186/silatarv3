@@ -86,7 +86,7 @@ class AcaraController extends Controller
     /**
      * Display the specified acara.
      */
-    public function show($id)
+    public function show($id, Request $request)
     {
         $acara = DB::table('ktd_acara')->where('id', $id)->first();
 
@@ -95,17 +95,44 @@ class AcaraController extends Controller
                 ->with('error', 'Acara tidak ditemukan');
         }
 
-        // Get attendance list
-        $attendance = DB::table('ktd_presensi_acara')
-            ->where('acara_id', $id)
-            ->join('users', 'ktd_presensi_acara.user_nip', '=', 'users.nomor_induk')
-            ->select('ktd_presensi_acara.*', 'users.name', 'users.telp')
+        $search = $request->input('search');
+        $statusFilter = $request->input('status_filter');
+        $deptFilter = $request->input('dept_filter');
+
+        // Get departments for filter (status 1 and 2 only)
+        $departments = DB::table('ktd_department')
+            ->whereIn('status', [1, 2])
+            ->orderBy('nama')
             ->get();
+
+        // Get attendance list with filters
+        $query = DB::table('ktd_presensi_acara')
+            ->where('ktd_presensi_acara.acara_id', $id)
+            ->join('users', 'ktd_presensi_acara.user_nip', '=', 'users.nomor_induk')
+            ->leftJoin('ktd_department', 'users.dept_id', '=', 'ktd_department.id')
+            ->select('ktd_presensi_acara.*', 'users.name', 'users.telp', 'ktd_department.nama as unit_kerja');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('users.name', 'LIKE', "%{$search}%")
+                  ->orWhere('ktd_presensi_acara.user_nip', 'LIKE', "%{$search}%");
+            });
+        }
+
+        if ($statusFilter) {
+            $query->where('ktd_presensi_acara.status', $statusFilter);
+        }
+
+        if ($deptFilter) {
+            $query->where('users.dept_id', $deptFilter);
+        }
+
+        $attendance = $query->orderBy('ktd_presensi_acara.created_at', 'desc')->get();
 
         $hadirCount = $attendance->where('status', 'hadir')->count();
         $tidakHadirCount = $attendance->where('status', 'tidak_hadir')->count();
 
-        return view('admin.acara.show', compact('acara', 'attendance', 'hadirCount', 'tidakHadirCount'));
+        return view('admin.acara.show', compact('acara', 'attendance', 'hadirCount', 'tidakHadirCount', 'departments'));
     }
 
     /**
