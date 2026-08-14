@@ -111,17 +111,24 @@
                                 <input type="text" name="lokasi" class="form-input" value="{{ old('lokasi') }}" required placeholder="Masukkan lokasi acara">
                             </div>
 
+                            <!-- Koordinat dari Google Maps -->
+                            <div class="form-group md:col-span-2">
+                                <label class="form-label">Koordinat dari Google Maps</label>
+                                <input type="text" id="googleMapsInput" class="form-input" placeholder="Contoh: -0.4723924849828874, 100.60524527844706" oninput="parseGoogleMapsCoords(this.value)">
+                                <p class="text-xs text-muted mt-1">Paste koordinat dari Google Maps, akan otomatis mengisi Latitude & Longitude</p>
+                            </div>
+
                             <!-- Latitude -->
                             <div class="form-group">
                                 <label class="form-label">Latitude</label>
-                                <input type="number" step="any" name="latitude" class="form-input" value="{{ old('latitude') }}" placeholder="Contoh: -0.947083">
+                                <input type="number" step="any" name="latitude" id="latitude" class="form-input" value="{{ old('latitude') }}" placeholder="Contoh: -0.947083">
                                 <p class="text-xs text-muted mt-1">Koordinat GPS (opsional)</p>
                             </div>
 
                             <!-- Longitude -->
                             <div class="form-group">
                                 <label class="form-label">Longitude</label>
-                                <input type="number" step="any" name="longitude" class="form-input" value="{{ old('longitude') }}" placeholder="Contoh: 100.417283">
+                                <input type="number" step="any" name="longitude" id="longitude" class="form-input" value="{{ old('longitude') }}" placeholder="Contoh: 100.417283">
                                 <p class="text-xs text-muted mt-1">Koordinat GPS (opsional)</p>
                             </div>
 
@@ -193,6 +200,19 @@
                     document.getElementById('fotoImg').src = e.target.result;
                 };
                 reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function parseGoogleMapsCoords(text) {
+            // Format: "-0.4723924849828874, 100.60524527844706"
+            var coords = text.split(',').map(function(s) { return s.trim(); });
+            if (coords.length === 2) {
+                var lat = parseFloat(coords[0]);
+                var lng = parseFloat(coords[1]);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    document.getElementById('latitude').value = lat;
+                    document.getElementById('longitude').value = lng;
+                }
             }
         }
     </script>
