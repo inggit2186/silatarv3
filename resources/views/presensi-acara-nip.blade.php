@@ -1,18 +1,6 @@
 <x-layouts.app title="Presensi Acara - SILATAR">
 
-    <main class="neo-mirai min-h-screen bg-[var(--paper)]">
-        <!-- Hero Section -->
-        <section class="hero-page bg-cover bg-center" style="background-image: url('/assets/img/template/bg2.webp'); padding: 120px 2rem 4rem; min-height: 300px;">
-            <div class="news-article-container article-hero">
-                <p class="section-label-gold section-label-sm">// Presensi Acara</p>
-                <h1 class="article-hero-title">{{ $acara->judul }}</h1>
-                <p class="article-hero-subtitle">Konfirmasi kehadiran Anda pada acara ini</p>
-                <div class="hero-actions">
-                    <a href="{{ url('/') }}" class="neo-hero-cta">Kembali ke Beranda</a>
-                </div>
-            </div>
-        </section>
-
+    <main class="neo-mirai min-h-screen bg-[var(--paper)] pt-20 lg:pt-24">
         <!-- Content -->
         <section class="page-content px-6 py-8 lg:px-8">
             <div class="max-w-2xl mx-auto">
@@ -73,7 +61,7 @@
                         <p class="text-sm text-[var(--ink-soft)]">Untuk mengakses halaman presensi acara</p>
                     </div>
 
-                    <form action="{{ route('presensi-acara-nip.submit', $acara->id) }}" method="POST">
+                    <form action="{{ route('presensi-acara-nip.submit', $acara->id) }}" method="POST" id="nipForm">
                         @csrf
                         <div class="mb-6">
                             <label class="block text-sm font-semibold text-[var(--ink)] mb-2">Nomor Induk Pegawai (NIP)</label>
@@ -84,12 +72,26 @@
                                 title="Hanya angka yang diperbolehkan">
                         </div>
 
-                        <button type="submit" class="w-full py-3 bg-[var(--gold)] hover:bg-[var(--gold-bright)] text-white font-bold rounded-xl shadow-lg transition-all">
-                            Lanjutkan
+                        <button type="submit" id="submitNip" class="w-full py-3 bg-[var(--gold)] hover:bg-[var(--gold-bright)] text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                            <span id="nipText">Lanjutkan</span>
+                            <span id="nipSpinner" class="hidden">
+                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
                         </button>
                     </form>
                 </div>
             </div>
         </section>
     </main>
+
+    <script>
+        document.getElementById('nipForm').addEventListener('submit', function() {
+            document.getElementById('nipText').classList.add('hidden');
+            document.getElementById('nipSpinner').classList.remove('hidden');
+            document.getElementById('submitNip').disabled = true;
+        });
+    </script>
 </x-layouts.app>

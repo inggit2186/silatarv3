@@ -158,8 +158,14 @@
                                 </button>
                             </div>
 
-                            <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-all">
-                                Presensi Hadir
+                            <button type="submit" id="submitHadir" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                                <span id="hadirText">Presensi Hadir</span>
+                                <span id="hadirSpinner" class="hidden">
+                                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </span>
                             </button>
                         </div>
                     </form>
@@ -197,11 +203,17 @@
                                     <textarea name="keterangan" class="w-full px-4 py-3 bg-[var(--paper-soft)] border border-[var(--line)] rounded-xl text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent" rows="3" placeholder="Masukkan alasan tidak hadir..." required></textarea>
                                 </div>
                                 <div class="flex gap-3">
-                                    <button type="button" onclick="closeTidakHadirModal()" class="flex-1 py-3 bg-[var(--paper-soft)] hover:bg-[var(--line)] text-[var(--ink)] font-semibold rounded-xl transition-all">
+                                    <button type="button" onclick="closeTidakHadirModal()" id="cancelTidakHadir" class="flex-1 py-3 bg-[var(--paper-soft)] hover:bg-[var(--line)] text-[var(--ink)] font-semibold rounded-xl transition-all">
                                         Batal
                                     </button>
-                                    <button type="submit" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-lg transition-all">
-                                        Kirim
+                                    <button type="submit" id="submitTidakHadir" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                                        <span id="tidakHadirText">Kirim</span>
+                                        <span id="tidakHadirSpinner" class="hidden">
+                                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        </span>
                                     </button>
                                 </div>
                             </form>
@@ -221,6 +233,20 @@
         function closeTidakHadirModal() {
             document.getElementById('tidakHadirModal').style.display = 'none';
         }
+
+        // Loading states
+        document.getElementById('hadirForm').addEventListener('submit', function() {
+            document.getElementById('hadirText').classList.add('hidden');
+            document.getElementById('hadirSpinner').classList.remove('hidden');
+            document.getElementById('submitHadir').disabled = true;
+        });
+
+        document.querySelector('#tidakHadirModal form').addEventListener('submit', function() {
+            document.getElementById('tidakHadirText').classList.add('hidden');
+            document.getElementById('tidakHadirSpinner').classList.remove('hidden');
+            document.getElementById('submitTidakHadir').disabled = true;
+            document.getElementById('cancelTidakHadir').disabled = true;
+        });
 
         var locationDetected = false;
 
