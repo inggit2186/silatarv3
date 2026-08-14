@@ -105,6 +105,16 @@ Route::middleware('auth')->group(function () {
 
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// PRESENSI ACARA (No Auth Required)
+// ═══════════════════════════════════════════════════════════════════════════
+
+Route::get('/presensi-acara/{id}', [PageController::class, 'presensiAcaraNip'])->name('presensi-acara.input')->whereNumber('id');
+Route::post('/presensi-acara/{id}/nip', [PageController::class, 'presensiAcaraNipSubmit'])->name('presensi-acara-nip.submit')->whereNumber('id');
+Route::get('/presensi-acara/{id}/show', [PageController::class, 'presensiAcara'])->name('presensi-acara.show')->whereNumber('id');
+Route::post('/presensi-acara/{id}/hadir', [PageController::class, 'presensiAcaraHadir'])->name('presensi-acara.hadir')->whereNumber('id');
+Route::post('/presensi-acara/{id}/tidak-hadir', [PageController::class, 'presensiAcaraTidakHadir'])->name('presensi-acara.tidak-hadir')->whereNumber('id');
+
 Route::get('/satuan-kerja', [PageController::class, 'satuanKerja'])->name('satuan-kerja');
 Route::get('/satuan-kerja/{department}', [PageController::class, 'satuanKerjaDetail'])->name('unit-kerja.detail');
 

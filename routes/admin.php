@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\PenilaianKinerjaController;
 use App\Http\Controllers\Admin\MadrasahController;
 use App\Http\Controllers\Admin\MadrasahLaporanController;
 use App\Http\Controllers\Admin\JanjiTemuController;
+use App\Http\Controllers\Admin\AcaraController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -81,6 +82,15 @@ Route::middleware(['auth', 'admin'])
         Route::delete('/units/{id}', [UnitController::class, 'destroy'])->name('units.destroy');
 
         Route::get('/units/{id}', [UnitController::class, 'show'])->name('units.show');
+
+        // Acara / Kegiatan Kankemenag
+        Route::get('/acara', [AcaraController::class, 'index'])->name('acara');
+        Route::get('/acara/create', [AcaraController::class, 'create'])->name('acara.create');
+        Route::post('/acara', [AcaraController::class, 'store'])->name('acara.store');
+        Route::get('/acara/{id}', [AcaraController::class, 'show'])->name('acara.show');
+        Route::get('/acara/{id}/edit', [AcaraController::class, 'edit'])->name('acara.edit');
+        Route::put('/acara/{id}', [AcaraController::class, 'update'])->name('acara.update');
+        Route::delete('/acara/{id}', [AcaraController::class, 'destroy'])->name('acara.destroy');
 
         Route::get('/requests', function () {
             return view('admin.requests.index');

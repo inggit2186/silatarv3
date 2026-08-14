@@ -7717,4 +7717,228 @@ class PageController extends Controller
 
         return redirect()->back()->with('success', $message);
     }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRESENSI ACARA
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRESENSI ACARA - NIP Based (No Login Required)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Halaman input NIP untuk presensi acara
+     */
+    public function presensiAcaraNip(int $id)
+    {
+        $acara = DB::table('ktd_acara')->where('id', $id)->first();
+        abort_unless($acara, 404);
+
+        return view('presensi-acara-nip', [
+            'acara' => $acara,
+        ]);
+    }
+
+    /**
+     * Submit NIP dan redirect ke halaman presensi
+     */
+    public function presensiAcaraNipSubmit(int $id, Request $request)
+    {
+        $request->validate([
+            'nomor_induk' => 'required|numeric',
+        ]);
+
+        $nomorInduk = $request->nomor_induk;
+
+        // Check if user exists
+        $user = DB::table('users')
+            ->where('nomor_induk', $nomorInduk)
+            ->first();
+
+        if (!$user) {
+            return back()->with('error', 'NIP tidak ditemukan dalam sistem');
+        }
+
+        // Store nomor_induk in session
+        session(['nomor_induk' => $nomorInduk]);
+
+        // Redirect to presensi page
+        return redirect()->route('presensi-acara.show', $id);
+    }
+
+    /**
+     * Halaman presensi acara (with NIP from session)
+     */
+    public function presensiAcara(int $id)
+    {
+        $nomorInduk = session('nomor_induk');
+        if (!$nomorInduk) {
+            return redirect()->route('presensi-acara.input', $id);
+        }
+
+        $acara = DB::table('ktd_acara')->where('id', $id)->first();
+        abort_unless($acara, 404);
+
+        // Get user info
+        $user = DB::table('users')->where('nomor_induk', $nomorInduk)->first();
+        $userName = $user ? $user->name : '-';
+        $jabatan = $user ? $user->pekerjaan : null;
+        $userPhoto = $user ? $user->pp : null;
+
+        // Get unit kerja name
+        $unitKerja = null;
+        if ($user && $user->dept_id) {
+            $dept = DB::table('ktd_department')->where('id', $user->dept_id)->first();
+            $unitKerja = $dept ? $dept->nama : null;
+        }
+
+        // Check if already has attendance
+        $attendance = DB::table('ktd_presensi_acara')
+            ->where('acara_id', $id)
+            ->where('user_nip', $nomorInduk)
+            ->first();
+
+        $sudahPresensi = $attendance ? true : false;
+        $statusKehadiran = $attendance ? $attendance->status : null;
+        $keterangan = $attendance ? $attendance->keterangan : null;
+
+        return view('presensi-acara', [
+            'acara' => $acara,
+            'nomorInduk' => $nomorInduk,
+            'userName' => $userName,
+            'jabatan' => $jabatan,
+            'unitKerja' => $unitKerja,
+            'userPhoto' => $userPhoto,
+            'sudahPresensi' => $sudahPresensi,
+            'statusKehadiran' => $statusKehadiran,
+            'keterangan' => $keterangan,
+        ]);
+    }
+
+    /**
+     * Submit presensi hadir
+     */
+    public function presensiAcaraHadir(int $id, Request $request)
+    {
+        $request->validate([
+            'nomor_induk' => 'required|numeric',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'foto' => 'nullable|string',
+        ]);
+
+        $nomorInduk = $request->nomor_induk;
+        $acara = DB::table('ktd_acara')->where('id', $id)->first();
+        abort_unless($acara, 404);
+
+        // Save photo if provided
+        $fotoPath = null;
+        if ($request->has('foto') && $request->foto) {
+            $fotoPath = $this->saveAcaraPhoto($request->foto, $id, $nomorInduk);
+        }
+
+        // Check if already has attendance
+        $existingAttendance = DB::table('ktd_presensi_acara')
+            ->where('acara_id', $id)
+            ->where('user_nip', $nomorInduk)
+            ->first();
+
+        if ($existingAttendance) {
+            DB::table('ktd_presensi_acara')
+                ->where('id', $existingAttendance->id)
+                ->update([
+                    'status' => 'hadir',
+                    'keterangan' => null,
+                    'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
+                    'foto' => $fotoPath,
+                    'waktu_absen' => date('H:i:s'),
+                    'updated_at' => now(),
+                ]);
+        } else {
+            DB::table('ktd_presensi_acara')->insert([
+                'acara_id' => $id,
+                'user_nip' => $nomorInduk,
+                'status' => 'hadir',
+                'keterangan' => null,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'foto' => $fotoPath,
+                'waktu_absen' => date('H:i:s'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return redirect()->route('presensi-acara.show', $id)
+            ->with('success', 'Presensi berhasil!')
+            ->with('nomor_induk', $nomorInduk);
+    }
+
+    /**
+     * Submit presensi tidak hadir
+     */
+    public function presensiAcaraTidakHadir(int $id, Request $request)
+    {
+        $request->validate([
+            'nomor_induk' => 'required|numeric',
+            'keterangan' => 'required|string|max:500',
+        ]);
+
+        $nomorInduk = $request->nomor_induk;
+        $acara = DB::table('ktd_acara')->where('id', $id)->first();
+        abort_unless($acara, 404);
+
+        // Check if already has attendance
+        $existingAttendance = DB::table('ktd_presensi_acara')
+            ->where('acara_id', $id)
+            ->where('user_nip', $nomorInduk)
+            ->first();
+
+        if ($existingAttendance) {
+            DB::table('ktd_presensi_acara')
+                ->where('id', $existingAttendance->id)
+                ->update([
+                    'status' => 'tidak_hadir',
+                    'keterangan' => $request->keterangan,
+                    'updated_at' => now(),
+                ]);
+        } else {
+            DB::table('ktd_presensi_acara')->insert([
+                'acara_id' => $id,
+                'user_nip' => $nomorInduk,
+                'status' => 'tidak_hadir',
+                'keterangan' => $request->keterangan,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return redirect()->route('presensi-acara.show', $id)
+            ->with('success', 'Keterangan berhasil dikirim!')
+            ->with('nomor_induk', $nomorInduk);
+    }
+
+    /**
+     * Save acara photo
+     */
+    private function saveAcaraPhoto(string $base64Photo, int $acaraId, string $userNip): ?string
+    {
+        try {
+            if (str_contains($base64Photo, 'base64,')) {
+                $base64Photo = explode('base64,', $base64Photo)[1];
+            }
+
+            $imageData = base64_decode($base64Photo);
+            $filename = 'presensi_acara_' . $acaraId . '_' . $userNip . '_' . time() . '.jpg';
+            $path = 'presensi_acara/' . $filename;
+
+            Storage::disk('public')->put($path, $imageData);
+
+            return $path;
+        } catch (\Exception $e) {
+            Log::error('Failed to save acara photo', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
 }
