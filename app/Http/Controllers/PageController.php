@@ -7837,6 +7837,17 @@ class PageController extends Controller
             $fotoPath = $this->saveAcaraPhoto($request->foto, $id, $nomorInduk);
         }
 
+        // Calculate distance if acara has location
+        $distance = null;
+        if ($acara->latitude && $acara->longitude && $acara->radius && $acara->radius > 0
+            && $request->latitude && $request->longitude
+            && $request->latitude != 0 && $request->longitude != 0) {
+            $distance = $this->calculateDistance(
+                $acara->latitude, $acara->longitude,
+                $request->latitude, $request->longitude
+            );
+        }
+
         // Check if already has attendance
         $existingAttendance = DB::table('ktd_presensi_acara')
             ->where('acara_id', $id)
@@ -7851,6 +7862,7 @@ class PageController extends Controller
                     'keterangan' => null,
                     'latitude' => $request->latitude,
                     'longitude' => $request->longitude,
+                    'distance' => $distance,
                     'foto' => $fotoPath,
                     'waktu_absen' => Carbon::now('Asia/Jakarta')->format('H:i:s'),
                     'updated_at' => now(),
@@ -7863,6 +7875,7 @@ class PageController extends Controller
                 'keterangan' => null,
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
+                'distance' => $distance,
                 'foto' => $fotoPath,
                 'waktu_absen' => Carbon::now('Asia/Jakarta')->format('H:i:s'),
                 'created_at' => now(),
@@ -7940,5 +7953,27 @@ class PageController extends Controller
             Log::error('Failed to save acara photo', ['error' => $e->getMessage()]);
             return null;
         }
+    }
+
+    /**
+     * Calculate distance between two coordinates (Haversine formula)
+     */
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2): float
+    {
+        $earthRadius = 6371000; // meters
+
+        $lat1 = deg2rad($lat1);
+        $lon1 = deg2rad($lon1);
+        $lat2 = deg2rad($lat2);
+        $lon2 = deg2rad($lon2);
+
+        $dLat = $lat2 - $lat1;
+        $dLon = $lon2 - $lon1;
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+             cos($lat1) * cos($lat2) * sin($dLon / 2) * sin($dLon / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 }

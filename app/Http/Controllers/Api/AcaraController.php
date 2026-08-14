@@ -101,20 +101,18 @@ class AcaraController extends BaseApiController
             return $this->notFound('Acara tidak ditemukan');
         }
 
-        // Validate GPS location if radius is set
-        if ($acara->radius && $acara->radius > 0) {
-            $acaraLatitude = $acara->latitude;
-            $acaraLongitude = $acara->longitude;
-            $acaraRadius = $acara->radius;
+        // Calculate distance if acara has location
+        $distance = null;
+        if ($acara->latitude && $acara->longitude && $request->latitude && $request->longitude
+            && $request->latitude != 0 && $request->longitude != 0) {
+            $distance = $this->calculateDistance(
+                $acara->latitude, $acara->longitude,
+                $request->latitude, $request->longitude
+            );
 
-            $userLatitude = $request->latitude;
-            $userLongitude = $request->longitude;
-
-            // Calculate distance
-            $distance = $this->calculateDistance($acaraLatitude, $acaraLongitude, $userLatitude, $userLongitude);
-
-            if ($distance > $acaraRadius) {
-                return $this->error("Anda berada di luar radius lokasi acara. Jarak: " . round($distance) . "m, Radius: {$acaraRadius}m", 400);
+            // Validate GPS location if radius is set
+            if ($acara->radius && $acara->radius > 0 && $distance > $acara->radius) {
+                return $this->error("Anda berada di luar radius lokasi acara. Jarak: " . round($distance) . "m, Radius: {$acara->radius}m", 400);
             }
         }
 
