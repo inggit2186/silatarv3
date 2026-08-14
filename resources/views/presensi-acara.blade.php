@@ -289,6 +289,9 @@
             }
         }
 
+        var currentStream = null;
+        var currentFacingMode = 'environment'; // Start with back camera
+
         function openCamera() {
             // Create modal for camera
             var modal = document.createElement('div');
@@ -297,20 +300,26 @@
 
             var video = document.createElement('video');
             video.id = 'cameraVideo';
-            video.style.cssText = 'max-width:100%;max-height:70vh;border-radius:8px;';
+            video.style.cssText = 'max-width:100%;max-height:65vh;border-radius:8px;';
             video.setAttribute('autoplay', '');
 
             var btnContainer = document.createElement('div');
-            btnContainer.style.cssText = 'margin-top:20px;display:flex;gap:20px;';
+            btnContainer.style.cssText = 'margin-top:20px;display:flex;gap:15px;justify-content:center;flex-wrap:wrap;';
+
+            var switchBtn = document.createElement('button');
+            switchBtn.id = 'switchCameraBtn';
+            switchBtn.textContent = '🔄 Ganti Kamera';
+            switchBtn.style.cssText = 'padding:12px 20px;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:bold;';
 
             var captureBtn = document.createElement('button');
             captureBtn.textContent = '📷 Ambil Foto';
-            captureBtn.style.cssText = 'padding:15px 30px;background:#22c55e;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:bold;';
+            captureBtn.style.cssText = 'padding:12px 20px;background:#22c55e;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:bold;';
 
             var cancelBtn = document.createElement('button');
             cancelBtn.textContent = '✕ Batal';
-            cancelBtn.style.cssText = 'padding:15px 30px;background:#ef4444;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:bold;';
+            cancelBtn.style.cssText = 'padding:12px 20px;background:#ef4444;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:bold;';
 
+            btnContainer.appendChild(switchBtn);
             btnContainer.appendChild(captureBtn);
             btnContainer.appendChild(cancelBtn);
             modal.appendChild(video);
@@ -318,38 +327,61 @@
             document.body.appendChild(modal);
 
             // Start camera
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+            startCamera(currentFacingMode);
+
+            // Switch camera button
+            switchBtn.onclick = function() {
+                currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+                startCamera(currentFacingMode);
+            };
+
+            // Capture button
+            captureBtn.onclick = function() {
+                var canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+
+                var compressed = canvas.toDataURL('image/jpeg', 0.7);
+
+                document.getElementById('photoPreview').classList.remove('hidden');
+                document.getElementById('photoImg').src = compressed;
+                document.getElementById('foto').value = compressed;
+
+                // Stop camera and close modal
+                if (currentStream) {
+                    currentStream.getTracks().forEach(function(track) { track.stop(); });
+                }
+                modal.remove();
+            };
+
+            // Cancel button
+            cancelBtn.onclick = function() {
+                if (currentStream) {
+                    currentStream.getTracks().forEach(function(track) { track.stop(); });
+                }
+                modal.remove();
+            };
+        }
+
+        function startCamera(facingMode) {
+            if (currentStream) {
+                currentStream.getTracks().forEach(function(track) { track.stop(); });
+            }
+
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } })
                 .then(function(stream) {
-                    video.srcObject = stream;
-                    video.play();
-
-                    captureBtn.onclick = function() {
-                        // Capture frame
-                        var canvas = document.createElement('canvas');
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        canvas.getContext('2d').drawImage(video, 0, 0);
-
-                        // Compress
-                        var compressed = canvas.toDataURL('image/jpeg', 0.7);
-
-                        document.getElementById('photoPreview').classList.remove('hidden');
-                        document.getElementById('photoImg').src = compressed;
-                        document.getElementById('foto').value = compressed;
-
-                        // Stop camera and close modal
-                        stream.getTracks().forEach(function(track) { track.stop(); });
-                        modal.remove();
-                    };
-
-                    cancelBtn.onclick = function() {
-                        stream.getTracks().forEach(function(track) { track.stop(); });
-                        modal.remove();
-                    };
+                    currentStream = stream;
+                    var video = document.getElementById('cameraVideo');
+                    if (video) {
+                        video.srcObject = stream;
+                        video.play();
+                    }
                 })
                 .catch(function(err) {
                     alert('Tidak dapat mengakses kamera: ' + err.message);
-                    modal.remove();
+                    var modal = document.getElementById('cameraModal');
+                    if (modal) modal.remove();
                 });
         }
 
