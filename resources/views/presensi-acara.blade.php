@@ -272,23 +272,20 @@
         }
 
         function takePhoto() {
-            // Check if mobile device
-            var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-            if (isMobile) {
-                // Mobile: Use file input with capture attribute
+            // Check if getUserMedia is supported (works on both mobile and desktop)
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                openCamera();
+            } else {
+                // Fallback to file input
                 var input = document.createElement('input');
                 input.type = 'file';
                 input.accept = 'image/*';
-                input.capture = 'environment';  // Back camera
+                input.capture = 'environment';
 
                 input.onchange = function(e) {
                     processFile(e.target.files[0]);
                 };
                 input.click();
-            } else {
-                // Desktop: Use webcam directly
-                openCamera();
             }
         }
 
