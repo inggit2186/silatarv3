@@ -1,4 +1,16 @@
-<x-layouts.app title="Presensi Acara - SILATAR">
+<x-layouts.app title="{{ $ogTitle ?? 'Presensi Acara - SILATAR' }}">
+
+    @push('styles')
+    <meta property="og:title" content="{{ $ogTitle ?? 'Presensi Acara - SILATAR' }}">
+    <meta property="og:description" content="{{ $ogDescription ?? 'Presensi Acara' }}">
+    <meta property="og:image" content="{{ $ogImage ?? asset('favicon.webp') }}">
+    <meta property="og:url" content="{{ $ogUrl ?? url()->current() }}">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $ogTitle ?? 'Presensi Acara - SILATAR' }}">
+    <meta name="twitter:description" content="{{ $ogDescription ?? 'Presensi Acara' }}">
+    <meta name="twitter:image" content="{{ $ogImage ?? asset('favicon.webp') }}">
+    @endpush
 
     <main class="neo-mirai min-h-screen bg-[var(--paper)] pt-20 lg:pt-24">
         <!-- Content -->
