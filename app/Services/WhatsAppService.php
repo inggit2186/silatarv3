@@ -161,16 +161,18 @@ class WhatsAppService
         // Remove all non-digit characters
         $phone = preg_replace('/\D/', '', $phone);
 
-        // Remove leading zeros
+        // If starts with 62, keep as is (already has country code)
         if (str_starts_with($phone, '62')) {
-            return substr($phone, 2);
+            return $phone;
         }
 
+        // If starts with 0, replace with 62
         if (str_starts_with($phone, '0')) {
-            return substr($phone, 1);
+            return '62' . substr($phone, 1);
         }
 
-        return $phone;
+        // Otherwise, assume it's local number and add 62
+        return '62' . $phone;
     }
 
     /**
@@ -178,6 +180,14 @@ class WhatsAppService
      */
     public static function formatPhoneForDisplay(string $phone): string
     {
+        // First normalize to ensure it has country code
+        $phone = self::normalizePhoneNumber($phone);
+
+        // Remove country code for display
+        if (str_starts_with($phone, '62')) {
+            $phone = '0' . substr($phone, 2);
+        }
+
         return preg_replace('/(?<=\d)(?=(\d{4})+$)/', ' ', $phone);
     }
 

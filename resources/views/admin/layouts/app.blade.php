@@ -132,6 +132,16 @@ $canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', '
                 <span>Janji Temu</span>
             </a>
 
+            <a href="{{ route('admin.acara') }}" class="sidebar-nav-item {{ request()->routeIs('admin.acara*') ? 'active' : '' }}">
+                <div class="sidebar-nav-icon-wrap amber">
+                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 11v4m-2-2h4"/>
+                    </svg>
+                </div>
+                <span>Acara</span>
+            </a>
+
             <div class="sidebar-divider"></div>
 
             <a href="#" onclick="openPasswordModal(); return false;" class="sidebar-nav-item">

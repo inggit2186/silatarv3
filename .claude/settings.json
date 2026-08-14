@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /b lib)",
+      "Bash(dart analyze *)",
+      "Bash(php -l resources/views/pengajuan-saya.blade.php)",
+      "Bash(grep -E \"\\\\.dart$\")",
+      "Bash(grep -n 'protected $fillable\\\\|pekerjaan\\\\|jabatan' app/Models/User.php)",
+      "Bash(mysql -u root -e \"SHOW COLUMNS FROM ktd_bukutamu WHERE Field = 'status';\" kemenagtd_db)",
+      "Bash(git commit -m ' *)",
+      "Bash(flutter clean *)"
+    ]
+  }
+}

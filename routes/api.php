@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AcaraController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\JanjiTemuController;
 use App\Http\Controllers\Api\KegiatanController;
@@ -96,6 +97,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/reset-password', [SimpegController::class, 'submitResetPassword']);
         Route::get('/my-requests', [SimpegController::class, 'myRequests']);
         Route::get('/{id}', [SimpegController::class, 'show']);
+    });
+
+    // Acara / Kegiatan Kankemenag
+    Route::prefix('acara')->group(function () {
+        Route::get('/', [AcaraController::class, 'index']);
+        Route::get('/{id}', [AcaraController::class, 'show']);
+        Route::post('/{id}/hadir', [AcaraController::class, 'hadir']);
+        Route::post('/{id}/tidak-hadir', [AcaraController::class, 'tidakHadir']);
+        Route::get('/history/user', [AcaraController::class, 'history']);
     });
 
     // ═══════════════════════════════════════════════════════════════════════════

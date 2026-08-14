@@ -134,6 +134,7 @@
                                     <th>Nama</th>
                                     <th>Status</th>
                                     <th>Waktu</th>
+                                    <th>Foto</th>
                                     <th>Keterangan</th>
                                 </tr>
                             </thead>
@@ -160,6 +161,18 @@
                                         </td>
                                         <td>
                                             <span class="text-sm">{{ $item->waktu_absen ?? '-' }}</span>
+                                        </td>
+                                        <td>
+                                            @if($item->foto)
+                                                <a href="{{ asset('storage/' . $item->foto) }}" target="_blank" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm">
+                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                    </svg>
+                                                    Lihat Foto
+                                                </a>
+                                            @else
+                                                <span class="text-sm text-gray-400">-</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <span class="text-sm max-w-xs truncate block" title="{{ $item->keterangan }}">{{ $item->keterangan ?? '-' }}</span>

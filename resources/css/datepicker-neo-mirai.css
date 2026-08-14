@@ -317,3 +317,371 @@
         max-width: 19rem;
     }
 }
+
+/* ====================================
+   DATETIMEPICKER STYLES - NEO MIRAI THEME
+   ==================================== */
+
+/* Datetimepicker Container */
+.silatar-datetimepicker {
+    width: 100%;
+    position: relative;
+}
+
+/* Trigger Button */
+.silatar-datetimepicker-trigger {
+    display: flex;
+    width: 100%;
+    height: 3.5rem;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 1rem;
+    border: 2px solid var(--line, #b8b5b0);
+    background: var(--paper, #f7f6f3);
+    color: var(--ink, #2d2824);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    outline: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.silatar-datetimepicker-trigger:hover {
+    border-color: var(--gold, #d4a853);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.silatar-datetimepicker-trigger:focus,
+.silatar-datetimepicker-trigger.is-open {
+    border-color: var(--gold, #d4a853);
+    box-shadow: 0 0 0 4px oklch(68% 0.145 74 / 0.15);
+}
+
+/* Trigger Icon */
+.silatar-datetimepicker-trigger-icon {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: 9999px;
+    background: var(--paper-soft, #eceae6);
+    color: var(--ink-soft, #514c46);
+}
+
+/* Clear Button */
+.silatar-datetimepicker-clear {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    color: var(--ink-soft, #514c46);
+    transition: all 0.2s ease;
+}
+
+.silatar-datetimepicker-clear:hover {
+    background: var(--paper-soft, #eceae6);
+    color: var(--ink, #2d2824);
+}
+
+/* Popover */
+.silatar-datetimepicker-popover {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 110;
+    width: 21rem;
+    padding: 1rem;
+    border-radius: 1.5rem;
+    border: 2px solid var(--line, #b8b5b0);
+    background: var(--paper, #f7f6f3);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+    overflow: hidden;
+}
+
+/* Tabs */
+.silatar-datetimepicker-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--line, #b8b5b0);
+}
+
+.silatar-datetimepicker-tab {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    border: none;
+    background: transparent;
+    color: var(--ink-soft, #514c46);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.silatar-datetimepicker-tab:hover {
+    background: var(--paper-soft, #eceae6);
+    color: var(--ink, #2d2824);
+}
+
+.silatar-datetimepicker-tab.is-active {
+    background: var(--gold, #d4a853);
+    color: white;
+}
+
+/* Header */
+.silatar-datetimepicker-popover-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Nav Buttons */
+.silatar-datetimepicker-nav {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: 0.5rem;
+    border: none;
+    background: var(--paper-soft, #eceae6);
+    color: var(--ink-soft, #514c46);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.silatar-datetimepicker-nav:hover {
+    background: var(--gold, #d4a853);
+    color: white;
+}
+
+/* Quick Select */
+.silatar-datetimepicker-quick-select {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    border: 2px solid var(--line, #b8b5b0);
+    background: var(--paper, #f7f6f3);
+    color: var(--ink, #2d2824);
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.silatar-datetimepicker-quick-select:focus {
+    border-color: var(--gold, #d4a853);
+}
+
+/* Year Input */
+.silatar-datetimepicker-year-input {
+    width: 5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    border: 2px solid var(--line, #b8b5b0);
+    background: var(--paper, #f7f6f3);
+    color: var(--ink, #2d2824);
+    text-align: center;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.silatar-datetimepicker-year-input:focus {
+    border-color: var(--gold, #d4a853);
+}
+
+/* Weekdays */
+.silatar-datetimepicker-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.silatar-datetimepicker-weekdays span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ink-soft, #514c46);
+}
+
+/* Grid */
+.silatar-datetimepicker-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+}
+
+/* Day Button */
+.silatar-datetimepicker-day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    border: none;
+    background: transparent;
+    color: var(--ink, #2d2824);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.silatar-datetimepicker-day:hover:not(:disabled):not(.is-empty) {
+    background: var(--paper-soft, #eceae6);
+}
+
+.silatar-datetimepicker-day.is-today {
+    border: 2px solid var(--gold, #d4a853);
+}
+
+.silatar-datetimepicker-day.is-selected {
+    background: var(--gold, #d4a853) !important;
+    color: white !important;
+    font-weight: 700;
+}
+
+.silatar-datetimepicker-day:disabled,
+.silatar-datetimepicker-day.is-empty,
+.silatar-datetimepicker-day.is-disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Time Header */
+.silatar-datetimepicker-time-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--ink, #2d2824);
+}
+
+/* Time Grid */
+.silatar-datetimepicker-time-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    max-height: 16rem;
+    overflow-y: auto;
+    padding: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+/* Time Option */
+.silatar-datetimepicker-time-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.625rem 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    border: 2px solid var(--line, #b8b5b0);
+    background: var(--paper, #f7f6f3);
+    color: var(--ink, #2d2824);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.silatar-datetimepicker-time-option:hover {
+    border-color: var(--gold, #d4a853);
+    background: var(--paper-soft, #eceae6);
+}
+
+.silatar-datetimepicker-time-option.is-selected {
+    background: var(--gold, #d4a853);
+    border-color: var(--gold, #d4a853);
+    color: white;
+    font-weight: 700;
+}
+
+/* Footer */
+.silatar-datetimepicker-popover-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--line, #b8b5b0);
+}
+
+.silatar-datetimepicker-footer-button {
+    display: inline-flex;
+    height: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-radius: 9999px;
+    background: var(--gold, #d4a853);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.silatar-datetimepicker-footer-button:hover {
+    background: var(--gold-bright, #e4c078);
+}
+
+.silatar-datetimepicker-footer-link {
+    display: inline-flex;
+    height: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-radius: 9999px;
+    border: 2px solid var(--line, #b8b5b0);
+    background: transparent;
+    color: var(--ink-soft, #514c46);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.silatar-datetimepicker-footer-link:hover {
+    border-color: var(--ink-soft, #514c46);
+    color: var(--ink, #2d2824);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .silatar-datetimepicker-popover {
+        width: calc(100vw - 2rem);
+        max-width: 21rem;
+    }
+
+    .silatar-datetimepicker-time-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
