@@ -7852,7 +7852,7 @@ class PageController extends Controller
                     'latitude' => $request->latitude,
                     'longitude' => $request->longitude,
                     'foto' => $fotoPath,
-                    'waktu_absen' => date('H:i:s'),
+                    'waktu_absen' => Carbon::now('Asia/Jakarta')->format('H:i:s'),
                     'updated_at' => now(),
                 ]);
         } else {
@@ -7864,7 +7864,7 @@ class PageController extends Controller
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
                 'foto' => $fotoPath,
-                'waktu_absen' => date('H:i:s'),
+                'waktu_absen' => Carbon::now('Asia/Jakarta')->format('H:i:s'),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
