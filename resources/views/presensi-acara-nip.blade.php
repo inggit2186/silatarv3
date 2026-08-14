@@ -13,6 +13,17 @@
                     </div>
                 @endif
 
+                {{-- Cover Photo --}}
+                @if($acara->filename)
+                    <div class="mb-6 neo-card overflow-hidden">
+                        <img src="{{ asset('storage/acara/' . $acara->filename) }}" alt="{{ $acara->judul }}" class="w-full h-48 object-cover">
+                        <div class="p-4">
+                            <h2 class="text-lg font-bold text-[var(--ink)]">{{ $acara->judul }}</h2>
+                            <p class="text-sm text-[var(--ink-soft)]">{{ $acara->lokasi }}</p>
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Acara Info Card --}}
                 <div class="neo-card mb-6 p-6">
                     <div class="flex items-center gap-3 mb-4 pb-4 border-b border-[var(--line)]">

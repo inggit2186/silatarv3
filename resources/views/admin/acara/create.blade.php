@@ -30,7 +30,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Form -->
         <div class="lg:col-span-2">
-            <form action="{{ route('admin.acara.store') }}" method="POST">
+            <form action="{{ route('admin.acara.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="card">
                     <div class="card-header">
@@ -57,7 +57,21 @@
                             <!-- Deskripsi -->
                             <div class="form-group md:col-span-2">
                                 <label class="form-label">Deskripsi</label>
-                                <textarea name="deskripsi" class="form-textarea" rows="3" placeholder="Deskripsi acara (opsional)">{{ old('deskripsi') }}</textarea>
+                                <textarea name="deskripsi" class="form-textarea" rows="6" placeholder="Deskripsi acara (opsional)">{{ old('deskripsi') }}</textarea>
+                            </div>
+
+                            <!-- Foto/Cover Acara -->
+                            <div class="form-group md:col-span-2">
+                                <label class="form-label">Foto/Cover Acara</label>
+                                <div class="flex items-center gap-4">
+                                    <div id="fotoPreview" class="hidden">
+                                        <img id="fotoImg" src="" alt="Preview" class="w-32 h-32 object-cover rounded-lg border">
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="file" name="foto" id="fotoInput" accept="image/*" class="form-input" onchange="previewFoto(this)">
+                                        <p class="text-xs text-muted mt-1">Format: JPG, PNG (Maks. 2MB)</p>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Tanggal -->
@@ -170,4 +184,16 @@
         </div>
     </div>
 
+    <script>
+        function previewFoto(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('fotoPreview').classList.remove('hidden');
+                    document.getElementById('fotoImg').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
 </x-admin.layouts.app>

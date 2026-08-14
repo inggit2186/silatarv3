@@ -7734,8 +7734,20 @@ class PageController extends Controller
         $acara = DB::table('ktd_acara')->where('id', $id)->first();
         abort_unless($acara, 404);
 
+        // Build OG tags data for social media preview
+        $ogTitle = $acara->judul . ' - Presensi Acara';
+        $ogDescription = $acara->lokasi . ' | ' .
+                         \Carbon\Carbon::parse($acara->tanggal)->format('d M Y') . ', ' .
+                         $acara->jam_mulai . ' - ' . $acara->jam_selesei . ' WIB';
+        $ogImage = $acara->filename ? asset('storage/acara/' . $acara->filename) : asset('favicon.webp');
+        $ogUrl = url('/presensi-acara/' . $id);
+
         return view('presensi-acara-nip', [
             'acara' => $acara,
+            'ogTitle' => $ogTitle,
+            'ogDescription' => $ogDescription,
+            'ogImage' => $ogImage,
+            'ogUrl' => $ogUrl,
         ]);
     }
 
@@ -7802,6 +7814,14 @@ class PageController extends Controller
         $statusKehadiran = $attendance ? $attendance->status : null;
         $keterangan = $attendance ? $attendance->keterangan : null;
 
+        // Build OG tags data for social media preview
+        $ogTitle = $acara->judul . ' - Presensi Acara';
+        $ogDescription = $userName . ' | ' .
+                         \Carbon\Carbon::parse($acara->tanggal)->format('d M Y') . ', ' .
+                         $acara->jam_mulai . ' - ' . $acara->jam_selesei . ' WIB';
+        $ogImage = $acara->filename ? asset('storage/acara/' . $acara->filename) : asset('favicon.webp');
+        $ogUrl = url('/presensi-acara/' . $id . '/show');
+
         return view('presensi-acara', [
             'acara' => $acara,
             'nomorInduk' => $nomorInduk,
@@ -7812,6 +7832,10 @@ class PageController extends Controller
             'sudahPresensi' => $sudahPresensi,
             'statusKehadiran' => $statusKehadiran,
             'keterangan' => $keterangan,
+            'ogTitle' => $ogTitle,
+            'ogDescription' => $ogDescription,
+            'ogImage' => $ogImage,
+            'ogUrl' => $ogUrl,
         ]);
     }
 

@@ -59,7 +59,15 @@ class AcaraController extends Controller
             'longitude' => 'nullable|numeric',
             'radius' => 'nullable|integer|min:0',
             'status' => 'required|in:active,completed,cancelled',
+            'foto' => 'nullable|image|max:2048',
         ]);
+
+        // Handle foto upload with compression
+        $filename = null;
+        if ($request->hasFile('foto')) {
+            $filename = 'acara_' . time() . '_' . $request->file('foto')->getClientOriginalName();
+            $this->compressAndStorePhoto($request->file('foto'), $filename);
+        }
 
         $insertData = [
             'dept_id' => $request->input('dept_id', 0),
@@ -73,14 +81,23 @@ class AcaraController extends Controller
             'longitude' => $request->longitude,
             'radius' => $request->radius,
             'status' => $request->status,
+            'filename' => $filename,
             'created_at' => now(),
             'updated_at' => now(),
         ];
 
-        DB::table('ktd_acara')->insert($insertData);
+        \Log::info('Inserting acara', $insertData);
 
-        return redirect()->route('admin.acara')
-            ->with('success', 'Acara berhasil dibuat');
+        try {
+            DB::table('ktd_acara')->insert($insertData);
+            return redirect()->route('admin.acara')
+                ->with('success', 'Acara berhasil dibuat');
+        } catch (\Exception $e) {
+            \Log::error('Failed to insert acara', ['error' => $e->getMessage()]);
+            return redirect()->route('admin.acara.create')
+                ->with('error', 'Gagal menyimpan data: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     /**
@@ -166,27 +183,57 @@ class AcaraController extends Controller
             'longitude' => 'nullable|numeric',
             'radius' => 'nullable|integer|min:0',
             'status' => 'required|in:active,completed,cancelled',
+            'foto' => 'nullable|image|max:2048',
         ]);
 
-        DB::table('ktd_acara')
-            ->where('id', $id)
-            ->update([
-                'dept_id' => $request->input('dept_id', 0),
-                'judul' => $request->judul,
-                'deskripsi' => $request->deskripsi,
-                'tanggal' => $request->tanggal,
-                'jam_mulai' => $request->jam_mulai,
-                'jam_selesei' => $request->jam_selesei,
-                'lokasi' => $request->lokasi,
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
-                'radius' => $request->radius,
-                'status' => $request->status,
-                'updated_at' => now(),
-            ]);
+        // Handle foto upload
+        $filename = null;
+        if ($request->hasFile('foto')) {
+            // Delete old foto if exists
+            $oldAcara = DB::table('ktd_acara')->where('id', $id)->first();
+            if ($oldAcara && $oldAcara->filename) {
+                Storage::disk('public')->delete('acara/' . $oldAcara->filename);
+            }
 
-        return redirect()->route('admin.acara')
-            ->with('success', 'Acara berhasil diupdate');
+            $filename = 'acara_' . time() . '_' . $request->file('foto')->getClientOriginalName();
+            $this->compressAndStorePhoto($request->file('foto'), $filename);
+        } else {
+            // Keep existing filename
+            $oldAcara = DB::table('ktd_acara')->where('id', $id)->first();
+            $filename = $oldAcara ? $oldAcara->filename : null;
+        }
+
+        $updateData = [
+            'dept_id' => $request->input('dept_id', 0),
+            'judul' => $request->judul,
+            'deskripsi' => $request->deskripsi,
+            'tanggal' => $request->tanggal,
+            'jam_mulai' => $request->jam_mulai,
+            'jam_selesei' => $request->jam_selesei,
+            'lokasi' => $request->lokasi,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'radius' => $request->radius,
+            'status' => $request->status,
+            'filename' => $filename,
+            'updated_at' => now(),
+        ];
+
+        \Log::info('Updating acara', ['id' => $id, 'filename' => $filename, 'has_file' => $request->hasFile('foto')]);
+
+        try {
+            DB::table('ktd_acara')
+                ->where('id', $id)
+                ->update($updateData);
+
+            return redirect()->route('admin.acara')
+                ->with('success', 'Acara berhasil diupdate');
+        } catch (\Exception $e) {
+            \Log::error('Failed to update acara', ['error' => $e->getMessage()]);
+            return redirect()->route('admin.acara.edit', $id)
+                ->with('error', 'Gagal mengupdate data: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     /**
@@ -198,5 +245,72 @@ class AcaraController extends Controller
 
         return redirect()->route('admin.acara.index')
             ->with('success', 'Acara berhasil dihapus');
+    }
+
+    /**
+     * Compress and store photo using GD library
+     */
+    private function compressAndStorePhoto($file, $filename)
+    {
+        try {
+            // Get image info
+            $imageInfo = getimagesize($file->getRealPath());
+
+            if (!$imageInfo) {
+                // Not a valid image, store original
+                $file->storeAs('public/acara', $filename);
+                return true;
+            }
+
+            $width = $imageInfo[0];
+            $height = $imageInfo[1];
+            $mime = $imageInfo['mime'];
+
+            // Create image resource based on mime type
+            $image = null;
+            switch ($mime) {
+                case 'image/jpeg':
+                    $image = imagecreatefromjpeg($file->getRealPath());
+                    break;
+                case 'image/png':
+                    $image = imagecreatefrompng($file->getRealPath());
+                    break;
+                case 'image/gif':
+                    $image = imagecreatefromgif($file->getRealPath());
+                    break;
+            }
+
+            if (!$image) {
+                $file->storeAs('public/acara', $filename);
+                return true;
+            }
+
+            // Resize to max 1200px width
+            $maxWidth = 1200;
+            if ($width > $maxWidth) {
+                $newWidth = $maxWidth;
+                $newHeight = (int)($height * ($maxWidth / $width));
+                $resized = imagecreatetruecolor($newWidth, $newHeight);
+                imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                imagedestroy($image);
+                $image = $resized;
+            }
+
+            // Store to disk with 80% quality
+            $path = storage_path('app/public/acara');
+            if (!is_dir($path)) {
+                mkdir($path, 0755, true);
+            }
+            imagejpeg($image, $path . '/' . $filename, 80);
+            imagedestroy($image);
+
+            return true;
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to compress photo: ' . $e->getMessage());
+            // Fallback: store original if compression fails
+            $file->storeAs('public/acara', $filename);
+            return true;
+        }
     }
 }
