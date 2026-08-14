@@ -243,7 +243,7 @@ class AcaraController extends Controller
     {
         DB::table('ktd_acara')->where('id', $id)->delete();
 
-        return redirect()->route('admin.acara.index')
+        return redirect()->route('admin.acara')
             ->with('success', 'Acara berhasil dihapus');
     }
 

@@ -5,9 +5,19 @@
     ogImage="{{ $ogImage ?? asset('favicon.webp') }}"
     ogUrl="{{ $ogUrl ?? url()->current() }}">
 
-    <main class="neo-mirai min-h-screen bg-[var(--paper)] pt-20 lg:pt-24">
+    <main class="neo-mirai min-h-screen bg-[var(--paper)]">
+        <!-- Scroll Info -->
+        <div class="bg-[var(--gold)]/10 border-b border-[var(--gold)]/20 py-2 px-4 text-center sticky top-0 z-40">
+            <p class="text-xs text-[var(--gold)] font-semibold flex items-center justify-center gap-2">
+                <svg class="w-3 h-3 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m 7 7v8"/>
+                </svg>
+                Scroll kebawah untuk mengisi NIP
+            </p>
+        </div>
+
         <!-- Content -->
-        <section class="page-content px-6 py-8 lg:px-8">
+        <section class="page-content px-4 py-4 lg:px-6">
             <div class="max-w-2xl mx-auto">
                 @if(session('error'))
                     <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 flex items-center gap-3">

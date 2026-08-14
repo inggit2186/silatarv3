@@ -5,9 +5,19 @@
     ogImage="{{ $ogImage ?? asset('favicon.webp') }}"
     ogUrl="{{ $ogUrl ?? url()->current() }}">
 
-    <main class="neo-mirai min-h-screen bg-[var(--paper)] pt-20 lg:pt-24">
+    <main class="neo-mirai min-h-screen bg-[var(--paper)]">
+        <!-- Scroll Info -->
+        <div class="bg-[var(--gold)]/10 border-b border-[var(--gold)]/20 py-2 px-4 text-center sticky top-0 z-40">
+            <p class="text-xs text-[var(--gold)] font-semibold flex items-center justify-center gap-2">
+                <svg class="w-3 h-3 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m 7 7v8"/>
+                </svg>
+                Scroll kebawah untuk Melakukan Presensi
+            </p>
+        </div>
+
         <!-- Content -->
-        <section class="page-content px-6 py-8 lg:px-8">
+        <section class="page-content px-4 py-4 lg:px-6">
             <div class="max-w-2xl mx-auto">
                 @if(session('success'))
                     <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 flex items-center gap-3">
@@ -19,7 +29,7 @@
                 @endif
 
                 @if(session('error'))
-                    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 flex items-center gap-3">
+                    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 flex items-center gap-3">
                         <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
@@ -29,9 +39,9 @@
 
                 {{-- Cover Photo --}}
                 @if($acara->filename)
-                    <div class="mb-6 neo-card overflow-hidden">
-                        <img src="{{ asset('storage/acara/' . $acara->filename) }}" alt="{{ $acara->judul }}" class="w-full h-48 object-cover">
-                        <div class="p-4">
+                    <div class="mb-4 neo-card overflow-hidden">
+                        <img src="{{ asset('storage/acara/' . $acara->filename) }}" alt="{{ $acara->judul }}" class="w-full h-40 object-cover">
+                        <div class="p-3">
                             <h2 class="text-lg font-bold text-[var(--ink)]">{{ $acara->judul }}</h2>
                             <p class="text-sm text-[var(--ink-soft)]">{{ $acara->lokasi }}</p>
                         </div>
@@ -101,16 +111,6 @@
                             <span class="text-[var(--ink)]">{{ $acara->lokasi }}</span>
                         </div>
 
-                        @if($acara->filename)
-                            <div class="mt-3">
-                                <button type="button" onclick="showPhotoModal('{{ asset('storage/acara/' . $acara->filename) }}')" class="w-full py-2 bg-[var(--gold)]/10 hover:bg-[var(--gold)]/20 text-[var(--gold)] text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                    Lihat Foto Acara
-                                </button>
-                            </div>
-                        @endif
                     </div>
                 </div>
 
