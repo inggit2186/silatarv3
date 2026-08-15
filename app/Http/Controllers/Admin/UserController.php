@@ -168,6 +168,53 @@ class UserController extends Controller
             abort(404, 'Pengguna tidak ditemukan.');
         }
 
+        // Get data from tenaga_ktd table if exists
+        $tenaga = DB::table('tenaga_ktd')
+            ->where('user_id', $user->id)
+            ->first();
+
+        // Merge data from tenaga_ktd to user object for fields that might be in tenaga_ktd
+        if ($tenaga) {
+            // Fields that are only in tenaga_ktd
+            $user->nik = $tenaga->nik ?? null;
+            $user->kk = $tenaga->kk ?? null;
+            $user->npwp = $tenaga->npwp ?? null;
+            $user->nikah = $tenaga->nikah ?? null;
+            $user->jenis_pjob = $tenaga->jenis_pjob ?? null;
+            $user->pjob = $tenaga->pjob ?? null;
+            $user->jml_anak = $tenaga->jml_anak ?? null;
+            $user->nama_ibu = $tenaga->nama_ibu ?? null;
+            $user->nama_istri_suami = $tenaga->nama_istri_suami ?? null;
+            $user->bio = $tenaga->bio ?? null;
+            $user->facebook = $tenaga->facebook ?? null;
+            $user->twitter = $tenaga->twitter ?? null;
+            $user->instagram = $tenaga->instagram ?? null;
+            $user->linkedin = $tenaga->linkedin ?? null;
+
+            // Use tenaga_ktd data if users table data is empty
+            if (empty($user->instansi) && !empty($tenaga->instansi)) {
+                $user->instansi = $tenaga->instansi;
+            }
+            if (empty($user->pekerjaan) && !empty($tenaga->pekerjaan)) {
+                $user->pekerjaan = $tenaga->pekerjaan;
+            }
+            if (empty($user->telp) && !empty($tenaga->telp)) {
+                $user->telp = $tenaga->telp;
+            }
+            if (empty($user->alamat) && !empty($tenaga->alamat)) {
+                $user->alamat = $tenaga->alamat;
+            }
+            if (empty($user->tempat_lahir) && !empty($tenaga->tempat_lahir)) {
+                $user->tempat_lahir = $tenaga->tempat_lahir;
+            }
+            if (empty($user->tanggal_lahir) && !empty($tenaga->tanggal_lahir)) {
+                $user->tanggal_lahir = $tenaga->tanggal_lahir;
+            }
+            if (empty($user->jk) && !empty($tenaga->jenis_kelamin)) {
+                $user->jk = $tenaga->jenis_kelamin;
+            }
+        }
+
         $roles = ['superadmin', 'admin', 'kasubbag', 'kasi', 'kepala', 'petugas', 'pegawai', 'frontdesk', 'pensiun', 'pindah'];
         $departments = DB::table('ktd_department')
             ->whereIn('status', [1, 2])
@@ -221,12 +268,24 @@ class UserController extends Controller
             'status' => ['nullable', 'numeric'],
             'tanggal_lahir' => ['nullable', 'date'],
             'tempat_lahir' => ['nullable', 'string', 'max:100'],
-            'nikah' => ['nullable', 'numeric'],
+            'nik' => ['nullable', 'string', 'max:20'],
+            'kk' => ['nullable', 'string', 'max:20'],
+            'npwp' => ['nullable', 'string', 'max:30'],
+            'nikah' => ['nullable', 'string'],
             'jenis_pjob' => ['nullable', 'string', Rule::in(['ASN', 'NON'])],
             'pjob' => ['nullable', 'string', 'max:255'],
             'instansi' => ['nullable', 'string', 'max:255'],
+            'jml_anak' => ['nullable', 'numeric'],
+            'nama_ibu' => ['nullable', 'string', 'max:255'],
+            'nama_istri_suami' => ['nullable', 'string', 'max:255'],
+            'bio' => ['nullable', 'string', 'max:500'],
+            'facebook' => ['nullable', 'string', 'max:255'],
+            'twitter' => ['nullable', 'string', 'max:255'],
+            'instagram' => ['nullable', 'string', 'max:255'],
+            'linkedin' => ['nullable', 'string', 'max:255'],
         ]);
 
+        // Update users table
         $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'] ?? null,
@@ -249,18 +308,6 @@ class UserController extends Controller
         if (isset($validated['tempat_lahir'])) {
             $updateData['tempat_lahir'] = $validated['tempat_lahir'];
         }
-        if (isset($validated['nikah'])) {
-            $updateData['nikah'] = $validated['nikah'];
-        }
-        if (isset($validated['jenis_pjob'])) {
-            $updateData['jenis_pjob'] = $validated['jenis_pjob'];
-        }
-        if (isset($validated['pjob'])) {
-            $updateData['pjob'] = $validated['pjob'];
-        }
-        if (isset($validated['instansi'])) {
-            $updateData['instansi'] = $validated['instansi'];
-        }
 
         // Only update password if provided
         if (!empty($validated['password'])) {
@@ -268,6 +315,67 @@ class UserController extends Controller
         }
 
         DB::table('users')->where('id', $id)->update($updateData);
+
+        // Update tenaga_ktd table (fields that exist only in tenaga_ktd)
+        $tenagaData = [];
+        if (isset($validated['nik'])) {
+            $tenagaData['nik'] = $validated['nik'];
+        }
+        if (isset($validated['kk'])) {
+            $tenagaData['kk'] = $validated['kk'];
+        }
+        if (isset($validated['npwp'])) {
+            $tenagaData['npwp'] = $validated['npwp'];
+        }
+        if (isset($validated['nikah'])) {
+            $tenagaData['nikah'] = $validated['nikah'];
+        }
+        if (isset($validated['jenis_pjob'])) {
+            $tenagaData['jenis_pjob'] = $validated['jenis_pjob'];
+        }
+        if (isset($validated['pjob'])) {
+            $tenagaData['pjob'] = $validated['pjob'];
+        }
+        if (isset($validated['instansi'])) {
+            $tenagaData['instansi'] = $validated['instansi'];
+        }
+        if (isset($validated['jml_anak'])) {
+            $tenagaData['jml_anak'] = $validated['jml_anak'];
+        }
+        if (isset($validated['nama_ibu'])) {
+            $tenagaData['nama_ibu'] = $validated['nama_ibu'];
+        }
+        if (isset($validated['nama_istri_suami'])) {
+            $tenagaData['nama_istri_suami'] = $validated['nama_istri_suami'];
+        }
+        if (isset($validated['bio'])) {
+            $tenagaData['bio'] = $validated['bio'];
+        }
+        if (isset($validated['facebook'])) {
+            $tenagaData['facebook'] = $validated['facebook'];
+        }
+        if (isset($validated['twitter'])) {
+            $tenagaData['twitter'] = $validated['twitter'];
+        }
+        if (isset($validated['instagram'])) {
+            $tenagaData['instagram'] = $validated['instagram'];
+        }
+        if (isset($validated['linkedin'])) {
+            $tenagaData['linkedin'] = $validated['linkedin'];
+        }
+
+        // Update tenaga_ktd if record exists and has data to update
+        $tenaga = DB::table('tenaga_ktd')->where('user_id', $id)->first();
+        if ($tenaga && !empty($tenagaData)) {
+            DB::table('tenaga_ktd')->where('user_id', $id)->update($tenagaData);
+        } elseif (!empty($tenagaData)) {
+            // Create tenaga_ktd record if it doesn't exist
+            $tenagaData['user_id'] = $id;
+            $tenagaData['nama'] = $validated['name'];
+            $tenagaData['created_at'] = now();
+            $tenagaData['updated_at'] = now();
+            DB::table('tenaga_ktd')->insert($tenagaData);
+        }
 
         return redirect()
             ->back()
