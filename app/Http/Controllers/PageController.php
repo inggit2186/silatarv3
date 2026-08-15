@@ -7888,6 +7888,7 @@ class PageController extends Controller
                     'longitude' => $request->longitude,
                     'distance' => $distance,
                     'foto' => $fotoPath,
+                    'tanggal' => Carbon::now('Asia/Jakarta')->format('Y-m-d'),
                     'waktu_absen' => Carbon::now('Asia/Jakarta')->format('H:i:s'),
                     'updated_at' => now(),
                 ]);
@@ -7901,6 +7902,7 @@ class PageController extends Controller
                 'longitude' => $request->longitude,
                 'distance' => $distance,
                 'foto' => $fotoPath,
+                'tanggal' => Carbon::now('Asia/Jakarta')->format('Y-m-d'),
                 'waktu_absen' => Carbon::now('Asia/Jakarta')->format('H:i:s'),
                 'created_at' => now(),
                 'updated_at' => now(),

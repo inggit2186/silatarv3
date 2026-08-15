@@ -201,6 +201,7 @@
                                     <th>Nama</th>
                                     <th>Unit Kerja</th>
                                     <th>Status</th>
+                                    <th>Tanggal</th>
                                     <th>Waktu</th>
                                     <th>Lokasi</th>
                                     <th>Foto</th>
@@ -230,6 +231,9 @@
                                         </td>
                                         <td>
                                             <span class="badge {{ $statusBadge }}">{{ $statusLabel }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-sm">{{ $item->tanggal ? \Carbon\Carbon::parse($item->tanggal)->format('d M Y') : '-' }}</span>
                                         </td>
                                         <td>
                                             <span class="text-sm">{{ $item->waktu_absen ?? '-' }}</span>

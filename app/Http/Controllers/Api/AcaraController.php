@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AcaraController extends BaseApiController
 {
@@ -140,6 +141,7 @@ class AcaraController extends BaseApiController
                     'distance' => $request->distance,
                     'location' => $request->location,
                     'foto' => $fotoPath,
+                    'tanggal' => \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d'),
                     'waktu_absen' => \Carbon\Carbon::now('Asia/Jakarta')->format('H:i:s'),
                     'updated_at' => now(),
                 ]);
@@ -155,6 +157,7 @@ class AcaraController extends BaseApiController
                 'distance' => $request->distance,
                 'location' => $request->location,
                 'foto' => $fotoPath,
+                'tanggal' => \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d'),
                 'waktu_absen' => \Carbon\Carbon::now('Asia/Jakarta')->format('H:i:s'),
                 'created_at' => now(),
                 'updated_at' => now(),
