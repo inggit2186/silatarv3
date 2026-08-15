@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\MadrasahController;
 use App\Http\Controllers\Admin\MadrasahLaporanController;
 use App\Http\Controllers\Admin\JanjiTemuController;
 use App\Http\Controllers\Admin\AcaraController;
+use App\Http\Controllers\Admin\CkhController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -92,6 +93,14 @@ Route::middleware(['auth', 'admin'])
         Route::get('/acara/{id}/edit', [AcaraController::class, 'edit'])->name('acara.edit');
         Route::put('/acara/{id}', [AcaraController::class, 'update'])->name('acara.update');
         Route::delete('/acara/{id}', [AcaraController::class, 'destroy'])->name('acara.destroy');
+
+        // Laporan CKH
+        Route::prefix('ckh')->name('ckh.')->group(function () {
+            Route::get('/', [CkhController::class, 'index'])->name('index');
+            Route::get('/{id}', [CkhController::class, 'show'])->name('show');
+            Route::post('/{id}/approve', [CkhController::class, 'approve'])->name('approve');
+            Route::post('/{id}/reject', [CkhController::class, 'reject'])->name('reject');
+        });
 
         Route::get('/requests', function () {
             return view('admin.requests.index');
