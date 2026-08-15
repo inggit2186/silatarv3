@@ -29,7 +29,9 @@ $canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', '
     <aside class="admin-sidebar" id="adminSidebar">
         <!-- Logo -->
         <div class="sidebar-logo">
-            <div class="sidebar-brand">SIL</div>
+            <div class="sidebar-brand">
+                <img src="{{ asset('favicon.webp') }}" alt="SILATAR Logo" class="sidebar-logo-img">
+            </div>
             <div class="sidebar-word">
                 <span>SILATAR</span>
                 <span>Admin Panel</span>
@@ -39,128 +41,181 @@ $canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', '
         <!-- Navigation -->
         <nav class="sidebar-nav">
             @if($canAccessAdminPanel)
-            <a href="{{ route('admin.dashboard') }}" class="sidebar-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                <div class="sidebar-nav-icon-wrap cyan">
-                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2v10m10-10a2 2 0 012 2v10a2 2 0 01-2 2h-2a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2"/>
+            <div class="menu-group" data-group="main" id="menuGroupMain">
+                <div class="menu-group-header" onclick="toggleMenuGroup('main')">
+                    <div class="menu-group-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                        </svg>
+                    </div>
+                    <span class="menu-group-header-text">Main</span>
+                    <span class="menu-group-count">1</span>
+                    <svg class="menu-group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </div>
-                <span>Admin Panel</span>
-            </a>
+                <div class="menu-group-items">
+                    <a href="{{ route('admin.dashboard') }}" class="sidebar-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap cyan">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2v10m10-10a2 2 0 012 2v10a2 2 0 01-2 2h-2a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
+            </div>
             @endif
 
             @if($isAdmin)
-            <a href="{{ route('admin.users.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                <div class="sidebar-nav-icon-wrap violet">
-                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <div class="menu-group {{ request()->routeIs('admin.users.*', 'admin.services.*', 'admin.units.*', 'admin.requests.*', 'admin.tpg.*', 'admin.reports.*', 'admin.madrasah.laporan.*') ? 'has-active' : '' }}" data-group="kelola" id="menuGroupKelola">
+                <div class="menu-group-header" onclick="toggleMenuGroup('kelola')">
+                    <div class="menu-group-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <span class="menu-group-header-text">Kelola</span>
+                    <span class="menu-group-count">6</span>
+                    <svg class="menu-group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </div>
-                <span>Pengguna</span>
-            </a>
+                <div class="menu-group-items">
+                    <a href="{{ route('admin.users.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap violet">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                        </div>
+                        <span>Pengguna</span>
+                    </a>
 
-            <a href="{{ route('admin.services.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
-                <div class="sidebar-nav-icon-wrap emerald">
-                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
-                    </svg>
-                </div>
-                <span>Layanan</span>
-            </a>
+                    <a href="{{ route('admin.services.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap emerald">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                            </svg>
+                        </div>
+                        <span>Layanan</span>
+                    </a>
 
-            <a href="{{ route('admin.units.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.units.*') ? 'active' : '' }}">
-                <div class="sidebar-nav-icon-wrap amber">
-                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                    </svg>
-                </div>
-                <span>Unit Kerja</span>
-            </a>
+                    <a href="{{ route('admin.units.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.units.*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap amber">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                        </div>
+                        <span>Unit Kerja</span>
+                    </a>
 
-            <a href="{{ route('admin.requests.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.requests.*') ? 'active' : '' }}">
-                <div class="sidebar-nav-icon-wrap rose">
-                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                </div>
-                <span>Pengajuan</span>
-            </a>
+                    <a href="{{ route('admin.requests.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.requests.*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap rose">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <span>Pengajuan</span>
+                    </a>
 
-            <a href="{{ route('admin.tpg.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.tpg.*') ? 'active' : '' }}">
-                <div class="sidebar-nav-icon-wrap emerald">
-                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <span>Verif TPG</span>
-            </a>
+                    <a href="{{ route('admin.tpg.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.tpg.*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap emerald">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <span>Verif TPG</span>
+                    </a>
 
-            <a href="{{ route('admin.reports.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
-                <div class="sidebar-nav-icon-wrap blue">
-                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                </div>
-                <span>Laporan</span>
-            </a>
+                    <a href="{{ route('admin.reports.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap blue">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                        <span>Laporan</span>
+                    </a>
 
-            <a href="{{ route('admin.madrasah.laporan.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.madrasah.laporan.*') ? 'active' : '' }}">
-                <div class="sidebar-nav-icon-wrap emerald">
-                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                    </svg>
+                    <a href="{{ route('admin.madrasah.laporan.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.madrasah.laporan.*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap emerald">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                        </div>
+                        <span>Laporan Madrasah</span>
+                    </a>
                 </div>
-                <span>Laporan Madrasah</span>
-            </a>
+            </div>
             @endif
 
-            <a href="{{ route('admin.news.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.news.*') ? 'active' : '' }}">
-                <div class="sidebar-nav-icon-wrap indigo">
-                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a5 5 0 01-5-5m5 5v13a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2h14a2 2 0 012 2v9a2 2 0 01-2 2h-5z"/>
+            <div class="menu-group {{ request()->routeIs('admin.news.*', 'admin.janji-temu*', 'admin.acara*') ? 'has-active' : '' }}" data-group="publikasi" id="menuGroupPublikasi">
+                <div class="menu-group-header" onclick="toggleMenuGroup('publikasi')">
+                    <div class="menu-group-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a5 5 0 01-5-5m5 5v13a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2h14a2 2 0 012 2v9a2 2 0 01-2 2h-5z"/>
+                        </svg>
+                    </div>
+                    <span class="menu-group-header-text">Publikasi</span>
+                    <span class="menu-group-count">3</span>
+                    <svg class="menu-group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </div>
-                <span>Berita</span>
-            </a>
+                <div class="menu-group-items">
+                    <a href="{{ route('admin.news.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.news.*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap indigo">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a5 5 0 01-5-5m5 5v13a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2h14a2 2 0 012 2v9a2 2 0 01-2 2h-5z"/>
+                            </svg>
+                        </div>
+                        <span>Berita</span>
+                    </a>
 
-            <a href="{{ route('admin.janji-temu') }}" class="sidebar-nav-item {{ request()->routeIs('admin.janji-temu*') ? 'active' : '' }}">
-                <div class="sidebar-nav-icon-wrap purple">
-                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                <span>Janji Temu</span>
-            </a>
+                    <a href="{{ route('admin.janji-temu') }}" class="sidebar-nav-item {{ request()->routeIs('admin.janji-temu*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap purple">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <span>Janji Temu</span>
+                    </a>
 
-            <a href="{{ route('admin.acara') }}" class="sidebar-nav-item {{ request()->routeIs('admin.acara*') ? 'active' : '' }}">
-                <div class="sidebar-nav-icon-wrap amber">
-                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 11v4m-2-2h4"/>
-                    </svg>
+                    <a href="{{ route('admin.acara') }}" class="sidebar-nav-item {{ request()->routeIs('admin.acara*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap amber">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 11v4m-2-2h4"/>
+                            </svg>
+                        </div>
+                        <span>Acara</span>
+                    </a>
                 </div>
-                <span>Acara</span>
-            </a>
+            </div>
 
             <div class="sidebar-divider"></div>
 
-            <a href="#" onclick="openPasswordModal(); return false;" class="sidebar-nav-item">
-                <div class="sidebar-nav-icon-wrap amber">
-                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                    </svg>
-                </div>
-                <span>Ubah Password</span>
-            </a>
+            <div class="menu-group system-group" data-group="system" id="menuGroupSystem">
+                <div class="menu-group-items">
+                    <a href="#" onclick="openPasswordModal(); return false;" class="sidebar-nav-item">
+                        <div class="sidebar-nav-icon-wrap amber">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                            </svg>
+                        </div>
+                        <span>Ubah Password</span>
+                    </a>
 
-            <a href="{{ url('/') }}" target="_blank" class="sidebar-nav-item">
-                <div class="sidebar-nav-icon-wrap">
-                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 6v6m0-6L10 14"/>
-                    </svg>
+                    <a href="{{ url('/') }}" target="_blank" class="sidebar-nav-item">
+                        <div class="sidebar-nav-icon-wrap">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 6v6m0-6L10 14"/>
+                            </svg>
+                        </div>
+                        <span>Lihat Website</span>
+                    </a>
                 </div>
-                <span>Lihat Website</span>
-            </a>
+            </div>
         </nav>
 
         <!-- User Profile Footer -->
@@ -327,6 +382,43 @@ $canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', '
         function toggleSidebar() {
             document.getElementById('adminSidebar').classList.toggle('open');
         }
+
+        // Menu Group Toggle
+        function toggleMenuGroup(groupId) {
+            const group = document.getElementById('menuGroup' + groupId.charAt(0).toUpperCase() + groupId.slice(1));
+            if (group) {
+                group.classList.toggle('collapsed');
+                // Save state to localStorage
+                const isCollapsed = group.classList.contains('collapsed');
+                localStorage.setItem('sidebar-group-' + groupId, isCollapsed);
+            }
+        }
+
+        // Initialize menu groups on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const groups = ['main', 'kelola', 'publikasi'];
+
+            groups.forEach(function(groupId) {
+                const group = document.getElementById('menuGroup' + groupId.charAt(0).toUpperCase() + groupId.slice(1));
+                if (group) {
+                    // Check if this group has an active item
+                    const hasActiveItem = group.querySelector('.sidebar-nav-item.active');
+
+                    if (hasActiveItem) {
+                        // Auto-expand group with active item
+                        group.classList.remove('collapsed');
+                        group.classList.add('has-active');
+                    } else {
+                        // Default: collapsed state
+                        const isCollapsed = localStorage.getItem('sidebar-group-' + groupId) === 'true';
+                        if (isCollapsed || !isCollapsed) {
+                            // Default to collapsed unless user explicitly opened it
+                            group.classList.add('collapsed');
+                        }
+                    }
+                }
+            });
+        });
 
         // Global Password Modal Functions
         const globalPasswordModal = document.getElementById('globalPasswordModal');

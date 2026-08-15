@@ -99,7 +99,7 @@
 .sidebar-brand {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);
+  background: transparent;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
@@ -107,6 +107,13 @@
   color: var(--text-inverse);
   font-weight: 700;
   font-size: 14px;
+  overflow: hidden;
+}
+
+.sidebar-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .sidebar-word {
@@ -190,6 +197,134 @@
   height: 1px;
   background: var(--border);
   margin: 12px 0;
+}
+
+/* ============================================
+   Menu Groups - Collapsible Sections
+   ============================================ */
+.menu-group {
+  margin-bottom: 8px;
+}
+
+.menu-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-md);
+  user-select: none;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, var(--secondary-light) 0%, var(--secondary) 100%);
+  border: 1px solid var(--border-light);
+}
+
+.menu-group-header:hover {
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--border-light) 100%);
+  color: var(--text-primary);
+  border-color: var(--border);
+  transform: translateX(2px);
+}
+
+.menu-group-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+
+.menu-group-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Main group icon - cyan */
+.menu-group[data-group="main"] .menu-group-icon {
+  color: #0891B2;
+  background: rgba(8, 145, 178, 0.15);
+  border-radius: var(--radius-sm);
+}
+
+/* Kelola group icon - emerald */
+.menu-group[data-group="kelola"] .menu-group-icon {
+  color: #059669;
+  background: rgba(5, 150, 105, 0.15);
+  border-radius: var(--radius-sm);
+}
+
+/* Publikasi group icon - indigo */
+.menu-group[data-group="publikasi"] .menu-group-icon {
+  color: #6366F1;
+  background: rgba(99, 102, 241, 0.15);
+  border-radius: var(--radius-sm);
+}
+
+.menu-group-header-text {
+  flex: 1;
+}
+
+.menu-group-count {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  background: var(--secondary);
+  color: var(--text-muted);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-light);
+}
+
+.menu-group-arrow {
+  width: 14px;
+  height: 14px;
+  transition: transform var(--transition-md);
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.menu-group.collapsed .menu-group-arrow {
+  transform: rotate(-90deg);
+}
+
+.menu-group-items {
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+  max-height: 600px;
+  opacity: 1;
+}
+
+.menu-group.collapsed .menu-group-items {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+}
+
+.menu-group.system-group .menu-group-header {
+  display: none;
+}
+
+.menu-group.has-active .menu-group-header {
+  background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);
+  border-color: rgba(200, 154, 43, 0.3);
+  color: var(--primary-dark);
+}
+
+.menu-group.has-active .menu-group-count {
+  background: var(--primary);
+  color: var(--text-inverse);
+  border-color: var(--primary);
+}
+
+.menu-group.system-group .menu-group-items .sidebar-nav-item {
+  padding-left: 12px;
 }
 
 .sidebar-footer {
