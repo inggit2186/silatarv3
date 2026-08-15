@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends BaseApiController
 {
@@ -15,17 +16,37 @@ class UserController extends BaseApiController
     {
         $user = $request->user();
 
+        // Get data from tenaga_ktd table if exists
+        $tenaga = DB::table('tenaga_ktd')
+            ->where('user_id', $user->id)
+            ->first();
+
+        // Use tenaga_ktd data if available, fallback to users table
+        $nama = $tenaga->nama ?? $user->name;
+        $jk = $tenaga->jenis_kelamin ?? $user->jk;
+        $tempatLahir = $tenaga->tempat_lahir ?? $user->tempat_lahir;
+        $tanggalLahir = $tenaga->tanggal_lahir ?? $user->tanggal_lahir;
+        $telp = $tenaga->telp ?? $user->telp;
+        $alamat = $tenaga->alamat ?? $user->alamat;
+        $bio = $tenaga->bio ?? $user->bio;
+        $email = $tenaga->email ?? $user->email;
+        $nomorInduk = $tenaga->nomor_induk ?? $user->nomor_induk;
+
         return $this->success([
             'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'nik' => $user->nik,
-            'no_hp' => $user->no_hp,
-            'alamat' => $user->alamat,
-            'tempat_lahir' => $user->tempat_lahir,
-            'tanggal_lahir' => $user->tanggal_lahir,
-            'jenis_kelamin' => $user->jenis_kelamin,
-            'foto' => $user->foto,
+            'name' => $nama,
+            'email' => $email,
+            'nik' => $tenaga->nik ?? $user->nik,
+            'nomor_induk' => $nomorInduk,
+            'nip' => $user->nip,
+            'no_hp' => $telp,
+            'alamat' => $alamat,
+            'tempat_lahir' => $tempatLahir,
+            'tanggal_lahir' => $tanggalLahir,
+            'jenis_kelamin' => $jk,
+            'foto' => $user->pp,
+            'pp' => $user->pp,
+            'bio' => $bio,
             'role' => $user->role,
             'status' => $user->status,
             'created_at' => $user->created_at,
@@ -43,30 +64,58 @@ class UserController extends BaseApiController
         $request->validate([
             'name' => 'sometimes|string|max:255',
             'nik' => 'sometimes|string|max:16',
+            'email' => 'sometimes|email|max:255',
             'no_hp' => 'sometimes|string|max:20',
             'alamat' => 'sometimes|string|max:500',
             'tempat_lahir' => 'sometimes|string|max:100',
             'tanggal_lahir' => 'sometimes|date',
             'jenis_kelamin' => 'sometimes|in:L,P',
+            'bio' => 'sometimes|string|max:500',
         ]);
 
-        $user->update($request->only([
-            'name', 'nik', 'no_hp', 'alamat', 'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin'
-        ]));
+        // Get tenaga_ktd record
+        $tenaga = DB::table('tenaga_ktd')
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($tenaga) {
+            // Update tenaga_ktd table
+            $tenagaData = [];
+            if ($request->has('name')) $tenagaData['nama'] = $request->name;
+            if ($request->has('nik')) $tenagaData['nik'] = $request->nik;
+            if ($request->has('email')) $tenagaData['email'] = $request->email;
+            if ($request->has('no_hp')) $tenagaData['telp'] = $request->no_hp;
+            if ($request->has('alamat')) $tenagaData['alamat'] = $request->alamat;
+            if ($request->has('tempat_lahir')) $tenagaData['tempat_lahir'] = $request->tempat_lahir;
+            if ($request->has('tanggal_lahir')) $tenagaData['tanggal_lahir'] = $request->tanggal_lahir;
+            if ($request->has('jenis_kelamin')) $tenagaData['jenis_kelamin'] = $request->jenis_kelamin;
+            if ($request->has('bio')) $tenagaData['bio'] = $request->bio;
+
+            if (!empty($tenagaData)) {
+                DB::table('tenaga_ktd')
+                    ->where('user_id', $user->id)
+                    ->update($tenagaData);
+            }
+        } else {
+            // Update users table
+            $data = [];
+            if ($request->has('name')) $data['name'] = $request->name;
+            if ($request->has('nik')) $data['nik'] = $request->nik;
+            if ($request->has('email')) $data['email'] = $request->email;
+            if ($request->has('no_hp')) $data['telp'] = $request->no_hp;
+            if ($request->has('alamat')) $data['alamat'] = $request->alamat;
+            if ($request->has('tempat_lahir')) $data['tempat_lahir'] = $request->tempat_lahir;
+            if ($request->has('tanggal_lahir')) $data['tanggal_lahir'] = $request->tanggal_lahir;
+            if ($request->has('jenis_kelamin')) $data['jk'] = $request->jenis_kelamin;
+            if ($request->has('bio')) $data['bio'] = $request->bio;
+
+            if (!empty($data)) {
+                $user->update($data);
+            }
+        }
 
         return $this->success([
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'nik' => $user->nik,
-            'no_hp' => $user->no_hp,
-            'alamat' => $user->alamat,
-            'tempat_lahir' => $user->tempat_lahir,
-            'tanggal_lahir' => $user->tanggal_lahir,
-            'jenis_kelamin' => $user->jenis_kelamin,
-            'foto' => $user->foto,
-            'role' => $user->role,
-            'status' => $user->status,
+            'user' => $this->formatUser($user->fresh()),
         ], 'Profil berhasil diupdate');
     }
 
@@ -79,7 +128,7 @@ class UserController extends BaseApiController
         $user = $request->user();
 
         $request->validate([
-            'foto' => 'required|image|mimes:jpg,jpeg,png|max:2048', // 2MB max
+            'foto' => 'required|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         try {
