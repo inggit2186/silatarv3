@@ -13,6 +13,12 @@ class UnitController extends Controller
      */
     public function index(Request $request)
     {
+        // Only admin/superadmin/kepala can access Unit Kerja
+        $currentUser = auth()->user();
+        if (!in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
+            abort(403, 'Anda tidak memiliki akses ke menu ini.');
+        }
+
         $query = DB::table('ktd_department as d')
             ->select([
                 'd.*',

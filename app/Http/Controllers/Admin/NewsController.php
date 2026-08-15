@@ -19,22 +19,28 @@ class NewsController extends Controller
      */
     private function userHasAccess($user): bool
     {
-        return $this->checkAccess($user, ['admin', 'superadmin']);
+        return $this->checkAccess($user, ['admin', 'superadmin', 'kepala']);
     }
 
     /**
-     * Check if user has news access (admin, superadmin, or humas).
+     * Check if user has news access (admin, superadmin, kepala, or humas).
      */
     private function userHasNewsAccess($user): bool
     {
-        return $this->checkAccess($user, ['admin', 'superadmin', 'humas']);
+        return $this->checkAccess($user, ['admin', 'superadmin', 'kepala', 'humas']);
     }
 
     /**
-     * Check if user has specific access from hak_akses table.
+     * Check if user has specific access from hak_akses table or role.
      */
     private function checkAccess($user, array $requiredAccess): bool
     {
+        // Check if user role is in required access
+        if (in_array($user->role, $requiredAccess)) {
+            return true;
+        }
+
+        // Check hak_akses table
         $hakAkses = DB::table('hak_akses')
             ->where('user_id', $user->id)
             ->first();

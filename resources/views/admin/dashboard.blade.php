@@ -1,7 +1,7 @@
 <x-admin.layouts.app>
     @php
-    $userAccess = App\Http\Middleware\AdminAccess::getUserAccess(auth()->id());
-    $isAdmin = in_array('admin', $userAccess) || in_array('superadmin', $userAccess);
+    $userRole = auth()->user()->role ?? '';
+    $isAdmin = in_array($userRole, ['admin', 'superadmin', 'kepala']);
     @endphp
 
     <!-- Page Header -->

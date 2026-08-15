@@ -54,6 +54,14 @@ class ServiceController extends Controller
             $query->where('l.spesial', $spesial);
         }
 
+        // Filter by dept_id for non-admin users (admin, superadmin, kepala = full access)
+        $currentUser = auth()->user();
+        $isAdmin = in_array($currentUser->role, ['admin', 'superadmin', 'kepala']);
+
+        if (!$isAdmin && $currentUser->dept_id) {
+            $query->where('l.dept_id', $currentUser->dept_id);
+        }
+
         $services = $query->orderBy('l.nama')->paginate(15);
 
         // Get departments for filter
@@ -84,6 +92,7 @@ class ServiceController extends Controller
                 'status' => $status,
                 'spesial' => $spesial,
             ],
+            'isAdmin' => $isAdmin,
         ]);
     }
 

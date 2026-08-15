@@ -32,7 +32,11 @@ class AcaraController extends Controller
 
         $acaraList = $query->orderBy('tanggal', 'desc')->paginate(15);
 
-        return view('admin.acara.index', compact('acaraList', 'search', 'status'));
+        // Check if current user is admin (admin, superadmin, kepala)
+        $currentUser = auth()->user();
+        $isAdmin = in_array($currentUser->role, ['admin', 'superadmin', 'kepala']);
+
+        return view('admin.acara.index', compact('acaraList', 'search', 'status', 'isAdmin'));
     }
 
     /**
@@ -40,6 +44,12 @@ class AcaraController extends Controller
      */
     public function create()
     {
+        // Only admin/superadmin/kepala can create acara
+        $currentUser = auth()->user();
+        if (!in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
+            abort(403, 'Anda tidak memiliki akses untuk membuat acara.');
+        }
+
         return view('admin.acara.create');
     }
 
@@ -48,6 +58,12 @@ class AcaraController extends Controller
      */
     public function store(Request $request)
     {
+        // Only admin/superadmin/kepala can create acara
+        $currentUser = auth()->user();
+        if (!in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
+            abort(403, 'Anda tidak memiliki akses untuk membuat acara.');
+        }
+
         $request->validate([
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
@@ -157,6 +173,12 @@ class AcaraController extends Controller
      */
     public function edit($id)
     {
+        // Only admin/superadmin/kepala can edit acara
+        $currentUser = auth()->user();
+        if (!in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit acara.');
+        }
+
         $acara = DB::table('ktd_acara')->where('id', $id)->first();
 
         if (!$acara) {
@@ -172,6 +194,12 @@ class AcaraController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // Only admin/superadmin/kepala can update acara
+        $currentUser = auth()->user();
+        if (!in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
+            abort(403, 'Anda tidak memiliki akses untuk mengupdate acara.');
+        }
+
         $request->validate([
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
@@ -241,6 +269,12 @@ class AcaraController extends Controller
      */
     public function destroy($id)
     {
+        // Only admin/superadmin/kepala can delete acara
+        $currentUser = auth()->user();
+        if (!in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
+            abort(403, 'Anda tidak memiliki akses untuk menghapus acara.');
+        }
+
         DB::table('ktd_acara')->where('id', $id)->delete();
 
         return redirect()->route('admin.acara')

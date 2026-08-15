@@ -1,11 +1,20 @@
 <?php
 use App\Http\Middleware\AdminAccess;
-$userAccess = AdminAccess::getUserAccess(auth()->id());
-$isAdmin = in_array("admin", $userAccess) || in_array("superadmin", $userAccess);
 
-// Get user role from users table
-$userRole = auth()->user()->role ?? '';
-$canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', 'petugas', 'kasi', 'kasubag', 'kasubbag', 'kepala']);
+// Get user data
+$user = auth()->user();
+$userRole = $user->role ?? '';
+$userId = $user->id ?? 0;
+$userDeptId = $user->dept_id ?? 0;
+
+// Check if user is admin or superadmin (full access)
+$isAdmin = in_array($userRole, ['admin', 'superadmin', 'kepala']);
+
+// Check if user can access admin panel
+$canAccessAdminPanel = in_array($userRole, ['petugas', 'kasi', 'kasubbag', 'admin', 'superadmin', 'kepala']);
+
+// Check if user has humas access
+$isHumas = AdminAccess::isHumas($userId);
 ?>
 
 <!DOCTYPE html>
@@ -67,7 +76,7 @@ $canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', '
             </div>
             @endif
 
-            @if($isAdmin)
+            @if($canAccessAdminPanel)
             <div class="menu-group {{ request()->routeIs('admin.users.*', 'admin.services.*', 'admin.units.*', 'admin.requests.*', 'admin.tpg.*', 'admin.reports.*', 'admin.madrasah.laporan.*') ? 'has-active' : '' }}" data-group="kelola" id="menuGroupKelola">
                 <div class="menu-group-header" onclick="toggleMenuGroup('kelola')">
                     <div class="menu-group-icon">
@@ -101,6 +110,7 @@ $canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', '
                         <span>Layanan</span>
                     </a>
 
+                    @if($isAdmin)
                     <a href="{{ route('admin.units.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.units.*') ? 'active' : '' }}">
                         <div class="sidebar-nav-icon-wrap amber">
                             <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -109,6 +119,7 @@ $canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', '
                         </div>
                         <span>Unit Kerja</span>
                     </a>
+                    @endif
 
                     <a href="{{ route('admin.requests.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.requests.*') ? 'active' : '' }}">
                         <div class="sidebar-nav-icon-wrap rose">
@@ -137,6 +148,7 @@ $canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', '
                         <span>Laporan</span>
                     </a>
 
+                    @if($isAdmin || $userDeptId == 7)
                     <a href="{{ route('admin.madrasah.laporan.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.madrasah.laporan.*') ? 'active' : '' }}">
                         <div class="sidebar-nav-icon-wrap emerald">
                             <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -145,6 +157,7 @@ $canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', '
                         </div>
                         <span>Laporan Madrasah</span>
                     </a>
+                    @endif
                 </div>
             </div>
             @endif
@@ -163,6 +176,7 @@ $canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', '
                     </svg>
                 </div>
                 <div class="menu-group-items">
+                    @if($isAdmin || $isHumas)
                     <a href="{{ route('admin.news.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.news.*') ? 'active' : '' }}">
                         <div class="sidebar-nav-icon-wrap indigo">
                             <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -171,6 +185,7 @@ $canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', '
                         </div>
                         <span>Berita</span>
                     </a>
+                    @endif
 
                     <a href="{{ route('admin.janji-temu') }}" class="sidebar-nav-item {{ request()->routeIs('admin.janji-temu*') ? 'active' : '' }}">
                         <div class="sidebar-nav-icon-wrap purple">

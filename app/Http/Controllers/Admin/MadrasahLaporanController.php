@@ -15,6 +15,13 @@ class MadrasahLaporanController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+
+        // Only admin/superadmin/kepala or users with dept_id=7 can access Laporan Madrasah
+        $isAdmin = in_array($user->role, ['admin', 'superadmin', 'kepala']);
+        if (!$isAdmin && $user->dept_id != 7) {
+            abort(403, 'Anda tidak memiliki akses ke menu ini.');
+        }
+
         $search = $request->get('search');
         $type = $request->get('type');
         $status = $request->get('status');

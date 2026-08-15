@@ -6,6 +6,7 @@
             <h1 class="page-title">Manajemen Pengguna</h1>
             <p class="page-subtitle">Kelola data pengguna dan hak akses sistem</p>
         </div>
+        @if($isAdmin)
         <div class="page-actions">
             <a href="{{ route('admin.users.create') }}" class="btn btn-primary">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -14,6 +15,7 @@
                 Tambah User
             </a>
         </div>
+        @endif
     </div>
 
     <!-- Stats -->
@@ -181,21 +183,30 @@
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="{{ route('admin.users.edit', $user->id) }}" class="action-btn" title="Edit">
-                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h5.586a1 1 0 00.707-.293l5.414-5.414a1 1 0 000-1.414l-5.414-5.414A1 1 0 0011.828 6H16"/>
-                                        </svg>
-                                    </a>
-                                    <button type="button" class="action-btn key" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" title="Ubah Password" onclick="openPasswordModal(this)">
-                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                                        </svg>
-                                    </button>
-                                    <button type="button" class="action-btn delete" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" title="Hapus" @if($user->role === 'superadmin') disabled @endif onclick="openDeleteModal(this)">
-                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                        </svg>
-                                    </button>
+                                    @if($isAdmin)
+                                        <a href="{{ route('admin.users.edit', $user->id) }}" class="action-btn" title="Edit">
+                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h5.586a1 1 0 00.707-.293l5.414-5.414a1 1 0 000-1.414l-5.414-5.414A1 1 0 0011.828 6H16"/>
+                                            </svg>
+                                        </a>
+                                        <button type="button" class="action-btn key" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" title="Ubah Password" onclick="openPasswordModal(this)">
+                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                                            </svg>
+                                        </button>
+                                        <button type="button" class="action-btn delete" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" title="Hapus" @if($user->role === 'superadmin') disabled @endif onclick="openDeleteModal(this)">
+                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    @else
+                                        <a href="{{ route('admin.users.detail', $user->id) }}" class="action-btn" title="Detail">
+                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            </svg>
+                                        </a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

@@ -76,6 +76,10 @@ class UserController extends Controller
             ->orderBy('nama')
             ->get(['id', 'nama']);
 
+        // Check if current user is admin (admin, superadmin, kepala)
+        $currentUser = auth()->user();
+        $isAdmin = in_array($currentUser->role, ['admin', 'superadmin', 'kepala']);
+
         return view('admin.users.index', [
             'title' => 'Manajemen Pengguna - SILATAR Admin',
             'breadcrumbs' => [
@@ -91,6 +95,7 @@ class UserController extends Controller
                 'dept_id' => $deptId,
                 'status' => $status,
             ],
+            'isAdmin' => $isAdmin,
         ]);
     }
 
@@ -167,6 +172,22 @@ class UserController extends Controller
         if (!$user) {
             abort(404, 'Pengguna tidak ditemukan.');
         }
+
+        // Initialize tenaga_ktd fields with null
+        $user->nik = null;
+        $user->kk = null;
+        $user->npwp = null;
+        $user->nikah = null;
+        $user->jenis_pjob = null;
+        $user->pjob = null;
+        $user->jml_anak = null;
+        $user->nama_ibu = null;
+        $user->nama_istri_suami = null;
+        $user->bio = null;
+        $user->facebook = null;
+        $user->twitter = null;
+        $user->instagram = null;
+        $user->linkedin = null;
 
         // Get data from tenaga_ktd table if exists
         $tenaga = DB::table('tenaga_ktd')
@@ -515,6 +536,76 @@ class UserController extends Controller
         }
 
         return response()->json(['success' => true, 'user' => $user]);
+    }
+
+    /**
+     * Display user detail page.
+     */
+    public function detail(int $id)
+    {
+        $user = DB::table('users as u')
+            ->leftJoin('ktd_department as dept', 'dept.id', '=', 'u.dept_id')
+            ->leftJoin('ktd_madrasah as madrasah', 'madrasah.id', '=', 'u.madrasah_id')
+            ->select([
+                'u.*',
+                'dept.nama as dept_name',
+                'madrasah.nama as madrasah_name',
+            ])
+            ->where('u.id', $id)
+            ->first();
+
+        if (!$user) {
+            abort(404, 'Pengguna tidak ditemukan.');
+        }
+
+        // Initialize tenaga_ktd fields with null
+        $user->nik = null;
+        $user->kk = null;
+        $user->npwp = null;
+        $user->nikah = null;
+        $user->jenis_pjob = null;
+        $user->pjob = null;
+        $user->jml_anak = null;
+        $user->nama_ibu = null;
+        $user->nama_istri_suami = null;
+        $user->bio = null;
+        $user->facebook = null;
+        $user->twitter = null;
+        $user->instagram = null;
+        $user->linkedin = null;
+
+        // Get data from tenaga_ktd
+        $tenaga = DB::table('tenaga_ktd')
+            ->where('user_id', $user->id)
+            ->first();
+
+        // Merge data from tenaga_ktd
+        if ($tenaga) {
+            $user->nik = $tenaga->nik ?? null;
+            $user->kk = $tenaga->kk ?? null;
+            $user->npwp = $tenaga->npwp ?? null;
+            $user->nikah = $tenaga->nikah ?? null;
+            $user->jenis_pjob = $tenaga->jenis_pjob ?? null;
+            $user->pjob = $tenaga->pjob ?? null;
+            $user->jml_anak = $tenaga->jml_anak ?? null;
+            $user->nama_ibu = $tenaga->nama_ibu ?? null;
+            $user->nama_istri_suami = $tenaga->nama_istri_suami ?? null;
+            $user->bio = $tenaga->bio ?? null;
+            $user->facebook = $tenaga->facebook ?? null;
+            $user->twitter = $tenaga->twitter ?? null;
+            $user->instagram = $tenaga->instagram ?? null;
+            $user->linkedin = $tenaga->linkedin ?? null;
+        }
+
+        return view('admin.users.show', [
+            'title' => 'Detail Pengguna - SILATAR Admin',
+            'breadcrumbs' => [
+                ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
+                ['label' => 'Pengguna', 'url' => route('admin.users.index')],
+                ['label' => $user->name, 'url' => null],
+            ],
+            'user' => $user,
+        ]);
     }
 
     /**

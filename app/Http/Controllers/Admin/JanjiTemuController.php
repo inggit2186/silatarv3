@@ -26,7 +26,7 @@ class JanjiTemuController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $isAdmin = in_array($user->role, ['superadmin', 'admin']);
+        $isAdmin = in_array($user->role, ['superadmin', 'admin', 'kepala']);
         $status = $request->input('status');
         $search = $request->input('search');
 
@@ -35,12 +35,12 @@ class JanjiTemuController extends Controller
         // Filter based on role
         if (!$isAdmin) {
             $query->where(function ($q) use ($user) {
-                // Appointments directed to this user (tipe asn)
+                // Appointments directed to this user (tipe asn) - filter by users.id
                 $q->where(function ($sub) use ($user) {
                     $sub->where('tipe', 'asn')
-                        ->where('nip_tujuan', $user->nomor_induk);
+                        ->where('nip_tujuan', $user->id);
                 })
-                // Or appointments directed to user's department (tipe satker)
+                // Or appointments directed to user's department (tipe satker) - filter by dept_id
                 ->orWhere(function ($sub) use ($user) {
                     $sub->where('tipe', 'satker')
                         ->where('nip_tujuan', $user->dept_id);
