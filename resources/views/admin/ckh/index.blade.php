@@ -219,8 +219,52 @@
                     <div class="text-sm text-muted">
                         Menampilkan {{ ($ckhList->currentPage() - 1) * $ckhList->perPage() + 1 }} - {{ min($ckhList->currentPage() * $ckhList->perPage(), $ckhList->total()) }} dari {{ $ckhList->total() }} data
                     </div>
-                    <div>
-                        {{ $ckhList->links() }}
+                    <div class="flex items-center gap-4">
+                        <div class="pagination">
+                            @if($ckhList->onFirstPage())
+                                <span class="disabled">Sebelumnya</span>
+                            @else
+                                <a href="{{ $ckhList->previousPageUrl() }}">Sebelumnya</a>
+                            @endif
+                            @foreach($ckhList->getUrlRange(1, $ckhList->lastPage()) as $page => $url)
+                                @if($page <= 3 || $page > $ckhList->lastPage() - 2 || abs($page - $ckhList->currentPage()) < 2)
+                                    @if($page == $ckhList->currentPage())
+                                        <span class="active">{{ $page }}</span>
+                                    @else
+                                        <a href="{{ $url }}">{{ $page }}</a>
+                                    @endif
+                                @elseif($loop->index == 2 || $loop->index == $ckhList->lastPage() - 3)
+                                    <span class="disabled">...</span>
+                                @endif
+                            @endforeach
+                            @if($ckhList->hasMorePages())
+                                <a href="{{ $ckhList->nextPageUrl() }}">Selanjutnya</a>
+                            @else
+                                <span class="disabled">Selanjutnya</span>
+                            @endif
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-muted">Ke halaman:</span>
+                            <form method="GET" action="{{ route('admin.ckh.index') }}" class="flex items-center gap-2">
+                                @if($filters['search'] ?? '')
+                                    <input type="hidden" name="search" value="{{ $filters['search'] }}">
+                                @endif
+                                @if($filters['bulan'] ?? '')
+                                    <input type="hidden" name="bulan" value="{{ $filters['bulan'] }}">
+                                @endif
+                                @if($filters['tahun'] ?? '')
+                                    <input type="hidden" name="tahun" value="{{ $filters['tahun'] }}">
+                                @endif
+                                @if($filters['dept_id'] ?? '')
+                                    <input type="hidden" name="dept_id" value="{{ $filters['dept_id'] }}">
+                                @endif
+                                @if($filters['status'] ?? '')
+                                    <input type="hidden" name="status" value="{{ $filters['status'] }}">
+                                @endif
+                                <input type="number" name="page" value="{{ $ckhList->currentPage() }}" min="1" max="{{ $ckhList->lastPage() }}" class="w-16 px-2 py-1 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                                <button type="submit" class="px-3 py-1 text-sm bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors">Go</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             @endif

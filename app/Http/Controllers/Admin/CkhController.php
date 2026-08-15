@@ -242,7 +242,7 @@ class CkhController extends Controller
                 'updated_at' => now(),
             ]);
 
-        return redirect()->route('admin.ckh.show', $id)
+        return redirect()->route('admin.ckh.index')
             ->with('success', 'Laporan CKH berhasil disetujui');
     }
 
@@ -277,7 +277,7 @@ class CkhController extends Controller
                 'updated_at' => now(),
             ]);
 
-        return redirect()->route('admin.ckh.show', $id)
+        return redirect()->route('admin.ckh.index')
             ->with('success', 'Laporan CKH berhasil ditolak');
     }
 
