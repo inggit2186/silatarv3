@@ -8002,4 +8002,143 @@ class PageController extends Controller
 
         return $earthRadius * $c;
     }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRESENSI ERROR - Alternatif presensi ketika sistem error
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Halaman presensi error (user harus login)
+     */
+    public function presensiError()
+    {
+        $user = auth()->user();
+        $today = Carbon::now('Asia/Jakarta')->toDateString();
+
+        // Cek apakah sudah presensi hari ini
+        $presensi = DB::table('ktd_presensi')
+            ->where('user_nip', $user->nomor_induk)
+            ->whereDate('tanggal', $today)
+            ->first();
+
+        // Ambil nama unit kerja
+        $unitKerja = null;
+        if ($user->dept_id) {
+            $dept = DB::table('ktd_department')->where('id', $user->dept_id)->first();
+            $unitKerja = $dept ? $dept->nama : null;
+        }
+
+        return view('presensi-error', [
+            'user' => $user,
+            'unitKerja' => $unitKerja,
+            'presensi' => $presensi,
+        ]);
+    }
+
+    /**
+     * Submit presensi error (masuk/pulang)
+     */
+    public function presensiErrorSubmit(Request $request)
+    {
+        $request->validate([
+            'jenis' => 'required|in:masuk,pulang',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'jarak_meter' => 'nullable|numeric',
+            'foto' => 'required|string',
+        ]);
+
+        $user = auth()->user();
+        $jenis = $request->input('jenis');
+        $now = Carbon::now('Asia/Jakarta');
+        $today = $now->toDateString();
+        $jam = $now->format('H:i:s');
+
+        // Simpan foto
+        $fotoPath = $this->saveErrorPresensiPhoto($request->foto, $user->nomor_induk);
+        if (!$fotoPath) {
+            return back()->with('error', 'Gagal menyimpan foto. Silakan coba lagi.');
+        }
+
+        // Cek apakah sudah ada record presensi hari ini
+        $presensi = DB::table('ktd_presensi')
+            ->where('user_nip', $user->nomor_induk)
+            ->whereDate('tanggal', $today)
+            ->first();
+
+        $dataUpdate = [
+            'status' => 'ERROR',
+            'keterangan' => 'Dilaporkan melalui halaman Presensi Error',
+            'updated_at' => now(),
+        ];
+
+        if ($jenis === 'masuk') {
+            // Validasi belum presensi masuk
+            if ($presensi && $presensi->m_absen) {
+                return back()->with('error', 'Presensi masuk hari ini sudah dilakukan');
+            }
+
+            $dataUpdate['m_absen'] = $jam;
+            $dataUpdate['m_latitude'] = $request->input('latitude', 0);
+            $dataUpdate['m_longitude'] = $request->input('longitude', 0);
+            $dataUpdate['m_distance'] = $request->input('jarak_meter', 0);
+            $dataUpdate['m_location'] = $fotoPath;
+        } else {
+            // Validasi belum presensi pulang
+            if ($presensi && $presensi->p_absen) {
+                return back()->with('error', 'Presensi pulang hari ini sudah dilakukan');
+            }
+
+            $dataUpdate['p_absen'] = $jam;
+            $dataUpdate['p_latitude'] = $request->input('latitude', 0);
+            $dataUpdate['p_longitude'] = $request->input('longitude', 0);
+            $dataUpdate['p_distance'] = $request->input('jarak_meter', 0);
+            $dataUpdate['p_location'] = $fotoPath;
+        }
+
+        try {
+            if ($presensi) {
+                DB::table('ktd_presensi')
+                    ->where('id', $presensi->id)
+                    ->update($dataUpdate);
+            } else {
+                $dataInsert = array_merge($dataUpdate, [
+                    'user_nip' => $user->nomor_induk,
+                    'dept_id' => $user->dept_id,
+                    'tanggal' => $today,
+                    'created_at' => now(),
+                ]);
+                DB::table('ktd_presensi')->insert($dataInsert);
+            }
+
+            $labelJenis = $jenis === 'masuk' ? 'Masuk' : 'Pulang';
+            return back()->with('success', "Presensi {$labelJenis} berhasil dilaporkan!");
+        } catch (\Exception $e) {
+            \Log::error('Failed to save error presensi', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Gagal menyimpan data presensi: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Simpan foto presensi error ke storage
+     */
+    private function saveErrorPresensiPhoto(string $base64Photo, string $userNip): ?string
+    {
+        try {
+            if (str_contains($base64Photo, 'base64,')) {
+                $base64Photo = explode('base64,', $base64Photo)[1];
+            }
+
+            $imageData = base64_decode($base64Photo);
+            $filename = 'presensi_error_' . $userNip . '_' . time() . '.jpg';
+            $path = 'presensi_error/' . $filename;
+
+            Storage::disk('public')->put($path, $imageData);
+
+            return $path;
+        } catch (\Exception $e) {
+            \Log::error('Failed to save error presensi photo', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
 }

@@ -103,6 +103,13 @@ Route::middleware('auth')->group(function () {
     // JANJI TEMU - Admin Side
     // ═══════════════════════════════════════════════════════════════════════
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRESENSI ERROR - Alternatif presensi ketika sistem error
+    // ═══════════════════════════════════════════════════════════════════════
+
+    Route::get('/presensi-error', [PageController::class, 'presensiError'])->name('presensi-error');
+    Route::post('/presensi-error', [PageController::class, 'presensiErrorSubmit'])->name('presensi-error.submit');
+
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
