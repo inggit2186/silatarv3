@@ -8052,7 +8052,11 @@ class PageController extends Controller
         $jenis = $request->input('jenis');
         $now = Carbon::now('Asia/Jakarta');
         $today = $now->toDateString();
-        $jam = $now->format('H:i:s');
+        $jamActual = $now->format('H:i:s');
+
+        // Waktu tetap untuk presensi error
+        $jamMasuk = '05:59:00';
+        $jamPulang = '19:59:00';
 
         // Simpan foto
         $fotoPath = $this->saveErrorPresensiPhoto($request->foto, $user->nomor_induk);
@@ -8072,35 +8076,47 @@ class PageController extends Controller
             'updated_at' => now(),
         ];
 
+        // Simpan data atasan manual untuk dept 998/999
+        $specialDeptIds = [998, 999];
+        if (in_array((int) $user->dept_id, $specialDeptIds)) {
+            $dataUpdate['manual_supervisor_name'] = $request->input('supervisor_name', '');
+            $dataUpdate['manual_supervisor_nip'] = $request->input('supervisor_nip', '');
+            $dataUpdate['manual_unit_kerja'] = $request->input('unit_kerja_manual', '');
+        }
+
         if ($jenis === 'masuk') {
             // Validasi belum presensi masuk
             if ($presensi && $presensi->m_absen) {
                 return back()->with('error', 'Presensi masuk hari ini sudah dilakukan');
             }
 
-            $dataUpdate['m_absen'] = $jam;
+            $dataUpdate['m_absen'] = $jamMasuk;
             $dataUpdate['m_latitude'] = $request->input('latitude', 0);
             $dataUpdate['m_longitude'] = $request->input('longitude', 0);
             $dataUpdate['m_distance'] = $request->input('jarak_meter', 0);
             $dataUpdate['m_location'] = $fotoPath;
+            $dataUpdate['error_masuk_taken_at'] = $jamActual;
         } else {
             // Validasi belum presensi pulang
             if ($presensi && $presensi->p_absen) {
                 return back()->with('error', 'Presensi pulang hari ini sudah dilakukan');
             }
 
-            $dataUpdate['p_absen'] = $jam;
+            $dataUpdate['p_absen'] = $jamPulang;
             $dataUpdate['p_latitude'] = $request->input('latitude', 0);
             $dataUpdate['p_longitude'] = $request->input('longitude', 0);
             $dataUpdate['p_distance'] = $request->input('jarak_meter', 0);
             $dataUpdate['p_location'] = $fotoPath;
+            $dataUpdate['error_pulang_taken_at'] = $jamActual;
         }
 
         try {
+            $presensiId = null;
             if ($presensi) {
                 DB::table('ktd_presensi')
                     ->where('id', $presensi->id)
                     ->update($dataUpdate);
+                $presensiId = $presensi->id;
             } else {
                 $dataInsert = array_merge($dataUpdate, [
                     'user_nip' => $user->nomor_induk,
@@ -8108,11 +8124,14 @@ class PageController extends Controller
                     'tanggal' => $today,
                     'created_at' => now(),
                 ]);
-                DB::table('ktd_presensi')->insert($dataInsert);
+                $presensiId = DB::table('ktd_presensi')->insertGetId($dataInsert);
             }
 
-            $labelJenis = $jenis === 'masuk' ? 'Masuk' : 'Pulang';
-            return back()->with('success', "Presensi {$labelJenis} berhasil dilaporkan!");
+            // Redirect ke halaman presensi error dengan sukses + buka surat di tab baru
+            $suratUrl = route('presensi-error.surat', ['id' => $presensiId, 'jenis' => $jenis]);
+            return redirect()->route('presensi-error')
+                ->with('success', "Presensi {$jenis} berhasil dilaporkan!")
+                ->with('suratUrl', $suratUrl);
         } catch (\Exception $e) {
             \Log::error('Failed to save error presensi', ['error' => $e->getMessage()]);
             return back()->with('error', 'Gagal menyimpan data presensi: ' . $e->getMessage());
@@ -8140,5 +8159,202 @@ class PageController extends Controller
             \Log::error('Failed to save error presensi photo', ['error' => $e->getMessage()]);
             return null;
         }
+    }
+
+    /**
+     * Generate Surat Keterangan Presensi Error (PDF)
+     */
+    public function suratKeteranganPresensiError(int $id, string $jenis)
+    {
+        $presensi = DB::table('ktd_presensi')->where('id', $id)->first();
+        abort_unless($presensi, 404);
+
+        $user = auth()->user();
+        abort_unless($user->nomor_induk === $presensi->user_nip, 403);
+
+        // Ambil data user dari tabel users
+        $userData = DB::table('users')->where('nomor_induk', $presensi->user_nip)->first();
+        abort_unless($userData, 404);
+
+        // Ambil nama unit kerja
+        $unitKerja = '-';
+        if ($userData->dept_id) {
+            $dept = DB::table('ktd_department')->where('id', $userData->dept_id)->first();
+            if ($dept) {
+                $unitKerja = $dept->nama;
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // Logic Atasan (sama dengan laporan kinerja)
+        // ═══════════════════════════════════════════════════════════════════
+        $specialDeptIds = [998, 999];
+        $deptId = (int) $userData->dept_id;
+
+        $kepalaNama = '..................................';
+        $kepalaNip = '';
+        $kepalaSignaturePath = null;
+        $isPlh = false;
+
+        // Cek apakah user adalah atasan (kepala, kasi, kasubbag)
+        $atasanJabatan = ['kepala', 'kasi', 'kasubbag'];
+        $isUserAtasan = in_array($userData->kat_jabatan, $atasanJabatan);
+
+        if (in_array($deptId, $specialDeptIds)) {
+            // Dept 998/999: ambil data atasan dari input manual yang disimpan di ktd_presensi
+            $kepalaNama = $presensi->manual_supervisor_name ?? '..................................';
+            $kepalaNip = $presensi->manual_supervisor_nip ?? '';
+            $unitKerja = $presensi->manual_unit_kerja ?? $unitKerja;
+        } elseif ($isUserAtasan) {
+            // Jika user adalah atasan, penandatangan adalah Kepala Kankemenag
+            $kepalaKankemenag = DB::table('users')
+                ->where('role', 'kepala')
+                ->first();
+
+            if ($kepalaKankemenag) {
+                $kepalaNama = $kepalaKankemenag->name;
+                $kepalaNip = $kepalaKankemenag->nomor_induk ?? '';
+
+                // Ambil foto tanda tangan
+                if ($kepalaKankemenag->pp) {
+                    $kepalaCheck = storage_path('app/public/users_berkas/' . $kepalaKankemenag->nomor_induk . '/' . $kepalaKankemenag->pp);
+                    if (file_exists($kepalaCheck)) {
+                        $kepalaSignaturePath = $kepalaCheck;
+                    }
+                }
+            }
+        } else {
+            // Cek PLT/PLH di tabel plt_plh
+            $pltPlh = DB::table('plt_plh')
+                ->where('dept_id_plh', $userData->dept_id)
+                ->first();
+
+            if ($pltPlh) {
+                // PLT exist - gunakan user PLT
+                $pltUser = DB::table('users')->where('id', $pltPlh->user_id)->first();
+                if ($pltUser) {
+                    $isPlh = true;
+                    $kepalaNama = $pltUser->name;
+                    $kepalaNip = $pltUser->nomor_induk ?? '';
+
+                    if ($pltUser->pp) {
+                        $kepalaCheck = storage_path('app/public/users_berkas/' . $pltUser->nomor_induk . '/' . $pltUser->pp);
+                        if (file_exists($kepalaCheck)) {
+                            $kepalaSignaturePath = $kepalaCheck;
+                        }
+                    }
+                }
+            } else {
+                // Cari kepala/kasi/kasubbag berdasarkan dept_id
+                $kepala = DB::table('users')
+                    ->where('dept_id', $userData->dept_id)
+                    ->whereIn('kat_jabatan', $atasanJabatan)
+                    ->first();
+
+                if ($kepala) {
+                    $kepalaNama = $kepala->name;
+                    $kepalaNip = $kepala->nomor_induk ?? '';
+
+                    if ($kepala->pp) {
+                        $kepalaCheck = storage_path('app/public/users_berkas/' . $kepala->nomor_induk . '/' . $kepala->pp);
+                        if (file_exists($kepalaCheck)) {
+                            $kepalaSignaturePath = $kepalaCheck;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Tentukan label penandatangan
+        if ($isUserAtasan) {
+            $kepalaLabel = 'Mengetahui<br>Kepala Kankemenag Kab. Tanah Datar,';
+        } elseif ($isPlh) {
+            $kepalaLabel = 'Mengetahui<br>PLT Kepala,';
+        } else {
+            $kepalaLabel = "Mengetahui<br>Kepala {$unitKerja},";
+        }
+
+        // Format tanggal
+        $tanggal = Carbon::parse($presensi->tanggal)->locale('id_ID')->isoFormat('dddd, D MMMM Y');
+
+        // Ambil data berdasarkan jenis presensi
+        if ($jenis === 'masuk') {
+            $jam = $presensi->m_absen ?? '-';
+            $jamActual = $presensi->error_masuk_taken_at ?? '-';
+            $latitude = $presensi->m_latitude ?? '-';
+            $longitude = $presensi->m_longitude ?? '-';
+            $distance = $presensi->m_distance ?? '-';
+            $fotoPath = $presensi->m_location ?? null;
+        } else {
+            $jam = $presensi->p_absen ?? '-';
+            $jamActual = $presensi->error_pulang_taken_at ?? '-';
+            $latitude = $presensi->p_latitude ?? '-';
+            $longitude = $presensi->p_longitude ?? '-';
+            $distance = $presensi->p_distance ?? '-';
+            $fotoPath = $presensi->p_location ?? null;
+        }
+
+        // Format jarak
+        $distanceFormatted = '-';
+        if ($distance && $distance != '-') {
+            $distanceFormatted = round((float) $distance) . ' meter';
+        }
+
+        // Format lokasi
+        $lokasi = '-';
+        if ($latitude && $longitude && $latitude != '-' && $longitude != '-') {
+            $lokasi = $latitude . ', ' . $longitude;
+        }
+
+        // Path foto
+        $fotoFullPath = null;
+        if ($fotoPath) {
+            $fotoFullPath = storage_path('app/public/' . $fotoPath);
+            if (!file_exists($fotoFullPath)) {
+                $fotoFullPath = null;
+            }
+        }
+
+        // Header image
+        $headerPath = public_path('assets/img/template/header.webp');
+        $headerExists = file_exists($headerPath);
+
+        // Tanda tangan user
+        $userSignaturePath = null;
+        if ($userData->pp) {
+            $userSignatureCheck = storage_path('app/public/users_berkas/' . $userData->nomor_induk . '/' . $userData->pp);
+            if (file_exists($userSignatureCheck)) {
+                $userSignaturePath = $userSignatureCheck;
+            }
+        }
+
+        $pdfData = [
+            'nomorSurat' => 'SK-PE/' . $presensi->user_nip . '/' . now()->format('m/Y'),
+            'tanggal' => $tanggal,
+            'nama' => $userData->name,
+            'nip' => $userData->nomor_induk,
+            'jabatan' => $userData->pekerjaan ?? '-',
+            'unitKerja' => $unitKerja,
+            'jam' => $jam,
+            'jamActual' => $jamActual,
+            'jenisPresensi' => $jenis === 'masuk' ? 'Presensi Masuk' : 'Presensi Pulang',
+            'lokasi' => $lokasi,
+            'jarak' => $distanceFormatted,
+            'keterangan' => $presensi->keterangan ?? 'Dilaporkan melalui Presensi Error',
+            'fotoPath' => $fotoFullPath,
+            'headerPath' => $headerExists ? $headerPath : null,
+            'kepalaLabel' => $kepalaLabel,
+            'kepalaNama' => $kepalaNama,
+            'kepalaNip' => $kepalaNip,
+            'kepalaSignaturePath' => $kepalaSignaturePath,
+            'userSignaturePath' => $userSignaturePath,
+        ];
+
+        $pdf = Pdf::loadView('pdf.surat-keterangan-presensi-error', $pdfData)
+            ->setPaper('a4', 'portrait')
+            ->setOption('isRemoteEnabled', true)
+            ->setOption('isHtml5ParserEnabled', true);
+
+        return $pdf->stream('surat-keterangan-presensi-error-' . $presensi->user_nip . '.pdf');
     }
 }

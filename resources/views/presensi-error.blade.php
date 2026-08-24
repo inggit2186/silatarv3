@@ -19,7 +19,12 @@
                         <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        {{ session('success') }}
+                        <div class="flex-1">
+                            <p>{{ session('success') }}</p>
+                            @if(session('suratUrl'))
+                                <p class="text-sm mt-1">Surat keterangan akan terbuka di tab baru. <a href="{{ session('suratUrl') }}" target="_blank" class="underline font-semibold">Klik disini jika tidak terbuka otomatis.</a></p>
+                            @endif
+                        </div>
                     </div>
                 @endif
 
@@ -76,14 +81,24 @@
 
                         <div class="space-y-3">
                             @if($presensi->m_absen)
-                                <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
-                                    <div class="flex items-center gap-2">
-                                        <svg class="w-5 h-5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                        <span class="text-sm font-semibold text-emerald-700">Presensi Masuk</span>
+                                <div class="p-3 bg-emerald-50 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <svg class="w-5 h-5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                            <span class="text-sm font-semibold text-emerald-700">Presensi Masuk</span>
+                                        </div>
+                                        <span class="text-sm text-emerald-700">sudah diambil ({{ $presensi->error_masuk_taken_at ?? $presensi->m_absen }})</span>
                                     </div>
-                                    <span class="text-sm font-bold text-emerald-800">{{ $presensi->m_absen }}</span>
+                                    <div class="mt-2 ml-7">
+                                        <a href="{{ route('presensi-error.surat', ['id' => $presensi->id, 'jenis' => 'masuk']) }}" target="_blank" class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-800">
+                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                            </svg>
+                                            Lihat Surat Keterangan
+                                        </a>
+                                    </div>
                                 </div>
                             @else
                                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -97,14 +112,24 @@
                             @endif
 
                             @if($presensi->p_absen)
-                                <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                                    <div class="flex items-center gap-2">
-                                        <svg class="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                        <span class="text-sm font-semibold text-blue-700">Presensi Pulang</span>
+                                <div class="p-3 bg-blue-50 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <svg class="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                            <span class="text-sm font-semibold text-blue-700">Presensi Pulang</span>
+                                        </div>
+                                        <span class="text-sm text-blue-700">sudah diambil ({{ $presensi->error_pulang_taken_at ?? $presensi->p_absen }})</span>
                                     </div>
-                                    <span class="text-sm font-bold text-blue-800">{{ $presensi->p_absen }}</span>
+                                    <div class="mt-2 ml-7">
+                                        <a href="{{ route('presensi-error.surat', ['id' => $presensi->id, 'jenis' => 'pulang']) }}" target="_blank" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800">
+                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                            </svg>
+                                            Lihat Surat Keterangan
+                                        </a>
+                                    </div>
                                 </div>
                             @else
                                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -114,15 +139,6 @@
                                         </svg>
                                         <span class="text-sm text-gray-500">Belum presensi pulang</span>
                                     </div>
-                                </div>
-                            @endif
-
-                            @if($presensi->status === 'ERROR')
-                                <div class="flex items-center gap-2 p-3 bg-amber-50 rounded-lg">
-                                    <svg class="w-5 h-5 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                                    </svg>
-                                    <span class="text-sm font-semibold text-amber-700">Dilaporkan melalui Presensi Error</span>
                                 </div>
                             @endif
                         </div>
@@ -215,6 +231,9 @@
                         <input type="hidden" name="longitude" id="longitude" value="0">
                         <input type="hidden" name="jarak_meter" id="jarak_meter" value="0">
                         <input type="hidden" name="foto" id="foto" value="">
+                        <input type="hidden" name="supervisor_name" id="supervisor_name" value="{{ $user->dept_id == 998 || $user->dept_id == 999 ? '' : 'N/A' }}">
+                        <input type="hidden" name="supervisor_nip" id="supervisor_nip" value="{{ $user->dept_id == 998 || $user->dept_id == 999 ? '' : 'N/A' }}">
+                        <input type="hidden" name="unit_kerja_manual" id="unit_kerja_manual" value="{{ $user->dept_id == 998 || $user->dept_id == 999 ? '' : 'N/A' }}">
 
                         {{-- Location Info --}}
                         <div class="neo-card p-6 mb-4">
@@ -283,7 +302,53 @@
                 @endif
             </div>
         </section>
-    </main>
+
+        {{-- Modal Input Atasan (dept 998/999) --}}
+        @if($user->dept_id == 998 || $user->dept_id == 999)
+            <div id="supervisorModal" style="display:none;" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                <div class="bg-[var(--paper)] rounded-2xl w-full max-w-md p-6 shadow-xl">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-[var(--ink)]">Input Data Atasan</h3>
+                            <p class="text-xs text-[var(--ink-soft)]">Wajib diisi untuk penandatanganan surat</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p class="text-xs text-amber-700">Unit kerja Anda memerlukan input manual atasan untuk surat keterangan.</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-[var(--ink)] mb-1">Nama Unit Kerja <span class="text-red-500">*</span></label>
+                            <input type="text" id="inputUnitKerja" placeholder="Contoh: MA Bandar Panasqq" class="w-full px-4 py-2 bg-[var(--paper-soft)] border border-[var(--line)] rounded-xl text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)]">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-[var(--ink)] mb-1">Nama Atasan <span class="text-red-500">*</span></label>
+                            <input type="text" id="inputSupervisorName" placeholder="Contoh: H. HELMIZULDI S.Ag., M.Pd.I." class="w-full px-4 py-2 bg-[var(--paper-soft)] border border-[var(--line)] rounded-xl text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)]">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-[var(--ink)] mb-1">NIP Atasan <span class="text-red-500">*</span></label>
+                            <input type="text" id="inputSupervisorNip" placeholder="Contoh: 197108101996031002" class="w-full px-4 py-2 bg-[var(--paper-soft)] border border-[var(--line)] rounded-xl text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)]">
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 mt-6">
+                        <button type="button" onclick="closeSupervisorModal()" class="flex-1 py-3 bg-[var(--paper-soft)] hover:bg-[var(--line)] text-[var(--ink)] font-semibold rounded-xl transition-all">
+                            Batal
+                        </button>
+                        <button type="button" onclick="saveSupervisor()" class="flex-1 py-3 bg-[var(--gold)] hover:bg-[var(--gold-bright)] text-white font-bold rounded-xl transition-all">
+                            Simpan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
 
     <script>
         var locationDetected = false;
@@ -291,6 +356,11 @@
         // Try to get location silently on page load
         document.addEventListener('DOMContentLoaded', function() {
             tryGetLocation();
+
+            // Auto-open surat keterangan di tab baru
+            @if(session('suratUrl'))
+                window.open('{{ session("suratUrl") }}', '_blank');
+            @endif
         });
 
         function tryGetLocation() {
@@ -358,12 +428,46 @@
                 return false;
             }
 
+            // Cek apakah perlu input atasan (dept 998/999)
+            var deptId = {{ $user->dept_id }};
+            if (deptId == 998 || deptId == 999) {
+                var supervisorName = document.getElementById('supervisor_name').value;
+                if (!supervisorName) {
+                    document.getElementById('supervisorModal').style.display = 'flex';
+                    return false;
+                }
+            }
+
             // Show loading
             document.getElementById('submitText').classList.add('hidden');
             document.getElementById('submitSpinner').classList.remove('hidden');
             document.getElementById('submitBtn').disabled = true;
 
             return true;
+        }
+
+        function closeSupervisorModal() {
+            document.getElementById('supervisorModal').style.display = 'none';
+        }
+
+        function saveSupervisor() {
+            var unitKerja = document.getElementById('inputUnitKerja').value.trim();
+            var name = document.getElementById('inputSupervisorName').value.trim();
+            var nip = document.getElementById('inputSupervisorNip').value.trim();
+
+            if (!unitKerja || !name || !nip) {
+                alert('Semua field wajib diisi');
+                return;
+            }
+
+            document.getElementById('unit_kerja_manual').value = unitKerja;
+            document.getElementById('supervisor_name').value = name;
+            document.getElementById('supervisor_nip').value = nip;
+
+            document.getElementById('supervisorModal').style.display = 'none';
+
+            // Submit form
+            document.getElementById('presensiErrorForm').submit();
         }
 
         function clearPhoto() {

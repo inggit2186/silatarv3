@@ -109,6 +109,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/presensi-error', [PageController::class, 'presensiError'])->name('presensi-error');
     Route::post('/presensi-error', [PageController::class, 'presensiErrorSubmit'])->name('presensi-error.submit');
+    Route::get('/presensi-error/surat/{id}/{jenis}', [PageController::class, 'suratKeteranganPresensiError'])->name('presensi-error.surat')->whereNumber('id')->where('jenis', 'masuk|pulang');
 
 });
 
