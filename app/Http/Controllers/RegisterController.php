@@ -93,13 +93,8 @@ class RegisterController extends Controller
 
         DB::beginTransaction();
         try {
-            // Determine role, asn, and kat_jabatan based on user type
+            // Determine role and kat_jabatan based on user type
             $role = ($type === 'masyarakat') ? 'user' : 'pegawai';
-            $asn = match($type) {
-                'honorer' => 'honorer',
-                'guru_pai' => $validated['jenis_asn'],
-                default => 'other',
-            };
             $katJabatan = ($type === 'masyarakat') ? null : ($validated['kat_jabatan'] ?? null);
 
             // nomor_induk: use NIP for honorer/guru_pai, NIK for masyarakat
@@ -124,7 +119,6 @@ class RegisterController extends Controller
                 'satker' => $validated['satker'] ?? $validated['tempat_bekerja'] ?? null,
                 'kat_jabatan' => $katJabatan,
                 'pekerjaan' => $validated['pekerjaan'] ?? null,
-                'asn' => $asn,
                 'status' => 1, // 1 = active, 0 = non-active
             ]);
 
