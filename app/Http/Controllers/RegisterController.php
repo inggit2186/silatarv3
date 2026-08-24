@@ -103,12 +103,15 @@ class RegisterController extends Controller
             // dept_id: masyarakat = 103, others use selected dept
             $deptId = ($type === 'masyarakat') ? 103 : ($validated['dept_id'] ?? null);
 
+            // Format nomor telepon (hapus prefix kode negara)
+            $formattedPhone = $this->formatPhoneNumber($validated['telp']);
+
             // Create user
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
-                'telp' => $validated['telp'],
+                'telp' => $formattedPhone,
                 'role' => $role,
                 'jk' => $validated['jenis_kelamin'] ?? null,
                 'tempat_lahir' => $validated['tempat_lahir'] ?? null,
@@ -134,7 +137,7 @@ class RegisterController extends Controller
             $tenagaKtdData = [
                 'nama' => $validated['name'],
                 'email' => $validated['email'],
-                'telp' => $validated['telp'],
+                'telp' => $formattedPhone,
                 'tempat_lahir' => $validated['tempat_lahir'] ?? null,
                 'tanggal_lahir' => $validated['tanggal_lahir'] ?? null,
                 'jenis_kelamin' => $validated['jenis_kelamin'] ?? null,
@@ -177,5 +180,24 @@ class RegisterController extends Controller
             'guru_pai' => 'guru_pai',
             default => 'masyarakat',
         };
+    }
+
+    private function formatPhoneNumber($phone)
+    {
+        // Hapus spasi dan karakter non-digit
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+
+        // Hapus prefix kode negara Indonesia
+        // Jika diawali dengan 62 atau 620, hapus 2 digit pertama
+        if (strlen($phone) >= 12 && substr($phone, 0, 2) === '62') {
+            $phone = substr($phone, 2);
+        }
+
+        // Jika diawali dengan 0, hapus 0 pertama
+        if (substr($phone, 0, 1) === '0') {
+            $phone = substr($phone, 1);
+        }
+
+        return $phone;
     }
 }
