@@ -25,9 +25,12 @@ class AuthController extends Controller
             'remember' => ['nullable', 'boolean'],
         ]);
 
+        // Trim whitespace from login input
+        $login = trim($credentials['login']);
+
         $user = User::query()
-            ->where('email', $credentials['login'])
-            ->orWhere('nomor_induk', $credentials['login'])
+            ->where('email', strtolower($login))
+            ->orWhere('nomor_induk', $login)
             ->first();
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {

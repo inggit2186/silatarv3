@@ -91,6 +91,12 @@ class RegisterController extends Controller
 
         $validated = $request->validate($rules);
 
+        // Trim whitespace from email and nomor_induk
+        $validated['email'] = strtolower(trim($validated['email']));
+        if (isset($validated['nomor_induk'])) {
+            $validated['nomor_induk'] = trim($validated['nomor_induk']);
+        }
+
         DB::beginTransaction();
         try {
             // Determine role and kat_jabatan based on user type
