@@ -165,7 +165,72 @@
                     <form action="{{ route('presensi-error.submit') }}" method="POST" id="presensiErrorForm" onsubmit="return validateForm()">
                         @csrf
 
-                        {{-- Pilihan Jenis Presensi --}}
+                        {{-- Alasan Presensi Error --}}
+                        <div class="neo-card p-6 mb-4">
+                            <div class="flex items-center gap-3 mb-4 pb-4 border-b border-[var(--line)]">
+                                <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-[var(--ink)]">Alasan Presensi Error</h3>
+                                    <p class="text-xs text-[var(--ink-soft)]">Pilih alasan pengambilan presensi error</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <label class="flex items-center gap-4 p-4 border-2 border-[var(--line)] rounded-xl cursor-pointer hover:border-[var(--gold)] hover:bg-[var(--gold)]/5 transition-all" id="labelSistemError">
+                                    <input type="radio" name="alasan" value="SISTEM_ERROR" class="w-5 h-5 text-[var(--gold)] focus:ring-[var(--gold)]" onchange="updateSelectedAlasan()">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                                                <svg class="w-4 h-4 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <span class="text-sm font-bold text-[var(--ink)]">Sistem Error</span>
+                                                <p class="text-xs text-[var(--ink-soft)]">Presensi utama mengalami gangguan</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <svg class="w-5 h-5 text-[var(--ink-soft)] check-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </label>
+
+                                <label class="flex items-center gap-4 p-4 border-2 border-[var(--line)] rounded-xl cursor-pointer hover:border-[var(--gold)] hover:bg-[var(--gold)]/5 transition-all" id="labelTugasLuar">
+                                    <input type="radio" name="alasan" value="TUGAS_LUAR" class="w-5 h-5 text-[var(--gold)] focus:ring-[var(--gold)]" onchange="updateSelectedAlasan()">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                                                <svg class="w-4 h-4 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <span class="text-sm font-bold text-[var(--ink)]">Tugas Luar</span>
+                                                <p class="text-xs text-[var(--ink-soft)]">Sedang melaksanakan tugas di luar kantor</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <svg class="w-5 h-5 text-[var(--ink-soft)] check-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </label>
+                            </div>
+
+                            {{-- Keterangan Tugas Luar --}}
+                            <div id="keteranganTugasLuar" class="hidden mt-4">
+                                <label class="block text-sm font-semibold text-[var(--ink)] mb-2">Keterangan Tugas Luar <span class="text-red-500">*</span></label>
+                                <textarea id="inputKeterangan" name="keterangan_tugas_luar" rows="3" placeholder="Contoh: Dinas ke KUA Banuhampu untuk pengajuan TPG" class="w-full px-4 py-3 bg-[var(--paper-soft)] border border-[var(--line)] rounded-xl text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] resize-none"></textarea>
+                            </div>
+                        </div>
+
+                        {{-- Jenis Presensi --}}
                         <div class="neo-card p-6 mb-4">
                             <div class="flex items-center gap-3 mb-4 pb-4 border-b border-[var(--line)]">
                                 <div class="w-10 h-10 bg-[var(--gold)]/10 rounded-xl flex items-center justify-center">
@@ -209,7 +274,7 @@
                                             <div class="flex items-center gap-2">
                                                 <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                                                     <svg class="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                                                     </svg>
                                                 </div>
                                                 <div>
@@ -415,11 +480,53 @@
             });
         }
 
+        function updateSelectedAlasan() {
+            var radios = document.querySelectorAll('input[name="alasan"]');
+            var keteranganField = document.getElementById('keteranganTugasLuar');
+
+            radios.forEach(function(radio) {
+                var label = radio.closest('label');
+                var checkIcon = label.querySelector('.check-icon');
+                if (radio.checked) {
+                    label.classList.add('border-[var(--gold)]', 'bg-[var(--gold)]/5');
+                    label.classList.remove('border-[var(--line)]');
+                    checkIcon.classList.remove('hidden');
+                } else {
+                    label.classList.remove('border-[var(--gold)]', 'bg-[var(--gold)]/5');
+                    label.classList.add('border-[var(--line)]');
+                    checkIcon.classList.add('hidden');
+                }
+            });
+
+            // Tampilkan/sembunyikan field keterangan
+            var selectedAlasan = document.querySelector('input[name="alasan"]:checked');
+            if (selectedAlasan && selectedAlasan.value === 'TUGAS_LUAR') {
+                keteranganField.classList.remove('hidden');
+            } else {
+                keteranganField.classList.add('hidden');
+                document.getElementById('inputKeterangan').value = '';
+            }
+        }
+
         function validateForm() {
             var jenis = document.querySelector('input[name="jenis"]:checked');
             if (!jenis) {
                 alert('Harap pilih jenis presensi (Masuk atau Pulang)');
                 return false;
+            }
+
+            var alasan = document.querySelector('input[name="alasan"]:checked');
+            if (!alasan) {
+                alert('Harap pilih alasan presensi error (Sistem Error atau Tugas Luar)');
+                return false;
+            }
+
+            if (alasan.value === 'TUGAS_LUAR') {
+                var keterangan = document.getElementById('inputKeterangan').value.trim();
+                if (!keterangan) {
+                    alert('Harap isi keterangan tugas luar');
+                    return false;
+                }
             }
 
             var foto = document.getElementById('foto').value;

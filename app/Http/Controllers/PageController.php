@@ -8042,6 +8042,8 @@ class PageController extends Controller
     {
         $request->validate([
             'jenis' => 'required|in:masuk,pulang',
+            'alasan' => 'required|in:SISTEM_ERROR,TUGAS_LUAR',
+            'keterangan_tugas_luar' => 'required_if:alasan,TUGAS_LUAR|nullable|string',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'jarak_meter' => 'nullable|numeric',
@@ -8050,6 +8052,7 @@ class PageController extends Controller
 
         $user = auth()->user();
         $jenis = $request->input('jenis');
+        $alasan = $request->input('alasan');
         $now = Carbon::now('Asia/Jakarta');
         $today = $now->toDateString();
         $jamActual = $now->format('H:i:s');
@@ -8057,6 +8060,14 @@ class PageController extends Controller
         // Waktu tetap untuk presensi error
         $jamMasuk = '05:59:00';
         $jamPulang = '19:59:00';
+
+        // Tentukan status berdasarkan alasan
+        $status = $alasan === 'SISTEM_ERROR' ? 'SISTEM_ERROR' : 'TUGAS_LUAR';
+
+        // Tentukan keterangan
+        $keterangan = $alasan === 'TUGAS_LUAR'
+            ? $request->input('keterangan_tugas_luar', 'Tugas Luar')
+            : 'Dilaporkan melalui halaman Presensi Error (Sistem Error)';
 
         // Simpan foto
         $fotoPath = $this->saveErrorPresensiPhoto($request->foto, $user->nomor_induk);
@@ -8071,8 +8082,8 @@ class PageController extends Controller
             ->first();
 
         $dataUpdate = [
-            'status' => 'ERROR',
-            'keterangan' => 'Dilaporkan melalui halaman Presensi Error',
+            'status' => $status,
+            'keterangan' => $keterangan,
             'updated_at' => now(),
         ];
 
@@ -8338,6 +8349,7 @@ class PageController extends Controller
             'jam' => $jam,
             'jamActual' => $jamActual,
             'jenisPresensi' => $jenis === 'masuk' ? 'Presensi Masuk' : 'Presensi Pulang',
+            'alasan' => $presensi->status ?? 'SISTEM_ERROR',
             'lokasi' => $lokasi,
             'jarak' => $distanceFormatted,
             'keterangan' => $presensi->keterangan ?? 'Dilaporkan melalui Presensi Error',

@@ -259,6 +259,10 @@
                 <td class="value">{{ $jenisPresensi }}</td>
             </tr>
             <tr>
+                <td class="label">Alasan</td>
+                <td class="value">{{ $alasan === 'TUGAS_LUAR' ? 'Tugas Luar' : 'Sistem Error' }}</td>
+            </tr>
+            <tr>
                 <td class="label">Waktu Pengambilan</td>
                 <td class="value">{{ $jamActual }} WIB</td>
             </tr>
