@@ -8390,8 +8390,12 @@ class PageController extends Controller
             }
         }
 
+        // Generate nomor surat unik/random
+        $randomNumber = strtoupper(substr(uniqid(), -6));
+        $nomorSurat = 'SK-PE/' . $randomNumber . '/' . now()->format('m/Y');
+
         $pdfData = [
-            'nomorSurat' => 'SK-PE/' . $presensi->user_nip . '/' . now()->format('m/Y'),
+            'nomorSurat' => $nomorSurat,
             'tanggal' => $tanggal,
             'nama' => $userData->name,
             'nip' => $userData->nomor_induk,

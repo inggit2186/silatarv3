@@ -4,14 +4,14 @@
     <meta charset="utf-8">
     <style>
         @page {
-            margin: 12mm 18mm 12mm 18mm;
+            margin: 10mm 15mm 10mm 15mm;
         }
 
         body {
             font-family: "DejaVu Sans", Helvetica, Arial, sans-serif;
-            font-size: 11pt;
+            font-size: 10pt;
             color: #1a1a2e;
-            line-height: 1.6;
+            line-height: 1.4;
             background: #ffffff;
             margin: 0;
             padding: 0;
@@ -20,20 +20,20 @@
         /* Header */
         .header-img {
             width: 100%;
-            max-height: 90px;
+            max-height: 70px;
             object-fit: contain;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
 
         /* Title */
         .title-section {
             text-align: center;
-            margin: 6px 0 10px;
+            margin: 4px 0 6px;
             padding: 0;
         }
 
         .surat-title {
-            font-size: 15pt;
+            font-size: 13pt;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.1em;
@@ -42,13 +42,13 @@
         }
 
         .surat-subtitle {
-            font-size: 10pt;
+            font-size: 9pt;
             color: #64748b;
             margin: 0 0 2px;
         }
 
         .surat-number {
-            font-size: 10pt;
+            font-size: 9pt;
             color: #475569;
             margin: 0;
         }
@@ -57,17 +57,17 @@
         .divider {
             border: none;
             border-top: 2px solid #2563eb;
-            margin: 8px 0 14px;
+            margin: 5px 0 10px;
         }
 
         /* Content */
         .content {
-            font-size: 11pt;
-            margin-bottom: 14px;
+            font-size: 10pt;
+            margin-bottom: 8px;
         }
 
         .content p {
-            margin: 0 0 10px;
+            margin: 0 0 6px;
             text-align: justify;
         }
 
@@ -75,12 +75,12 @@
         .info-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 10px 0;
-            font-size: 11pt;
+            margin: 6px 0;
+            font-size: 9.5pt;
         }
 
         .info-table td {
-            padding: 7px 10px;
+            padding: 4px 8px;
             border: 1px solid #e2e8f0;
             vertical-align: top;
         }
@@ -124,27 +124,27 @@
 
         /* Statement */
         .statement {
-            margin: 16px 0;
-            padding: 10px 12px;
+            margin: 10px 0;
+            padding: 8px 10px;
             background: #f0f9ff;
             border-left: 4px solid #2563eb;
-            font-size: 10.5pt;
+            font-size: 9.5pt;
         }
 
         /* Upload Info */
         .upload-info {
-            margin: 12px 0;
-            padding: 10px 12px;
+            margin: 8px 0;
+            padding: 8px 10px;
             background: #fef3c7;
             border-left: 4px solid #f59e0b;
-            font-size: 10pt;
+            font-size: 9pt;
             color: #92400e;
         }
 
         /* Signature Section */
         .signature-section {
             width: 100%;
-            margin-top: 30px;
+            margin-top: 20px;
             page-break-inside: avoid;
         }
 
@@ -156,48 +156,48 @@
         .signature-table td {
             width: 50%;
             vertical-align: top;
-            padding: 0 12px;
+            padding: 0 10px;
         }
 
         .sig-title {
-            font-size: 8.5pt;
+            font-size: 8pt;
             font-weight: 700;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             color: #334155;
         }
 
         .sig-image {
-            max-width: 100px;
-            max-height: 50px;
-            margin: 6px 0;
+            max-width: 80px;
+            max-height: 40px;
+            margin: 4px 0;
         }
 
         .sig-line {
             border-bottom: 1px solid #94a3b8;
-            margin: 50px 0 5px;
+            margin: 35px 0 4px;
         }
 
         .sig-name {
-            font-size: 9pt;
+            font-size: 8.5pt;
             font-weight: 700;
             margin: 0;
             color: #1a1a2e;
         }
 
         .sig-nip {
-            font-size: 8pt;
+            font-size: 7.5pt;
             color: #64748b;
-            margin: 2px 0 0;
+            margin: 1px 0 0;
         }
 
         /* Footer */
         .footer-note {
-            margin-top: 20px;
-            font-size: 8pt;
+            margin-top: 12px;
+            font-size: 7.5pt;
             color: #94a3b8;
             text-align: center;
             border-top: 1px solid #e2e8f0;
-            padding-top: 6px;
+            padding-top: 4px;
         }
     </style>
 </head>
@@ -302,24 +302,27 @@
                 bukti pelaporan pengaduan presensi PUSAKA.
             </p>
         </div>
-
-        {{-- Catatan Pimpinan --}}
-        <div class="catatan-pimpinan" style="margin: 16px 0; padding: 12px; border: 1px solid #e2e8f0; border-radius: 4px;">
-            <p style="margin: 0 0 8px; font-size: 10pt; font-weight: 700; color: #334155;">Catatan Pimpinan:</p>
-            <div style="min-height: 60px; border-bottom: 1px solid #d1d5db; margin-bottom: 5px;"></div>
-            <div style="min-height: 60px; border-bottom: 1px solid #d1d5db; margin-bottom: 5px;"></div>
-            <div style="min-height: 60px;"></div>
-        </div>
     </div>
+
+    {{-- Page Break --}}
+    <div style="page-break-before: always;"></div>
 
     {{-- Foto Bukti --}}
     @if($fotoPath)
         <div class="photo-section">
-            <p style="font-size: 11pt; font-weight: 700; margin-bottom: 10px; color: #334155;">Foto Bukti Kehadiran</p>
+            <p style="font-size: 10pt; font-weight: 700; margin-bottom: 6px; color: #334155;">Foto Bukti Kehadiran</p>
             <img src="file://{{ $fotoPath }}" alt="Foto Bukti Kehadiran">
             <p class="photo-label">Foto diambil saat melakukan pengaduan presensi</p>
         </div>
     @endif
+
+    {{-- Catatan Pimpinan --}}
+    <div class="catatan-pimpinan" style="margin: 10px 0; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+        <p style="margin: 0 0 5px; font-size: 9pt; font-weight: 700; color: #334155;">Catatan Pimpinan:</p>
+        <div style="min-height: 40px; border-bottom: 1px solid #d1d5db; margin-bottom: 4px;"></div>
+        <div style="min-height: 40px; border-bottom: 1px solid #d1d5db; margin-bottom: 4px;"></div>
+        <div style="min-height: 40px;"></div>
+    </div>
 
     {{-- Tanda Tangan --}}
     <div class="signature-section">
