@@ -15,15 +15,17 @@
         <section class="page-content px-4 py-4 lg:px-6">
             <div class="max-w-2xl mx-auto">
                 @if(session('success'))
-                    <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 flex items-center gap-3">
-                        <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <div class="flex-1">
-                            <p>{{ session('success') }}</p>
-                            @if(session('suratUrl'))
-                                <p class="text-sm mt-1">Surat keterangan akan terbuka di tab baru. <a href="{{ session('suratUrl') }}" target="_blank" class="underline font-semibold">Klik disini jika tidak terbuka otomatis.</a></p>
-                            @endif
+                    <div class="mb-6 p-6 bg-emerald-50 border-2 border-emerald-300 rounded-2xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-emerald-800">{{ session('success') }}</h3>
+                                <p class="text-sm text-emerald-600 mt-1">Surat keterangan akan ditampilkan dalam beberapa saat...</p>
+                            </div>
                         </div>
                     </div>
                 @endif
@@ -165,71 +167,6 @@
                     <form action="{{ route('presensi-error.submit') }}" method="POST" id="presensiErrorForm" onsubmit="return validateForm()">
                         @csrf
 
-                        {{-- Alasan Presensi Error --}}
-                        <div class="neo-card p-6 mb-4">
-                            <div class="flex items-center gap-3 mb-4 pb-4 border-b border-[var(--line)]">
-                                <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-bold text-[var(--ink)]">Alasan Presensi Error</h3>
-                                    <p class="text-xs text-[var(--ink-soft)]">Pilih alasan pengambilan presensi error</p>
-                                </div>
-                            </div>
-
-                            <div class="space-y-3">
-                                <label class="flex items-center gap-4 p-4 border-2 border-[var(--line)] rounded-xl cursor-pointer hover:border-[var(--gold)] hover:bg-[var(--gold)]/5 transition-all" id="labelSistemError">
-                                    <input type="radio" name="alasan" value="SISTEM_ERROR" class="w-5 h-5 text-[var(--gold)] focus:ring-[var(--gold)]" onchange="updateSelectedAlasan()">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-                                                <svg class="w-4 h-4 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01"/>
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <span class="text-sm font-bold text-[var(--ink)]">Sistem Error</span>
-                                                <p class="text-xs text-[var(--ink-soft)]">Presensi utama mengalami gangguan</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <svg class="w-5 h-5 text-[var(--ink-soft)] check-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                                    </svg>
-                                </label>
-
-                                <label class="flex items-center gap-4 p-4 border-2 border-[var(--line)] rounded-xl cursor-pointer hover:border-[var(--gold)] hover:bg-[var(--gold)]/5 transition-all" id="labelTugasLuar">
-                                    <input type="radio" name="alasan" value="TUGAS_LUAR" class="w-5 h-5 text-[var(--gold)] focus:ring-[var(--gold)]" onchange="updateSelectedAlasan()">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
-                                                <svg class="w-4 h-4 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <span class="text-sm font-bold text-[var(--ink)]">Tugas Luar</span>
-                                                <p class="text-xs text-[var(--ink-soft)]">Sedang melaksanakan tugas di luar kantor</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <svg class="w-5 h-5 text-[var(--ink-soft)] check-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                                    </svg>
-                                </label>
-                            </div>
-
-                            {{-- Keterangan Tugas Luar --}}
-                            <div id="keteranganTugasLuar" class="hidden mt-4">
-                                <label class="block text-sm font-semibold text-[var(--ink)] mb-2">Keterangan Tugas Luar <span class="text-red-500">*</span></label>
-                                <textarea id="inputKeterangan" name="keterangan_tugas_luar" rows="3" placeholder="Contoh: Dinas ke KUA Banuhampu untuk pengajuan TPG" class="w-full px-4 py-3 bg-[var(--paper-soft)] border border-[var(--line)] rounded-xl text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] resize-none"></textarea>
-                            </div>
-                        </div>
-
                         {{-- Jenis Presensi --}}
                         <div class="neo-card p-6 mb-4">
                             <div class="flex items-center gap-3 mb-4 pb-4 border-b border-[var(--line)]">
@@ -288,6 +225,71 @@
                                         </svg>
                                     </label>
                                 @endif
+                            </div>
+                        </div>
+
+                        {{-- Alasan Pengaduan Presensi --}}
+                        <div class="neo-card p-6 mb-4">
+                            <div class="flex items-center gap-3 mb-4 pb-4 border-b border-[var(--line)]">
+                                <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-[var(--ink)]">Alasan Pengaduan Presensi</h3>
+                                    <p class="text-xs text-[var(--ink-soft)]">Pilih alasan pengaduan presensi</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <label class="flex items-center gap-4 p-4 border-2 border-[var(--line)] rounded-xl cursor-pointer hover:border-[var(--gold)] hover:bg-[var(--gold)]/5 transition-all" id="labelSistemError">
+                                    <input type="radio" name="alasan" value="SISTEM_ERROR" class="w-5 h-5 text-[var(--gold)] focus:ring-[var(--gold)]" onchange="updateSelectedAlasan()">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                                                <svg class="w-4 h-4 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <span class="text-sm font-bold text-[var(--ink)]">Sistem Error</span>
+                                                <p class="text-xs text-[var(--ink-soft)]">Presensi utama mengalami gangguan</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <svg class="w-5 h-5 text-[var(--ink-soft)] check-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </label>
+
+                                <label class="flex items-center gap-4 p-4 border-2 border-[var(--line)] rounded-xl cursor-pointer hover:border-[var(--gold)] hover:bg-[var(--gold)]/5 transition-all" id="labelTugasLuar">
+                                    <input type="radio" name="alasan" value="TUGAS_LUAR" class="w-5 h-5 text-[var(--gold)] focus:ring-[var(--gold)]" onchange="updateSelectedAlasan()">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                                                <svg class="w-4 h-4 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <span class="text-sm font-bold text-[var(--ink)]">Tugas Luar</span>
+                                                <p class="text-xs text-[var(--ink-soft)]">Sedang melaksanakan tugas di luar kantor</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <svg class="w-5 h-5 text-[var(--ink-soft)] check-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </label>
+                            </div>
+
+                            {{-- Keterangan Tugas Luar --}}
+                            <div id="keteranganTugasLuar" class="hidden mt-4">
+                                <label class="block text-sm font-semibold text-[var(--ink)] mb-2">Keterangan Tugas Luar <span class="text-red-500">*</span></label>
+                                <textarea id="inputKeterangan" name="keterangan_tugas_luar" rows="3" placeholder="Contoh: Dinas ke KUA Banuhampu untuk pengajuan TPG" class="w-full px-4 py-3 bg-[var(--paper-soft)] border border-[var(--line)] rounded-xl text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] resize-none"></textarea>
                             </div>
                         </div>
 
@@ -421,11 +423,6 @@
         // Try to get location silently on page load
         document.addEventListener('DOMContentLoaded', function() {
             tryGetLocation();
-
-            // Auto-open surat keterangan di tab baru
-            @if(session('suratUrl'))
-                window.open('{{ session("suratUrl") }}', '_blank');
-            @endif
         });
 
         function tryGetLocation() {
@@ -723,5 +720,99 @@
             };
             reader.readAsDataURL(file);
         }
+
+        // Modal Surat Keterangan
+        function showSuratModal() {
+            @if(session('suratUrl'))
+                document.getElementById('suratModal').style.display = 'flex';
+            @endif
+        }
+
+        function closeSuratModal() {
+            document.getElementById('suratModal').style.display = 'none';
+        }
+
+        function downloadSurat() {
+            @if(session('suratUrl'))
+                var link = document.createElement('a');
+                link.href = '{{ session("suratUrl") }}';
+                link.download = 'surat-keterangan-pengaduan-presensi.pdf';
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            @endif
+        }
+
+        function openSuratInNewTab() {
+            @if(session('suratUrl'))
+                window.open('{{ session("suratUrl") }}', '_blank');
+            @endif
+        }
+
+        // Tampilkan modal saat halaman dimuat dengan success
+        document.addEventListener('DOMContentLoaded', function() {
+            @if(session('suratUrl'))
+                setTimeout(function() {
+                    showSuratModal();
+                }, 500);
+            @endif
+        });
     </script>
+
+    {{-- Modal Surat Keterangan --}}
+    @if(session('suratUrl'))
+        <div id="suratModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+            <div class="bg-white rounded-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+                {{-- Header Modal --}}
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-[var(--gold)] to-[var(--gold-bright)]">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">Surat Keterangan Pengaduan Presensi</h3>
+                            <p class="text-xs text-white/80">Preview surat keterangan Anda</p>
+                        </div>
+                    </div>
+                    <button onclick="closeSuratModal()" class="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors">
+                        <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- PDF Preview --}}
+                <div class="flex-1 overflow-hidden bg-gray-100">
+                    <iframe src="{{ session('suratUrl') }}" class="w-full h-full border-0"></iframe>
+                </div>
+
+                {{-- Footer Modal --}}
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
+                    <p class="text-sm text-gray-600">
+                        <svg class="w-4 h-4 inline text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        PDF ini juga dapat diunduh atau dibuka di tab baru
+                    </p>
+                    <div class="flex items-center gap-3">
+                        <button onclick="openSuratInNewTab()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                            Buka di Tab Baru
+                        </button>
+                        <button onclick="downloadSurat()" class="px-6 py-2 bg-[var(--gold)] hover:bg-[var(--gold-bright)] text-white font-bold rounded-xl shadow-md transition-all flex items-center gap-2">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Download PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </x-layouts.app>

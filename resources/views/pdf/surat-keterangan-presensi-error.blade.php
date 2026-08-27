@@ -213,7 +213,7 @@
     {{-- Title --}}
     <div class="title-section">
         <h1 class="surat-title">Surat Keterangan</h1>
-        <p class="surat-subtitle">Pelaporan Presensi Error</p>
+        <p class="surat-subtitle">Pelaporan Pengaduan Presensi</p>
         <p class="surat-number">Nomor: {{ $nomorSurat }}</p>
     </div>
 
@@ -285,7 +285,7 @@
             <p style="margin: 0;">
                 Demikian surat keterangan ini dibuat dengan sebenar-benarnya dan dapat dipertanggungjawabkan.
                 Surat ini diterbitkan karena terjadi gangguan pada sistem presensi utama, sehingga presensi
-                dilakukan melalui halaman alternatif <strong>Presensi Error</strong>.
+                dilakukan melalui halaman alternatif <strong>Pengaduan Presensi</strong>.
             </p>
         </div>
 
@@ -293,20 +293,17 @@
         <div class="upload-info">
             <p style="margin: 0;">
                 Surat Keterangan ini diupload ke <strong>https://absensi.kemenag.go.id</strong> sebagai
-                bukti pelaporan error presensi PUSAKA.
+                bukti pelaporan pengaduan presensi PUSAKA.
             </p>
         </div>
     </div>
-
-    {{-- ═══════════════════════════════════════ HALAMAN 2 ═══════════════════════════════════════ --}}
-    <div class="page-break"></div>
 
     {{-- Foto Bukti --}}
     @if($fotoPath)
         <div class="photo-section">
             <p style="font-size: 11pt; font-weight: 700; margin-bottom: 10px; color: #334155;">Foto Bukti Kehadiran</p>
             <img src="file://{{ $fotoPath }}" alt="Foto Bukti Kehadiran">
-            <p class="photo-label">Foto diambil saat melakukan presensi error</p>
+            <p class="photo-label">Foto diambil saat melakukan pengaduan presensi</p>
         </div>
     @endif
 
@@ -332,12 +329,7 @@
                 <td style="text-align: center;">
                     <p class="sig-title">Yang Bersangkutan,</p>
                     <br/>
-                    @if($userSignaturePath)
-                        <img src="file://{{ $userSignaturePath }}" alt="TTD User" class="sig-image">
-                    @else
-                        <div class="sig-line"></div>
-                    @endif
-
+                    <div class="sig-line"></div>
                     <p class="sig-name">{{ $nama }}</p>
                     <p class="sig-nip">NIP. {{ $nip }}</p>
                 </td>
