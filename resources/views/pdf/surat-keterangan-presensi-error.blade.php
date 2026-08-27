@@ -321,12 +321,7 @@
                 <td style="text-align: center;">
                     <p class="sig-title">{!! $kepalaLabel !!}</p>
                     <br/>
-                    @if($kepalaSignaturePath)
-                        <img src="file://{{ $kepalaSignaturePath }}" alt="TTD Atasan" class="sig-image">
-                    @else
-                        <div class="sig-line"></div>
-                    @endif
-
+                    <div class="sig-line"></div>
                     <p class="sig-name">{{ $kepalaNama }}</p>
                     <p class="sig-nip">NIP. {{ $kepalaNip }}</p>
                 </td>
