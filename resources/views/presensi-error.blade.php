@@ -461,7 +461,34 @@
                         locationDetected = false;
                         document.getElementById('latitude').value = '0';
                         document.getElementById('longitude').value = '0';
-                        locationText.innerHTML = '<span class="text-[var(--ink-soft)] text-sm">Lokasi tidak tersedia</span>';
+
+                        var title = 'Gagal Mendapatkan Lokasi';
+                        var message = '';
+
+                        if (error.code === 1) {
+                            // PERMISSION_DENIED
+                            title = 'Izin Lokasi Ditolak';
+                            message = 'Anda telah menolak izin lokasi. Untuk menggunakan fitur ini, silakan:' +
+                                '<br><br>' +
+                                '<ol style="margin-left: 20px; margin-top: 10px;">' +
+                                    '<li style="margin-bottom: 8px;">Klik ikon 🔒 di address bar browser</li>' +
+                                    '<li style="margin-bottom: 8px;">Pilih "Izinkan" untuk Lokasi</li>' +
+                                    '<li>Refresh halaman ini</li>' +
+                                '</ol>';
+                        } else if (error.code === 2) {
+                            // POSITION_UNAVAILABLE
+                            title = 'Lokasi Tidak Tersedia';
+                            message = 'GPS atau jaringan tidak dapat menentukan lokasi Anda. Pastikan GPS aktif dan Anda berada di area dengan sinyal yang baik.';
+                        } else if (error.code === 3) {
+                            // TIMEOUT
+                            title = 'Waktu Habis';
+                            message = 'Pengambilan lokasi memakan waktu terlalu lama. Coba lagi di area dengan sinyal GPS yang lebih baik.';
+                        } else {
+                            message = 'Terjadi kesalahan saat mengambil lokasi. Silakan coba lagi.';
+                        }
+
+                        locationText.innerHTML = '<span class="text-red-500 font-semibold text-sm">✕ Gagal mendeteksi lokasi</span>';
+                        showLocationWarning(title, message);
                     },
                     {
                         enableHighAccuracy: true,
@@ -473,7 +500,8 @@
                 locationDetected = false;
                 document.getElementById('latitude').value = '0';
                 document.getElementById('longitude').value = '0';
-                locationText.innerHTML = '<span class="text-[var(--ink-soft)] text-sm">GPS tidak tersedia</span>';
+                locationText.innerHTML = '<span class="text-red-500 font-semibold text-sm">✕ GPS tidak tersedia</span>';
+                showLocationWarning('Browser Tidak Mendukung GPS', 'Browser Anda tidak mendukung fitur Geolocation. Silakan gunakan browser lain seperti Chrome, Firefox, atau Safari.');
             }
         }
 
@@ -748,6 +776,42 @@
                     var modal = document.getElementById('cameraModal');
                     if (modal) modal.remove();
                 });
+        }
+
+        function showLocationWarning(title, message) {
+            var existingModal = document.getElementById('locationWarningModal');
+            if (existingModal) existingModal.remove();
+
+            var modal = document.createElement('div');
+            modal.id = 'locationWarningModal';
+            modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4';
+            modal.innerHTML = '<div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">' +
+                '<div class="p-6">' +
+                    '<div class="flex items-center gap-4 mb-4">' +
+                        '<div class="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">' +
+                            '<svg class="w-8 h-8 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                                '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>' +
+                            '</svg>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h3 class="text-lg font-bold text-gray-900">' + title + '</h3>' +
+                        '</div>' +
+                    '</div>' +
+                    '<p class="text-gray-600 mb-4">' + message + '</p>' +
+                '</div>' +
+                '<div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">' +
+                    '<button onclick="closeLocationWarning()" class="px-6 py-2 bg-[var(--gold)] hover:bg-[var(--gold-bright)] text-white font-bold rounded-xl transition-colors">' +
+                        'Mengerti' +
+                    '</button>' +
+                '</div>' +
+            '</div>';
+
+            document.body.appendChild(modal);
+        }
+
+        function closeLocationWarning() {
+            var modal = document.getElementById('locationWarningModal');
+            if (modal) modal.remove();
         }
 
         function processFile(file) {
