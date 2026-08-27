@@ -298,6 +298,7 @@
                         <input type="hidden" name="longitude" id="longitude" value="0">
                         <input type="hidden" name="jarak_meter" id="jarak_meter" value="0">
                         <input type="hidden" name="foto" id="foto" value="">
+                        <input type="hidden" name="alamat" id="alamat" value="">
                         <input type="hidden" name="supervisor_name" id="supervisor_name" value="{{ $user->dept_id == 998 || $user->dept_id == 999 ? '' : 'N/A' }}">
                         <input type="hidden" name="supervisor_nip" id="supervisor_nip" value="{{ $user->dept_id == 998 || $user->dept_id == 999 ? '' : 'N/A' }}">
                         <input type="hidden" name="unit_kerja_manual" id="unit_kerja_manual" value="{{ $user->dept_id == 998 || $user->dept_id == 999 ? '' : 'N/A' }}">
@@ -443,12 +444,17 @@
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     function(position) {
-                        document.getElementById('latitude').value = position.coords.latitude;
-                        document.getElementById('longitude').value = position.coords.longitude;
+                        var lat = position.coords.latitude;
+                        var lon = position.coords.longitude;
+                        document.getElementById('latitude').value = lat;
+                        document.getElementById('longitude').value = lon;
                         locationDetected = true;
                         locationText.innerHTML = '<span class="text-[var(--ink)] font-semibold text-sm">✓ Lokasi terdeteksi</span>';
                         document.getElementById('distanceInfo').classList.remove('hidden');
                         document.getElementById('distanceText').innerHTML = 'Jarak dari kantor akan dihitung otomatis';
+
+                        // Reverse geocoding untuk mendapatkan alamat
+                        reverseGeocode(lat, lon);
                     },
                     function(error) {
                         console.log('GPS error:', error.message);
@@ -469,6 +475,53 @@
                 document.getElementById('longitude').value = '0';
                 locationText.innerHTML = '<span class="text-[var(--ink-soft)] text-sm">GPS tidak tersedia</span>';
             }
+        }
+
+        // Reverse geocoding menggunakan OpenStreetMap Nominatim (gratis)
+        function reverseGeocode(lat, lon) {
+            var alamatInput = document.getElementById('alamat');
+            var locationText = document.getElementById('locationText');
+
+            // Tampilkan loading
+            locationText.innerHTML = '<span class="text-[var(--ink)] font-semibold text-sm">✓ Lokasi terdeteksi</span>' +
+                '<div class="mt-2 text-xs text-[var(--ink-soft)]">Mengambil alamat...</div>';
+
+            // Fetch alamat dari Nominatim
+            fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon + '&zoom=18&addressdetails=1', {
+                headers: {
+                    'Accept-Language': 'id' // Bahasa Indonesia
+                }
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                if (data && data.display_name) {
+                    var alamat = data.display_name;
+                    alamatInput.value = alamat;
+
+                    // Format alamat untuk display (ambil bagian penting saja)
+                    var alamatShort = alamat.length > 80 ? alamat.substring(0, 80) + '...' : alamat;
+
+                    locationText.innerHTML = '<span class="text-[var(--ink)] font-semibold text-sm">✓ Lokasi terdeteksi</span>' +
+                        '<div class="mt-2 text-xs text-[var(--ink-soft)] leading-relaxed">' +
+                            '<svg class="w-3 h-3 inline text-[var(--gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                                '<path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>' +
+                            '</svg>' +
+                            '<span class="font-medium text-[var(--ink)]">' + alamatShort + '</span>' +
+                        '</div>';
+                } else {
+                    alamatInput.value = 'Koordinat: ' + lat + ', ' + lon;
+                    locationText.innerHTML = '<span class="text-[var(--ink)] font-semibold text-sm">✓ Lokasi terdeteksi</span>' +
+                        '<div class="mt-2 text-xs text-[var(--ink-soft)]">Koordinat: ' + lat.toFixed(6) + ', ' + lon.toFixed(6) + '</div>';
+                }
+            })
+            .catch(function(error) {
+                console.log('Geocoding error:', error);
+                alamatInput.value = 'Koordinat: ' + lat + ', ' + lon;
+                locationText.innerHTML = '<span class="text-[var(--ink)] font-semibold text-sm">✓ Lokasi terdeteksi</span>' +
+                    '<div class="mt-2 text-xs text-[var(--ink-soft)]">Koordinat: ' + lat.toFixed(6) + ', ' + lon.toFixed(6) + '</div>';
+            });
         }
 
         function updateSelectedJenis() {

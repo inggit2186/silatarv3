@@ -8079,6 +8079,7 @@ class PageController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'jarak_meter' => 'nullable|numeric',
+            'alamat' => 'nullable|string',
             'foto' => 'required|string',
         ]);
 
@@ -8137,6 +8138,7 @@ class PageController extends Controller
             $dataUpdate['m_latitude'] = $request->input('latitude', 0);
             $dataUpdate['m_longitude'] = $request->input('longitude', 0);
             $dataUpdate['m_location'] = $fotoPath;
+            $dataUpdate['m_alamat'] = $request->input('alamat', '');
             $dataUpdate['error_masuk_taken_at'] = $jamActual;
 
             // Hitung jarak dari kantor
@@ -8156,6 +8158,7 @@ class PageController extends Controller
             $dataUpdate['p_latitude'] = $request->input('latitude', 0);
             $dataUpdate['p_longitude'] = $request->input('longitude', 0);
             $dataUpdate['p_location'] = $fotoPath;
+            $dataUpdate['p_alamat'] = $request->input('alamat', '');
             $dataUpdate['error_pulang_taken_at'] = $jamActual;
 
             // Hitung jarak dari kantor
@@ -8342,6 +8345,7 @@ class PageController extends Controller
             $longitude = $presensi->m_longitude ?? '-';
             $distance = $presensi->m_distance ?? '-';
             $fotoPath = $presensi->m_location ?? null;
+            $alamat = $presensi->m_alamat ?? '';
         } else {
             $jam = $presensi->p_absen ?? '-';
             $jamActual = $presensi->error_pulang_taken_at ?? '-';
@@ -8349,6 +8353,7 @@ class PageController extends Controller
             $longitude = $presensi->p_longitude ?? '-';
             $distance = $presensi->p_distance ?? '-';
             $fotoPath = $presensi->p_location ?? null;
+            $alamat = $presensi->p_alamat ?? '';
         }
 
         // Format jarak
@@ -8397,6 +8402,7 @@ class PageController extends Controller
             'jenisPresensi' => $jenis === 'masuk' ? 'Presensi Masuk' : 'Presensi Pulang',
             'alasan' => $presensi->status ?? 'SISTEM_ERROR',
             'lokasi' => $lokasi,
+            'alamat' => $alamat,
             'jarak' => $distanceFormatted,
             'keterangan' => $presensi->keterangan ?? 'Dilaporkan melalui Presensi Error',
             'fotoPath' => $fotoFullPath,

@@ -270,6 +270,12 @@
                 <td class="label">Lokasi (Koordinat)</td>
                 <td class="value">{{ $lokasi }}</td>
             </tr>
+            @if(!empty($alamat))
+            <tr>
+                <td class="label">Alamat</td>
+                <td class="value">{{ $alamat }}</td>
+            </tr>
+            @endif
             <tr>
                 <td class="label">Jarak dari Kantor</td>
                 <td class="value">{{ $jarak }}</td>
