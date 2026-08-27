@@ -321,6 +321,15 @@
                                 <div id="locationText" class="text-sm text-[var(--ink-soft)]">
                                     Mendeteksi lokasi...
                                 </div>
+                                <div id="distanceInfo" class="hidden mt-2 pt-2 border-t border-[var(--line)]">
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-[var(--gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                        <span id="distanceText" class="text-sm font-semibold text-[var(--ink)]"></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -437,7 +446,9 @@
                         document.getElementById('latitude').value = position.coords.latitude;
                         document.getElementById('longitude').value = position.coords.longitude;
                         locationDetected = true;
-                        locationText.innerHTML = '<span class="text-[var(--ink)] font-semibold text-sm">Lokasi terdeteksi</span>';
+                        locationText.innerHTML = '<span class="text-[var(--ink)] font-semibold text-sm">✓ Lokasi terdeteksi</span>';
+                        document.getElementById('distanceInfo').classList.remove('hidden');
+                        document.getElementById('distanceText').innerHTML = 'Jarak dari kantor akan dihitung otomatis';
                     },
                     function(error) {
                         console.log('GPS error:', error.message);

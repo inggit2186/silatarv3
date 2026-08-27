@@ -8003,6 +8003,38 @@ class PageController extends Controller
         return $earthRadius * $c;
     }
 
+    /**
+     * Calculate distance from user to office (department)
+     */
+    private function calculateDistanceFromOffice(?int $deptId, float $userLat, float $userLon): ?float
+    {
+        // Jika koordinat user tidak valid, return null
+        if ($userLat == 0 && $userLon == 0) {
+            return null;
+        }
+
+        // Ambil data department
+        $dept = DB::table('ktd_department')->where('id', $deptId)->first();
+        if (!$dept) {
+            return null;
+        }
+
+        // Cek apakah department memiliki koordinat
+        if (empty($dept->latitude) || empty($dept->longitude)) {
+            return null;
+        }
+
+        $officeLat = (float) $dept->latitude;
+        $officeLon = (float) $dept->longitude;
+
+        // Validasi koordinat office
+        if ($officeLat == 0 && $officeLon == 0) {
+            return null;
+        }
+
+        return $this->calculateDistance($officeLat, $officeLon, $userLat, $userLon);
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     // PRESENSI ERROR - Alternatif presensi ketika sistem error
     // ═══════════════════════════════════════════════════════════════════════
@@ -8104,9 +8136,16 @@ class PageController extends Controller
             $dataUpdate['m_absen'] = $jamMasuk;
             $dataUpdate['m_latitude'] = $request->input('latitude', 0);
             $dataUpdate['m_longitude'] = $request->input('longitude', 0);
-            $dataUpdate['m_distance'] = $request->input('jarak_meter', 0);
             $dataUpdate['m_location'] = $fotoPath;
             $dataUpdate['error_masuk_taken_at'] = $jamActual;
+
+            // Hitung jarak dari kantor
+            $distance = $this->calculateDistanceFromOffice(
+                $user->dept_id,
+                $request->input('latitude', 0),
+                $request->input('longitude', 0)
+            );
+            $dataUpdate['m_distance'] = $distance ?? $request->input('jarak_meter', 0);
         } else {
             // Validasi belum presensi pulang
             if ($presensi && $presensi->p_absen) {
@@ -8116,9 +8155,16 @@ class PageController extends Controller
             $dataUpdate['p_absen'] = $jamPulang;
             $dataUpdate['p_latitude'] = $request->input('latitude', 0);
             $dataUpdate['p_longitude'] = $request->input('longitude', 0);
-            $dataUpdate['p_distance'] = $request->input('jarak_meter', 0);
             $dataUpdate['p_location'] = $fotoPath;
             $dataUpdate['error_pulang_taken_at'] = $jamActual;
+
+            // Hitung jarak dari kantor
+            $distance = $this->calculateDistanceFromOffice(
+                $user->dept_id,
+                $request->input('latitude', 0),
+                $request->input('longitude', 0)
+            );
+            $dataUpdate['p_distance'] = $distance ?? $request->input('jarak_meter', 0);
         }
 
         try {
