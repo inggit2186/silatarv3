@@ -328,6 +328,7 @@
 
                 {{-- User (Kanan) --}}
                 <td style="text-align: center;">
+                    <br/>
                     <p class="sig-title">Yang Bersangkutan,</p>
                     <br/>
                     <div class="sig-line"></div>
