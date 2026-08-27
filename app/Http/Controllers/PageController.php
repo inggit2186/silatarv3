@@ -8359,7 +8359,14 @@ class PageController extends Controller
         // Format jarak
         $distanceFormatted = '-';
         if ($distance && $distance != '-') {
-            $distanceFormatted = round((float) $distance) . ' meter';
+            $distanceInMeters = round((float) $distance);
+            if ($distanceInMeters >= 1000) {
+                $km = floor($distanceInMeters / 1000);
+                $remainingMeters = $distanceInMeters % 1000;
+                $distanceFormatted = $km . ' km ' . $remainingMeters . ' meter';
+            } else {
+                $distanceFormatted = $distanceInMeters . ' meter';
+            }
         }
 
         // Format lokasi
