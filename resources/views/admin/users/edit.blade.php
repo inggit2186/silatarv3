@@ -283,6 +283,38 @@
                                     </select>
                                 </div>
                             </div>
+
+                            {{-- Custom Supervisor Assignment --}}
+                            <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-100">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-8 h-8 rounded-lg bg-purple-500 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-purple-800">Custom Supervisor</h4>
+                                        <p class="text-xs text-purple-600">Override atasan untuk laporan kinerja (opsional)</p>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <select id="custom_supervisor_id" name="custom_supervisor_id" class="form-select">
+                                        <option value="">-- Mengikuti Hierarki Unit Kerja --</option>
+                                        @foreach($supervisors as $supervisor)
+                                            <option value="{{ $supervisor->id }}" {{ old('custom_supervisor_id', $user->custom_supervisor_id) == $supervisor->id ? 'selected' : '' }}>
+                                                {{ $supervisor->name }} ({{ ucfirst($supervisor->kat_jabatan) }}) - {{ $supervisor->department_name ?? '-' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <p class="text-xs text-slate-500 mt-2">
+                                        <svg class="w-4 h-4 inline text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        Jika dipilih, laporan kinerja akan ditandatangani oleh supervisor ini.
+                                        <br>Kosongkan jika ingin mengikuti hierarki unit kerja bawaan.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

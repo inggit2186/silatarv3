@@ -3016,6 +3016,7 @@ class PageController extends Controller
             ->first();
 
         $isPlh = false;
+        $isCustomSupervisor = false;
         $signatureName = '..................................';
         $signatureNip = '';
 
@@ -3023,7 +3024,25 @@ class PageController extends Controller
         $atasanJabatan = ['kepala', 'kasi', 'kasubbag'];
         $isUserAtasan = in_array($user->kat_jabatan, $atasanJabatan);
 
-        if ($isUserAtasan) {
+        // Cek custom supervisor dulu (priority tertinggi)
+        if (!empty($user->custom_supervisor_id)) {
+            $customSupervisor = DB::table('users')
+                ->where('id', $user->custom_supervisor_id)
+                ->first();
+
+            if ($customSupervisor) {
+                $isCustomSupervisor = true;
+                $signatureName = $customSupervisor->name;
+                $signatureNip = $customSupervisor->nomor_induk
+                    ? 'NIP. ' . $customSupervisor->nomor_induk
+                    : '';
+            }
+        }
+
+        if ($isCustomSupervisor) {
+            // Custom supervisor sudah di-set di atas, skip logic lain
+            // Signature name dan nip sudah di-set
+        } elseif ($isUserAtasan) {
             // Jika user adalah atasan, penandatangan adalah Kepala Kankemenag
             $kepalaKankemenag = DB::table('users')
                 ->where('role', 'kepala')
@@ -3060,7 +3079,15 @@ class PageController extends Controller
             ? ($user->satker ?? $unitName)
             : ($unitName ?: '-');
 
-        if ($isUserAtasan) {
+        if ($isCustomSupervisor) {
+            // Custom supervisor - tentukan label berdasarkan kat_jabatan supervisor
+            $customSupervisorJabatan = $customSupervisor->kat_jabatan ?? '';
+            if ($customSupervisorJabatan === 'kepala') {
+                $signatureLabel = 'Mengetahui<br>Kepala Kankemenag Kab. Tanah Datar,';
+            } else {
+                $signatureLabel = "Mengetahui<br>Kepala {$kepalaLabel},";
+            }
+        } elseif ($isUserAtasan) {
             $signatureLabel = 'Mengetahui<br>Kepala Kankemenag Kab. Tanah Datar,';
         } elseif ($isPlh) {
             $signatureLabel = 'Mengetahui<br>PLT Kepala,';
@@ -4102,7 +4129,20 @@ class PageController extends Controller
         $validJabatan = ['kepala', 'kasi', 'kasubbag'];
         $atasanRole = in_array(strtolower($user->kat_jabatan ?? ''), $validJabatan);
 
-        if (!$atasanRole) {
+        // Cek apakah user adalah custom supervisor dari pembuat laporan
+        $reportOwner = DB::table('users')
+            ->where('id', $data['user_id'])
+            ->first();
+
+        $isCustomSupervisorOfUser = false;
+        if ($reportOwner && !empty($reportOwner->custom_supervisor_id)) {
+            $isCustomSupervisorOfUser = ($reportOwner->custom_supervisor_id == $user->id);
+        }
+
+        // Izinkan verifikasi jika:
+        // 1. User adalah atasan berdasarkan hierarki (kepala/kasi/kasubbag)
+        // 2. ATAU user adalah custom supervisor dari pembuat laporan
+        if (!$atasanRole && !$isCustomSupervisorOfUser) {
             return response()->json([
                 'success' => false,
                 'message' => 'Anda tidak memiliki hak untuk memverifikasi laporan.',

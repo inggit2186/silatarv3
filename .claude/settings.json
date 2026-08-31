@@ -8,7 +8,16 @@
       "Bash(grep -n 'protected $fillable\\\\|pekerjaan\\\\|jabatan' app/Models/User.php)",
       "Bash(mysql -u root -e \"SHOW COLUMNS FROM ktd_bukutamu WHERE Field = 'status';\" kemenagtd_db)",
       "Bash(git commit -m ' *)",
-      "Bash(flutter clean *)"
+      "Bash(flutter clean *)",
+      "Bash(git commit -m 'fix\\(presensi-error\\): perbaiki UI/UX halaman pengaduan presensi dan surat keterangan *)",
+      "Bash(git commit -m 'feat\\(presensi-error\\): implementasi perhitungan jarak dari kantor *)",
+      "Bash(git commit -m 'feat\\(presensi-error\\): implementasi reverse geocoding untuk menampilkan alamat *)",
+      "Bash(git commit -m 'fix\\(pdf\\): hapus foto profil pada tanda tangan atasan di surat keterangan *)",
+      "Bash(git commit *)",
+      "Bash(git commit -m 'feat\\(pdf\\): tambahkan section Catatan Pimpinan di surat keterangan *)",
+      "Bash(git commit -m 'fix\\(pdf\\): perkecil ukuran, tambah pagebreak, dan nomor surat unik *)",
+      "Bash(git commit -m 'feat\\(pdf\\): format jarak dengan kilometer dan meter *)",
+      "Bash(git commit -m 'feat\\(presensi-error\\): tambahkan modal peringatan izin lokasi *)"
     ]
   }
 }

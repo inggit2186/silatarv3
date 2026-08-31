@@ -249,6 +249,21 @@ class UserController extends Controller
             ->orderBy('nama')
             ->get(['id', 'nama', 'nsm', 'kategori']);
 
+        // Get supervisors list for custom supervisor assignment
+        $supervisors = DB::table('users')
+            ->whereIn('kat_jabatan', ['kepala', 'kasi', 'kasubbag'])
+            ->where('status', 1)
+            ->orderBy('kat_jabatan')
+            ->orderBy('name')
+            ->get(['id', 'name', 'kat_jabatan', 'dept_id'])
+            ->map(function ($supervisor) {
+                $dept = DB::table('ktd_department')
+                    ->where('id', $supervisor->dept_id)
+                    ->first();
+                $supervisor->department_name = $dept->nama ?? '-';
+                return $supervisor;
+            });
+
         return view('admin.users.edit', [
             'title' => 'Edit Pengguna - SILATAR Admin',
             'breadcrumbs' => [
@@ -260,6 +275,7 @@ class UserController extends Controller
             'roles' => $roles,
             'departments' => $departments,
             'madrasahs' => $madrasahs,
+            'supervisors' => $supervisors,
         ]);
     }
 
@@ -282,6 +298,7 @@ class UserController extends Controller
             'role' => ['required', 'string', Rule::in(['superadmin', 'admin', 'kasubbag', 'kasi', 'kepala', 'petugas', 'pegawai', 'frontdesk', 'pensiun', 'pindah'])],
             'dept_id' => ['nullable', 'numeric'],
             'madrasah_id' => ['nullable', 'numeric', 'exists:ktd_madrasah,id'],
+            'custom_supervisor_id' => ['nullable', 'numeric', 'exists:users,id'],
             'jk' => ['nullable', 'string', Rule::in(['Pria', 'Wanita'])],
             'pekerjaan' => ['nullable', 'string', 'max:255'],
             'telp' => ['nullable', 'string', 'max:50'],
@@ -314,6 +331,7 @@ class UserController extends Controller
             'role' => $validated['role'],
             'dept_id' => $validated['dept_id'] ?? 0,
             'madrasah_id' => $validated['madrasah_id'] ?? null,
+            'custom_supervisor_id' => $validated['custom_supervisor_id'] ?? null,
             'jk' => $validated['jk'] ?? 'Pria',
             'pekerjaan' => $validated['pekerjaan'] ?? '',
             'telp' => $validated['telp'] ?? null,

@@ -626,10 +626,29 @@ class KegiatanController extends BaseApiController
                 ->first();
 
             $isPlh = false;
+            $isCustomSupervisor = false;
+            $customSupervisor = null;
             $atasanJabatan = ['kepala', 'kasi', 'kasubbag'];
             $isUserAtasan = in_array($user->kat_jabatan, $atasanJabatan);
 
-            if ($isUserAtasan) {
+            // Cek custom supervisor dulu (priority tertinggi)
+            if (!empty($user->custom_supervisor_id)) {
+                $customSupervisor = DB::table('users')
+                    ->where('id', $user->custom_supervisor_id)
+                    ->first();
+
+                if ($customSupervisor) {
+                    $isCustomSupervisor = true;
+                    $signatureName = $customSupervisor->name;
+                    $signatureNip = $customSupervisor->nomor_induk
+                        ? 'NIP. ' . $customSupervisor->nomor_induk
+                        : '';
+                }
+            }
+
+            if ($isCustomSupervisor) {
+                // Custom supervisor sudah di-set di atas, skip logic lain
+            } elseif ($isUserAtasan) {
                 // Jika user adalah atasan, penandatangan adalah Kepala Kankemenag
                 $kepalaKankemenag = DB::table('users')
                     ->where('role', 'kepala')
@@ -677,7 +696,15 @@ class KegiatanController extends BaseApiController
                 ? ($user->satker ?? $unitName)
                 : ($unitName ?: '-');
 
-            if ($isUserAtasan) {
+            if ($isCustomSupervisor) {
+                // Custom supervisor - tentukan label berdasarkan kat_jabatan supervisor
+                $customSupervisorJabatan = $customSupervisor->kat_jabatan ?? '';
+                if ($customSupervisorJabatan === 'kepala') {
+                    $signatureLabel = 'Mengetahui<br>Kepala Kankemenag Kab. Tanah Datar,';
+                } else {
+                    $signatureLabel = "Mengetahui<br>Kepala {$kepalaLabel},";
+                }
+            } elseif ($isUserAtasan) {
                 $signatureLabel = 'Mengetahui<br>Kepala Kankemenag Kab. Tanah Datar,';
             } elseif ($isPlh) {
                 $signatureLabel = 'Mengetahui<br>PLT Kepala,';

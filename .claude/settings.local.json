@@ -112,7 +112,9 @@
       "Bash(php -l app/Http/Controllers/PageController.php)",
       "Bash(grep -n '$tot.*+=' 'd:\\\\work\\\\SourceCode\\\\silatarV2\\\\resources\\\\views\\\\madrasah\\\\laporansemester.blade.php')",
       "Bash(npx stylelint *)",
-      "Bash(dir public\\\\css)"
+      "Bash(dir public\\\\css)",
+      "Bash(grep -v \"//\")",
+      "Bash(php vendor/bin/pint --version)"
     ],
     "additionalDirectories": [
       "D:\\work\\SourceCode\\silatarV2\\bootstrap\\cache"
