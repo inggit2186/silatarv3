@@ -3420,11 +3420,31 @@ class PageController extends Controller
 
         $report = DB::table('satker_ckh')
             ->where('id', $reportId)
-            ->where('user_id', $user->id)
             ->first();
 
         abort_unless($report, 404);
         abort_unless(filled($report->filename), 404);
+
+        // Cek apakah user punya akses ke report ini
+        $isOwner = ($report->user_id == $user->id);
+        $isAdmin = in_array($user->role, ['superadmin', 'admin']);
+        $isAtasan = false;
+
+        if (! $isOwner && ! $isAdmin) {
+            // Cek apakah user adalah custom supervisor dari pemilik report
+            $reportOwner = DB::table('users')->where('id', $report->user_id)->first();
+            $isCustomSupervisor = ($reportOwner && $reportOwner->custom_supervisor_id == $user->id);
+
+            // Cek apakah user adalah atasan di dept yang sama
+            $validJabatan = ['kepala', 'kasi', 'kasubbag'];
+            $isAtasan = in_array($user->kat_jabatan, $validJabatan)
+                && $reportOwner
+                && $reportOwner->dept_id == $user->dept_id;
+
+            if (! $isCustomSupervisor && ! $isAtasan) {
+                abort(403, 'Anda tidak memiliki akses ke laporan ini.');
+            }
+        }
 
         $storagePath = "satker_ckh/{$report->user_id}/{$report->filename}";
         $filename = $report->filename;
