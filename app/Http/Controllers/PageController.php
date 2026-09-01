@@ -3131,15 +3131,48 @@ class PageController extends Controller
             }
         }
 
-        // Save PDF with error handling
-        $saved = Storage::disk('public')->put($storagePath, $pdfBinary);
+        // Try to save PDF with multiple fallback methods
+        $saved = false;
+        $fullFilePath = $fullDirPath . '/' . $filename;
+
+        // Method 1: Try Storage facade
+        try {
+            $saved = Storage::disk('public')->put($storagePath, $pdfBinary);
+        } catch (\Exception $e) {
+            Log::warning('Storage facade gagal, mencoba method lain', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Method 2: Try direct file_put_contents if Storage fails
         if (! $saved) {
-            Log::error('Gagal menyimpan PDF CKH ke storage', [
+            try {
+                if (! is_dir($fullDirPath)) {
+                    mkdir($fullDirPath, 0755, true);
+                }
+                $result = file_put_contents($fullFilePath, $pdfBinary);
+                if ($result !== false) {
+                    $saved = true;
+                    chmod($fullFilePath, 0644);
+                }
+            } catch (\Exception $e) {
+                Log::warning('file_put_contents gagal', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Log error if all methods fail
+        if (! $saved) {
+            Log::error('Gagal menyimpan PDF CKH ke storage (semua method gagal)', [
                 'user_id' => $user->id,
                 'storage_path' => $storagePath,
                 'full_path' => $fullDirPath,
                 'file_exists' => file_exists($fullDirPath),
                 'is_writable' => is_writable($fullDirPath ?? ''),
+                'php_user' => exec('whoami'),
             ]);
             // Still return the PDF to user even if storage fails
         }
