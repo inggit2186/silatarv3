@@ -3172,7 +3172,6 @@ class PageController extends Controller
                 'full_path' => $fullDirPath,
                 'file_exists' => file_exists($fullDirPath),
                 'is_writable' => is_writable($fullDirPath ?? ''),
-                'php_user' => exec('whoami'),
             ]);
             // Still return the PDF to user even if storage fails
         }
