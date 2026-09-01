@@ -3134,8 +3134,9 @@ class PageController extends Controller
         // Try to save PDF with multiple fallback methods
         $saved = false;
         $fullFilePath = $fullDirPath . '/' . $filename;
+        $savedPath = $storagePath;
 
-        // Method 1: Try Storage facade
+        // Method 1: Try Storage facade (public disk)
         try {
             $saved = Storage::disk('public')->put($storagePath, $pdfBinary);
         } catch (\Exception $e) {
@@ -3145,7 +3146,7 @@ class PageController extends Controller
             ]);
         }
 
-        // Method 2: Try direct file_put_contents if Storage fails
+        // Method 2: Try direct file_put_contents (public path)
         if (! $saved) {
             try {
                 if (! is_dir($fullDirPath)) {
@@ -3158,6 +3159,32 @@ class PageController extends Controller
                 }
             } catch (\Exception $e) {
                 Log::warning('file_put_contents gagal', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Method 3: Try save ke storage/app (non-public) sebagai fallback
+        if (! $saved) {
+            try {
+                $altDirPath = storage_path('app/satker_ckh/' . $user->id);
+                if (! is_dir($altDirPath)) {
+                    mkdir($altDirPath, 0755, true);
+                }
+                $altFilePath = $altDirPath . '/' . $filename;
+                $result = file_put_contents($altFilePath, $pdfBinary);
+                if ($result !== false) {
+                    $saved = true;
+                    $savedPath = "satker_ckh/{$user->id}/{$filename}";
+                    chmod($altFilePath, 0644);
+                    Log::info('PDF disimpan di storage/app (fallback)', [
+                        'user_id' => $user->id,
+                        'path' => $altFilePath,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::warning('file_put_contents ke storage/app gagal', [
                     'user_id' => $user->id,
                     'error' => $e->getMessage(),
                 ]);
