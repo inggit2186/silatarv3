@@ -468,10 +468,15 @@
                                                 <td class="bulanan-cell font-mono text-cyan-300">{{ $report['bulan'] }}</td>
                                                 <td class="bulanan-cell text-center">
                                                     @if($report['filename'])
+                                                        @php
+                                                            $pdfUrl = $report['id']
+                                                                ? route('laporan-kinerja.pdf', $report['id'])
+                                                                : '/storage/satker_ckh/' . $report['user_id'] . '/' . $report['filename'];
+                                                        @endphp
                                                         <div class="flex flex-col items-center gap-2">
                                                             <button
                                                                 type="button"
-                                                                @click="openPdfPreview('/storage/satker_ckh/{{ $report['user_id'] }}/{{ $report['filename'] }}', '{{ $report['bulan'] }}')"
+                                                                @click="openPdfPreview('{{ $pdfUrl }}', '{{ $report['bulan'] }}')"
                                                                 class="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 font-mono text-xs text-white hover:bg-cyan-500/20 hover:border-cyan-500/50 transition cursor-pointer"
                                                             >
                                                                 <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>

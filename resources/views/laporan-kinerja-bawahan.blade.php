@@ -550,10 +550,15 @@
                                                 </td>
                                                 <td class="bulanan-cell text-center">
                                                     @if($report['has_report'] && $report['filename'])
+                                                        @php
+                                                            $pdfUrl = $report['id']
+                                                                ? route('laporan-kinerja.pdf', $report['id'])
+                                                                : '/storage/satker_ckh/' . $report['user_id'] . '/' . $report['filename'];
+                                                        @endphp
                                                         <button
                                                             type="button"
                                                             @click="openPdfPreview(@js([
-                                                                'url' => '/storage/satker_ckh/' . $report['user_id'] . '/' . $report['filename'],
+                                                                'url' => $pdfUrl,
                                                                 'title' => $report['user_name'] . ' - ' . $report['bulan'],
                                                                 'reportId' => $report['id'] ?? null,
                                                                 'userId' => $report['user_id'],
