@@ -3427,13 +3427,36 @@ class PageController extends Controller
         abort_unless(filled($report->filename), 404);
 
         $storagePath = "satker_ckh/{$report->user_id}/{$report->filename}";
+        $filename = $report->filename;
 
-        abort_unless(Storage::disk('public')->exists($storagePath), 404);
+        // Method 1: Coba akses dari storage/app/public (public disk)
+        if (Storage::disk('public')->exists($storagePath)) {
+            return Storage::disk('public')->response($storagePath, $filename, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            ]);
+        }
 
-        return Storage::disk('public')->response($storagePath, $report->filename, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $report->filename . '"',
-        ]);
+        // Method 2: Coba akses dari storage/app (fallback untuk PHP-FPM permission issue)
+        $altStoragePath = storage_path('app/satker_ckh/' . $report->user_id . '/' . $filename);
+        if (file_exists($altStoragePath)) {
+            return response()->file($altStoragePath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            ]);
+        }
+
+        // Method 3: Coba akses dari public/storage (symlink)
+        $publicPath = public_path('storage/satker_ckh/' . $report->user_id . '/' . $filename);
+        if (file_exists($publicPath)) {
+            return response()->file($publicPath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            ]);
+        }
+
+        // Jika semua method gagal, return 404
+        abort(404, 'File PDF tidak ditemukan.');
     }
 
     public function replaceLaporanKinerjaFile(Request $request, int $reportId)
