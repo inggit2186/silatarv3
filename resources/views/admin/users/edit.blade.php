@@ -271,6 +271,21 @@
                                 </div>
                             </div>
 
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <div class="form-group">
+                                    <label for="satker" class="form-label">Satuan Kerja (Satker)</label>
+                                    <input type="text" id="satker" name="satker" class="form-input" value="{{ old('satker', $user->satker) }}" placeholder="Contoh: Subbag Tata Usaha">
+                                    <p class="text-xs text-slate-500 mt-1">Nama satuan kerja untuk dept 998/999 (Pemerintah Daerah)</p>
+                                </div>
+                                <div class="form-group">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select id="status" name="status" class="form-select">
+                                        <option value="1" {{ old('status', $user->status) == 1 ? 'selected' : '' }}>Aktif</option>
+                                        <option value="0" {{ old('status', $user->status) == 0 ? 'selected' : '' }}>Nonaktif</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             {{-- Madrasah Assignment --}}
                             <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-100">
                                 <div class="flex items-center gap-3 mb-3">
