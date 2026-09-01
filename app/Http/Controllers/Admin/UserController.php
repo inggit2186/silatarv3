@@ -264,6 +264,9 @@ class UserController extends Controller
                 return $supervisor;
             });
 
+        // Kategori jabatan options
+        $katJabatanOptions = ['kepala', 'kasi', 'kasubbag', 'kaur', 'staf', 'guru', 'pelaksana', 'honorer'];
+
         return view('admin.users.edit', [
             'title' => 'Edit Pengguna - SILATAR Admin',
             'breadcrumbs' => [
@@ -276,6 +279,7 @@ class UserController extends Controller
             'departments' => $departments,
             'madrasahs' => $madrasahs,
             'supervisors' => $supervisors,
+            'katJabatanOptions' => $katJabatanOptions,
         ]);
     }
 
@@ -299,6 +303,7 @@ class UserController extends Controller
             'dept_id' => ['nullable', 'numeric'],
             'madrasah_id' => ['nullable', 'numeric', 'exists:ktd_madrasah,id'],
             'custom_supervisor_id' => ['nullable', 'numeric', 'exists:users,id'],
+            'kat_jabatan' => ['nullable', 'string', Rule::in(['kepala', 'kasi', 'kasubbag', 'kaur', 'staf', 'guru', 'pelaksana', 'honorer'])],
             'jk' => ['nullable', 'string', Rule::in(['Pria', 'Wanita'])],
             'pekerjaan' => ['nullable', 'string', 'max:255'],
             'telp' => ['nullable', 'string', 'max:50'],
@@ -332,6 +337,7 @@ class UserController extends Controller
             'dept_id' => $validated['dept_id'] ?? 0,
             'madrasah_id' => $validated['madrasah_id'] ?? null,
             'custom_supervisor_id' => $validated['custom_supervisor_id'] ?? null,
+            'kat_jabatan' => $validated['kat_jabatan'] ?? null,
             'jk' => $validated['jk'] ?? 'Pria',
             'pekerjaan' => $validated['pekerjaan'] ?? '',
             'telp' => $validated['telp'] ?? null,

@@ -252,6 +252,25 @@
                                 </div>
                             </div>
 
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <div class="form-group">
+                                    <label for="kat_jabatan" class="form-label">Kategori Jabatan</label>
+                                    <select id="kat_jabatan" name="kat_jabatan" class="form-select">
+                                        <option value="">Pilih Kategori Jabatan</option>
+                                        @foreach($katJabatanOptions as $jabatan)
+                                            <option value="{{ $jabatan }}" {{ old('kat_jabatan', $user->kat_jabatan) === $jabatan ? 'selected' : '' }}>
+                                                {{ ucfirst($jabatan) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <p class="text-xs text-slate-500 mt-1">Menentukan hierarki atasan pada laporan kinerja</p>
+                                </div>
+                                <div class="form-group">
+                                    <label for="pekerjaan" class="form-label">Pekerjaan/Jabatan</label>
+                                    <input type="text" id="pekerjaan" name="pekerjaan" class="form-input" value="{{ old('pekerjaan', $user->pekerjaan) }}" placeholder="Contoh: Staff Tata Usaha">
+                                </div>
+                            </div>
+
                             {{-- Madrasah Assignment --}}
                             <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-100">
                                 <div class="flex items-center gap-3 mb-3">
