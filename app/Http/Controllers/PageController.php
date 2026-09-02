@@ -4879,7 +4879,6 @@ class PageController extends Controller
                         'filename' => $filename,
                         'directory_exists' => is_dir($directory),
                         'directory_writable' => is_writable($directory),
-                        'disk_root' => Storage::disk('public')->getDriver()->getAdapter()->getPathPrefix(),
                         'php_error' => $error ? $error['message'] : null,
                     ]);
                 }
