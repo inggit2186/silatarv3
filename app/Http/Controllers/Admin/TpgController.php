@@ -319,16 +319,68 @@ class TpgController extends Controller
 
     private function getDynamicServiceIds($user, string $mode): array
     {
-        return DB::table('ktd_layanan as l')
-            ->where('l.status', 1)
-            ->where('l.tipe', $mode)
-            ->when($user->role !== 'admin', fn ($q) => $q->where('l.dept_id', $user->dept_id))
-            ->pluck('l.id')
-            ->all();
+        // TPG service IDs - semester and bulanan
+        $tpgServiceIds = [1037, 1038, 1081, 1082];
+
+        // For staff/petugas, get services they can access
+        if ($user->role !== 'admin') {
+            // Get all layanan for this user's dept_id
+            $deptServiceIds = DB::table('ktd_layanan as l')
+                ->where('l.status', 1)
+                ->where('l.dept_id', $user->dept_id)
+                ->pluck('l.id')
+                ->all();
+
+            // If dept has TPG services, return them
+            if (!empty(array_intersect($deptServiceIds, $tpgServiceIds))) {
+                return array_intersect($deptServiceIds, $tpgServiceIds);
+            }
+
+            // If no TPG services in dept, check if user's dept_id matches pemberkasan dept_id
+            // This allows staff to see submissions from their dept even if layanan is global
+            $pemberkasanDeptIds = DB::table('satker_pemberkasan')
+                ->whereIn('layanan_id', $tpgServiceIds)
+                ->where('dept_id', $user->dept_id)
+                ->distinct()
+                ->pluck('layanan_id')
+                ->toArray();
+
+            if (!empty($pemberkasanDeptIds)) {
+                return $pemberkasanDeptIds;
+            }
+
+            // Fallback: return all TPG service IDs (staff will be filtered by dept_id in main query)
+            return $tpgServiceIds;
+        }
+
+        // For admin, return all TPG services
+        return $tpgServiceIds;
     }
 
     private function getDynamicLayananOptions($user, string $mode): array
     {
+        // TPG service IDs
+        $tpgServiceIds = [1037, 1038, 1081, 1082];
+
+        // For staff/petugas, get services they can access
+        if ($user->role !== 'admin') {
+            return DB::table('ktd_layanan as l')
+                ->leftJoin('ktd_department as d', 'd.id', '=', 'l.dept_id')
+                ->select([
+                    'l.id',
+                    DB::raw("CONCAT(d.nama, ' - ', l.nama) as full_name"),
+                ])
+                ->where('l.status', 1)
+                ->whereIn('l.id', $tpgServiceIds)
+                ->where('l.dept_id', $user->dept_id)
+                ->orderBy('d.nama')
+                ->orderBy('l.nama')
+                ->get()
+                ->pluck('full_name', 'id')
+                ->all();
+        }
+
+        // For admin, return all TPG services
         return DB::table('ktd_layanan as l')
             ->leftJoin('ktd_department as d', 'd.id', '=', 'l.dept_id')
             ->select([
@@ -336,8 +388,7 @@ class TpgController extends Controller
                 DB::raw("CONCAT(d.nama, ' - ', l.nama) as full_name"),
             ])
             ->where('l.status', 1)
-            ->where('l.tipe', $mode)
-            ->when($user->role !== 'admin', fn ($q) => $q->where('l.dept_id', $user->dept_id))
+            ->whereIn('l.id', $tpgServiceIds)
             ->orderBy('d.nama')
             ->orderBy('l.nama')
             ->get()
