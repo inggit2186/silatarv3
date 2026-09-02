@@ -4849,19 +4849,38 @@ class PageController extends Controller
                 $path = "users_berkas/{$requester->nomor_induk}/Request/{$filename}";
 
                 // Save file to storage/app/public/users_berkas/{nomor_induk}/Request/{filename}
-                $success = Storage::disk('public')->put($path, file_get_contents($uploadedFile->getRealPath()));
+                $fullPath = storage_path("app/public/{$path}");
+                $directory = dirname($fullPath);
+
+                // Ensure directory exists
+                if (!is_dir($directory)) {
+                    mkdir($directory, 0755, true);
+                    Log::info('Directory created', ['directory' => $directory]);
+                }
+
+                $content = file_get_contents($uploadedFile->getRealPath());
+                $success = Storage::disk('public')->put($path, $content);
 
                 if ($success) {
                     Log::info('File uploaded successfully', [
                         'user_id' => $requester->id,
                         'path' => $path,
+                        'full_path' => $fullPath,
                         'filename' => $filename,
+                        'file_exists_after' => file_exists($fullPath),
                     ]);
                 } else {
+                    // Get detailed error
+                    $error = error_get_last();
                     Log::error('File upload FAILED', [
                         'user_id' => $requester->id,
                         'path' => $path,
+                        'full_path' => $fullPath,
                         'filename' => $filename,
+                        'directory_exists' => is_dir($directory),
+                        'directory_writable' => is_writable($directory),
+                        'disk_root' => Storage::disk('public')->getDriver()->getAdapter()->getPathPrefix(),
+                        'php_error' => $error ? $error['message'] : null,
                     ]);
                 }
 
