@@ -25,29 +25,13 @@ class MigratePemberkasanFilePaths extends Command
         $this->info('===========================================');
         $this->newLine();
 
-        // Get all pemberkasan records with files
-        $query = DB::table('satker_pemberkasan')
+        // Get total count first (without loading all records)
+        $totalRecords = DB::table('satker_pemberkasan')
             ->whereNotNull('files')
             ->where('files', '!=', '')
             ->where('files', '!=', '[]')
             ->where('files', '!=', 'null')
-            ->select([
-                'id',
-                'noreq',
-                'user_id',
-                'files',
-            ]);
-
-        if ($this->option('start-id')) {
-            $query->where('id', '>=', (int) $this->option('start-id'));
-        }
-
-        if ($this->option('limit')) {
-            $query->limit((int) $this->option('limit'));
-        }
-
-        $records = $query->orderBy('id')->get();
-        $totalRecords = $records->count();
+            ->count();
 
         $this->info("Found {$totalRecords} records with files.");
         $this->newLine();
@@ -58,7 +42,7 @@ class MigratePemberkasanFilePaths extends Command
         }
 
         if ($this->option('dry-run')) {
-            return $this->dryRun($records);
+            return $this->dryRun($totalRecords);
         }
 
         if (!$this->confirm("This will migrate files for {$totalRecords} records. Continue?")) {
@@ -79,33 +63,52 @@ class MigratePemberkasanFilePaths extends Command
 
         $batchSize = (int) $this->option('batch');
         $deleteOld = $this->option('delete-old');
+        $lastId = 0;
 
-        foreach ($records->chunk($batchSize) as $chunkIndex => $chunk) {
-            foreach ($chunk as $record) {
-                $result = $this->processRecord($record, $deleteOld);
+        // Use cursor for memory-efficient processing
+        $query = DB::table('satker_pemberkasan')
+            ->whereNotNull('files')
+            ->where('files', '!=', '')
+            ->where('files', '!=', '[]')
+            ->where('files', '!=', 'null')
+            ->select(['id', 'noreq', 'user_id', 'files']);
 
-                if ($result['success']) {
-                    $successCount++;
-                    $filesMigrated += $result['migrated'];
+        if ($this->option('start-id')) {
+            $lastId = (int) $this->option('start-id') - 1;
+            $query->where('id', '>=', $this->option('start-id'));
+        }
+
+        if ($this->option('limit')) {
+            $query->limit((int) $this->option('limit'));
+        }
+
+        // Process records one by one using cursor
+        foreach ($query->orderBy('id')->cursor() as $record) {
+            $result = $this->processRecord($record, $deleteOld);
+
+            if ($result['success']) {
+                $successCount++;
+                $filesMigrated += $result['migrated'];
+                $filesSkipped += $result['skipped'];
+                $bar->setMessage('<fg=green>OK</>');
+            } else {
+                if ($result['reason'] === 'skip') {
+                    $skippedCount++;
                     $filesSkipped += $result['skipped'];
-                    $bar->setMessage('<fg=green>OK</>');
+                    $bar->setMessage('<fg=yellow>SKIP</>');
                 } else {
-                    if ($result['reason'] === 'skip') {
-                        $skippedCount++;
-                        $filesSkipped += $result['skipped'];
-                        $bar->setMessage('<fg=yellow>SKIP</>');
-                    } else {
-                        $failedCount++;
-                        $filesFailed += $result['failed'];
-                        $bar->setMessage('<fg=red>FAIL</>');
-                    }
+                    $failedCount++;
+                    $filesFailed += $result['failed'];
+                    $bar->setMessage('<fg=red>FAIL</>');
                 }
-
-                $bar->advance();
             }
 
-            if ($chunkIndex < ceil($totalRecords / $batchSize) - 1) {
-                usleep(100000);
+            $bar->advance();
+            $lastId = $record->id;
+
+            // Free memory periodically
+            if (($successCount + $skippedCount + $failedCount) % 100 === 0) {
+                gc_collect_cycles();
             }
         }
 
@@ -137,23 +140,35 @@ class MigratePemberkasanFilePaths extends Command
             $this->warn('Old files kept. Run with --delete-old to remove them.');
         }
 
+        $this->newLine();
+        $this->info("Last processed ID: {$lastId}");
+
         return Command::SUCCESS;
     }
 
-    protected function dryRun($records): int
+    protected function dryRun($totalRecords): int
     {
         $this->warn('DRY RUN MODE - No files will be moved.');
         $this->newLine();
 
         $headers = ['ID', 'noreq', 'Files Count', 'Status', 'Details'];
         $rows = [];
-        $totalFiles = 0;
         $filesToMigrate = 0;
+        $sampleSize = min(20, $totalRecords);
 
-        foreach ($records->take(20) as $record) {
+        // Process only first 20 records for dry-run
+        $records = DB::table('satker_pemberkasan')
+            ->whereNotNull('files')
+            ->where('files', '!=', '')
+            ->where('files', '!=', '[]')
+            ->where('files', '!=', 'null')
+            ->orderBy('id')
+            ->limit($sampleSize)
+            ->get();
+
+        foreach ($records as $record) {
             $files = json_decode($record->files, true) ?: [];
             $fileCount = count($files);
-            $totalFiles += $fileCount;
 
             $status = 'ready';
             $details = '';
@@ -207,13 +222,14 @@ class MigratePemberkasanFilePaths extends Command
 
         $this->table($headers, $rows);
 
-        if ($records->count() > 20) {
+        if ($totalRecords > $sampleSize) {
             $this->newLine();
-            $this->info('... and ' . ($records->count() - 20) . ' more records.');
+            $this->info("... and " . ($totalRecords - $sampleSize) . " more records.");
         }
 
         $this->newLine();
-        $this->info("Total files to migrate: {$filesToMigrate}");
+        $this->info("Total records: {$totalRecords}");
+        $this->info("Files to migrate (sampled): {$filesToMigrate}");
 
         return Command::SUCCESS;
     }
