@@ -11,12 +11,11 @@ class MigratePemberkasanFilePaths extends Command
 {
     protected $signature = 'pemberkasan:migrate-file-paths
                             {--dry-run : Preview tanpa pindah file}
-                            {--delete-old : Hapus file lama setelah dipindah}
-                            {--batch=50 : Records per batch}
+                            {--keep-old : Simpan file lama (default: hapus setelah dipindah)}
                             {--start-id= : Mulai dari ID tertentu}
                             {--limit= : Batasi jumlah record}';
 
-    protected $description = 'Migrate pemberkasan files from users_berkas to public/users_berkas with Request subdirectory';
+    protected $description = 'Migrate pemberkasan files from users_berkas to public/users_berkas (hapus file lama setelah dipindah)';
 
     public function handle(): int
     {
@@ -60,10 +59,10 @@ class MigratePemberkasanFilePaths extends Command
         $filesMigrated = 0;
         $filesSkipped = 0;
         $filesFailed = 0;
+        $filesDeleted = 0;
 
-        $batchSize = (int) $this->option('batch');
-        $deleteOld = $this->option('delete-old');
         $lastId = 0;
+        $deleteOld = !$this->option('keep-old');  // Default: delete, --keep-old to keep
 
         // Use cursor for memory-efficient processing
         $query = DB::table('satker_pemberkasan')
@@ -90,6 +89,7 @@ class MigratePemberkasanFilePaths extends Command
                 $successCount++;
                 $filesMigrated += $result['migrated'];
                 $filesSkipped += $result['skipped'];
+                $filesDeleted += $result['deleted'];
                 $bar->setMessage('<fg=green>OK</>');
             } else {
                 if ($result['reason'] === 'skip') {
@@ -128,16 +128,18 @@ class MigratePemberkasanFilePaths extends Command
                 ['Files Migrated', $filesMigrated],
                 ['Files Skipped', $filesSkipped],
                 ['Files Failed', $filesFailed],
+                ['Files Deleted', $filesDeleted],
             ]
         );
 
         $this->newLine();
         $this->info('Files migrated to: storage/app/public/users_berkas/{nomor_induk}/Request/');
 
-        if ($deleteOld) {
-            $this->info('Old files have been deleted from: storage/app/users_berkas/{nomor_induk}/');
+        if (!$this->option('keep-old')) {
+            $this->info("Old files deleted: {$filesDeleted} files");
+            $this->info('From: storage/app/users_berkas/{nomor_induk}/');
         } else {
-            $this->warn('Old files kept. Run with --delete-old to remove them.');
+            $this->warn('Old files kept. Run without --keep-old to delete them.');
         }
 
         $this->newLine();
@@ -293,11 +295,19 @@ class MigratePemberkasanFilePaths extends Command
             }
 
             // Migrate the file
-            $success = FileHelper::migrateFileToPublic($nomorInduk, $filename, $deleteOld);
+            $success = FileHelper::migrateFileToPublic($nomorInduk, $filename, false);
 
             if ($success) {
                 $migrated++;
                 $filesUpdated = true;
+
+                // Delete old file if requested (after successful migration)
+                if ($deleteOld) {
+                    $legacyPath = FileHelper::getLegacyPath($nomorInduk, $filename);
+                    if (Storage::disk('users_berkas')->exists($legacyPath)) {
+                        Storage::disk('users_berkas')->delete($legacyPath);
+                    }
+                }
             } else {
                 $failed++;
             }
@@ -320,6 +330,7 @@ class MigratePemberkasanFilePaths extends Command
             'migrated' => $migrated,
             'skipped' => $skipped,
             'failed' => $failed,
+            'deleted' => $deleteOld ? $migrated : 0,
         ];
     }
 }
