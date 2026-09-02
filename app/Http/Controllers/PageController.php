@@ -1177,11 +1177,22 @@ class PageController extends Controller
 
         abort_unless($fileEntry && !empty($fileEntry['filename']) && $fileEntry['filename'] !== 'NONE', 404);
 
-        $path = "{$user->nomor_induk}/{$fileEntry['filename']}";
+        $filename = $fileEntry['filename'];
+        $nomorInduk = $user->nomor_induk;
 
-        abort_unless(Storage::disk('users_berkas')->exists($path), 404);
+        // Check new location first
+        $newPath = \App\Helpers\FileHelper::getPemberkasanPath($nomorInduk, $filename);
+        if (Storage::disk('public')->exists($newPath)) {
+            return Storage::disk('public')->response($newPath);
+        }
 
-        return Storage::disk('users_berkas')->response($path);
+        // Fallback to legacy location
+        $legacyPath = \App\Helpers\FileHelper::getLegacyPath($nomorInduk, $filename);
+        if (Storage::disk('users_berkas')->exists($legacyPath)) {
+            return Storage::disk('users_berkas')->response($legacyPath);
+        }
+
+        abort(404);
     }
 
     public function editTpgRequest(int $pemberkasanId, Request $request = null)
@@ -1467,11 +1478,22 @@ class PageController extends Controller
 
         abort_unless($fileEntry && !empty($fileEntry['filename']) && $fileEntry['filename'] !== 'NONE', 404);
 
-        $path = "{$user->nomor_induk}/{$fileEntry['filename']}";
+        $filename = $fileEntry['filename'];
+        $nomorInduk = $user->nomor_induk;
 
-        abort_unless(Storage::disk('users_berkas')->exists($path), 404);
+        // Check new location first
+        $newPath = \App\Helpers\FileHelper::getPemberkasanPath($nomorInduk, $filename);
+        if (Storage::disk('public')->exists($newPath)) {
+            return Storage::disk('public')->response($newPath);
+        }
 
-        return Storage::disk('users_berkas')->response($path);
+        // Fallback to legacy location
+        $legacyPath = \App\Helpers\FileHelper::getLegacyPath($nomorInduk, $filename);
+        if (Storage::disk('users_berkas')->exists($legacyPath)) {
+            return Storage::disk('users_berkas')->response($legacyPath);
+        }
+
+        abort(404);
     }
 
     /**
@@ -1955,11 +1977,19 @@ class PageController extends Controller
         return $this->deleteTpgBulananRequest($pemberkasanId);
     }
 
-    public function myRequests()
+    public function myRequests(Request $request)
     {
         $user = auth()->user();
 
         abort_unless($user, 403);
+
+        // Year filter parameter
+        $selectedYear = $request->input('year');
+        if ($selectedYear && preg_match('/^\d{4}$/', $selectedYear)) {
+            $selectedYear = (int) $selectedYear;
+        } else {
+            $selectedYear = null;
+        }
 
         // ==========================================
         // TPG TYPES (satker_pemberkasan)
@@ -2034,6 +2064,9 @@ class PageController extends Controller
         $regularRequests = DB::table('users_request as ur')
             ->where('ur.user_id', $user->id)
             ->leftJoin('ktd_layanan as layanan', 'layanan.id', '=', 'ur.layanan_id')
+            ->when($selectedYear, function ($query) use ($selectedYear) {
+                $query->whereYear('ur.created_at', $selectedYear);
+            })
             ->select([
                 'ur.id',
                 'ur.no_req',
@@ -2062,6 +2095,9 @@ class PageController extends Controller
         $tpgRequests = DB::table('satker_pemberkasan as sp')
             ->where('sp.user_id', $user->id)
             ->whereIn('sp.tipe', $tpgTypes)
+            ->when($selectedYear, function ($query) use ($selectedYear) {
+                $query->whereYear('sp.created_at', $selectedYear);
+            })
             ->select([
                 'sp.id',
                 'sp.noreq as no_req',
@@ -2099,14 +2135,40 @@ class PageController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        // Post-process: count files for TPG requests
+        // Post-process: count files for TPG requests and extract period info
         foreach ($allRequests as $request) {
-            if (!empty($request->tipe) && in_array($request->tipe, $tpgTypes) && !empty($request->files_data)) {
-                $files = json_decode($request->files_data, true);
-                if (is_string($files)) {
-                    $files = json_decode($files, true);
+            if (!empty($request->tipe) && in_array($request->tipe, $tpgTypes)) {
+                // Count files
+                if (!empty($request->files_data)) {
+                    $files = json_decode($request->files_data, true);
+                    if (is_string($files)) {
+                        $files = json_decode($files, true);
+                    }
+                    $request->file_count = is_array($files) ? count(array_filter($files, fn($f) => !empty($f['filename']) && $f['filename'] !== 'NONE')) : 0;
                 }
-                $request->file_count = is_array($files) ? count(array_filter($files, fn($f) => !empty($f['filename']) && $f['filename'] !== 'NONE')) : 0;
+
+                // Extract period info from metadata
+                $metadata = json_decode($request->metadata ?? '{}', true);
+                if (is_string($metadata)) {
+                    $metadata = json_decode($metadata, true) ?? [];
+                }
+                $request->periode = null;
+
+                // Handle semester type (PAIS-TPG-SEMESTER)
+                if ($request->tipe === 'PAIS-TPG-SEMESTER') {
+                    if (!empty($metadata['tahun_ajaran']) && !empty($metadata['semester'])) {
+                        $semesterLabel = ucfirst($metadata['semester']);
+                        $request->periode = $metadata['tahun_ajaran'] . ' - Semester ' . $semesterLabel;
+                    }
+                }
+                // Handle bulanan types (PAIS-TPG-BULANAN, PENMAD-TPG-BULANAN, PENMAD-PENGAWAS-BULANAN)
+                else {
+                    if (!empty($metadata['bulan']) && !empty($metadata['tahun'])) {
+                        $request->periode = $metadata['bulan'] . ' ' . $metadata['tahun'];
+                    } elseif (!empty($metadata['bulan']) && !empty($metadata['tahun_ajaran'])) {
+                        $request->periode = $metadata['bulan'] . ' ' . $metadata['tahun_ajaran'];
+                    }
+                }
             }
         }
 
@@ -2115,6 +2177,9 @@ class PageController extends Controller
         // ==========================================
         $janjiTemuList = DB::table('ktd_bukutamu')
             ->where('nomor_induk', $user->nomor_induk)
+            ->when($selectedYear, function ($query) use ($selectedYear) {
+                $query->whereYear('waktu', $selectedYear);
+            })
             ->orderByDesc('created_at')
             ->paginate(12)
             ->withQueryString();
@@ -4753,10 +4818,10 @@ class PageController extends Controller
                 $extension = strtolower($uploadedFile->getClientOriginalExtension() ?: $uploadedFile->extension());
                 $safeName = Str::slug($requirement['title'] ?? "syarat_{$syaratId}", '');
                 $filename = "{$noreq}.{$requester->id}.{$safeName}.{$extension}";
-                $path = "{$requester->nomor_induk}/{$filename}";
+                $path = "{$requester->nomor_induk}/Request/{$filename}";
 
-                // Save file to storage/app/users_berkas/{nomor_induk}/{filename}
-                Storage::disk('users_berkas')->put($path, file_get_contents($uploadedFile->getRealPath()));
+                // Save file to storage/app/public/users_berkas/{nomor_induk}/Request/{filename}
+                Storage::disk('public')->put($path, file_get_contents($uploadedFile->getRealPath()));
 
                 $fileEntry['filename'] = $filename;
                 $fileEntry['filetype'] = $extension;
@@ -4888,7 +4953,7 @@ class PageController extends Controller
         $filename = "{$noreq}.{$requester->id}.{$safeName}.{$extension}";
         $path = "{$requester->nomor_induk}/Request/{$filename}";
 
-        Storage::disk('users_berkas')->put($path, file_get_contents($file->getRealPath()));
+        Storage::disk('public')->put($path, file_get_contents($file->getRealPath()));
 
         return $filename;
     }

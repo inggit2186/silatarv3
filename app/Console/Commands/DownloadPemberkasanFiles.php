@@ -139,7 +139,7 @@ class DownloadPemberkasanFiles extends Command
         );
 
         $this->newLine();
-        $this->info('Files saved to: storage/app/users_berkas/{nomor_induk}/');
+        $this->info('Files saved to: storage/app/public/users_berkas/{nomor_induk}/Request/');
 
         return Command::SUCCESS;
     }
@@ -246,9 +246,9 @@ class DownloadPemberkasanFiles extends Command
                 continue;
             }
 
-            $storagePath = "{$record->nomor_induk}/{$filename}";
+            $storagePath = "users_berkas/{$record->nomor_induk}/Request/{$filename}";
 
-            if (Storage::disk('users_berkas')->exists($storagePath)) {
+            if (Storage::disk('public')->exists($storagePath)) {
                 $files[] = [
                     'syarat_id' => $syaratId,
                     'title' => $title,
@@ -271,7 +271,7 @@ class DownloadPemberkasanFiles extends Command
                     ->get($fileUrl);
 
                 if ($response->successful()) {
-                    Storage::disk('users_berkas')->put($storagePath, $response->body());
+                    Storage::disk('public')->put($storagePath, $response->body());
 
                     $files[] = [
                         'syarat_id' => $syaratId,
