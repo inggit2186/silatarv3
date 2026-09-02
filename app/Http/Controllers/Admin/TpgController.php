@@ -30,7 +30,10 @@ class TpgController extends Controller
 
         $currentBulan = $request->has('bulan') ? ($request->get('bulan') ?: null) : $defaultBulan;
         $currentTahun = $request->has('tahun') ? ($request->get('tahun') ?: null) : $defaultTahun;
-        $currentStatus = $request->has('status') ? ($request->get('status') ?: null) : 'SUBMITTED';
+
+        // Default status: admin sees SUBMITTED, staff sees all statuses
+        $defaultStatus = $user->role === 'admin' ? 'SUBMITTED' : null;
+        $currentStatus = $request->has('status') ? ($request->get('status') ?: null) : $defaultStatus;
 
         $tipeLabels = [
             'PAIS-TPG-SEMESTER' => 'TPG Semester',
@@ -324,29 +327,28 @@ class TpgController extends Controller
 
         // For staff/petugas, get services they can access
         if ($user->role !== 'admin') {
-            // Get all layanan for this user's dept_id
-            $deptServiceIds = DB::table('ktd_layanan as l')
-                ->where('l.status', 1)
-                ->where('l.dept_id', $user->dept_id)
-                ->pluck('l.id')
-                ->all();
-
-            // If dept has TPG services, return them
-            if (!empty(array_intersect($deptServiceIds, $tpgServiceIds))) {
-                return array_intersect($deptServiceIds, $tpgServiceIds);
-            }
-
-            // If no TPG services in dept, check if user's dept_id matches pemberkasan dept_id
-            // This allows staff to see submissions from their dept even if layanan is global
-            $pemberkasanDeptIds = DB::table('satker_pemberkasan')
+            // First, check if there are pemberkasan records with user's dept_id
+            // This is the most reliable way - staff sees submissions from their dept
+            $pemberkasanServiceIds = DB::table('satker_pemberkasan')
                 ->whereIn('layanan_id', $tpgServiceIds)
                 ->where('dept_id', $user->dept_id)
                 ->distinct()
                 ->pluck('layanan_id')
                 ->toArray();
 
-            if (!empty($pemberkasanDeptIds)) {
-                return $pemberkasanDeptIds;
+            if (!empty($pemberkasanServiceIds)) {
+                return $pemberkasanServiceIds;
+            }
+
+            // If no pemberkasan found, check ktd_layanan
+            $deptServiceIds = DB::table('ktd_layanan as l')
+                ->where('l.status', 1)
+                ->where('l.dept_id', $user->dept_id)
+                ->pluck('l.id')
+                ->all();
+
+            if (!empty(array_intersect($deptServiceIds, $tpgServiceIds))) {
+                return array_intersect($deptServiceIds, $tpgServiceIds);
             }
 
             // Fallback: return all TPG service IDs (staff will be filtered by dept_id in main query)
