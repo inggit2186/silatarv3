@@ -60,15 +60,12 @@
                     handleFormSubmit(event) {
                         event.preventDefault();
 
-                        console.log('=== FORM SUBMIT STARTED ===');
-
                         // Set submit_action from the clicked button
                         var clickedButton = event.submitter;
                         var submitAction = '';
                         if (clickedButton && clickedButton.name === 'submit_action') {
                             submitAction = clickedButton.value;
                             document.getElementById('submitActionInput').value = submitAction;
-                            console.log('Submit action:', submitAction);
                         }
 
                         var missingCount = 0;
@@ -77,7 +74,6 @@
 
                         // Check for file errors (size validation, processing errors, etc)
                         var fileErrorKeys = Object.keys(this.fileErrors);
-                        console.log('File errors:', fileErrorKeys.length, this.fileErrors);
                         if (fileErrorKeys.length > 0) {
                             fileErrorKeys.forEach(function(syaratId) {
                                 var errorMsg = self.fileErrors[syaratId];
@@ -88,23 +84,18 @@
                         }
 
                         // Check for required files
-                        console.log('Required file IDs:', this.requiredFileIds);
                         this.requiredFileIds.forEach(function(fileId) {
                             var wasDeleted = self.deletedFileIds.includes(fileId);
                             var fileInput = document.querySelector('input[name="files[' + fileId + ']"]');
                             var hasNewFile = fileInput && fileInput.files && fileInput.files.length > 0;
                             var hasExisting = self.existingFiles && self.existingFiles[fileId] && !wasDeleted;
 
-                            console.log('File', fileId, '- hasNewFile:', hasNewFile, 'hasExisting:', hasExisting, 'wasDeleted:', wasDeleted);
-
                             if (!hasNewFile && !hasExisting) {
                                 missingCount++;
                             }
                         });
-                        console.log('Missing count:', missingCount);
 
                         if (errorMessages.length > 0) {
-                            console.log('BLOCKED: File errors found');
                             this.validationModal.message = 'Ada file yang tidak valid: ' + errorMessages.join('; ');
                             this.validationModal.missingCount = errorMessages.length;
                             this.validationModal.open = true;
@@ -114,7 +105,6 @@
 
                         // Only block for final submission (Ajukan), not for draft
                         if (submitAction === 'submit' && missingCount > 0) {
-                            console.log('BLOCKED: Missing required files for submit');
                             this.validationModal.message = 'Harap upload semua dokumen yang wajib sebelum mengajukan.';
                             this.validationModal.missingCount = missingCount;
                             this.validationModal.open = true;
@@ -124,14 +114,12 @@
 
                         // For draft, show warning but allow submission
                         if (submitAction === 'draft' && missingCount > 0) {
-                            console.log('WARNING: Missing files for draft');
                             if (!confirm('Ada ' + missingCount + ' dokumen wajib yang belum diupload. Tetap simpan draft?')) {
                                 return;
                             }
                         }
 
                         // Submit form
-                        console.log('SUBMITTING FORM...');
                         event.target.submit();
                     },
 

@@ -4786,28 +4786,11 @@ class PageController extends Controller
     {
         $files = [];
 
-        // Debug: Log all files received by request
-        Log::info('buildFilesSnapshot called', [
-            'user_id' => $requester->id,
-            'service_id' => $serviceId,
-            'noreq' => $noreq,
-            'request_files' => $request->hasFile('files') ? array_keys($request->file('files')) : [],
-            'all_files_count' => count($request->allFiles()),
-        ]);
-
         foreach ($requirements as $requirement) {
             $syaratId = (int) $requirement['id'];
             $type = $requirement['type_normalized'];
             $fieldKey = $this->requirementFieldKey($type, $syaratId);
             $uploadedFile = $request->file($fieldKey);
-
-            // Debug: Log field key and file status
-            Log::info('Processing requirement', [
-                'syarat_id' => $syaratId,
-                'field_key' => $fieldKey,
-                'has_file' => $uploadedFile ? true : false,
-                'file_name' => $uploadedFile ? $uploadedFile->getClientOriginalName() : null,
-            ]);
 
             // Check if file was deleted by user
             $isDeleted = in_array($syaratId, $deletedFileIds);
@@ -4832,17 +4815,6 @@ class PageController extends Controller
 
             // Handle file upload (only if new file is uploaded)
             if ($uploadedFile) {
-                // Debug logging
-                Log::info('Upload file received', [
-                    'user_id' => $requester->id,
-                    'nomor_induk' => $requester->nomor_induk,
-                    'syarat_id' => $syaratId,
-                    'filename_original' => $uploadedFile->getClientOriginalName(),
-                    'size' => $uploadedFile->getSize(),
-                    'extension' => $uploadedFile->getClientOriginalExtension(),
-                    'path_real' => $uploadedFile->getRealPath(),
-                ]);
-
                 $extension = strtolower($uploadedFile->getClientOriginalExtension() ?: $uploadedFile->extension());
                 $safeName = Str::slug($requirement['title'] ?? "syarat_{$syaratId}", '');
                 $filename = "{$noreq}.{$requester->id}.{$safeName}.{$extension}";
@@ -4855,44 +4827,15 @@ class PageController extends Controller
                 // Ensure directory exists
                 if (!is_dir($directory)) {
                     mkdir($directory, 0755, true);
-                    Log::info('Directory created', ['directory' => $directory]);
                 }
 
-                $content = file_get_contents($uploadedFile->getRealPath());
-                $success = Storage::disk('public')->put($path, $content);
-
-                if ($success) {
-                    Log::info('File uploaded successfully', [
-                        'user_id' => $requester->id,
-                        'path' => $path,
-                        'full_path' => $fullPath,
-                        'filename' => $filename,
-                        'file_exists_after' => file_exists($fullPath),
-                    ]);
-                } else {
-                    // Get detailed error
-                    $error = error_get_last();
-                    Log::error('File upload FAILED', [
-                        'user_id' => $requester->id,
-                        'path' => $path,
-                        'full_path' => $fullPath,
-                        'filename' => $filename,
-                        'directory_exists' => is_dir($directory),
-                        'directory_writable' => is_writable($directory),
-                        'php_error' => $error ? $error['message'] : null,
-                    ]);
-                }
+                Storage::disk('public')->put($path, file_get_contents($uploadedFile->getRealPath()));
 
                 $fileEntry['filename'] = $filename;
                 $fileEntry['filetype'] = $extension;
                 $fileEntry['size'] = (string) $uploadedFile->getSize();
                 $fileEntry['status'] = 1;
                 $fileEntry['uploaded_at'] = now()->toIso8601String();
-            } else {
-                Log::info('No file uploaded for requirement', [
-                    'user_id' => $requester->id,
-                    'syarat_id' => $syaratId,
-                ]);
             }
 
             $files[] = $fileEntry;
