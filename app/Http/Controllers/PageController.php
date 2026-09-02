@@ -4818,7 +4818,7 @@ class PageController extends Controller
                 $extension = strtolower($uploadedFile->getClientOriginalExtension() ?: $uploadedFile->extension());
                 $safeName = Str::slug($requirement['title'] ?? "syarat_{$syaratId}", '');
                 $filename = "{$noreq}.{$requester->id}.{$safeName}.{$extension}";
-                $path = "{$requester->nomor_induk}/Request/{$filename}";
+                $path = "users_berkas/{$requester->nomor_induk}/Request/{$filename}";
 
                 // Save file to storage/app/public/users_berkas/{nomor_induk}/Request/{filename}
                 Storage::disk('public')->put($path, file_get_contents($uploadedFile->getRealPath()));
@@ -4951,7 +4951,7 @@ class PageController extends Controller
         $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension());
         $safeName = Str::slug($requirement['title'] ?? "syarat_{$syaratId}", '');
         $filename = "{$noreq}.{$requester->id}.{$safeName}.{$extension}";
-        $path = "{$requester->nomor_induk}/Request/{$filename}";
+        $path = "users_berkas/{$requester->nomor_induk}/Request/{$filename}";
 
         Storage::disk('public')->put($path, file_get_contents($file->getRealPath()));
 
