@@ -4815,19 +4815,49 @@ class PageController extends Controller
 
             // Handle file upload (only if new file is uploaded)
             if ($uploadedFile) {
+                // Debug logging
+                Log::info('Upload file received', [
+                    'user_id' => $requester->id,
+                    'nomor_induk' => $requester->nomor_induk,
+                    'syarat_id' => $syaratId,
+                    'filename_original' => $uploadedFile->getClientOriginalName(),
+                    'size' => $uploadedFile->getSize(),
+                    'extension' => $uploadedFile->getClientOriginalExtension(),
+                    'path_real' => $uploadedFile->getRealPath(),
+                ]);
+
                 $extension = strtolower($uploadedFile->getClientOriginalExtension() ?: $uploadedFile->extension());
                 $safeName = Str::slug($requirement['title'] ?? "syarat_{$syaratId}", '');
                 $filename = "{$noreq}.{$requester->id}.{$safeName}.{$extension}";
                 $path = "users_berkas/{$requester->nomor_induk}/Request/{$filename}";
 
                 // Save file to storage/app/public/users_berkas/{nomor_induk}/Request/{filename}
-                Storage::disk('public')->put($path, file_get_contents($uploadedFile->getRealPath()));
+                $success = Storage::disk('public')->put($path, file_get_contents($uploadedFile->getRealPath()));
+
+                if ($success) {
+                    Log::info('File uploaded successfully', [
+                        'user_id' => $requester->id,
+                        'path' => $path,
+                        'filename' => $filename,
+                    ]);
+                } else {
+                    Log::error('File upload FAILED', [
+                        'user_id' => $requester->id,
+                        'path' => $path,
+                        'filename' => $filename,
+                    ]);
+                }
 
                 $fileEntry['filename'] = $filename;
                 $fileEntry['filetype'] = $extension;
                 $fileEntry['size'] = (string) $uploadedFile->getSize();
                 $fileEntry['status'] = 1;
                 $fileEntry['uploaded_at'] = now()->toIso8601String();
+            } else {
+                Log::info('No file uploaded for requirement', [
+                    'user_id' => $requester->id,
+                    'syarat_id' => $syaratId,
+                ]);
             }
 
             $files[] = $fileEntry;
