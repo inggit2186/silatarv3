@@ -238,7 +238,21 @@ class MigratePemberkasanFilePaths extends Command
 
     protected function processRecord(object $record, bool $deleteOld): array
     {
-        $files = json_decode($record->files, true) ?: [];
+        // Handle JSON decoding with fallback for double-encoded JSON
+        $filesRaw = $record->files;
+
+        if (is_array($filesRaw)) {
+            $files = $filesRaw;
+        } elseif (is_string($filesRaw)) {
+            $decoded = json_decode($filesRaw, true);
+            if (is_string($decoded)) {
+                // Double-encoded JSON
+                $decoded = json_decode($decoded, true);
+            }
+            $files = is_array($decoded) ? $decoded : [];
+        } else {
+            $files = [];
+        }
 
         if (empty($files)) {
             return [
@@ -247,6 +261,7 @@ class MigratePemberkasanFilePaths extends Command
                 'migrated' => 0,
                 'skipped' => 0,
                 'failed' => 0,
+                'deleted' => 0,
             ];
         }
 
@@ -259,6 +274,7 @@ class MigratePemberkasanFilePaths extends Command
                 'migrated' => 0,
                 'skipped' => 0,
                 'failed' => 0,
+                'deleted' => 0,
             ];
         }
 
@@ -324,13 +340,19 @@ class MigratePemberkasanFilePaths extends Command
                 ]);
         }
 
+        $deletedCount = 0;
+        if ($deleteOld && $migrated > 0) {
+            // Count successful deletes (files that were migrated and old deleted)
+            $deletedCount = $migrated;
+        }
+
         return [
             'success' => $failed === 0,
             'reason' => $failed > 0 ? 'error' : 'ok',
             'migrated' => $migrated,
             'skipped' => $skipped,
             'failed' => $failed,
-            'deleted' => $deleteOld ? $migrated : 0,
+            'deleted' => $deletedCount,
         ];
     }
 }
