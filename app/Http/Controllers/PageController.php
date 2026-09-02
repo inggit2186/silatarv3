@@ -4786,11 +4786,28 @@ class PageController extends Controller
     {
         $files = [];
 
+        // Debug: Log all files received by request
+        Log::info('buildFilesSnapshot called', [
+            'user_id' => $requester->id,
+            'service_id' => $serviceId,
+            'noreq' => $noreq,
+            'request_files' => $request->hasFile('files') ? array_keys($request->file('files')) : [],
+            'all_files_count' => count($request->allFiles()),
+        ]);
+
         foreach ($requirements as $requirement) {
             $syaratId = (int) $requirement['id'];
             $type = $requirement['type_normalized'];
             $fieldKey = $this->requirementFieldKey($type, $syaratId);
             $uploadedFile = $request->file($fieldKey);
+
+            // Debug: Log field key and file status
+            Log::info('Processing requirement', [
+                'syarat_id' => $syaratId,
+                'field_key' => $fieldKey,
+                'has_file' => $uploadedFile ? true : false,
+                'file_name' => $uploadedFile ? $uploadedFile->getClientOriginalName() : null,
+            ]);
 
             // Check if file was deleted by user
             $isDeleted = in_array($syaratId, $deletedFileIds);
