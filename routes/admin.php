@@ -185,6 +185,7 @@ Route::middleware(['auth', 'admin'])
         Route::post('/rekap-presensi/generate', [RekapPresensiController::class, 'generate'])->name('rekap-presensi.generate');
         Route::get('/rekap-presensi/download-presensi', [RekapPresensiController::class, 'downloadPresensi'])->name('rekap-presensi.download-presensi');
         Route::get('/rekap-presensi/download-detail', [RekapPresensiController::class, 'downloadDetail'])->name('rekap-presensi.download-detail');
+        Route::get('/rekap-presensi/download-by-group', [RekapPresensiController::class, 'downloadByGroup'])->name('rekap-presensi.download-by-group');
 
         // Import ASN Routes
         Route::prefix('import-asn')->name('import-asn.')->group(function () {

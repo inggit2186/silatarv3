@@ -11,6 +11,8 @@ class KtdPresensiFile extends Model
 
     protected $fillable = [
         'dept',
+        'group_key',
+        'user_id',
         'bulan',
         'tahun',
         'presensi',
