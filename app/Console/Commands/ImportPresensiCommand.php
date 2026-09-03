@@ -78,44 +78,39 @@ class ImportPresensiCommand extends Command
         }
         $this->newLine();
 
+        // Single confirmation before processing all files
+        if (!$this->option('force') && !$this->option('dry-run')) {
+            if (!$this->confirm("Import semua file ini ke database?")) {
+                $this->warn("⏭️  Dibatalkan oleh user");
+                return Command::SUCCESS;
+            }
+        }
+
         // Process each file
         $totalImported = 0;
         $totalSkipped = 0;
         $totalInvalid = 0;
         $importResults = [];
-        $filesToDelete = [];
 
         foreach ($files as $file) {
-            $result = $this->processFile($file);
+            // Free memory before processing next file
+            gc_collect_cycles();
+
+            $result = $this->processFile($file, true); // Pass true to skip individual confirmation
             $importResults[] = $result;
             $totalImported += $result['imported'];
             $totalSkipped += $result['skipped'];
             $totalInvalid += $result['invalid'];
 
-            // Mark file for deletion if import was successful (no errors)
-            // Hapus file jika tidak ada error, meskipun semua data duplikat
-            if (empty($result['errors'])) {
-                $filesToDelete[] = $file;
+            // Delete file immediately after successful import (unless --keep-files)
+            if (!$this->option('keep-files') && empty($result['errors']) && file_exists($file)) {
+                unlink($file);
+                $this->line("   🗑️  File dihapus: " . basename($file));
             }
         }
 
         // Print summary
         $this->printSummary($importResults, $totalImported, $totalSkipped, $totalInvalid);
-
-        // Delete files after successful import (unless --keep-files is specified)
-        if (!$this->option('keep-files') && !empty($filesToDelete)) {
-            $this->newLine();
-            $this->info('🗑️  Menghapus file Excel yang sudah berhasil diimport...');
-
-            foreach ($filesToDelete as $file) {
-                if (file_exists($file)) {
-                    unlink($file);
-                    $this->line("   🗑️  " . basename($file));
-                }
-            }
-
-            $this->info("✅ Berhasil menghapus " . count($filesToDelete) . " file");
-        }
 
         return Command::SUCCESS;
     }
@@ -165,7 +160,7 @@ class ImportPresensiCommand extends Command
         return $mapping;
     }
 
-    protected function processFile(string $filePath): array
+    protected function processFile(string $filePath, bool $skipConfirmation = false): array
     {
         $filename = basename($filePath);
         $this->line("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -220,8 +215,8 @@ class ImportPresensiCommand extends Command
             ];
         }
 
-        // Confirm import
-        if (!$this->option('force')) {
+        // Confirm import (skip if already confirmed at start)
+        if (!$this->option('force') && !$skipConfirmation) {
             $this->newLine();
             if (!$this->confirm("Import {$validated['valid_count']} data yang valid ke database?")) {
                 $this->warn("⏭️  Dibatalkan oleh user");

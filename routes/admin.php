@@ -12,9 +12,7 @@ use App\Http\Controllers\Admin\MadrasahLaporanController;
 use App\Http\Controllers\Admin\JanjiTemuController;
 use App\Http\Controllers\Admin\AcaraController;
 use App\Http\Controllers\Admin\CkhController;
-use App\Http\Controllers\Admin\PresensiImportController;
-use App\Http\Controllers\Admin\PresensiExportController;
-use App\Http\Controllers\Admin\ExportDownloadController;
+use App\Http\Controllers\Admin\RekapPresensiController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -178,28 +176,12 @@ Route::middleware(['auth', 'admin'])
             Route::post('/{type}/{id}/note', [MadrasahLaporanController::class, 'addNote'])->name('note');
         });
 
-        // Presensi Import Routes
-        Route::prefix('presensi')->name('presensi.')->group(function () {
-            Route::get('/import', [PresensiImportController::class, 'index'])->name('import');
-            Route::post('/import/preview', [PresensiImportController::class, 'preview'])->name('import.preview');
-            Route::post('/import/execute', [PresensiImportController::class, 'import'])->name('import.execute');
-            Route::post('/import/rollback/{batchId}', [PresensiImportController::class, 'rollback'])->name('import.rollback');
-            Route::get('/import/history', [PresensiImportController::class, 'history'])->name('import.history');
-        });
+        // Presensi Import Routes (Console only, tidak perlu web routes)
+        // Presensi Export Routes (Console only, tidak perlu web routes)
 
-        // Presensi Export Routes
-        Route::prefix('presensi')->name('presensi.')->group(function () {
-            Route::get('/export', [PresensiExportController::class, 'index'])->name('export');
-            Route::get('/export/detail', [PresensiExportController::class, 'exportDetail'])->name('export.detail');
-            Route::get('/export/absensi', [PresensiExportController::class, 'exportAbsensi'])->name('export.absensi');
-            Route::post('/export/bulk', [PresensiExportController::class, 'exportBulk'])->name('export.bulk');
-        });
-
-        // Export Download Routes
-        Route::prefix('exports')->name('exports.')->group(function () {
-            Route::get('/', [ExportDownloadController::class, 'index'])->name('index');
-            Route::get('/download', [ExportDownloadController::class, 'download'])->name('download');
-            Route::get('/download-month', [ExportDownloadController::class, 'downloadMonth'])->name('download-month');
-            Route::post('/delete', [ExportDownloadController::class, 'delete'])->name('delete');
-        });
+        // Rekap Presensi Routes
+        Route::get('/rekap-presensi', [RekapPresensiController::class, 'index'])->name('rekap-presensi');
+        Route::post('/rekap-presensi/generate', [RekapPresensiController::class, 'generate'])->name('rekap-presensi.generate');
+        Route::get('/rekap-presensi/download-presensi', [RekapPresensiController::class, 'downloadPresensi'])->name('rekap-presensi.download-presensi');
+        Route::get('/rekap-presensi/download-detail', [RekapPresensiController::class, 'downloadDetail'])->name('rekap-presensi.download-detail');
     });

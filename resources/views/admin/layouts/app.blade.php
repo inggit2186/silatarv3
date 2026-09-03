@@ -169,31 +169,13 @@ $isHumas = AdminAccess::isHumas($userId);
                     </a>
 
                     @if($isAdmin)
-                    <a href="{{ route('admin.presensi.import') }}" class="sidebar-nav-item {{ request()->routeIs('admin.presensi.import*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.rekap-presensi') }}" class="sidebar-nav-item {{ request()->routeIs('admin.rekap-presensi*') ? 'active' : '' }}">
                         <div class="sidebar-nav-icon-wrap cyan">
                             <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
                         </div>
-                        <span>Import Presensi</span>
-                    </a>
-
-                    <a href="{{ route('admin.presensi.export') }}" class="sidebar-nav-item {{ request()->routeIs('admin.presensi.export*') ? 'active' : '' }}">
-                        <div class="sidebar-nav-icon-wrap emerald">
-                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                            </svg>
-                        </div>
-                        <span>Export Presensi</span>
-                    </a>
-
-                    <a href="{{ route('admin.exports.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.exports.*') ? 'active' : '' }}">
-                        <div class="sidebar-nav-icon-wrap blue">
-                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                            </svg>
-                        </div>
-                        <span>Download Export</span>
+                        <span>Rekap Presensi</span>
                     </a>
                     @endif
                 </div>

@@ -21,6 +21,9 @@ class PresensiImportService
      */
     public function parseExcel($filePath): array
     {
+        // Increase memory limit for large files
+        ini_set('memory_limit', '1024M');
+
         try {
             $spreadsheet = IOFactory::load($filePath);
             $sheet = $spreadsheet->getActiveSheet();
@@ -34,6 +37,11 @@ class PresensiImportService
                     $rowData[] = $sheet->getCell($col . $row)->getValue();
                 }
                 $data[] = $rowData;
+
+                // Free memory every 100 rows
+                if ($row % 100 == 0) {
+                    gc_collect_cycles();
+                }
             }
 
             return [

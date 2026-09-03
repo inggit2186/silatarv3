@@ -28,6 +28,8 @@ class KtdPresensi extends Model
         'p_alamat',
         'status',
         'keterangan',
+        'presensi',
+        'uangmakan',
         'error_masuk_taken_at',
         'error_pulang_taken_at',
         'manual_supervisor_name',
