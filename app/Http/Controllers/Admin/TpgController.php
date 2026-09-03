@@ -28,8 +28,14 @@ class TpgController extends Controller
             : 'Desember';
         $defaultTahun = $defaultMonthIndex > 0 ? date('Y') : (date('Y') - 1);
 
-        $currentBulan = $request->has('bulan') ? ($request->get('bulan') ?: null) : $defaultBulan;
-        $currentTahun = $request->has('tahun') ? ($request->get('tahun') ?: null) : $defaultTahun;
+        // Staff: no month/year filter by default (show all); Admin: default to current month
+        if ($user->role === 'admin') {
+            $currentBulan = $request->has('bulan') ? ($request->get('bulan') ?: null) : $defaultBulan;
+            $currentTahun = $request->has('tahun') ? ($request->get('tahun') ?: null) : $defaultTahun;
+        } else {
+            $currentBulan = $request->has('bulan') ? ($request->get('bulan') ?: null) : null;
+            $currentTahun = $request->has('tahun') ? ($request->get('tahun') ?: null) : null;
+        }
 
         // Default status: admin sees SUBMITTED, staff sees all statuses
         $defaultStatus = $user->role === 'admin' ? 'SUBMITTED' : null;
@@ -177,9 +183,16 @@ class TpgController extends Controller
         }
         $tahunAjaranOptions = $tahunAjaranOptions->unique()->values()->all();
 
-        $currentSemester = $request->has('semester') ? ($request->get('semester') ?: null) : 'Ganjil';
-        $currentTahunAjaran = $request->has('tahun_ajaran') ? ($request->get('tahun_ajaran') ?: null) : $defaultYear;
-        $currentStatus = $request->has('status') ? ($request->get('status') ?: null) : 'SUBMITTED';
+        // Staff: no filter defaults (show all); Admin: default to current semester/year
+        if ($user->role === 'admin') {
+            $currentSemester = $request->has('semester') ? ($request->get('semester') ?: null) : 'Ganjil';
+            $currentTahunAjaran = $request->has('tahun_ajaran') ? ($request->get('tahun_ajaran') ?: null) : $defaultYear;
+            $currentStatus = $request->has('status') ? ($request->get('status') ?: null) : 'SUBMITTED';
+        } else {
+            $currentSemester = $request->has('semester') ? ($request->get('semester') ?: null) : null;
+            $currentTahunAjaran = $request->has('tahun_ajaran') ? ($request->get('tahun_ajaran') ?: null) : null;
+            $currentStatus = $request->has('status') ? ($request->get('status') ?: null) : null;
+        }
         $layananId = $request->get('layanan_id');
 
         $allowedServiceIds = $this->getDynamicServiceIds($user, 'semester');
