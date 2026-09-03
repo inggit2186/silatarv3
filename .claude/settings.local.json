@@ -114,10 +114,17 @@
       "Bash(npx stylelint *)",
       "Bash(dir public\\\\css)",
       "Bash(grep -v \"//\")",
-      "Bash(php vendor/bin/pint --version)"
+      "Bash(php vendor/bin/pint --version)",
+      "Bash(chmod +x d:\\\\work\\\\SourceCode\\\\silatarV2\\\\debug-permissions.sh)",
+      "Bash(composer require *)",
+      "Bash(php -m)",
+      "Bash(rm -rf storage/app/exports/presensi/* 2>&1; php artisan presensi:export --user=1 --month=8 --year=2026 --all-types 2>&1 | head -60)",
+      "Bash(php -l resources/views/admin/layouts/app.blade.php)",
+      "Bash(grep -r '{{ $slot }}' resources/views/admin/)"
     ],
     "additionalDirectories": [
-      "D:\\work\\SourceCode\\silatarV2\\bootstrap\\cache"
+      "D:\\work\\SourceCode\\silatarV2\\bootstrap\\cache",
+      "D:\\work\\SourceCode\\silatarV2\\storage\\app\\exports\\presensi"
     ]
   },
   "hooks": {
