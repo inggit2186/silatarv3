@@ -325,6 +325,7 @@ $isHumas = AdminAccess::isHumas($userId);
 
         <!-- Content -->
         <div class="admin-content">
+            {{ $slot ?? '' }}
             @yield('content')
         </div>
     </main>
