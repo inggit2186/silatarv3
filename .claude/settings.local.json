@@ -121,7 +121,9 @@
       "Bash(rm -rf storage/app/exports/presensi/* 2>&1; php artisan presensi:export --user=1 --month=8 --year=2026 --all-types 2>&1 | head -60)",
       "Bash(php -l resources/views/admin/layouts/app.blade.php)",
       "Bash(grep -r '{{ $slot }}' resources/views/admin/)",
-      "Bash(\"C:\\\\xampp_lite_8_5\\\\apps\\\\mysql\\\\bin\\\\mysql.exe\" -u root kemenagtd_db)"
+      "Bash(\"C:\\\\xampp_lite_8_5\\\\apps\\\\mysql\\\\bin\\\\mysql.exe\" -u root kemenagtd_db)",
+      "Bash(git stash *)",
+      "Bash(git revert *)"
     ],
     "additionalDirectories": [
       "D:\\work\\SourceCode\\silatarV2\\bootstrap\\cache",
