@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\JanjiTemuController;
 use App\Http\Controllers\Admin\AcaraController;
 use App\Http\Controllers\Admin\CkhController;
 use App\Http\Controllers\Admin\RekapPresensiController;
+use App\Http\Controllers\Admin\AsnImportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -184,4 +185,12 @@ Route::middleware(['auth', 'admin'])
         Route::post('/rekap-presensi/generate', [RekapPresensiController::class, 'generate'])->name('rekap-presensi.generate');
         Route::get('/rekap-presensi/download-presensi', [RekapPresensiController::class, 'downloadPresensi'])->name('rekap-presensi.download-presensi');
         Route::get('/rekap-presensi/download-detail', [RekapPresensiController::class, 'downloadDetail'])->name('rekap-presensi.download-detail');
+
+        // Import ASN Routes
+        Route::prefix('import-asn')->name('import-asn.')->group(function () {
+            Route::get('/', [AsnImportController::class, 'index'])->name('index');
+            Route::post('/preview', [AsnImportController::class, 'preview'])->name('preview');
+            Route::post('/import', [AsnImportController::class, 'import'])->name('import');
+            Route::get('/history', [AsnImportController::class, 'history'])->name('history');
+        });
     });

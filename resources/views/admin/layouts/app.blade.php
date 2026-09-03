@@ -77,7 +77,7 @@ $isHumas = AdminAccess::isHumas($userId);
             @endif
 
             @if($canAccessAdminPanel)
-            <div class="menu-group {{ request()->routeIs('admin.users.*', 'admin.services.*', 'admin.units.*', 'admin.requests.*', 'admin.tpg.*', 'admin.reports.*', 'admin.madrasah.laporan.*') ? 'has-active' : '' }}" data-group="kelola" id="menuGroupKelola">
+            <div class="menu-group {{ request()->routeIs('admin.users.*', 'admin.services.*', 'admin.units.*', 'admin.requests.*', 'admin.tpg.*', 'admin.reports.*', 'admin.madrasah.laporan.*', 'admin.import-asn.*') ? 'has-active' : '' }}" data-group="kelola" id="menuGroupKelola">
                 <div class="menu-group-header" onclick="toggleMenuGroup('kelola')">
                     <div class="menu-group-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -100,6 +100,17 @@ $isHumas = AdminAccess::isHumas($userId);
                         </div>
                         <span>Pengguna</span>
                     </a>
+
+                    @if($isAdmin)
+                    <a href="{{ route('admin.import-asn.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.import-asn.*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap cyan">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                            </svg>
+                        </div>
+                        <span>Import ASN</span>
+                    </a>
+                    @endif
 
                     <a href="{{ route('admin.services.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
                         <div class="sidebar-nav-icon-wrap emerald">
