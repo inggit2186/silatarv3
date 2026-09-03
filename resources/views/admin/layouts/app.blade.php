@@ -167,6 +167,35 @@ $isHumas = AdminAccess::isHumas($userId);
                         </div>
                         <span>Laporan CKH</span>
                     </a>
+
+                    @if($isAdmin)
+                    <a href="{{ route('admin.presensi.import') }}" class="sidebar-nav-item {{ request()->routeIs('admin.presensi.import*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap cyan">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                            </svg>
+                        </div>
+                        <span>Import Presensi</span>
+                    </a>
+
+                    <a href="{{ route('admin.presensi.export') }}" class="sidebar-nav-item {{ request()->routeIs('admin.presensi.export*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap emerald">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                        </div>
+                        <span>Export Presensi</span>
+                    </a>
+
+                    <a href="{{ route('admin.exports.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.exports.*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap blue">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                        </div>
+                        <span>Download Export</span>
+                    </a>
+                    @endif
                 </div>
             </div>
             @endif

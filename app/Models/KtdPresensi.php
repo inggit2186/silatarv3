@@ -11,20 +11,32 @@ class KtdPresensi extends Model
 
     protected $fillable = [
         'user_nip',
-        'dept_id',
         'tanggal',
         'm_absen',
+        'm_diff',
         'm_latitude',
         'm_longitude',
         'm_distance',
         'm_location',
+        'm_alamat',
         'p_absen',
+        'p_diff',
         'p_latitude',
         'p_longitude',
         'p_distance',
         'p_location',
+        'p_alamat',
         'status',
         'keterangan',
+        'error_masuk_taken_at',
+        'error_pulang_taken_at',
+        'manual_supervisor_name',
+        'manual_supervisor_nip',
+        'manual_unit_kerja',
+        'import_batch_id',
+        'imported_by',
+        'imported_at',
+        'import_source',
     ];
 
     protected $casts = [
