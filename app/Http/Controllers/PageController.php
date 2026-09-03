@@ -3145,12 +3145,35 @@ class PageController extends Controller
             : ($unitName ?: '-');
 
         if ($isCustomSupervisor) {
-            // Custom supervisor - tentukan label berdasarkan kat_jabatan supervisor
+            // Custom supervisor - tentukan label berdasarkan role dan kat_jabatan supervisor
+            $customSupervisorRole = $customSupervisor->role ?? '';
             $customSupervisorJabatan = $customSupervisor->kat_jabatan ?? '';
-            if ($customSupervisorJabatan === 'kepala') {
+
+            // Ambil nama unit kerja supervisor
+            $supervisorDept = DB::table('ktd_department')
+                ->where('id', $customSupervisor->dept_id)
+                ->first();
+            $supervisorDeptName = $supervisorDept->nama ?? '-';
+
+            // Jika role = kepala, tampilkan "Kepala Kankemenag Kab. Tanah Datar"
+            if ($customSupervisorRole === 'kepala') {
                 $signatureLabel = 'Mengetahui<br>Kepala Kankemenag Kab. Tanah Datar,';
-            } else {
-                $signatureLabel = "Mengetahui<br>Kepala {$kepalaLabel},";
+            }
+            // Jika kat_jabatan = kepala (tapi role bukan kepala), tampilkan "Kepala {unit_kerja}"
+            elseif ($customSupervisorJabatan === 'kepala') {
+                $signatureLabel = "Mengetahui<br>Kepala {$supervisorDeptName},";
+            }
+            // Jika kat_jabatan = kasi
+            elseif ($customSupervisorJabatan === 'kasi') {
+                $signatureLabel = "Mengetahui<br>Kasi {$supervisorDeptName},";
+            }
+            // Jika kat_jabatan = kasubbag
+            elseif ($customSupervisorJabatan === 'kasubbag') {
+                $signatureLabel = "Mengetahui<br>Kasubbag {$supervisorDeptName},";
+            }
+            // Default
+            else {
+                $signatureLabel = "Mengetahui<br>Kepala {$supervisorDeptName},";
             }
         } elseif ($isUserAtasan) {
             $signatureLabel = 'Mengetahui<br>Kepala Kankemenag Kab. Tanah Datar,';
