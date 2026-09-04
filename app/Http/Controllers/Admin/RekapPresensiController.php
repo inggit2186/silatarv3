@@ -439,22 +439,24 @@ class RekapPresensiController extends Controller
             $existing = $existingQuery->first();
 
             if ($existing) {
-                // Hapus file LAMA jika path berbeda dari yang baru ditulis
-                if ($existing->presensi && $existing->presensi !== $detailPath && file_exists(storage_path('app/' . $existing->presensi))) {
+                // Hapus file LAMA jika ada
+                if ($existing->presensi && file_exists(storage_path('app/' . $existing->presensi))) {
                     unlink(storage_path('app/' . $existing->presensi));
                 }
-                if ($existing->uangmakan && $existing->uangmakan !== $rekapPath && file_exists(storage_path('app/' . $existing->uangmakan))) {
+                if ($existing->uangmakan && file_exists(storage_path('app/' . $existing->uangmakan))) {
                     unlink(storage_path('app/' . $existing->uangmakan));
                 }
-                if (isset($existing->tukin) && $existing->tukin && $existing->tukin !== $tukinPath && file_exists(storage_path('app/' . $existing->tukin))) {
+                if (isset($existing->tukin) && $existing->tukin && file_exists(storage_path('app/' . $existing->tukin))) {
                     unlink(storage_path('app/' . $existing->tukin));
                 }
 
+                // Update timestamp
                 $existing->update([
                     'presensi' => $detailPath,
                     'uangmakan' => $rekapPath,
                     'tukin' => $tukinPath,
                     'user_id' => auth()->id(),
+                    'updated_at' => now(),
                 ]);
             } else {
                 KtdPresensiFile::create([
