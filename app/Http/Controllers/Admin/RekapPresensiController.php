@@ -640,8 +640,8 @@ class RekapPresensiController extends Controller
             $sheet->setCellValue("{$colLetter}5", $header);
         }
 
-        // Style headers
-        $lastCol = $getColumnName($headers);
+        // Style headers - use K as last column (11 columns)
+        $lastCol = 'K';
         $sheet->getStyle("A5:{$lastCol}5")->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
         $sheet->getStyle("A5:{$lastCol}5")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('7C3AED');
         $sheet->getStyle("A5:{$lastCol}5")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
