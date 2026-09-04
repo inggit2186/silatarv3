@@ -179,7 +179,7 @@ $isHumas = AdminAccess::isHumas($userId);
                         <span>Laporan CKH</span>
                     </a>
 
-                    @if($isAdmin)
+                    @if($isAdmin || $userDeptId == 4)
                     <a href="{{ route('admin.rekap-presensi') }}" class="sidebar-nav-item {{ request()->routeIs('admin.rekap-presensi*') ? 'active' : '' }}">
                         <div class="sidebar-nav-icon-wrap cyan">
                             <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

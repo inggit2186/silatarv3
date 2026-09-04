@@ -15,10 +15,36 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 class RekapPresensiController extends Controller
 {
     /**
+     * Check if user can access rekap presensi
+     * Allowed: admin, superadmin, kepala, or users with dept_id = 4
+     */
+    protected function canAccess(): bool
+    {
+        $user = auth()->user();
+        if (!$user) return false;
+
+        // Admin roles have full access
+        if (in_array($user->role, ['admin', 'superadmin', 'kepala'])) {
+            return true;
+        }
+
+        // Users with dept_id = 4 (Sub-Bagian TU) can access
+        if ($user->dept_id == 4) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Tampilkan form rekap presensi
      */
     public function index(Request $request)
     {
+        // Check access
+        if (!$this->canAccess()) {
+            abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
+        }
         $departments = Department::whereIn('status', [1, 2])->orderBy('nama')->get();
 
         // Default: bulan sebelumnya
@@ -149,6 +175,11 @@ class RekapPresensiController extends Controller
      */
     public function generate(Request $request)
     {
+        // Check access
+        if (!$this->canAccess()) {
+            abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
+        }
+
         $method = $request->input('method', 'unit_kerja');
         $isAjax = $request->ajax() || $request->expectsJson();
 
@@ -441,6 +472,11 @@ class RekapPresensiController extends Controller
      */
     public function downloadPresensi(Request $request)
     {
+        // Check access
+        if (!$this->canAccess()) {
+            abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
+        }
+
         $request->validate([
             'dept_id' => 'required|integer',
             'month' => 'required|integer',
@@ -491,6 +527,10 @@ class RekapPresensiController extends Controller
      */
     public function downloadByGroup(Request $request)
     {
+        // Check access
+        if (!$this->canAccess()) {
+            abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
+        }
         $request->validate([
             'group_key' => 'required|string',
             'month' => 'required|integer',

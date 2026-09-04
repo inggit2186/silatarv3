@@ -188,6 +188,10 @@ class UserController extends Controller
         $user->twitter = null;
         $user->instagram = null;
         $user->linkedin = null;
+        $user->masa_kerja_tahun = null;
+        $user->masa_kerja_bulan = null;
+        $user->tipe_asn = null;
+        $user->serdik = null;
 
         // Get data from tenaga_ktd table if exists
         $tenaga = DB::table('tenaga_ktd')
@@ -233,6 +237,54 @@ class UserController extends Controller
             }
             if (empty($user->jk) && !empty($tenaga->jenis_kelamin)) {
                 $user->jk = $tenaga->jenis_kelamin;
+            }
+            // Merge kepegawaian data from tenaga_ktd if empty in users
+            if (empty($user->gol) && !empty($tenaga->golongan)) {
+                $user->gol = $tenaga->golongan;
+            }
+            if (empty($user->jabatan) && !empty($tenaga->jabatan)) {
+                $user->jabatan = $tenaga->jabatan;
+            }
+            if (empty($user->tmt_cpns) && !empty($tenaga->tmt_cpns)) {
+                $user->tmt_cpns = $tenaga->tmt_cpns;
+            }
+            if (empty($user->tmt_pns) && !empty($tenaga->tmt_pns)) {
+                $user->tmt_pns = $tenaga->tmt_pns;
+            }
+            if (empty($user->tmt_tugas) && !empty($tenaga->tmt_tugas)) {
+                $user->tmt_tugas = $tenaga->tmt_tugas;
+            }
+            if (empty($user->kgb) && !empty($tenaga->kgb)) {
+                $user->kgb = $tenaga->kgb;
+            }
+            if (empty($user->masa_kerja_tahun) && !empty($tenaga->masa_kerja_tahun)) {
+                $user->masa_kerja_tahun = $tenaga->masa_kerja_tahun;
+            }
+            if (empty($user->masa_kerja_bulan) && !empty($tenaga->masa_kerja_bulan)) {
+                $user->masa_kerja_bulan = $tenaga->masa_kerja_bulan;
+            }
+            // Merge pendidikan data
+            if (empty($user->ijazah_pendidikan) && !empty($tenaga->pendidikan)) {
+                $user->ijazah_pendidikan = $tenaga->pendidikan;
+            }
+            if (empty($user->ijazah_jurusan) && !empty($tenaga->jurusan)) {
+                $user->ijazah_jurusan = $tenaga->jurusan;
+            }
+            if (empty($user->ijazah_fakultas) && !empty($tenaga->fakultas)) {
+                $user->ijazah_fakultas = $tenaga->fakultas;
+            }
+            if (empty($user->ijazah_universitas) && !empty($tenaga->universitas)) {
+                $user->ijazah_universitas = $tenaga->universitas;
+            }
+            if (empty($user->ijazah_tahun_lulus) && !empty($tenaga->tahun_lulus)) {
+                $user->ijazah_tahun_lulus = $tenaga->tahun_lulus;
+            }
+            // Merge tipe ASN and sertifikasi
+            if (empty($user->tipe_asn) && !empty($tenaga->status)) {
+                $user->tipe_asn = $tenaga->status;
+            }
+            if (empty($user->serdik) && !empty($tenaga->serdik)) {
+                $user->serdik = $tenaga->serdik;
             }
         }
 
@@ -327,6 +379,25 @@ class UserController extends Controller
             'twitter' => ['nullable', 'string', 'max:255'],
             'instagram' => ['nullable', 'string', 'max:255'],
             'linkedin' => ['nullable', 'string', 'max:255'],
+            'gol' => ['nullable', 'string', 'max:10'],
+            'jabatan' => ['nullable', 'string', 'max:255'],
+            'asn' => ['nullable', 'string', Rule::in(['PNS', 'PPPK', 'NON'])],
+            'req_tunjangan' => ['nullable', 'string'],
+            'tmt_cpns' => ['nullable', 'date'],
+            'tmt_pns' => ['nullable', 'date'],
+            'tmt_tugas' => ['nullable', 'date'],
+            'kgb' => ['nullable', 'date'],
+            'masa_kerja_tahun' => ['nullable', 'numeric'],
+            'masa_kerja_bulan' => ['nullable', 'numeric', 'min:0', 'max:11'],
+            'ijazah_pendidikan' => ['nullable', 'string', Rule::in(['SD', 'SMP', 'SMA', 'D3', 'D4', 'S1', 'S2', 'S3'])],
+            'ijazah_jurusan' => ['nullable', 'string', 'max:255'],
+            'ijazah_fakultas' => ['nullable', 'string', 'max:255'],
+            'ijazah_universitas' => ['nullable', 'string', 'max:255'],
+            'ijazah_tahun_lulus' => ['nullable', 'numeric', 'min:1950', 'max:2030'],
+            'bank_kategori' => ['nullable', 'string', 'max:100'],
+            'rekening' => ['nullable', 'string', 'max:50'],
+            'tipe_asn' => ['nullable', 'string', Rule::in(['pns', 'pppk', 'cpns', 'honorer', 'umum'])],
+            'serdik' => ['nullable', 'string', Rule::in(['sertifikasi', 'non-sertifikasi', 'non-guru'])],
         ]);
 
         // Update users table
@@ -345,6 +416,10 @@ class UserController extends Controller
             'telp' => $validated['telp'] ?? null,
             'alamat' => $validated['alamat'] ?? null,
             'status' => $validated['status'] ?? 1,
+            'gol' => $validated['gol'] ?? null,
+            'jabatan' => $validated['jabatan'] ?? null,
+            'asn' => $validated['asn'] ?? null,
+            'req_tunjangan' => $validated['req_tunjangan'] ?? null,
             'updated_at' => now(),
         ];
 
@@ -354,6 +429,51 @@ class UserController extends Controller
         }
         if (isset($validated['tempat_lahir'])) {
             $updateData['tempat_lahir'] = $validated['tempat_lahir'];
+        }
+        if (isset($validated['tmt_cpns'])) {
+            $updateData['tmt_cpns'] = $validated['tmt_cpns'];
+        }
+        if (isset($validated['tmt_pns'])) {
+            $updateData['tmt_pns'] = $validated['tmt_pns'];
+        }
+        if (isset($validated['tmt_tugas'])) {
+            $updateData['tmt_tugas'] = $validated['tmt_tugas'];
+        }
+        if (isset($validated['kgb'])) {
+            $updateData['kgb'] = $validated['kgb'];
+        }
+        if (isset($validated['masa_kerja_tahun'])) {
+            $updateData['masa_kerja_tahun'] = $validated['masa_kerja_tahun'];
+        }
+        if (isset($validated['masa_kerja_bulan'])) {
+            $updateData['masa_kerja_bulan'] = $validated['masa_kerja_bulan'];
+        }
+        if (isset($validated['ijazah_pendidikan'])) {
+            $updateData['ijazah_pendidikan'] = $validated['ijazah_pendidikan'];
+        }
+        if (isset($validated['ijazah_jurusan'])) {
+            $updateData['ijazah_jurusan'] = $validated['ijazah_jurusan'];
+        }
+        if (isset($validated['ijazah_fakultas'])) {
+            $updateData['ijazah_fakultas'] = $validated['ijazah_fakultas'];
+        }
+        if (isset($validated['ijazah_universitas'])) {
+            $updateData['ijazah_universitas'] = $validated['ijazah_universitas'];
+        }
+        if (isset($validated['ijazah_tahun_lulus'])) {
+            $updateData['ijazah_tahun_lulus'] = $validated['ijazah_tahun_lulus'];
+        }
+        if (isset($validated['bank_kategori'])) {
+            $updateData['bank_kategori'] = $validated['bank_kategori'];
+        }
+        if (isset($validated['rekening'])) {
+            $updateData['rekening'] = $validated['rekening'];
+        }
+        if (isset($validated['tipe_asn'])) {
+            $updateData['tipe_asn'] = $validated['tipe_asn'];
+        }
+        if (isset($validated['serdik'])) {
+            $updateData['serdik'] = $validated['serdik'];
         }
 
         // Only update password if provided
@@ -599,6 +719,11 @@ class UserController extends Controller
         $user->twitter = null;
         $user->instagram = null;
         $user->linkedin = null;
+        $user->masa_kerja_tahun = null;
+        $user->masa_kerja_bulan = null;
+        $user->tipe_asn = null;
+        $user->serdik = null;
+        $user->req_tunjangan = null;
 
         // Get data from tenaga_ktd
         $tenaga = DB::table('tenaga_ktd')
@@ -621,6 +746,54 @@ class UserController extends Controller
             $user->twitter = $tenaga->twitter ?? null;
             $user->instagram = $tenaga->instagram ?? null;
             $user->linkedin = $tenaga->linkedin ?? null;
+            // Merge kepegawaian data
+            if (empty($user->gol) && !empty($tenaga->golongan)) {
+                $user->gol = $tenaga->golongan;
+            }
+            if (empty($user->jabatan) && !empty($tenaga->jabatan)) {
+                $user->jabatan = $tenaga->jabatan;
+            }
+            if (empty($user->tmt_cpns) && !empty($tenaga->tmt_cpns)) {
+                $user->tmt_cpns = $tenaga->tmt_cpns;
+            }
+            if (empty($user->tmt_pns) && !empty($tenaga->tmt_pns)) {
+                $user->tmt_pns = $tenaga->tmt_pns;
+            }
+            if (empty($user->tmt_tugas) && !empty($tenaga->tmt_tugas)) {
+                $user->tmt_tugas = $tenaga->tmt_tugas;
+            }
+            if (empty($user->kgb) && !empty($tenaga->kgb)) {
+                $user->kgb = $tenaga->kgb;
+            }
+            if (empty($user->masa_kerja_tahun) && !empty($tenaga->masa_kerja_tahun)) {
+                $user->masa_kerja_tahun = $tenaga->masa_kerja_tahun;
+            }
+            if (empty($user->masa_kerja_bulan) && !empty($tenaga->masa_kerja_bulan)) {
+                $user->masa_kerja_bulan = $tenaga->masa_kerja_bulan;
+            }
+            // Merge pendidikan data
+            if (empty($user->ijazah_pendidikan) && !empty($tenaga->pendidikan)) {
+                $user->ijazah_pendidikan = $tenaga->pendidikan;
+            }
+            if (empty($user->ijazah_jurusan) && !empty($tenaga->jurusan)) {
+                $user->ijazah_jurusan = $tenaga->jurusan;
+            }
+            if (empty($user->ijazah_fakultas) && !empty($tenaga->fakultas)) {
+                $user->ijazah_fakultas = $tenaga->fakultas;
+            }
+            if (empty($user->ijazah_universitas) && !empty($tenaga->universitas)) {
+                $user->ijazah_universitas = $tenaga->universitas;
+            }
+            if (empty($user->ijazah_tahun_lulus) && !empty($tenaga->tahun_lulus)) {
+                $user->ijazah_tahun_lulus = $tenaga->tahun_lulus;
+            }
+            // Merge tipe ASN and sertifikasi
+            if (empty($user->tipe_asn) && !empty($tenaga->status)) {
+                $user->tipe_asn = $tenaga->status;
+            }
+            if (empty($user->serdik) && !empty($tenaga->serdik)) {
+                $user->serdik = $tenaga->serdik;
+            }
         }
 
         return view('admin.users.show', [

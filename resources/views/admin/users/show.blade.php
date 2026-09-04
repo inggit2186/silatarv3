@@ -182,7 +182,7 @@
                 </div>
             </div>
 
-            {{-- Informasi Lainnya --}}
+            {{-- Informasi Tambahan --}}
             <div class="info-card">
                 <div class="info-card-header">
                     <div class="info-card-icon purple">
@@ -211,7 +211,71 @@
                     </div>
                     <div class="info-item">
                         <div class="info-label">Status Nikah</div>
-                        <div class="info-value">{{ $user->nikah == '1' ? 'Sudah Menikah' : 'Belum Menikah' }}</div>
+                        <div class="info-value">{{ $user->nikah == '1' ? 'Sudah Menikah' : ($user->nikah == '0' ? 'Belum Menikah' : '-') }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Status ASN</div>
+                        <div class="info-value">{{ $user->asn ?? '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Tipe ASN</div>
+                        <div class="info-value">{{ ucfirst($user->tipe_asn ?? '-') }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Sertifikasi Guru</div>
+                        <div class="info-value">{{ ucfirst($user->serdik ?? '-') }}</div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Informasi Kepegawaian --}}
+            <div class="info-card">
+                <div class="info-card-header">
+                    <div class="info-card-icon green">
+                        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-semibold text-slate-800">Informasi Kepegawaian</h3>
+                </div>
+                <div>
+                    <div class="info-item">
+                        <div class="info-label">Golongan</div>
+                        <div class="info-value">{{ $user->gol ?? '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Jabatan Formal</div>
+                        <div class="info-value">{{ $user->jabatan ?? '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">TMT CPNS</div>
+                        <div class="info-value">{{ $user->tmt_cpns ?? '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">TMT PNS</div>
+                        <div class="info-value">{{ $user->tmt_pns ?? '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">TMT Tugas</div>
+                        <div class="info-value">{{ $user->tmt_tugas ?? '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">KGB</div>
+                        <div class="info-value">{{ $user->kgb ?? '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Masa Kerja</div>
+                        <div class="info-value">
+                            @if($user->masa_kerja_tahun || $user->masa_kerja_bulan)
+                                {{ $user->masa_kerja_tahun ?? '0' }} Tahun {{ $user->masa_kerja_bulan ?? '0' }} Bulan
+                            @else
+                                -
+                            @endif
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Request Tunjangan</div>
+                        <div class="info-value">{{ $user->req_tunjangan == '1' ? 'Ya' : 'Tidak' }}</div>
                     </div>
                 </div>
             </div>
@@ -246,6 +310,64 @@
                     <div class="info-item">
                         <div class="info-label">Bio</div>
                         <div class="info-value">{{ $user->bio ?? '-' }}</div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Informasi Pendidikan --}}
+            <div class="info-card">
+                <div class="info-card-header">
+                    <div class="info-card-icon blue">
+                        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 14l9-5-9-5-9 5 9 5z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-semibold text-slate-800">Informasi Pendidikan</h3>
+                </div>
+                <div>
+                    <div class="info-item">
+                        <div class="info-label">Pendidikan Terakhir</div>
+                        <div class="info-value">{{ $user->ijazah_pendidikan ?? '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Jurusan</div>
+                        <div class="info-value">{{ $user->ijazah_jurusan ?? '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Fakultas</div>
+                        <div class="info-value">{{ $user->ijazah_fakultas ?? '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Universitas / Institusi</div>
+                        <div class="info-value">{{ $user->ijazah_universitas ?? '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Tahun Lulus</div>
+                        <div class="info-value">{{ $user->ijazah_tahun_lulus ?? '-' }}</div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Informasi Bank --}}
+            <div class="info-card">
+                <div class="info-card-header">
+                    <div class="info-card-icon green">
+                        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-semibold text-slate-800">Informasi Bank</h3>
+                </div>
+                <div>
+                    <div class="info-item">
+                        <div class="info-label">Kategori Bank</div>
+                        <div class="info-value">{{ $user->bank_kategori ?? '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Nomor Rekening</div>
+                        <div class="info-value">{{ $user->rekening ?? '-' }}</div>
                     </div>
                 </div>
             </div>
