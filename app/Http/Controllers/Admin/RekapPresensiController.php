@@ -884,8 +884,10 @@ class RekapPresensiController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->freezePane('A6');
 
-        $lastCol = $getColumnName($daysInMonth + 3);
-        $totalCol = $getColumnName($daysInMonth + 2);
+        // Kolom: A=NIP, B=Nama, C=1, D=2, ..., AF=31, AG=Total
+        $dateEndCol = $getColumnName($daysInMonth + 1); // AF (tanggal 31)
+        $totalCol = $getColumnName($daysInMonth + 2); // AG (kolom Total)
+        $lastCol = $totalCol; // AG adalah kolom terakhir
 
         // Row 1: Title
         $sheet->mergeCells("A1:{$lastCol}1");
@@ -961,12 +963,15 @@ class RekapPresensiController extends Controller
                         ($presensi->status === null);
 
                     if ($hasPresensi) {
-                        $sheet->setCellValue("{$getColumnName($day + 2)}{$rowNum}", 1);
+                        // Kolom C (day=1), D (day=2), ..., AF (day=31)
+                        $col = $getColumnName($day + 2);
+                        $sheet->setCellValue("{$col}{$rowNum}", 1);
                         $total++;
                     }
                 }
             }
 
+            // Kolom AG (totalCol) untuk data total
             $sheet->setCellValue("{$totalCol}{$rowNum}", $total);
 
             // Apply row styling in batch (1 call per row, bukan per cell)
@@ -1067,8 +1072,10 @@ class RekapPresensiController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->freezePane('A6');
 
-        $lastCol = $getColumnName($daysInMonth + 3);
-        $totalCol = $getColumnName($daysInMonth + 2);
+        // Kolom: A=NIP, B=Nama, C=1, D=2, ..., AF=31, AG=Total
+        $dateEndCol = $getColumnName($daysInMonth + 1); // AF (tanggal 31)
+        $totalCol = $getColumnName($daysInMonth + 2); // AG (kolom Total)
+        $lastCol = $totalCol; // AG adalah kolom terakhir
 
         // Row 1: Title
         $sheet->mergeCells("A1:{$lastCol}1");
