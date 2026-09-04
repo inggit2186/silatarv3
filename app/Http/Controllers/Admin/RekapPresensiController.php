@@ -919,7 +919,7 @@ class RekapPresensiController extends Controller
 
         // Row 5: Headers
         $headerRow = 5;
-        $headerRange = "A{$headerRow}:{$totalCol}{$headerRow}";
+        $headerRange = "A{$headerRow}:{$lastCol}{$headerRow}";
         $sheet->setCellValue("A{$headerRow}", 'NIP');
         $sheet->setCellValue("B{$headerRow}", 'Nama');
         for ($day = 1; $day <= $daysInMonth; $day++) {
@@ -1100,7 +1100,7 @@ class RekapPresensiController extends Controller
 
         // Row 5: Headers
         $headerRow = 5;
-        $headerRange = "A{$headerRow}:{$totalCol}{$headerRow}";
+        $headerRange = "A{$headerRow}:{$lastCol}{$headerRow}";
         $sheet->setCellValue("A{$headerRow}", 'NIP');
         $sheet->setCellValue("B{$headerRow}", 'Nama');
         for ($day = 1; $day <= $daysInMonth; $day++) {
