@@ -905,10 +905,14 @@ class RekapPresensiController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->freezePane('A6');
 
-        // Kolom: A=NIP, B=Nama, C=1, D=2, ..., AF=31, AG=Total
-        $dateEndCol = $getColumnName($daysInMonth + 1); // AF (tanggal 31)
-        $totalCol = $getColumnName($daysInMonth + 2); // AG (kolom Total)
-        $lastCol = $totalCol; // AG adalah kolom terakhir
+        // Kolom: A=NIP, B=Nama, C=1, D=2, ..., AG=31, AH=Total
+        // daysInMonth=31: C(3)=1, D(4)=2, ..., AG(33)=31, AH(34)=Total
+        // Loop: getColumnName(day+2) untuk day=1..31 -> C..AG
+        // Total: getColumnName(34) = AH
+
+        $dateEndCol = $getColumnName($daysInMonth + 2); // AG (tanggal 31)
+        $totalCol = $getColumnName($daysInMonth + 3); // AH (kolom Total)
+        $lastCol = $totalCol; // AH adalah kolom terakhir
 
         // Row 1: Title
         $sheet->mergeCells("A1:{$lastCol}1");
@@ -1093,10 +1097,14 @@ class RekapPresensiController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->freezePane('A6');
 
-        // Kolom: A=NIP, B=Nama, C=1, D=2, ..., AF=31, AG=Total
-        $dateEndCol = $getColumnName($daysInMonth + 1); // AF (tanggal 31)
-        $totalCol = $getColumnName($daysInMonth + 2); // AG (kolom Total)
-        $lastCol = $totalCol; // AG adalah kolom terakhir
+        // Kolom: A=NIP, B=Nama, C=1, D=2, ..., AG=31, AH=Total
+        // daysInMonth=31: C(3)=1, D(4)=2, ..., AG(33)=31, AH(34)=Total
+        // Loop: getColumnName(day+2) untuk day=1..31 -> C..AG
+        // Total: getColumnName(34) = AH
+
+        $dateEndCol = $getColumnName($daysInMonth + 2); // AG (tanggal 31)
+        $totalCol = $getColumnName($daysInMonth + 3); // AH (kolom Total)
+        $lastCol = $totalCol; // AH adalah kolom terakhir
 
         // Row 1: Title
         $sheet->mergeCells("A1:{$lastCol}1");
