@@ -553,7 +553,7 @@ class RekapPresensiController extends Controller
             'group_key' => 'required|string',
             'month' => 'required|integer',
             'year' => 'required|integer',
-            'type' => 'required|in:presensi,detail',
+            'type' => 'required|in:presensi,detail,tukin',
         ]);
 
         $record = KtdPresensiFile::where('group_key', $request->group_key)
@@ -561,7 +561,13 @@ class RekapPresensiController extends Controller
             ->where('tahun', $request->year)
             ->first();
 
-        return $this->sendFile($record, $request->type === 'detail' ? 'presensi' : 'uangmakan');
+        $columnMap = [
+            'presensi' => 'uangmakan',
+            'detail' => 'presensi',
+            'tukin' => 'tukin',
+        ];
+
+        return $this->sendFile($record, $columnMap[$request->type]);
     }
 
     /**
