@@ -234,6 +234,7 @@ class RekapPresensiController extends Controller
 
         $users = DB::table('users')
             ->where('dept_id', $deptId)
+            ->where('status', 1) // Hanya users dengan status aktif
             ->whereNotNull('nomor_induk')
             ->where('nomor_induk', '!=', '')
             ->select('id', 'name', 'nomor_induk')
@@ -296,7 +297,8 @@ class RekapPresensiController extends Controller
         $query = DB::table('users')
             ->join('tenaga_ktd', 'users.nomor_induk', '=', 'tenaga_ktd.nomor_induk')
             ->where('users.bank_kategori', $group['bank_kategori'])
-            ->where('tenaga_ktd.status', $group['status']);
+            ->where('tenaga_ktd.status', $group['status'])
+            ->where('users.status', 1); // Hanya users dengan status aktif
 
         if (isset($group['serdik'])) {
             $query->where(function ($q) use ($group) {
@@ -340,6 +342,7 @@ class RekapPresensiController extends Controller
             ->where(function ($q) {
                 $q->whereNull('bank_kategori')->orWhere('bank_kategori', '=', '');
             })
+            ->where('status', 1) // Hanya users dengan status aktif
             ->whereNotNull('nomor_induk')
             ->where('nomor_induk', '!=', '')
             ->select('id', 'name', 'nomor_induk')
