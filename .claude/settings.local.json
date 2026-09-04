@@ -124,7 +124,9 @@
       "Bash(\"C:\\\\xampp_lite_8_5\\\\apps\\\\mysql\\\\bin\\\\mysql.exe\" -u root kemenagtd_db)",
       "Bash(git stash *)",
       "Bash(git revert *)",
-      "Bash(git commit -m 'fix\\(admin\\): support both component and template patterns *)"
+      "Bash(git commit -m 'fix\\(admin\\): support both component and template patterns *)",
+      "Bash(php -l app/Http/Controllers/Admin/UserController.php)",
+      "Bash(git commit -m 'fix\\(rekap-presensi\\): replace cal_days_in_month with date function *)"
     ],
     "additionalDirectories": [
       "D:\\work\\SourceCode\\silatarV2\\bootstrap\\cache",
