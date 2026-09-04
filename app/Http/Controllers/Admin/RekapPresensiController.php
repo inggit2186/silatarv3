@@ -715,35 +715,40 @@ class RekapPresensiController extends Controller
         $sheet->freezePane('A6');
 
         // Colors
-        $headerBg = '6D28D9'; // Ungu
+        $headerBg = '6D28D9';
         $headerFg = 'FFFFFF';
         $dayRowBg = 'F3E8FF';
         $altRowBg = 'FAF5FF';
         $totalBg = '6D28D9';
         $borderColor = 'C4B5FD';
-        $tukinColor = '059669'; // Hijau untuk tukin
-        $potonganColor = 'DC2626'; // Merah untuk potongan
+
+        // Column mapping: A=No, B=NIP, C=Nama, D=TUKIN, E=TK Jml, F=TK %, G=TL, H=TL %, I=PSW, J=PSW %, K=Hukdis, L=Hukdis %, M=CPNS, N=CPNS %, O=SKP, P=SKP %, Q=TB, R=TB %, S=Pot Lain, T=Pot Lain %, U=Total Pot, V=Tukin Dibayar
+        $lastColIdx = 22; // V
+        $lastCol = 'V';
+        $totalCol = 'U'; // Total Potongan
 
         // Title
-        $sheet->mergeCells('A1:K1');
+        $sheet->mergeCells("A1:{$lastCol}1");
         $sheet->setCellValue('A1', 'REKAP TUKIN - ' . $title);
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('FFFFFF');
         $sheet->getStyle('A1')->getAlignment()->setHorizontal('center')->setVertical('center');
-        $sheet->getStyle('A1:K1')->getFill()->setFillType('solid')->getStartColor()->setRGB($headerBg);
+        $sheet->getStyle("A1:{$lastCol}1")->getFill()->setFillType('solid')->getStartColor()->setRGB($headerBg);
         $sheet->getRowDimension(1)->setRowHeight(30);
 
         // Subtitle
-        $sheet->mergeCells('A2:K2');
+        $sheet->mergeCells("A2:{$lastCol}2");
         $sheet->setCellValue('A2', 'Bulan: ' . $this->getMonthName($month) . ' ' . $year);
         $sheet->getStyle('A2')->getFont()->setItalic(true)->setSize(11)->getColor()->setRGB('6D28D9');
         $sheet->getStyle('A2')->getAlignment()->setHorizontal('center')->setVertical('center');
-        $sheet->getStyle('A2:K2')->getFill()->setFillType('solid')->getStartColor()->setRGB($dayRowBg);
+        $sheet->getStyle("A2:{$lastCol}2")->getFill()->setFillType('solid')->getStartColor()->setRGB($dayRowBg);
 
         // Headers (Row 5)
         $headerRow = 5;
         $headers = [
-            'No', 'NIP', 'Nama', 'TUKIN', 'TK Jumlah', 'TK (%)',
-            'TL (Telat)', 'TL (%)', 'PSW', 'Hukdis', 'Total Potongan'
+            'No', 'NIP', 'Nama', 'TUKIN', 'TK Jml', 'TK %',
+            'TL (Telat)', 'TL %', 'PSW', 'PSW %', 'Hukdis',
+            'Hukdis %', 'CPNS', 'CPNS %', 'SKP', 'SKP %',
+            'TB', 'TB %', 'Pot Lain', 'Pot Lain %', 'Total Pot', 'Tukin Dibayar'
         ];
 
         foreach ($headers as $col => $header) {
@@ -752,7 +757,6 @@ class RekapPresensiController extends Controller
         }
 
         // Style headers
-        $lastCol = 'K';
         $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getFont()->setBold(true)->getColor()->setRGB($headerFg);
         $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getFill()->setFillType('solid')->getStartColor()->setRGB($headerBg);
         $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getAlignment()->setHorizontal('center')->setVertical('center');
@@ -760,17 +764,28 @@ class RekapPresensiController extends Controller
         $sheet->getRowDimension($headerRow)->setRowHeight(22);
 
         // Column widths
-        $sheet->getColumnDimension('A')->setWidth(5);
-        $sheet->getColumnDimension('B')->setWidth(20);
-        $sheet->getColumnDimension('C')->setWidth(30);
-        $sheet->getColumnDimension('D')->setWidth(15);
-        $sheet->getColumnDimension('E')->setWidth(12);
-        $sheet->getColumnDimension('F')->setWidth(8);
-        $sheet->getColumnDimension('G')->setWidth(12);
-        $sheet->getColumnDimension('H')->setWidth(8);
-        $sheet->getColumnDimension('I')->setWidth(12);
-        $sheet->getColumnDimension('J')->setWidth(12);
-        $sheet->getColumnDimension('K')->setWidth(15);
+        $sheet->getColumnDimension('A')->setWidth(5);   // No
+        $sheet->getColumnDimension('B')->setWidth(20);  // NIP
+        $sheet->getColumnDimension('C')->setWidth(30);  // Nama
+        $sheet->getColumnDimension('D')->setWidth(15);  // TUKIN
+        $sheet->getColumnDimension('E')->setWidth(10);  // TK Jml
+        $sheet->getColumnDimension('F')->setWidth(7);   // TK %
+        $sheet->getColumnDimension('G')->setWidth(10);  // TL
+        $sheet->getColumnDimension('H')->setWidth(7);   // TL %
+        $sheet->getColumnDimension('I')->setWidth(10);  // PSW
+        $sheet->getColumnDimension('J')->setWidth(7);   // PSW %
+        $sheet->getColumnDimension('K')->setWidth(10);  // Hukdis
+        $sheet->getColumnDimension('L')->setWidth(9);   // Hukdis %
+        $sheet->getColumnDimension('M')->setWidth(8);   // CPNS
+        $sheet->getColumnDimension('N')->setWidth(8);   // CPNS %
+        $sheet->getColumnDimension('O')->setWidth(8);   // SKP
+        $sheet->getColumnDimension('P')->setWidth(7);   // SKP %
+        $sheet->getColumnDimension('Q')->setWidth(8);   // TB
+        $sheet->getColumnDimension('R')->setWidth(7);   // TB %
+        $sheet->getColumnDimension('S')->setWidth(10);  // Pot Lain
+        $sheet->getColumnDimension('T')->setWidth(10);  // Pot Lain %
+        $sheet->getColumnDimension('U')->setWidth(12);  // Total Pot
+        $sheet->getColumnDimension('V')->setWidth(15);  // Tukin Dibayar
 
         // Data
         $dataStartRow = 6;
@@ -785,6 +800,9 @@ class RekapPresensiController extends Controller
             // Alternate row colors
             $rowBg = (($rowNum - $dataStartRow) % 2 === 0) ? 'FFFFFF' : $altRowBg;
 
+            // Hitung tukin dibayarkan
+            $tukinDibayar = $tukin ? ($tukin->tukin - $tukin->total_potongan) : 0;
+
             $sheet->setCellValue("A{$rowNum}", $no++);
             $sheet->setCellValue("B{$rowNum}", $user->nomor_induk);
             $sheet->setCellValue("C{$rowNum}", $user->name);
@@ -794,14 +812,25 @@ class RekapPresensiController extends Controller
             $sheet->setCellValue("G{$rowNum}", $tukin ? $tukin->tl : 0);
             $sheet->setCellValue("H{$rowNum}", $tukin ? $tukin->tl_persen : 0);
             $sheet->setCellValue("I{$rowNum}", $tukin ? $tukin->psw : 0);
-            $sheet->setCellValue("J{$rowNum}", $tukin ? $tukin->hukdis : 0);
-            $sheet->setCellValue("K{$rowNum}", $tukin ? $tukin->total_potongan : 0);
+            $sheet->setCellValue("J{$rowNum}", $tukin ? $tukin->psw_persen : 0);
+            $sheet->setCellValue("K{$rowNum}", $tukin ? $tukin->hukdis : 0);
+            $sheet->setCellValue("L{$rowNum}", $tukin ? $tukin->hukdis_persen : 0);
+            $sheet->setCellValue("M{$rowNum}", $tukin ? $tukin->cpns : 0);
+            $sheet->setCellValue("N{$rowNum}", $tukin ? $tukin->cpns_persen : 0);
+            $sheet->setCellValue("O{$rowNum}", $tukin ? $tukin->skp : 0);
+            $sheet->setCellValue("P{$rowNum}", $tukin ? $tukin->skp_persen : 0);
+            $sheet->setCellValue("Q{$rowNum}", $tukin ? $tukin->tb : 0);
+            $sheet->setCellValue("R{$rowNum}", $tukin ? $tukin->tb_persen : 0);
+            $sheet->setCellValue("S{$rowNum}", $tukin ? $tukin->potongan_lain : 0);
+            $sheet->setCellValue("T{$rowNum}", $tukin ? $tukin->potongan_lain_persen : 0);
+            $sheet->setCellValue("U{$rowNum}", $tukin ? $tukin->total_potongan : 0);
+            $sheet->setCellValue("V{$rowNum}", $tukinDibayar);
 
             $totalTukin += $tukin ? $tukin->tukin : 0;
             $totalPotongan += $tukin ? $tukin->total_potongan : 0;
 
             // Apply row styling
-            $rowRange = "A{$rowNum}:K{$rowNum}";
+            $rowRange = "A{$rowNum}:{$lastCol}{$rowNum}";
             $sheet->getStyle($rowRange)->getFill()->setFillType('solid')->getStartColor()->setRGB($rowBg);
             $sheet->getStyle($rowRange)->getBorders()->getAllBorders()->setBorderStyle('thin')->getColor()->setRGB($borderColor);
             $sheet->getStyle($rowRange)->getFont()->setSize(9);
@@ -811,8 +840,13 @@ class RekapPresensiController extends Controller
             $sheet->getStyle("E{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
             $sheet->getStyle("G{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
             $sheet->getStyle("I{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
-            $sheet->getStyle("J{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
             $sheet->getStyle("K{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("M{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("O{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("Q{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("S{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("U{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("V{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
 
             $rowNum++;
         }
@@ -829,14 +863,26 @@ class RekapPresensiController extends Controller
         $sheet->setCellValue("H{$totalRow}", '');
         $sheet->setCellValue("I{$totalRow}", '');
         $sheet->setCellValue("J{$totalRow}", '');
-        $sheet->setCellValue("K{$totalRow}", $totalPotongan);
+        $sheet->setCellValue("K{$totalRow}", '');
+        $sheet->setCellValue("L{$totalRow}", '');
+        $sheet->setCellValue("M{$totalRow}", '');
+        $sheet->setCellValue("N{$totalRow}", '');
+        $sheet->setCellValue("O{$totalRow}", '');
+        $sheet->setCellValue("P{$totalRow}", '');
+        $sheet->setCellValue("Q{$totalRow}", '');
+        $sheet->setCellValue("R{$totalRow}", '');
+        $sheet->setCellValue("S{$totalRow}", '');
+        $sheet->setCellValue("T{$totalRow}", '');
+        $sheet->setCellValue("U{$totalRow}", $totalPotongan);
+        $sheet->setCellValue("V{$totalRow}", $totalTukin - $totalPotongan);
 
         // Style total row
-        $sheet->getStyle("A{$totalRow}:K{$totalRow}")->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-        $sheet->getStyle("A{$totalRow}:K{$totalRow}")->getFill()->setFillType('solid')->getStartColor()->setRGB($totalBg);
-        $sheet->getStyle("A{$totalRow}:K{$totalRow}")->getBorders()->getAllBorders()->setBorderStyle('thin')->getColor()->setRGB($borderColor);
+        $sheet->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
+        $sheet->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")->getFill()->setFillType('solid')->getStartColor()->setRGB($totalBg);
+        $sheet->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")->getBorders()->getAllBorders()->setBorderStyle('thin')->getColor()->setRGB($borderColor);
         $sheet->getStyle("D{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
-        $sheet->getStyle("K{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
+        $sheet->getStyle("U{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
+        $sheet->getStyle("V{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
 
         // Save to temp file then read
         $tempFile = tempnam(sys_get_temp_dir(), 'tukin_');
