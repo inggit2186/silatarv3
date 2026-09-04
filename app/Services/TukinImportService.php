@@ -268,6 +268,7 @@ class TukinImportService
                     KtdTukin::create([
                         'periode' => $rowData['periode'],
                         'user_nip' => $rowData['nip'],
+                        'grade' => 0, // Default value
                         'tukin' => $rowData['tukin'],
                         'tk_jumlah' => $rowData['tk_jumlah'],
                         'tk_persen' => $rowData['tk_persen'],

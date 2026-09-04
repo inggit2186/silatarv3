@@ -127,7 +127,8 @@
       "Bash(git commit -m 'fix\\(admin\\): support both component and template patterns *)",
       "Bash(php -l app/Http/Controllers/Admin/UserController.php)",
       "Bash(git commit -m 'fix\\(rekap-presensi\\): replace cal_days_in_month with date function *)",
-      "Bash(git commit -m 'fix\\(rekap-presensi\\): add tukin download button and info *)"
+      "Bash(git commit -m 'fix\\(rekap-presensi\\): add tukin download button and info *)",
+      "Bash(git commit -m 'fix\\(tukin\\): add default value for grade column *)"
     ],
     "additionalDirectories": [
       "D:\\work\\SourceCode\\silatarV2\\bootstrap\\cache",

@@ -12,6 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         // Tabel sudah ada, tambah kolom baru jika belum ada
+        // Set default value untuk kolom grade yang sudah ada
+        DB::statement('ALTER TABLE ktd_tukin ALTER COLUMN grade SET DEFAULT 0');
+
         Schema::table('ktd_tukin', function (Blueprint $table) {
             if (!Schema::hasColumn('ktd_tukin', 'periode')) {
                 $table->string('periode', 7)->after('id')->comment('Format: YYYY-MM');

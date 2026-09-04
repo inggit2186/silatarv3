@@ -11,6 +11,7 @@ class KtdTukin extends Model
     protected $fillable = [
         'periode',
         'user_nip',
+        'grade',
         'tukin',
         'tk_jumlah',
         'tk_persen',
