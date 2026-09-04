@@ -925,7 +925,8 @@ class RekapPresensiController extends Controller
         for ($day = 1; $day <= $daysInMonth; $day++) {
             $sheet->setCellValue("{$getColumnName($day + 2)}{$headerRow}", $day);
         }
-        $sheet->setCellValue("{$totalCol}{$headerRow}", 'Total');
+        // Total column is set by the loop above (day 31 = col AG)
+        // No need to set it again
         $sheet->getStyle($headerRange)->getFont()->setBold(true)->setSize(9)->getColor()->setRGB($headerFg);
         $sheet->getStyle($headerRange)->getFill()->setFillType('solid')->getStartColor()->setRGB($headerBg);
         $sheet->getStyle($headerRange)->getAlignment()->setHorizontal('center')->setVertical('center');
@@ -1106,7 +1107,8 @@ class RekapPresensiController extends Controller
         for ($day = 1; $day <= $daysInMonth; $day++) {
             $sheet->setCellValue("{$getColumnName($day + 2)}{$headerRow}", $day);
         }
-        $sheet->setCellValue("{$totalCol}{$headerRow}", 'Total');
+        // Total column is set by the loop above (day 31 = col AG)
+        // No need to set it again
         $sheet->getStyle($headerRange)->getFont()->setBold(true)->setSize(9)->getColor()->setRGB($headerFg);
         $sheet->getStyle($headerRange)->getFill()->setFillType('solid')->getStartColor()->setRGB($headerBg);
         $sheet->getStyle($headerRange)->getAlignment()->setHorizontal('center')->setVertical('center');
