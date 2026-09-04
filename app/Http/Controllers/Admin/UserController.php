@@ -139,6 +139,10 @@ class UserController extends Controller
             'telp' => ['nullable', 'string', 'max:50'],
             'alamat' => ['nullable', 'string', 'max:500'],
             'status' => ['nullable', 'numeric'],
+            'kat_jabatan' => ['nullable', 'string', 'max:50'],
+            'golongan' => ['nullable', 'string', 'max:10'],
+            'tipe_asn' => ['nullable', 'string', Rule::in(['pns', 'pppk', 'cpns', 'honorer', 'umum'])],
+            'serdik' => ['nullable', 'string', Rule::in(['sertifikasi', 'non-sertifikasi', 'non-guru'])],
         ]);
 
         $userId = DB::table('users')->insertGetId([
@@ -153,9 +157,27 @@ class UserController extends Controller
             'telp' => $validated['telp'] ?? null,
             'alamat' => $validated['alamat'] ?? null,
             'status' => $validated['status'] ?? 1,
+            'kat_jabatan' => $validated['kat_jabatan'] ?? null,
+            'golongan' => $validated['golongan'] ?? null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        // Create tenaga_ktd record for ASN info (tipe_asn, serdik)
+        if (!empty($validated['tipe_asn']) || !empty($validated['serdik'])) {
+            DB::table('tenaga_ktd')->insert([
+                'user_id' => $userId,
+                'nomor_induk' => $validated['nomor_induk'],
+                'nama' => $validated['name'],
+                'dept_id' => $validated['dept_id'] ?? 0,
+                'status' => $validated['tipe_asn'] ?? null,
+                'serdik' => $validated['serdik'] ?? null,
+                'kat_jabatan' => $validated['kat_jabatan'] ?? null,
+                'golongan' => $validated['golongan'] ?? null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         return redirect()
             ->route('admin.users.edit', $userId)
