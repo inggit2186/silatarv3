@@ -450,7 +450,7 @@ class RekapPresensiController extends Controller
                     unlink(storage_path('app/' . $existing->tukin));
                 }
 
-                // Update timestamp
+                // Update record dengan touch() untuk memastikan updated_at berubah
                 $existing->update([
                     'presensi' => $detailPath,
                     'uangmakan' => $rekapPath,
@@ -458,8 +458,18 @@ class RekapPresensiController extends Controller
                     'user_id' => auth()->id(),
                     'updated_at' => now(),
                 ]);
+
+                // Force touch untuk memastikan timestamps berubah
+                $existing->touch();
+
+                Log::info("Rekap presensi diupdate", [
+                    'id' => $existing->id,
+                    'dept' => $deptLabel,
+                    'group_key' => $groupKey,
+                    'updated_at' => now()->toDateTimeString(),
+                ]);
             } else {
-                KtdPresensiFile::create([
+                $newRecord = KtdPresensiFile::create([
                     'dept' => $deptLabel,
                     'group_key' => $groupKey,
                     'user_id' => auth()->id(),
@@ -468,6 +478,12 @@ class RekapPresensiController extends Controller
                     'presensi' => $detailPath,
                     'uangmakan' => $rekapPath,
                     'tukin' => $tukinPath,
+                ]);
+
+                Log::info("Rekap presensi dibuat baru", [
+                    'id' => $newRecord->id,
+                    'dept' => $deptLabel,
+                    'group_key' => $groupKey,
                 ]);
             }
 
