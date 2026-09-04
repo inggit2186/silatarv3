@@ -753,7 +753,7 @@ class RekapPresensiController extends Controller
 
         // Style headers
         $lastCol = 'K';
-        $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getFont()->setBold(true)->setColor()->setRGB($headerFg);
+        $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getFont()->setBold(true)->getColor()->setRGB($headerFg);
         $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getFill()->setFillType('solid')->getStartColor()->setRGB($headerBg);
         $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getAlignment()->setHorizontal('center')->setVertical('center');
         $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getBorders()->getAllBorders()->setBorderStyle('thin')->getColor()->setRGB($borderColor);
@@ -832,7 +832,7 @@ class RekapPresensiController extends Controller
         $sheet->setCellValue("K{$totalRow}", $totalPotongan);
 
         // Style total row
-        $sheet->getStyle("A{$totalRow}:K{$totalRow}")->getFont()->setBold(true)->setColor()->setRGB('FFFFFF');
+        $sheet->getStyle("A{$totalRow}:K{$totalRow}")->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
         $sheet->getStyle("A{$totalRow}:K{$totalRow}")->getFill()->setFillType('solid')->getStartColor()->setRGB($totalBg);
         $sheet->getStyle("A{$totalRow}:K{$totalRow}")->getBorders()->getAllBorders()->setBorderStyle('thin')->getColor()->setRGB($borderColor);
         $sheet->getStyle("D{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
