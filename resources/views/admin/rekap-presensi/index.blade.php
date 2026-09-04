@@ -312,6 +312,22 @@
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                         </svg>
                                                     </a>
+                                                    @if(auth()->user()->role === 'admin' || auth()->user()->role === 'superadmin')
+                                                        <form action="{{ route('admin.rekap-presensi.delete') }}" method="POST" style="display: inline;"
+                                                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus rekap ini? File akan dihapus permanen!')">
+                                                            @csrf
+                                                            <input type="hidden" name="group_key" value="{{ $item['group_key'] }}">
+                                                            <input type="hidden" name="month" value="{{ $item['bulan'] }}">
+                                                            <input type="hidden" name="year" value="{{ $item['tahun'] }}">
+                                                            <button type="submit"
+                                                                    style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--danger); color: var(--text-inverse); border: none; cursor: pointer;"
+                                                                    title="Hapus">
+                                                                <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                                </svg>
+                                                            </button>
+                                                        </form>
+                                                    @endif
                                                 @else
                                                     <a href="{{ route('admin.rekap-presensi.download-presensi', ['dept_id' => $item['dept_id'] ?? 0, 'month' => $item['bulan'], 'year' => $item['tahun']]) }}"
                                                        style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--info); color: var(--text-inverse);"
@@ -334,6 +350,22 @@
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                         </svg>
                                                     </a>
+                                                    @if(auth()->user()->role === 'admin' || auth()->user()->role === 'superadmin')
+                                                        <form action="{{ route('admin.rekap-presensi.delete') }}" method="POST" style="display: inline;"
+                                                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus rekap ini? File akan dihapus permanen!')">
+                                                            @csrf
+                                                            <input type="hidden" name="dept_id" value="{{ $item['dept_id'] ?? 0 }}">
+                                                            <input type="hidden" name="month" value="{{ $item['bulan'] }}">
+                                                            <input type="hidden" name="year" value="{{ $item['tahun'] }}">
+                                                            <button type="submit"
+                                                                    style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--danger); color: var(--text-inverse); border: none; cursor: pointer;"
+                                                                    title="Hapus">
+                                                                <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                                </svg>
+                                                            </button>
+                                                        </form>
+                                                    @endif
                                                 @endif
                                             </div>
                                         </td>

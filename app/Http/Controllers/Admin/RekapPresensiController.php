@@ -638,25 +638,109 @@ class RekapPresensiController extends Controller
     }
 
     /**
-     * Generate Excel Tukin
+     * Delete rekap presensi (hanya untuk admin)
+     */
+    public function delete(Request $request)
+    {
+        // Check access - only admin can delete
+        if (!$this->isAdmin()) {
+            abort(403, 'Hanya admin yang bisa menghapus rekap presensi.');
+        }
+
+        $request->validate([
+            'month' => 'required|integer',
+            'year' => 'required|integer',
+        ]);
+
+        // Find record by group_key or dept_id
+        $query = KtdPresensiFile::where('bulan', $request->month)
+            ->where('tahun', $request->year);
+
+        if ($request->has('group_key')) {
+            $query->where('group_key', $request->group_key);
+        } elseif ($request->has('dept_id')) {
+            $dept = Department::find($request->dept_id);
+            if ($dept) {
+                $query->where('dept', $dept->nama);
+            }
+        }
+
+        $record = $query->first();
+
+        if (!$record) {
+            return back()->with('error', 'Data rekap tidak ditemukan');
+        }
+
+        // Delete files
+        if ($record->presensi && file_exists(storage_path('app/' . $record->presensi))) {
+            unlink(storage_path('app/' . $record->presensi));
+        }
+        if ($record->uangmakan && file_exists(storage_path('app/' . $record->uangmakan))) {
+            unlink(storage_path('app/' . $record->uangmakan));
+        }
+        if (isset($record->tukin) && $record->tukin && file_exists(storage_path('app/' . $record->tukin))) {
+            unlink(storage_path('app/' . $record->tukin));
+        }
+
+        // Delete record from database
+        $record->delete();
+
+        Log::info("Rekap presensi dihapus", [
+            'dept' => $record->dept,
+            'group_key' => $record->group_key,
+            'month' => $request->month,
+            'year' => $request->year,
+            'deleted_by' => auth()->id(),
+        ]);
+
+        return back()->with('success', 'Rekap presensi berhasil dihapus untuk ' . $record->dept);
+    }
+
+    /**
+     * Check if current user is admin
+     */
+    protected function isAdmin(): bool
+    {
+        $user = auth()->user();
+        return in_array($user->role, ['admin', 'superadmin']);
+    }
+
+    /**
+     * Generate Excel Tukin - Format lebih menarik dan user-friendly
      */
     protected function generateTukinExcel($users, $tukinData, string $title, int $month, int $year): string
     {
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
+        $sheet->freezePane('A6');
+
+        // Colors
+        $headerBg = '6D28D9'; // Ungu
+        $headerFg = 'FFFFFF';
+        $dayRowBg = 'F3E8FF';
+        $altRowBg = 'FAF5FF';
+        $totalBg = '6D28D9';
+        $borderColor = 'C4B5FD';
+        $tukinColor = '059669'; // Hijau untuk tukin
+        $potonganColor = 'DC2626'; // Merah untuk potongan
 
         // Title
         $sheet->mergeCells('A1:K1');
         $sheet->setCellValue('A1', 'REKAP TUKIN - ' . $title);
-        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('FFFFFF');
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal('center')->setVertical('center');
+        $sheet->getStyle('A1:K1')->getFill()->setFillType('solid')->getStartColor()->setRGB($headerBg);
+        $sheet->getRowDimension(1)->setRowHeight(30);
 
+        // Subtitle
         $sheet->mergeCells('A2:K2');
         $sheet->setCellValue('A2', 'Bulan: ' . $this->getMonthName($month) . ' ' . $year);
-        $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(11);
-        $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A2')->getFont()->setItalic(true)->setSize(11)->getColor()->setRGB('6D28D9');
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal('center')->setVertical('center');
+        $sheet->getStyle('A2:K2')->getFill()->setFillType('solid')->getStartColor()->setRGB($dayRowBg);
 
-        // Headers
+        // Headers (Row 5)
+        $headerRow = 5;
         $headers = [
             'No', 'NIP', 'Nama', 'TUKIN', 'TK Jumlah', 'TK (%)',
             'TL (Telat)', 'TL (%)', 'PSW', 'Hukdis', 'Total Potongan'
@@ -664,23 +748,42 @@ class RekapPresensiController extends Controller
 
         foreach ($headers as $col => $header) {
             $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col + 1);
-            $sheet->setCellValue("{$colLetter}5", $header);
+            $sheet->setCellValue("{$colLetter}{$headerRow}", $header);
         }
 
-        // Style headers - use K as last column (11 columns)
+        // Style headers
         $lastCol = 'K';
-        $sheet->getStyle("A5:{$lastCol}5")->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-        $sheet->getStyle("A5:{$lastCol}5")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('7C3AED');
-        $sheet->getStyle("A5:{$lastCol}5")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getFont()->setBold(true)->setColor()->setRGB($headerFg);
+        $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getFill()->setFillType('solid')->getStartColor()->setRGB($headerBg);
+        $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getAlignment()->setHorizontal('center')->setVertical('center');
+        $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getBorders()->getAllBorders()->setBorderStyle('thin')->getColor()->setRGB($borderColor);
+        $sheet->getRowDimension($headerRow)->setRowHeight(22);
+
+        // Column widths
+        $sheet->getColumnDimension('A')->setWidth(5);
+        $sheet->getColumnDimension('B')->setWidth(20);
+        $sheet->getColumnDimension('C')->setWidth(30);
+        $sheet->getColumnDimension('D')->setWidth(15);
+        $sheet->getColumnDimension('E')->setWidth(12);
+        $sheet->getColumnDimension('F')->setWidth(8);
+        $sheet->getColumnDimension('G')->setWidth(12);
+        $sheet->getColumnDimension('H')->setWidth(8);
+        $sheet->getColumnDimension('I')->setWidth(12);
+        $sheet->getColumnDimension('J')->setWidth(12);
+        $sheet->getColumnDimension('K')->setWidth(15);
 
         // Data
-        $rowNum = 6;
+        $dataStartRow = 6;
+        $rowNum = $dataStartRow;
         $no = 1;
         $totalTukin = 0;
         $totalPotongan = 0;
 
         foreach ($users as $user) {
             $tukin = $tukinData->get($user->nomor_induk);
+
+            // Alternate row colors
+            $rowBg = (($rowNum - $dataStartRow) % 2 === 0) ? 'FFFFFF' : $altRowBg;
 
             $sheet->setCellValue("A{$rowNum}", $no++);
             $sheet->setCellValue("B{$rowNum}", $user->nomor_induk);
@@ -697,36 +800,43 @@ class RekapPresensiController extends Controller
             $totalTukin += $tukin ? $tukin->tukin : 0;
             $totalPotongan += $tukin ? $tukin->total_potongan : 0;
 
+            // Apply row styling
+            $rowRange = "A{$rowNum}:K{$rowNum}";
+            $sheet->getStyle($rowRange)->getFill()->setFillType('solid')->getStartColor()->setRGB($rowBg);
+            $sheet->getStyle($rowRange)->getBorders()->getAllBorders()->setBorderStyle('thin')->getColor()->setRGB($borderColor);
+            $sheet->getStyle($rowRange)->getFont()->setSize(9);
+
+            // Format angka
+            $sheet->getStyle("D{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("E{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("G{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("I{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("J{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("K{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
+
             $rowNum++;
         }
 
         // Total row
-        $sheet->setCellValue("A{$rowNum}", '');
-        $sheet->setCellValue("B{$rowNum}", '');
-        $sheet->setCellValue("C{$rowNum}", 'TOTAL');
-        $sheet->setCellValue("D{$rowNum}", $totalTukin);
-        $sheet->setCellValue("E{$rowNum}", '');
-        $sheet->setCellValue("F{$rowNum}", '');
-        $sheet->setCellValue("G{$rowNum}", '');
-        $sheet->setCellValue("H{$rowNum}", '');
-        $sheet->setCellValue("I{$rowNum}", '');
-        $sheet->setCellValue("J{$rowNum}", '');
-        $sheet->setCellValue("K{$rowNum}", $totalPotongan);
+        $totalRow = $rowNum;
+        $sheet->setCellValue("A{$totalRow}", '');
+        $sheet->setCellValue("B{$totalRow}", '');
+        $sheet->setCellValue("C{$totalRow}", 'TOTAL');
+        $sheet->setCellValue("D{$totalRow}", $totalTukin);
+        $sheet->setCellValue("E{$totalRow}", '');
+        $sheet->setCellValue("F{$totalRow}", '');
+        $sheet->setCellValue("G{$totalRow}", '');
+        $sheet->setCellValue("H{$totalRow}", '');
+        $sheet->setCellValue("I{$totalRow}", '');
+        $sheet->setCellValue("J{$totalRow}", '');
+        $sheet->setCellValue("K{$totalRow}", $totalPotongan);
 
-        $sheet->getStyle("A{$rowNum}:K{$rowNum}")->getFont()->setBold(true);
-
-        // Auto-size columns
-        $sheet->getColumnDimension('A')->setWidth(5);
-        $sheet->getColumnDimension('B')->setWidth(20);
-        $sheet->getColumnDimension('C')->setWidth(30);
-        $sheet->getColumnDimension('D')->setWidth(15);
-        $sheet->getColumnDimension('E')->setWidth(15);
-        $sheet->getColumnDimension('F')->setWidth(10);
-        $sheet->getColumnDimension('G')->setWidth(12);
-        $sheet->getColumnDimension('H')->setWidth(10);
-        $sheet->getColumnDimension('I')->setWidth(12);
-        $sheet->getColumnDimension('J')->setWidth(12);
-        $sheet->getColumnDimension('K')->setWidth(15);
+        // Style total row
+        $sheet->getStyle("A{$totalRow}:K{$totalRow}")->getFont()->setBold(true)->setColor()->setRGB('FFFFFF');
+        $sheet->getStyle("A{$totalRow}:K{$totalRow}")->getFill()->setFillType('solid')->getStartColor()->setRGB($totalBg);
+        $sheet->getStyle("A{$totalRow}:K{$totalRow}")->getBorders()->getAllBorders()->setBorderStyle('thin')->getColor()->setRGB($borderColor);
+        $sheet->getStyle("D{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
+        $sheet->getStyle("K{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
 
         // Save to temp file then read
         $tempFile = tempnam(sys_get_temp_dir(), 'tukin_');
