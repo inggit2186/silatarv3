@@ -391,9 +391,18 @@ class RekapPresensiController extends Controller
                 });
             });
 
+        // Get tukin data
+        $periode = sprintf('%04d-%02d', $year, $month);
+        $tukinData = DB::table('ktd_tukin')
+            ->whereIn('user_nip', $nips)
+            ->where('periode', $periode)
+            ->get()
+            ->keyBy('user_nip');
+
         try {
             $presensiFile = $this->generatePresensiExcel($users, $presensiData, $title, $month, $year);
             $detailFile = $this->generateDetailPresensiExcel($users, $presensiData, $title, $month, $year);
+            $tukinFile = $this->generateTukinExcel($users, $tukinData, $title, $month, $year);
 
             $rekapDir = storage_path('app/rekap_presensi');
             if (!file_exists($rekapDir)) {
@@ -411,6 +420,10 @@ class RekapPresensiController extends Controller
             $detailFilename = "detail_presensi_{$cleanName}_{$year}_{$month}.xlsx";
             $detailPath = "rekap_presensi/{$cleanName}/{$detailFilename}";
             file_put_contents(storage_path("app/{$detailPath}"), base64_decode($detailFile));
+
+            $tukinFilename = "rekap_tukin_{$cleanName}_{$year}_{$month}.xlsx";
+            $tukinPath = "rekap_presensi/{$cleanName}/{$tukinFilename}";
+            file_put_contents(storage_path("app/{$tukinPath}"), base64_decode($tukinFile));
 
             // Save/update ke ktd_presensifiles
             $existingQuery = KtdPresensiFile::where('dept', $deptLabel)
@@ -433,10 +446,14 @@ class RekapPresensiController extends Controller
                 if ($existing->uangmakan && $existing->uangmakan !== $rekapPath && file_exists(storage_path('app/' . $existing->uangmakan))) {
                     unlink(storage_path('app/' . $existing->uangmakan));
                 }
+                if (isset($existing->tukin) && $existing->tukin && $existing->tukin !== $tukinPath && file_exists(storage_path('app/' . $existing->tukin))) {
+                    unlink(storage_path('app/' . $existing->tukin));
+                }
 
                 $existing->update([
                     'presensi' => $detailPath,
                     'uangmakan' => $rekapPath,
+                    'tukin' => $tukinPath,
                     'user_id' => auth()->id(),
                 ]);
             } else {
@@ -448,6 +465,7 @@ class RekapPresensiController extends Controller
                     'tahun' => $year,
                     'presensi' => $detailPath,
                     'uangmakan' => $rekapPath,
+                    'tukin' => $tukinPath,
                 ]);
             }
 
@@ -565,6 +583,132 @@ class RekapPresensiController extends Controller
         return response()->download($fullPath, $filename, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
+    }
+
+    /**
+     * Download file tukin
+     */
+    public function downloadTukin(Request $request)
+    {
+        $request->validate([
+            'dept_id' => 'required|integer',
+            'month' => 'required|integer',
+            'year' => 'required|integer',
+        ]);
+
+        $dept = Department::find($request->dept_id);
+        if (!$dept) {
+            return back()->with('error', 'Unit kerja tidak ditemukan');
+        }
+
+        $record = KtdPresensiFile::where('dept', $dept->nama)
+            ->where('bulan', $request->month)
+            ->where('tahun', $request->year)
+            ->whereNull('group_key')
+            ->first();
+
+        return $this->sendFile($record, 'tukin');
+    }
+
+    /**
+     * Generate Excel Tukin
+     */
+    protected function generateTukinExcel($users, $tukinData, string $title, int $month, int $year): string
+    {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Title
+        $sheet->mergeCells('A1:K1');
+        $sheet->setCellValue('A1', 'REKAP TUKIN - ' . $title);
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        $sheet->mergeCells('A2:K2');
+        $sheet->setCellValue('A2', 'Bulan: ' . $this->getMonthName($month) . ' ' . $year);
+        $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(11);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // Headers
+        $headers = [
+            'No', 'NIP', 'Nama', 'TUKIN', 'TK Jumlah', 'TK (%)',
+            'TL (Telat)', 'TL (%)', 'PSW', 'Hukdis', 'Total Potongan'
+        ];
+
+        foreach ($headers as $col => $header) {
+            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col + 1);
+            $sheet->setCellValue("{$colLetter}5", $header);
+        }
+
+        // Style headers
+        $lastCol = $getColumnName($headers);
+        $sheet->getStyle("A5:{$lastCol}5")->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
+        $sheet->getStyle("A5:{$lastCol}5")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('7C3AED');
+        $sheet->getStyle("A5:{$lastCol}5")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // Data
+        $rowNum = 6;
+        $no = 1;
+        $totalTukin = 0;
+        $totalPotongan = 0;
+
+        foreach ($users as $user) {
+            $tukin = $tukinData->get($user->nomor_induk);
+
+            $sheet->setCellValue("A{$rowNum}", $no++);
+            $sheet->setCellValue("B{$rowNum}", $user->nomor_induk);
+            $sheet->setCellValue("C{$rowNum}", $user->name);
+            $sheet->setCellValue("D{$rowNum}", $tukin ? $tukin->tukin : 0);
+            $sheet->setCellValue("E{$rowNum}", $tukin ? $tukin->tk_jumlah : 0);
+            $sheet->setCellValue("F{$rowNum}", $tukin ? $tukin->tk_persen : 0);
+            $sheet->setCellValue("G{$rowNum}", $tukin ? $tukin->tl : 0);
+            $sheet->setCellValue("H{$rowNum}", $tukin ? $tukin->tl_persen : 0);
+            $sheet->setCellValue("I{$rowNum}", $tukin ? $tukin->psw : 0);
+            $sheet->setCellValue("J{$rowNum}", $tukin ? $tukin->hukdis : 0);
+            $sheet->setCellValue("K{$rowNum}", $tukin ? $tukin->total_potongan : 0);
+
+            $totalTukin += $tukin ? $tukin->tukin : 0;
+            $totalPotongan += $tukin ? $tukin->total_potongan : 0;
+
+            $rowNum++;
+        }
+
+        // Total row
+        $sheet->setCellValue("A{$rowNum}", '');
+        $sheet->setCellValue("B{$rowNum}", '');
+        $sheet->setCellValue("C{$rowNum}", 'TOTAL');
+        $sheet->setCellValue("D{$rowNum}", $totalTukin);
+        $sheet->setCellValue("E{$rowNum}", '');
+        $sheet->setCellValue("F{$rowNum}", '');
+        $sheet->setCellValue("G{$rowNum}", '');
+        $sheet->setCellValue("H{$rowNum}", '');
+        $sheet->setCellValue("I{$rowNum}", '');
+        $sheet->setCellValue("J{$rowNum}", '');
+        $sheet->setCellValue("K{$rowNum}", $totalPotongan);
+
+        $sheet->getStyle("A{$rowNum}:K{$rowNum}")->getFont()->setBold(true);
+
+        // Auto-size columns
+        $sheet->getColumnDimension('A')->setWidth(5);
+        $sheet->getColumnDimension('B')->setWidth(20);
+        $sheet->getColumnDimension('C')->setWidth(30);
+        $sheet->getColumnDimension('D')->setWidth(15);
+        $sheet->getColumnDimension('E')->setWidth(15);
+        $sheet->getColumnDimension('F')->setWidth(10);
+        $sheet->getColumnDimension('G')->setWidth(12);
+        $sheet->getColumnDimension('H')->setWidth(10);
+        $sheet->getColumnDimension('I')->setWidth(12);
+        $sheet->getColumnDimension('J')->setWidth(12);
+        $sheet->getColumnDimension('K')->setWidth(15);
+
+        // Save to temp file then read
+        $tempFile = tempnam(sys_get_temp_dir(), 'tukin_');
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save($tempFile);
+        $excelContent = file_get_contents($tempFile);
+        unlink($tempFile);
+
+        return base64_encode($excelContent);
     }
 
     /**
@@ -701,7 +845,7 @@ class RekapPresensiController extends Controller
      */
     protected function generatePresensiExcel($users, $presensiData, string $title, int $month, int $year): string
     {
-        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+        $daysInMonth = date('t', mktime(0, 0, 0, $month, 1, $year));
 
         $getColumnName = function ($index) {
             $column = '';
@@ -870,7 +1014,7 @@ class RekapPresensiController extends Controller
      */
     protected function generateDetailPresensiExcel($users, $presensiData, string $title, int $month, int $year): string
     {
-        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+        $daysInMonth = date('t', mktime(0, 0, 0, $month, 1, $year));
 
         $getColumnName = function ($index) {
             $column = '';
