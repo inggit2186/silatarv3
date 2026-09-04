@@ -413,15 +413,18 @@ class RekapPresensiController extends Controller
                 mkdir($deptDir, 0755, true);
             }
 
-            $rekapFilename = "rekap_presensi_{$cleanName}_{$year}_{$month}.xlsx";
+            // Timestamp untuk nama file baru
+            $timestamp = date('Ymd_His');
+
+            $rekapFilename = "rekap_presensi_{$cleanName}_{$year}_{$month}_{$timestamp}.xlsx";
             $rekapPath = "rekap_presensi/{$cleanName}/{$rekapFilename}";
             file_put_contents(storage_path("app/{$rekapPath}"), base64_decode($presensiFile));
 
-            $detailFilename = "detail_presensi_{$cleanName}_{$year}_{$month}.xlsx";
+            $detailFilename = "detail_presensi_{$cleanName}_{$year}_{$month}_{$timestamp}.xlsx";
             $detailPath = "rekap_presensi/{$cleanName}/{$detailFilename}";
             file_put_contents(storage_path("app/{$detailPath}"), base64_decode($detailFile));
 
-            $tukinFilename = "rekap_tukin_{$cleanName}_{$year}_{$month}.xlsx";
+            $tukinFilename = "rekap_tukin_{$cleanName}_{$year}_{$month}_{$timestamp}.xlsx";
             $tukinPath = "rekap_presensi/{$cleanName}/{$tukinFilename}";
             file_put_contents(storage_path("app/{$tukinPath}"), base64_decode($tukinFile));
 
@@ -439,7 +442,7 @@ class RekapPresensiController extends Controller
             $existing = $existingQuery->first();
 
             if ($existing) {
-                // Hapus file LAMA jika ada
+                // Hapus file LAMA jika ada dan berbeda dengan file baru
                 if ($existing->presensi && file_exists(storage_path('app/' . $existing->presensi))) {
                     unlink(storage_path('app/' . $existing->presensi));
                 }
@@ -450,7 +453,7 @@ class RekapPresensiController extends Controller
                     unlink(storage_path('app/' . $existing->tukin));
                 }
 
-                // Update record dengan touch() untuk memastikan updated_at berubah
+                // Update record di database
                 $existing->update([
                     'presensi' => $detailPath,
                     'uangmakan' => $rekapPath,
