@@ -370,7 +370,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                         </svg>
                     </div>
-                    <div id="passwordInfoContent" class="collapsible-content expanded">
+                    <div id="passwordInfoContent" class="collapsible-content">
                         <div class="p-6">
                             <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
                                 <div class="flex items-center gap-2">
@@ -410,7 +410,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                         </svg>
                     </div>
-                    <div id="additionalInfoContent" class="collapsible-content expanded">
+                    <div id="additionalInfoContent" class="collapsible-content">
                         <div class="p-6 space-y-4">
                             {{-- Pekerjaan & Kontak --}}
                             <div class="grid gap-4 md:grid-cols-2">
