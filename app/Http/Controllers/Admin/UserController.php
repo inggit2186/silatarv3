@@ -439,7 +439,6 @@ class UserController extends Controller
             'status' => $validated['status'] ?? 1,
             'golongan' => $validated['golongan'] ?? null,
             'jabatan' => $validated['jabatan'] ?? null,
-            'req_tunjangan' => $validated['req_tunjangan'] ?? null,
             'updated_at' => now(),
         ];
 
@@ -450,50 +449,11 @@ class UserController extends Controller
         if (isset($validated['tempat_lahir'])) {
             $updateData['tempat_lahir'] = $validated['tempat_lahir'];
         }
-        if (isset($validated['tmt_cpns'])) {
-            $updateData['tmt_cpns'] = $validated['tmt_cpns'];
-        }
-        if (isset($validated['tmt_pns'])) {
-            $updateData['tmt_pns'] = $validated['tmt_pns'];
-        }
-        if (isset($validated['tmt_tugas'])) {
-            $updateData['tmt_tugas'] = $validated['tmt_tugas'];
-        }
-        if (isset($validated['kgb'])) {
-            $updateData['kgb'] = $validated['kgb'];
-        }
-        if (isset($validated['masa_kerja_tahun'])) {
-            $updateData['masa_kerja_tahun'] = $validated['masa_kerja_tahun'];
-        }
-        if (isset($validated['masa_kerja_bulan'])) {
-            $updateData['masa_kerja_bulan'] = $validated['masa_kerja_bulan'];
-        }
-        if (isset($validated['ijazah_pendidikan'])) {
-            $updateData['ijazah_pendidikan'] = $validated['ijazah_pendidikan'];
-        }
-        if (isset($validated['ijazah_jurusan'])) {
-            $updateData['ijazah_jurusan'] = $validated['ijazah_jurusan'];
-        }
-        if (isset($validated['ijazah_fakultas'])) {
-            $updateData['ijazah_fakultas'] = $validated['ijazah_fakultas'];
-        }
-        if (isset($validated['ijazah_universitas'])) {
-            $updateData['ijazah_universitas'] = $validated['ijazah_universitas'];
-        }
-        if (isset($validated['ijazah_tahun_lulus'])) {
-            $updateData['ijazah_tahun_lulus'] = $validated['ijazah_tahun_lulus'];
-        }
         if (isset($validated['bank_kategori'])) {
             $updateData['bank_kategori'] = $validated['bank_kategori'];
         }
         if (isset($validated['rekening'])) {
             $updateData['rekening'] = $validated['rekening'];
-        }
-        if (isset($validated['tipe_asn'])) {
-            $updateData['tipe_asn'] = $validated['tipe_asn'];
-        }
-        if (isset($validated['serdik'])) {
-            $updateData['serdik'] = $validated['serdik'];
         }
 
         // Only update password if provided
@@ -549,6 +509,48 @@ class UserController extends Controller
         }
         if (isset($validated['linkedin'])) {
             $tenagaData['linkedin'] = $validated['linkedin'];
+        }
+        if (isset($validated['tipe_asn'])) {
+            $tenagaData['status'] = $validated['tipe_asn'];
+        }
+        if (isset($validated['serdik'])) {
+            $tenagaData['serdik'] = $validated['serdik'];
+        }
+        if (isset($validated['req_tunjangan'])) {
+            $tenagaData['req_tunjangan'] = $validated['req_tunjangan'];
+        }
+        if (isset($validated['tmt_cpns'])) {
+            $tenagaData['tmt_cpns'] = $validated['tmt_cpns'];
+        }
+        if (isset($validated['tmt_pns'])) {
+            $tenagaData['tmt_pns'] = $validated['tmt_pns'];
+        }
+        if (isset($validated['tmt_tugas'])) {
+            $tenagaData['tmt_tugas'] = $validated['tmt_tugas'];
+        }
+        if (isset($validated['kgb'])) {
+            $tenagaData['kgb'] = $validated['kgb'];
+        }
+        if (isset($validated['masa_kerja_tahun'])) {
+            $tenagaData['masa_kerja_tahun'] = $validated['masa_kerja_tahun'];
+        }
+        if (isset($validated['masa_kerja_bulan'])) {
+            $tenagaData['masa_kerja_bulan'] = $validated['masa_kerja_bulan'];
+        }
+        if (isset($validated['ijazah_pendidikan'])) {
+            $tenagaData['pendidikan'] = $validated['ijazah_pendidikan'];
+        }
+        if (isset($validated['ijazah_jurusan'])) {
+            $tenagaData['jurusan'] = $validated['ijazah_jurusan'];
+        }
+        if (isset($validated['ijazah_fakultas'])) {
+            $tenagaData['fakultas'] = $validated['ijazah_fakultas'];
+        }
+        if (isset($validated['ijazah_universitas'])) {
+            $tenagaData['universitas'] = $validated['ijazah_universitas'];
+        }
+        if (isset($validated['ijazah_tahun_lulus'])) {
+            $tenagaData['tahun_lulus'] = $validated['ijazah_tahun_lulus'];
         }
 
         // Update tenaga_ktd if record exists and has data to update
