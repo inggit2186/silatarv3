@@ -587,15 +587,6 @@
                                 </div>
                                 <div class="grid gap-4 md:grid-cols-2">
                                     <div class="form-group">
-                                        <label for="asn" class="form-label">Status ASN</label>
-                                        <select id="asn" name="asn" class="form-select">
-                                            <option value="">Pilih</option>
-                                            <option value="PNS" {{ old('asn', $user->asn ?? '') === 'PNS' ? 'selected' : '' }}>PNS</option>
-                                            <option value="PPPK" {{ old('asn', $user->asn ?? '') === 'PPPK' ? 'selected' : '' }}>PPPK</option>
-                                            <option value="NON" {{ old('asn', $user->asn ?? '') === 'NON' ? 'selected' : '' }}>Non-ASN</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
                                         <label for="req_tunjangan" class="form-label">Request Tunjangan</label>
                                         <select id="req_tunjangan" name="req_tunjangan" class="form-select">
                                             <option value="">Pilih</option>

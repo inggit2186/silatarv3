@@ -403,7 +403,6 @@ class UserController extends Controller
             'linkedin' => ['nullable', 'string', 'max:255'],
             'golongan' => ['nullable', 'string', 'max:10'],
             'jabatan' => ['nullable', 'string', 'max:255'],
-            'asn' => ['nullable', 'string', Rule::in(['PNS', 'PPPK', 'NON'])],
             'req_tunjangan' => ['nullable', 'string'],
             'tmt_cpns' => ['nullable', 'date'],
             'tmt_pns' => ['nullable', 'date'],
@@ -440,7 +439,6 @@ class UserController extends Controller
             'status' => $validated['status'] ?? 1,
             'golongan' => $validated['golongan'] ?? null,
             'jabatan' => $validated['jabatan'] ?? null,
-            'asn' => $validated['asn'] ?? null,
             'req_tunjangan' => $validated['req_tunjangan'] ?? null,
             'updated_at' => now(),
         ];
