@@ -18,7 +18,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 8.5px;
+            font-size: 11px;
             color: #1e293b;
             background: #fff;
             -webkit-print-color-adjust: exact;
@@ -43,27 +43,11 @@
             flex: 1;
             border: 1.5px solid #0e7490;
             border-radius: 5px;
-            padding: 2.5mm 2.5mm;
+            padding: 3mm 3mm;
             display: flex;
             flex-direction: column;
             position: relative;
             overflow: hidden;
-        }
-
-        /* Dashed cut guides */
-        .cut-left, .cut-right {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 0;
-        }
-        .cut-left {
-            left: -2mm;
-            border-left: 1px dashed #94a3b8;
-        }
-        .cut-right {
-            right: -2mm;
-            border-left: 1px dashed #94a3b8;
         }
 
         /* Header */
@@ -77,7 +61,7 @@
         /* Title */
         .receipt-title {
             text-align: center;
-            font-size: 8px;
+            font-size: 11px;
             font-weight: 700;
             color: #fff;
             background: linear-gradient(135deg, #0891b2, #0e7490);
@@ -90,13 +74,12 @@
         /* Copy Label */
         .copy-label {
             text-align: center;
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 800;
-            color: #0e7490;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             margin-bottom: 2mm;
-            padding: 1.2mm 2mm;
+            padding: 1mm 2mm;
             border: 1.5px solid #0e7490;
             border-radius: 3px;
             background: #ecfeff;
@@ -113,14 +96,14 @@
         }
 
         .no-req-label {
-            font-size: 6px;
+            font-size: 8px;
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .no-req-value {
-            font-size: 8.5px;
+            font-size: 11px;
             font-weight: 700;
             color: #0e7490;
             font-family: 'Courier New', monospace;
@@ -130,11 +113,11 @@
 
         /* Sections */
         .info-section {
-            margin-bottom: 1.5mm;
+            margin-bottom: 2mm;
         }
 
         .info-section-title {
-            font-size: 7px;
+            font-size: 9px;
             font-weight: 700;
             color: #0e7490;
             text-transform: uppercase;
@@ -146,7 +129,7 @@
 
         .info-row {
             display: flex;
-            padding: 0.6mm 0;
+            padding: 0.8mm 0;
             border-bottom: 0.3px solid #f1f5f9;
             align-items: flex-start;
         }
@@ -156,27 +139,27 @@
         }
 
         .info-label {
-            width: 24mm;
-            font-size: 7px;
+            width: 26mm;
+            font-size: 9px;
             color: #64748b;
             flex-shrink: 0;
         }
 
         .info-dot {
-            width: 2.5mm;
+            width: 3mm;
             flex-shrink: 0;
             text-align: center;
             color: #94a3b8;
-            font-size: 7px;
+            font-size: 9px;
         }
 
         .info-value {
             flex: 1;
-            font-size: 7.5px;
+            font-size: 10px;
             font-weight: 500;
             color: #1e293b;
             word-break: break-word;
-            line-height: 1.35;
+            line-height: 1.3;
         }
 
         /* Status badge */
@@ -184,7 +167,7 @@
             display: inline-block;
             background: #10b981;
             color: #fff;
-            font-size: 6.5px;
+            font-size: 8px;
             font-weight: 600;
             padding: 0.6mm 2mm;
             border-radius: 2px;
@@ -192,24 +175,41 @@
             letter-spacing: 0.3px;
         }
 
-        /* Disposisi area (special for copy 1) */
-        .disposisi-area {
-            border: 1px solid #0e7490;
+        /* Keterangan */
+        .keterangan-box {
+            border: 1px solid #e2e8f0;
             border-radius: 3px;
-            padding: 1.5mm;
-            margin-bottom: 1.5mm;
+            padding: 2mm;
+            background: #fafafa;
+            min-height: 10mm;
+            margin-bottom: 2mm;
+        }
+
+        .keterangan-text {
+            font-size: 9px;
+            line-height: 1.4;
+            color: #334155;
+            white-space: pre-wrap;
+        }
+
+        /* Disposisi area */
+        .disposisi-area {
+            border: 1.5px solid #0e7490;
+            border-radius: 4px;
+            padding: 2mm;
             background: #f0fdfa;
+            flex: 1;
         }
 
         .disposisi-title {
-            font-size: 6.5px;
+            font-size: 7px;
             font-weight: 700;
             color: #0e7490;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
             margin-bottom: 1mm;
-            letter-spacing: 0.3px;
-            border-bottom: 1px solid #99f6e4;
             padding-bottom: 0.5mm;
+            border-bottom: 1px solid #99f6e4;
         }
 
         .disposisi-note {
@@ -224,70 +224,40 @@
             display: flex;
             align-items: center;
             gap: 1mm;
-            margin-bottom: 0.5mm;
+            margin-bottom: 1mm;
         }
 
         .disposisi-note-label {
-            font-size: 6.5px;
-            font-weight: 600;
+            font-size: 8px;
+            font-weight: 700;
             color: #334155;
         }
 
         .disposisi-note-box {
             border: 0.5px solid #cbd5e1;
             border-radius: 2px;
-            min-height: 8mm;
-            padding: 0.8mm;
+            height: 14mm;
+            padding: 1.5mm;
             background: #fff;
         }
 
         .disposisi-note-line {
             border-bottom: 0.3px solid #e2e8f0;
-            height: 2.5mm;
-            margin-bottom: 0.3mm;
+            height: 3mm;
+            margin-bottom: 0.2mm;
         }
 
         .disposisi-note-line:last-child {
             margin-bottom: 0;
         }
 
-        /* Signature */
-        .signature-area {
-            margin-top: auto;
-            padding-top: 2mm;
-        }
-
-        .signature-box {
-            border: 1px dashed #cbd5e1;
-            border-radius: 3px;
-            padding: 1.5mm;
-            text-align: center;
-            min-height: 12mm;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-        }
-
-        .signature-label {
-            font-size: 6px;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-
-        .signature-line {
-            width: 55%;
-            margin: 0.8mm auto 0;
-            border-top: 0.5px solid #cbd5e1;
-        }
-
         /* Footer */
         .receipt-footer {
-            margin-top: 1.5mm;
-            padding-top: 1mm;
+            margin-top: auto;
+            padding-top: 1.5mm;
             border-top: 1px solid #e2e8f0;
             text-align: center;
-            font-size: 5.5px;
+            font-size: 7px;
             color: #94a3b8;
         }
 
@@ -362,8 +332,6 @@
     <div class="page">
         @foreach($copies as $copy)
         <div class="receipt">
-            <div class="cut-left"></div>
-            <div class="cut-right"></div>
 
             <!-- Header -->
             <div class="receipt-header">
@@ -446,14 +414,22 @@
                 </div>
             </div>
 
-            <!-- Disposisi area (hanya untuk salinan pertama) -->
-            @if($copy['label'] === 'DISPOSISI')
+            <!-- Keterangan -->
+            @if($surat->deskripsi)
+            <div class="keterangan-box">
+                <div class="info-section-title" style="border-bottom: none; margin-bottom: 1mm; padding-bottom: 0;">Keterangan</div>
+                <div class="keterangan-text">{{ Str::limit($surat->deskripsi, 150) }}</div>
+            </div>
+            @endif
+
+            <!-- Form Disposisi (DISPOSISI & PENERIMA) -->
+            @if(in_array($copy['label'], ['DISPOSISI', 'PENERIMA']))
             <div class="disposisi-area">
                 <div class="disposisi-title">Form Disposisi</div>
 
                 <div class="disposisi-note">
                     <div class="disposisi-note-header">
-                        <span class="disposisi-note-label">Catatan Kakankemenag</span>
+                        <span class="disposisi-note-label">Catatan Kasubbag TU</span>
                     </div>
                     <div class="disposisi-note-box">
                         <div class="disposisi-note-line"></div>
@@ -464,7 +440,7 @@
 
                 <div class="disposisi-note">
                     <div class="disposisi-note-header">
-                        <span class="disposisi-note-label">Catatan Kasubbag TU</span>
+                        <span class="disposisi-note-label">Catatan Kakankemenag</span>
                     </div>
                     <div class="disposisi-note-box">
                         <div class="disposisi-note-line"></div>
@@ -485,32 +461,6 @@
                 </div>
             </div>
             @endif
-
-            <!-- Keterangan -->
-            @if($surat->deskripsi)
-            <div class="info-section">
-                <div class="info-section-title">Keterangan</div>
-                <div class="info-row">
-                    <span class="info-value" style="font-size: 7px; line-height: 1.4;">{{ Str::limit($surat->deskripsi, 120) }}</span>
-                </div>
-            </div>
-            @endif
-
-            <!-- Signature -->
-            <div class="signature-area">
-                <div class="signature-box">
-                    <div class="signature-label">
-                        @if($copy['label'] === 'DISPOSISI')
-                            Tanda Tangan &amp; Stempel
-                        @elseif($copy['label'] === 'PENGIRIM')
-                            Tanda Tangan Pengirim
-                        @else
-                            Tanda Tangan Penerima
-                        @endif
-                    </div>
-                    <div class="signature-line"></div>
-                </div>
-            </div>
 
             <!-- Footer -->
             <div class="receipt-footer">
