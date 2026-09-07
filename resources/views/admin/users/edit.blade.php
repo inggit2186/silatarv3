@@ -558,26 +558,26 @@
                                 </h4>
                                 <div class="grid gap-4 md:grid-cols-2">
                                     <div class="form-group">
-                                        <label for="gol" class="form-label">Golongan</label>
-                                        <select id="gol" name="gol" class="form-select">
+                                        <label for="golongan" class="form-label">Golongan</label>
+                                        <select id="golongan" name="golongan" class="form-select">
                                             <option value="">Pilih Golongan</option>
-                                            <option value="I/a" {{ old('gol', $user->gol ?? '') === 'I/a' ? 'selected' : '' }}>I/a - Juru Muda</option>
-                                            <option value="I/b" {{ old('gol', $user->gol ?? '') === 'I/b' ? 'selected' : '' }}>I/b - Juru Muda TK I</option>
-                                            <option value="I/c" {{ old('gol', $user->gol ?? '') === 'I/c' ? 'selected' : '' }}>I/c - Juru TK I</option>
-                                            <option value="I/d" {{ old('gol', $user->gol ?? '') === 'I/d' ? 'selected' : '' }}>I/d - Juru</option>
-                                            <option value="II/a" {{ old('gol', $user->gol ?? '') === 'II/a' ? 'selected' : '' }}>II/a - Pengatur Muda</option>
-                                            <option value="II/b" {{ old('gol', $user->gol ?? '') === 'II/b' ? 'selected' : '' }}>II/b - Pengatur Muda TK I</option>
-                                            <option value="II/c" {{ old('gol', $user->gol ?? '') === 'II/c' ? 'selected' : '' }}>II/c - Pengatur TK I</option>
-                                            <option value="II/d" {{ old('gol', $user->gol ?? '') === 'II/d' ? 'selected' : '' }}>II/d - Pengatur</option>
-                                            <option value="III/a" {{ old('gol', $user->gol ?? '') === 'III/a' ? 'selected' : '' }}>III/a - Penata Muda TK I</option>
-                                            <option value="III/b" {{ old('gol', $user->gol ?? '') === 'III/b' ? 'selected' : '' }}>III/b - Penata Muda</option>
-                                            <option value="III/c" {{ old('gol', $user->gol ?? '') === 'III/c' ? 'selected' : '' }}>III/c - Penata TK I</option>
-                                            <option value="III/d" {{ old('gol', $user->gol ?? '') === 'III/d' ? 'selected' : '' }}>III/d - Penata</option>
-                                            <option value="IV/a" {{ old('gol', $user->gol ?? '') === 'IV/a' ? 'selected' : '' }}>IV/a - Pembina TK I</option>
-                                            <option value="IV/b" {{ old('gol', $user->gol ?? '') === 'IV/b' ? 'selected' : '' }}>IV/b - Pembina</option>
-                                            <option value="IV/c" {{ old('gol', $user->gol ?? '') === 'IV/c' ? 'selected' : '' }}>IV/c - Pembina Utama Muda</option>
-                                            <option value="IV/d" {{ old('gol', $user->gol ?? '') === 'IV/d' ? 'selected' : '' }}>IV/d - Pembina Utama Madya</option>
-                                            <option value="IV/e" {{ old('gol', $user->gol ?? '') === 'IV/e' ? 'selected' : '' }}>IV/e - Pembina Utama</option>
+                                            <option value="I/a" {{ old('golongan', $user->golongan ?? '') === 'I/a' ? 'selected' : '' }}>I/a - Juru Muda</option>
+                                            <option value="I/b" {{ old('golongan', $user->golongan ?? '') === 'I/b' ? 'selected' : '' }}>I/b - Juru Muda TK I</option>
+                                            <option value="I/c" {{ old('golongan', $user->golongan ?? '') === 'I/c' ? 'selected' : '' }}>I/c - Juru TK I</option>
+                                            <option value="I/d" {{ old('golongan', $user->golongan ?? '') === 'I/d' ? 'selected' : '' }}>I/d - Juru</option>
+                                            <option value="II/a" {{ old('golongan', $user->golongan ?? '') === 'II/a' ? 'selected' : '' }}>II/a - Pengatur Muda</option>
+                                            <option value="II/b" {{ old('golongan', $user->golongan ?? '') === 'II/b' ? 'selected' : '' }}>II/b - Pengatur Muda TK I</option>
+                                            <option value="II/c" {{ old('golongan', $user->golongan ?? '') === 'II/c' ? 'selected' : '' }}>II/c - Pengatur TK I</option>
+                                            <option value="II/d" {{ old('golongan', $user->golongan ?? '') === 'II/d' ? 'selected' : '' }}>II/d - Pengatur</option>
+                                            <option value="III/a" {{ old('golongan', $user->golongan ?? '') === 'III/a' ? 'selected' : '' }}>III/a - Penata Muda TK I</option>
+                                            <option value="III/b" {{ old('golongan', $user->golongan ?? '') === 'III/b' ? 'selected' : '' }}>III/b - Penata Muda</option>
+                                            <option value="III/c" {{ old('golongan', $user->golongan ?? '') === 'III/c' ? 'selected' : '' }}>III/c - Penata TK I</option>
+                                            <option value="III/d" {{ old('golongan', $user->golongan ?? '') === 'III/d' ? 'selected' : '' }}>III/d - Penata</option>
+                                            <option value="IV/a" {{ old('golongan', $user->golongan ?? '') === 'IV/a' ? 'selected' : '' }}>IV/a - Pembina TK I</option>
+                                            <option value="IV/b" {{ old('golongan', $user->golongan ?? '') === 'IV/b' ? 'selected' : '' }}>IV/b - Pembina</option>
+                                            <option value="IV/c" {{ old('golongan', $user->golongan ?? '') === 'IV/c' ? 'selected' : '' }}>IV/c - Pembina Utama Muda</option>
+                                            <option value="IV/d" {{ old('golongan', $user->golongan ?? '') === 'IV/d' ? 'selected' : '' }}>IV/d - Pembina Utama Madya</option>
+                                            <option value="IV/e" {{ old('golongan', $user->golongan ?? '') === 'IV/e' ? 'selected' : '' }}>IV/e - Pembina Utama</option>
                                         </select>
                                     </div>
                                     <div class="form-group">
