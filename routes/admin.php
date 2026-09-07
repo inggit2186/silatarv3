@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\AcaraController;
 use App\Http\Controllers\Admin\CkhController;
 use App\Http\Controllers\Admin\RekapPresensiController;
 use App\Http\Controllers\Admin\AsnImportController;
+use App\Http\Controllers\Admin\SuratManualController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -188,6 +189,19 @@ Route::middleware(['auth', 'admin'])
         Route::get('/rekap-presensi/download-tukin', [RekapPresensiController::class, 'downloadTukin'])->name('rekap-presensi.download-tukin');
         Route::get('/rekap-presensi/download-by-group', [RekapPresensiController::class, 'downloadByGroup'])->name('rekap-presensi.download-by-group');
         Route::post('/rekap-presensi/delete', [RekapPresensiController::class, 'delete'])->name('rekap-presensi.delete');
+
+        // Surat Manual Routes
+        Route::prefix('surat-manual')->name('surat-manual.')->group(function () {
+            Route::get('/', [SuratManualController::class, 'index'])->name('index');
+            Route::get('/create', [SuratManualController::class, 'create'])->name('create');
+            Route::post('/', [SuratManualController::class, 'store'])->name('store');
+            Route::get('/{id}', [SuratManualController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [SuratManualController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [SuratManualController::class, 'update'])->name('update');
+            Route::delete('/{id}', [SuratManualController::class, 'destroy'])->name('destroy');
+            Route::get('/{id}/download', [SuratManualController::class, 'download'])->name('download');
+            Route::get('/print/{noReq}', [SuratManualController::class, 'print'])->name('print');
+        });
 
         // Import ASN Routes
         Route::prefix('import-asn')->name('import-asn.')->group(function () {
