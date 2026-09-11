@@ -77,7 +77,7 @@ $isHumas = AdminAccess::isHumas($userId);
             @endif
 
             @if($canAccessAdminPanel)
-            <div class="menu-group {{ request()->routeIs('admin.users.*', 'admin.services.*', 'admin.units.*', 'admin.requests.*', 'admin.tpg.*', 'admin.reports.*', 'admin.madrasah.laporan.*', 'admin.import-asn.*') ? 'has-active' : '' }}" data-group="kelola" id="menuGroupKelola">
+            <div class="menu-group {{ request()->routeIs('admin.users.*', 'admin.services.*', 'admin.units.*', 'admin.requests.*', 'admin.tpg.*', 'admin.reports.*', 'admin.madrasah.laporan.*', 'admin.import-asn.*', 'admin.ppid.*') ? 'has-active' : '' }}" data-group="kelola" id="menuGroupKelola">
                 <div class="menu-group-header" onclick="toggleMenuGroup('kelola')">
                     <div class="menu-group-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -198,6 +198,18 @@ $isHumas = AdminAccess::isHumas($userId);
                             </svg>
                         </div>
                         <span>Rekap Presensi</span>
+                    </a>
+                    @endif
+
+                    @if($isAdmin)
+                    <a href="{{ route('admin.ppid.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.ppid.*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap orange">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                        </div>
+                        <span>PPID</span>
                     </a>
                     @endif
                 </div>

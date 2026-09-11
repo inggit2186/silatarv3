@@ -3,16 +3,55 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PpidController extends Controller
 {
+    /**
+     * Helper method to get page data with sections.
+     */
+    protected function getPageData(string $slug): ?array
+    {
+        $page = DB::table('ppid_pages')
+            ->where('slug', $slug)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$page) {
+            return null;
+        }
+
+        $sections = DB::table('ppid_sections')
+            ->where('page_id', $page->id)
+            ->where('is_visible', true)
+            ->orderBy('sort_order')
+            ->get();
+
+        // Group sections by section_key
+        $sectionsByType = $sections->groupBy('section_key');
+
+        return [
+            'page' => $page,
+            'sections' => $sections,
+            'sectionsByType' => $sectionsByType,
+        ];
+    }
+
     /**
      * Main PPID page (Beranda)
      */
     public function index()
     {
+        $data = $this->getPageData('index');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.index', [
-            'title' => 'PPID - Pejabat Pengelola Informasi dan Dokumentasi',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -21,8 +60,16 @@ class PpidController extends Controller
      */
     public function profilSingkat()
     {
+        $data = $this->getPageData('profil-singkat');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.profil-singkat', [
-            'title' => 'Profil Singkat - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -31,8 +78,16 @@ class PpidController extends Controller
      */
     public function visiMisi()
     {
+        $data = $this->getPageData('visi-misi');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.visi-misi', [
-            'title' => 'Visi Misi - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -41,8 +96,16 @@ class PpidController extends Controller
      */
     public function tugasFungsi()
     {
+        $data = $this->getPageData('tugas-fungsi');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.tugas-fungsi', [
-            'title' => 'Tugas, Fungsi, dan Wewenang - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -51,8 +114,16 @@ class PpidController extends Controller
      */
     public function struktur()
     {
+        $data = $this->getPageData('struktur');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.struktur', [
-            'title' => 'Struktur Kelembagaan - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -61,8 +132,16 @@ class PpidController extends Controller
      */
     public function regulasi()
     {
+        $data = $this->getPageData('regulasi');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.regulasi', [
-            'title' => 'Regulasi - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -71,8 +150,16 @@ class PpidController extends Controller
      */
     public function maklumat()
     {
+        $data = $this->getPageData('maklumat');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.maklumat', [
-            'title' => 'Maklumat Pelayanan - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -81,8 +168,16 @@ class PpidController extends Controller
      */
     public function jadwal()
     {
+        $data = $this->getPageData('jadwal');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.jadwal', [
-            'title' => 'Jadwal Layanan - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -91,8 +186,16 @@ class PpidController extends Controller
      */
     public function biaya()
     {
+        $data = $this->getPageData('biaya');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.biaya', [
-            'title' => 'Biaya Layanan - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -101,8 +204,16 @@ class PpidController extends Controller
      */
     public function laporanLayanan()
     {
+        $data = $this->getPageData('laporan-layanan');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.laporan-layanan', [
-            'title' => 'Laporan Layanan - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -111,8 +222,16 @@ class PpidController extends Controller
      */
     public function prosedurPermohonan()
     {
+        $data = $this->getPageData('prosedur-permohonan');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.prosedur-permohonan', [
-            'title' => 'Tata Cara Permohonan Informasi Publik - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -121,8 +240,16 @@ class PpidController extends Controller
      */
     public function prosedurKeberatan()
     {
+        $data = $this->getPageData('prosedur-keberatan');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.prosedur-keberatan', [
-            'title' => 'Tata Cara Pengajuan Keberatan - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -131,8 +258,16 @@ class PpidController extends Controller
      */
     public function prosedurSengketa()
     {
+        $data = $this->getPageData('prosedur-sengketa');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.prosedur-sengketa', [
-            'title' => 'Tata Cara Pengajuan Permohonan Penyelesaian Sengketa - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -141,8 +276,16 @@ class PpidController extends Controller
      */
     public function formulirPermohonan()
     {
+        $data = $this->getPageData('formulir-permohonan');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.formulir-permohonan', [
-            'title' => 'Formulir Permohonan Informasi Publik - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -151,8 +294,16 @@ class PpidController extends Controller
      */
     public function formulirKeberatan()
     {
+        $data = $this->getPageData('formulir-keberatan');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.formulir-keberatan', [
-            'title' => 'Formulir Pengajuan Keberatan - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -161,8 +312,16 @@ class PpidController extends Controller
      */
     public function informasiBerkala()
     {
+        $data = $this->getPageData('informasi-berkala');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.informasi-berkala', [
-            'title' => 'Informasi Diumumkan Berkala - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -171,8 +330,16 @@ class PpidController extends Controller
      */
     public function informasiSertaMerta()
     {
+        $data = $this->getPageData('informasi-serta-merta');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.informasi-serta-merta', [
-            'title' => 'Informasi Serta Merta - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -181,8 +348,16 @@ class PpidController extends Controller
      */
     public function informasiSetiapSaat()
     {
+        $data = $this->getPageData('informasi-setiap-saat');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.informasi-setiap-saat', [
-            'title' => 'Informasi Tersedia Setiap Saat - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -191,8 +366,16 @@ class PpidController extends Controller
      */
     public function pengaduan()
     {
+        $data = $this->getPageData('pengaduan');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.pengaduan', [
-            'title' => 'Pengaduan - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
     }
 
@@ -201,8 +384,24 @@ class PpidController extends Controller
      */
     public function galleryFasilitas()
     {
+        $data = $this->getPageData('gallery-fasilitas');
+
+        if (!$data) {
+            abort(404);
+        }
+
+        // Get gallery items
+        $galleryItems = DB::table('ppid_gallery')
+            ->where('page_slug', 'gallery-fasilitas')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+
         return view('ppid.gallery-fasilitas', [
-            'title' => 'Fasilitas Publik - Gallery PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
+            'galleryItems' => $galleryItems,
         ]);
     }
 
@@ -211,8 +410,24 @@ class PpidController extends Controller
      */
     public function galleryKegiatan()
     {
+        $data = $this->getPageData('gallery-kegiatan');
+
+        if (!$data) {
+            abort(404);
+        }
+
+        // Get gallery items
+        $galleryItems = DB::table('ppid_gallery')
+            ->where('page_slug', 'gallery-kegiatan')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+
         return view('ppid.gallery-kegiatan', [
-            'title' => 'Kegiatan - Gallery PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
+            'galleryItems' => $galleryItems,
         ]);
     }
 
@@ -221,8 +436,24 @@ class PpidController extends Controller
      */
     public function tentangKami()
     {
+        $data = $this->getPageData('tentang-kami');
+
+        if (!$data) {
+            abort(404);
+        }
+
         return view('ppid.tentang-kami', [
-            'title' => 'Tentang Kami - PPID',
+            'title' => $data['page']->title,
+            'page' => $data['page'],
+            'sectionsByType' => $data['sectionsByType'],
         ]);
+    }
+
+    /**
+     * Clear cache for a specific page.
+     */
+    protected function clearPageCache(string $slug): void
+    {
+        Cache::forget("ppid_page_{$slug}");
     }
 }

@@ -85,6 +85,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get tenaga record (ASN status, etc.)
+     */
+    public function tenaga()
+    {
+        return $this->hasOne(Tenaga::class, 'user_id');
+    }
+
+    /**
      * Scope: Get users yang bisa dinilai (kasubbag, kasi, kepala)
      */
     public function scopeDapatDinilai($query)

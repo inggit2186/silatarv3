@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RekapPresensiController extends Controller
 {
@@ -155,6 +156,9 @@ class RekapPresensiController extends Controller
                 'tahun' => $record->tahun,
                 'updated_at' => $record->updated_at,
                 'generated_by' => $record->generated_by ?? '-',
+                'has_presensi' => !empty($record->presensi),
+                'has_uangmakan' => !empty($record->uangmakan),
+                'has_tukin' => !empty($record->tukin),
             ];
         }
 
@@ -201,6 +205,145 @@ class RekapPresensiController extends Controller
                 return response()->json(['success' => false, 'message' => 'Terjadi kesalahan server: ' . $e->getMessage()], 500);
             }
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate tukin calculation only (based on Unit Kerja)
+     * POST /admin/rekap-presensi/generate-tukin
+     */
+    public function generateTukin(Request $request)
+    {
+        if (!$this->canAccess()) {
+            abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
+        }
+
+        $isAjax = $request->ajax() || $request->expectsJson();
+
+        try {
+            $request->validate([
+                'dept_id' => 'required|integer|exists:ktd_department,id',
+                'month' => 'required|integer|between:1,12',
+                'year' => 'required|integer|between:2020,2030',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
+            throw $e;
+        }
+
+        $deptId = $request->dept_id;
+        $month = $request->month;
+        $year = $request->year;
+
+        $dept = Department::find($deptId);
+        if (!$dept) {
+            if ($isAjax) return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan']);
+            return back()->with('error', 'Unit kerja tidak ditemukan');
+        }
+
+        try {
+            $tanggal = sprintf('%04d-%02d-01', $year, $month);
+            $export = new \App\Exports\PresensiTukin($deptId, $tanggal);
+            $cleanName = preg_replace('/[^a-zA-Z0-9]/', '_', $dept->nama);
+
+            Log::info("Generating tukin for dept: {$dept->nama}, period: {$month}/{$year}");
+
+            // Create directory if not exists
+            $rekapDir = storage_path('app/rekap_presensi');
+            if (!file_exists($rekapDir)) {
+                mkdir($rekapDir, 0755, true);
+            }
+            $deptDir = "{$rekapDir}/{$cleanName}";
+            if (!file_exists($deptDir)) {
+                mkdir($deptDir, 0755, true);
+            }
+
+            // Generate timestamp and filename
+            $timestamp = date('Ymd_His');
+            $tukinFilename = "rekap_tukin_{$cleanName}_{$year}_{$month}_{$timestamp}.xlsx";
+            $tukinPath = "rekap_presensi/{$cleanName}/{$tukinFilename}";
+            $fullPath = storage_path("app/{$tukinPath}");
+
+            // Store Excel file directly (same method as presensi)
+            $tukinFile = \Maatwebsite\Excel\Facades\Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
+            file_put_contents($fullPath, $tukinFile);
+
+            Log::info("Tukin file stored at: {$fullPath}");
+
+            // Save/update ke ktd_presensifiles
+            $existingQuery = KtdPresensiFile::where('dept', $dept->nama)
+                ->where('bulan', $month)
+                ->where('tahun', $year);
+
+            $existing = $existingQuery->first();
+
+            if ($existing) {
+                // Hapus file LAMA jika ada
+                if (isset($existing->tukin) && $existing->tukin && file_exists(storage_path('app/' . $existing->tukin))) {
+                    unlink(storage_path('app/' . $existing->tukin));
+                }
+
+                // Update record di database
+                $existing->update([
+                    'tukin' => $tukinPath,
+                    'user_id' => auth()->id(),
+                    'updated_at' => now(),
+                ]);
+
+                $existing->touch();
+
+                Log::info("Tukin file diupdate", [
+                    'id' => $existing->id,
+                    'dept' => $dept->nama,
+                    'updated_at' => now()->toDateTimeString(),
+                ]);
+            } else {
+                $newRecord = KtdPresensiFile::create([
+                    'dept' => $dept->nama,
+                    'group_key' => null,
+                    'user_id' => auth()->id(),
+                    'bulan' => $month,
+                    'tahun' => $year,
+                    'presensi' => null,
+                    'uangmakan' => null,
+                    'tukin' => $tukinPath,
+                ]);
+
+                Log::info("Tukin file dibuat baru", [
+                    'id' => $newRecord->id,
+                    'dept' => $dept->nama,
+                ]);
+            }
+
+            Log::info("Tukin berhasil digenerate", [
+                'dept' => $dept->nama,
+                'month' => $month,
+                'year' => $year,
+                'file' => $tukinPath,
+            ]);
+
+            // For AJAX requests, return JSON with download URL
+            if ($isAjax) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Tukin berhasil di-generate untuk ' . $dept->nama,
+                    'download_url' => route('admin.rekap-presensi.download-tukin-direct', [
+                        'dept_id' => $deptId,
+                        'month' => $month,
+                        'year' => $year
+                    ])
+                ]);
+            }
+
+            return Excel::download($export, $tukinFilename);
+        } catch (\Exception $e) {
+            Log::error("Generate tukin error: " . $e->getMessage());
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Gagal generate tukin: ' . $e->getMessage()], 500);
+            }
+            return back()->with('error', 'Gagal generate tukin: ' . $e->getMessage());
         }
     }
 
@@ -405,7 +548,6 @@ class RekapPresensiController extends Controller
         try {
             $presensiFile = $this->generatePresensiExcel($users, $presensiData, $title, $month, $year);
             $detailFile = $this->generateDetailPresensiExcel($users, $presensiData, $title, $month, $year);
-            $tukinFile = $this->generateTukinExcel($users, $tukinData, $title, $month, $year);
 
             $rekapDir = storage_path('app/rekap_presensi');
             if (!file_exists($rekapDir)) {
@@ -427,10 +569,6 @@ class RekapPresensiController extends Controller
             $detailPath = "rekap_presensi/{$cleanName}/{$detailFilename}";
             file_put_contents(storage_path("app/{$detailPath}"), base64_decode($detailFile));
 
-            $tukinFilename = "rekap_tukin_{$cleanName}_{$year}_{$month}_{$timestamp}.xlsx";
-            $tukinPath = "rekap_presensi/{$cleanName}/{$tukinFilename}";
-            file_put_contents(storage_path("app/{$tukinPath}"), base64_decode($tukinFile));
-
             // Save/update ke ktd_presensifiles
             $existingQuery = KtdPresensiFile::where('dept', $deptLabel)
                 ->where('bulan', $month)
@@ -445,22 +583,18 @@ class RekapPresensiController extends Controller
             $existing = $existingQuery->first();
 
             if ($existing) {
-                // Hapus file LAMA jika ada dan berbeda dengan file baru
+                // Hapus file LAMA presensi dan uangmakan jika ada
                 if ($existing->presensi && file_exists(storage_path('app/' . $existing->presensi))) {
                     unlink(storage_path('app/' . $existing->presensi));
                 }
                 if ($existing->uangmakan && file_exists(storage_path('app/' . $existing->uangmakan))) {
                     unlink(storage_path('app/' . $existing->uangmakan));
                 }
-                if (isset($existing->tukin) && $existing->tukin && file_exists(storage_path('app/' . $existing->tukin))) {
-                    unlink(storage_path('app/' . $existing->tukin));
-                }
 
-                // Update record di database
+                // Update record - hanya presensi dan uangmakan, JANGAN ubah tukin
                 $existing->update([
                     'presensi' => $detailPath,
                     'uangmakan' => $rekapPath,
-                    'tukin' => $tukinPath,
                     'user_id' => auth()->id(),
                     'updated_at' => now(),
                 ]);
@@ -483,7 +617,7 @@ class RekapPresensiController extends Controller
                     'tahun' => $year,
                     'presensi' => $detailPath,
                     'uangmakan' => $rekapPath,
-                    'tukin' => $tukinPath,
+                    'tukin' => null,
                 ]);
 
                 Log::info("Rekap presensi dibuat baru", [
@@ -1064,14 +1198,10 @@ class RekapPresensiController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->freezePane('A6');
 
-        // Kolom: A=NIP, B=Nama, C=1, D=2, ..., AG=31, AH=Total
-        // daysInMonth=31: C(3)=1, D(4)=2, ..., AG(33)=31, AH(34)=Total
-        // Loop: getColumnName(day+2) untuk day=1..31 -> C..AG
-        // Total: getColumnName(34) = AH
-
-        $dateEndCol = $getColumnName($daysInMonth + 2); // AG (tanggal 31)
-        $totalCol = $getColumnName($daysInMonth + 3); // AH (kolom Total)
-        $lastCol = $totalCol; // AH adalah kolom terakhir
+        // Kolom: A=NIP, B=Nama, C=Unit Kerja, D=1, E=2, ..., AH=31, AI=Total
+        $dateEndCol = $getColumnName($daysInMonth + 3); // AH (tanggal 31)
+        $totalCol = $getColumnName($daysInMonth + 4); // AI (kolom Total)
+        $lastCol = $totalCol; // AI adalah kolom terakhir
 
         // Row 1: Title
         $sheet->mergeCells("A1:{$lastCol}1");
@@ -1093,12 +1223,12 @@ class RekapPresensiController extends Controller
         $sheet->getStyle($dayRowRange)->getFont()->setBold(true)->setSize(8)->getColor()->setRGB('475569');
         $sheet->getStyle($dayRowRange)->getAlignment()->setHorizontal('center');
         for ($day = 1; $day <= $daysInMonth; $day++) {
-            $col = $getColumnName($day + 2);
+            $col = $getColumnName($day + 3);
             $sheet->setCellValue("{$col}4", $dayNames[Carbon::create($year, $month, $day)->dayOfWeek]);
         }
         // Weekend day-name highlight (satu batch)
         foreach ($weekendCols as $day => $_) {
-            $col = $getColumnName($day + 2);
+            $col = $getColumnName($day + 3);
             $sheet->getStyle("{$col}4")->getFill()->setFillType('solid')->getStartColor()->setRGB('FEF3C7');
             $sheet->getStyle("{$col}4")->getFont()->getColor()->setRGB('D97706');
         }
@@ -1108,11 +1238,10 @@ class RekapPresensiController extends Controller
         $headerRange = "A{$headerRow}:{$lastCol}{$headerRow}";
         $sheet->setCellValue("A{$headerRow}", 'NIP');
         $sheet->setCellValue("B{$headerRow}", 'Nama');
+        $sheet->setCellValue("C{$headerRow}", 'Unit Kerja');
         for ($day = 1; $day <= $daysInMonth; $day++) {
-            $sheet->setCellValue("{$getColumnName($day + 2)}{$headerRow}", $day);
+            $sheet->setCellValue("{$getColumnName($day + 3)}{$headerRow}", $day);
         }
-        // Total column is set by the loop above (day 31 = col AG)
-        // No need to set it again
         $sheet->getStyle($headerRange)->getFont()->setBold(true)->setSize(9)->getColor()->setRGB($headerFg);
         $sheet->getStyle($headerRange)->getFill()->setFillType('solid')->getStartColor()->setRGB($headerBg);
         $sheet->getStyle($headerRange)->getAlignment()->setHorizontal('center')->setVertical('center');
@@ -1123,8 +1252,9 @@ class RekapPresensiController extends Controller
         // Column widths (satu kali)
         $sheet->getColumnDimension('A')->setWidth(18);
         $sheet->getColumnDimension('B')->setWidth(25);
+        $sheet->getColumnDimension('C')->setWidth(30);
         for ($day = 1; $day <= $daysInMonth; $day++) {
-            $sheet->getColumnDimension($getColumnName($day + 2))->setWidth(5);
+            $sheet->getColumnDimension($getColumnName($day + 3))->setWidth(5);
         }
         $sheet->getColumnDimension($totalCol)->setWidth(8);
 
@@ -1135,6 +1265,15 @@ class RekapPresensiController extends Controller
         foreach ($users as $user) {
             $sheet->setCellValue("A{$rowNum}", $user->nomor_induk);
             $sheet->setCellValue("B{$rowNum}", $user->name);
+            // Unit Kerja
+            $deptName = '';
+            if (isset($user->dept_id)) {
+                $deptRecord = DB::table('ktd_department')->where('id', $user->dept_id)->first();
+                $deptName = $deptRecord ? $deptRecord->nama : '';
+            } elseif (isset($user->dept->nama)) {
+                $deptName = $user->dept->nama;
+            }
+            $sheet->setCellValue("C{$rowNum}", $deptName);
 
             $userPresensi = $presensiData->get($user->nomor_induk);
             $total = 0;
@@ -1147,8 +1286,8 @@ class RekapPresensiController extends Controller
                         ($presensi->status === null);
 
                     if ($hasPresensi) {
-                        // Kolom C (day=1), D (day=2), ..., AF (day=31)
-                        $col = $getColumnName($day + 2);
+                        // Kolom D (day=1), E (day=2), ..., AI (day=31)
+                        $col = $getColumnName($day + 3);
                         $sheet->setCellValue("{$col}{$rowNum}", 1);
                         $total++;
                     }
@@ -1173,7 +1312,7 @@ class RekapPresensiController extends Controller
         $lastDataRow = $rowNum - 1;
         if ($lastDataRow >= $dataStartRow) {
             for ($day = 1; $day <= $daysInMonth; $day++) {
-                $col = $getColumnName($day + 2);
+                $col = $getColumnName($day + 3);
                 $sheet->getStyle("{$col}{$dataStartRow}:{$col}{$lastDataRow}")
                     ->getFont()->getColor()->setRGB('16A34A');
             }
@@ -1190,7 +1329,7 @@ class RekapPresensiController extends Controller
         // Batch apply: weekend column backgrounds
         if ($lastDataRow >= $dataStartRow && !empty($weekendCols)) {
             foreach ($weekendCols as $day => $_) {
-                $col = $getColumnName($day + 2);
+                $col = $getColumnName($day + 3);
                 $sheet->getStyle("{$col}{$dataStartRow}:{$col}{$lastDataRow}")
                     ->getFill()->setFillType('solid')->getStartColor()->setRGB('FFFBEB');
             }
@@ -1256,14 +1395,10 @@ class RekapPresensiController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->freezePane('A6');
 
-        // Kolom: A=NIP, B=Nama, C=1, D=2, ..., AG=31, AH=Total
-        // daysInMonth=31: C(3)=1, D(4)=2, ..., AG(33)=31, AH(34)=Total
-        // Loop: getColumnName(day+2) untuk day=1..31 -> C..AG
-        // Total: getColumnName(34) = AH
-
-        $dateEndCol = $getColumnName($daysInMonth + 2); // AG (tanggal 31)
-        $totalCol = $getColumnName($daysInMonth + 3); // AH (kolom Total)
-        $lastCol = $totalCol; // AH adalah kolom terakhir
+        // Kolom: A=NIP, B=Nama, C=Unit Kerja, D=1, E=2, ..., AH=31, AI=Total
+        $dateEndCol = $getColumnName($daysInMonth + 3); // AH (tanggal 31)
+        $totalCol = $getColumnName($daysInMonth + 4); // AI (kolom Total)
+        $lastCol = $totalCol; // AI adalah kolom terakhir
 
         // Row 1: Title
         $sheet->mergeCells("A1:{$lastCol}1");
@@ -1285,11 +1420,11 @@ class RekapPresensiController extends Controller
         $sheet->getStyle($dayRowRange)->getFont()->setBold(true)->setSize(8)->getColor()->setRGB('475569');
         $sheet->getStyle($dayRowRange)->getAlignment()->setHorizontal('center');
         for ($day = 1; $day <= $daysInMonth; $day++) {
-            $col = $getColumnName($day + 2);
+            $col = $getColumnName($day + 3);
             $sheet->setCellValue("{$col}4", $dayNames[Carbon::create($year, $month, $day)->dayOfWeek]);
         }
         foreach ($weekendCols as $day => $_) {
-            $col = $getColumnName($day + 2);
+            $col = $getColumnName($day + 3);
             $sheet->getStyle("{$col}4")->getFill()->setFillType('solid')->getStartColor()->setRGB('FEF3C7');
             $sheet->getStyle("{$col}4")->getFont()->getColor()->setRGB('D97706');
         }
@@ -1299,11 +1434,10 @@ class RekapPresensiController extends Controller
         $headerRange = "A{$headerRow}:{$lastCol}{$headerRow}";
         $sheet->setCellValue("A{$headerRow}", 'NIP');
         $sheet->setCellValue("B{$headerRow}", 'Nama');
+        $sheet->setCellValue("C{$headerRow}", 'Unit Kerja');
         for ($day = 1; $day <= $daysInMonth; $day++) {
-            $sheet->setCellValue("{$getColumnName($day + 2)}{$headerRow}", $day);
+            $sheet->setCellValue("{$getColumnName($day + 3)}{$headerRow}", $day);
         }
-        // Total column is set by the loop above (day 31 = col AG)
-        // No need to set it again
         $sheet->getStyle($headerRange)->getFont()->setBold(true)->setSize(9)->getColor()->setRGB($headerFg);
         $sheet->getStyle($headerRange)->getFill()->setFillType('solid')->getStartColor()->setRGB($headerBg);
         $sheet->getStyle($headerRange)->getAlignment()->setHorizontal('center')->setVertical('center');
@@ -1315,7 +1449,7 @@ class RekapPresensiController extends Controller
         $sheet->getColumnDimension('A')->setWidth(18);
         $sheet->getColumnDimension('B')->setWidth(25);
         for ($day = 1; $day <= $daysInMonth; $day++) {
-            $sheet->getColumnDimension($getColumnName($day + 2))->setWidth(12);
+            $sheet->getColumnDimension($getColumnName($day + 3))->setWidth(12);
         }
         $sheet->getColumnDimension($totalCol)->setWidth(8);
 
@@ -1326,6 +1460,15 @@ class RekapPresensiController extends Controller
         foreach ($users as $user) {
             $sheet->setCellValue("A{$rowNum}", $user->nomor_induk);
             $sheet->setCellValue("B{$rowNum}", $user->name);
+            // Unit Kerja
+            $deptName = '';
+            if (isset($user->dept_id)) {
+                $deptRecord = DB::table('ktd_department')->where('id', $user->dept_id)->first();
+                $deptName = $deptRecord ? $deptRecord->nama : '';
+            } elseif (isset($user->dept->nama)) {
+                $deptName = $user->dept->nama;
+            }
+            $sheet->setCellValue("C{$rowNum}", $deptName);
 
             $userPresensi = $presensiData->get($user->nomor_induk);
             $total = 0;
@@ -1340,11 +1483,10 @@ class RekapPresensiController extends Controller
                     if ($hasPresensi) {
                         $jamMasuk = $formatJam($presensi->m_absen);
                         $jamPulang = $formatJam($presensi->p_absen);
-                        $sheet->setCellValue("{$getColumnName($day + 2)}{$rowNum}", "{$jamMasuk} / {$jamPulang}");
+                        $sheet->setCellValue("{$getColumnName($day + 3)}{$rowNum}", "{$jamMasuk} / {$jamPulang}");
                         $total++;
                     } elseif ($presensi && !empty($presensi->status)) {
-                        // Tidak ada jam masuk/pulang, tapi ada status (CUTI, SAKIT, DLL)
-                        $sheet->setCellValue("{$getColumnName($day + 2)}{$rowNum}", strtoupper($presensi->status));
+                        $sheet->setCellValue("{$getColumnName($day + 3)}{$rowNum}", strtoupper($presensi->status));
                     }
                 }
             }
@@ -1367,7 +1509,7 @@ class RekapPresensiController extends Controller
         // Batch: green font untuk kolom presensi
         if ($lastDataRow >= $dataStartRow) {
             for ($day = 1; $day <= $daysInMonth; $day++) {
-                $col = $getColumnName($day + 2);
+                $col = $getColumnName($day + 3);
                 $sheet->getStyle("{$col}{$dataStartRow}:{$col}{$lastDataRow}")
                     ->getFont()->getColor()->setRGB('16A34A');
             }
@@ -1384,7 +1526,7 @@ class RekapPresensiController extends Controller
         // Batch: weekend column backgrounds
         if ($lastDataRow >= $dataStartRow && !empty($weekendCols)) {
             foreach ($weekendCols as $day => $_) {
-                $col = $getColumnName($day + 2);
+                $col = $getColumnName($day + 3);
                 $sheet->getStyle("{$col}{$dataStartRow}:{$col}{$lastDataRow}")
                     ->getFill()->setFillType('solid')->getStartColor()->setRGB('FFFBEB');
             }
@@ -1407,5 +1549,89 @@ class RekapPresensiController extends Controller
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
         ];
         return $months[$month] ?? 'Unknown';
+    }
+
+    /**
+     * Export tukin calculation to Excel
+     * GET /admin/rekap-presensi/tukin/{satker}/{tanggal}
+     */
+    public function exportTukin($satker, $tanggal)
+    {
+        if (!$this->canAccess()) {
+            abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
+        }
+
+        try {
+            $export = new \App\Exports\PresensiTukin($satker, $tanggal);
+            return \Maatwebsite\Excel\Facades\Excel::download($export, "rekap-tukin-{$satker}-{$tanggal}.xlsx");
+        } catch (\Exception $e) {
+            Log::error("Export tukin error: " . $e->getMessage());
+            return back()->with('error', 'Gagal export tukin: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download temporary tukin file (for AJAX generation)
+     * GET /admin/rekap-presensi/download-tukin-temp/{dept_id}/{month}/{year}
+     */
+    public function downloadTukinTemp($deptId, $month, $year)
+    {
+        if (!$this->canAccess()) {
+            abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
+        }
+
+        $tempPath = storage_path("app/rekap_tukin_temp_{$deptId}_{$year}_{$month}.xlsx");
+
+        if (!file_exists($tempPath)) {
+            return back()->with('error', 'File tukin tidak ditemukan. Silakan generate ulang.');
+        }
+
+        $filename = "rekap-tukin-{$deptId}-{$year}_{$month}.xlsx";
+
+        // Clean up temporary file after download
+        $response = response()->download($tempPath, $filename)->deleteFileAfterSend(true);
+
+        return $response;
+    }
+
+    /**
+     * Download tukin directly (for AJAX generation)
+     * GET /admin/rekap-presensi/download-tukin-direct/{dept_id}/{month}/{year}
+     */
+    public function downloadTukinDirect($deptId, $month, $year)
+    {
+        if (!$this->canAccess()) {
+            abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
+        }
+
+        try {
+            $dept = Department::find($deptId);
+            if (!$dept) {
+                return back()->with('error', 'Unit kerja tidak ditemukan');
+            }
+
+            // Find the record in ktd_presensifiles
+            $record = KtdPresensiFile::where('dept', $dept->nama)
+                ->where('bulan', $month)
+                ->where('tahun', $year)
+                ->first();
+
+            if (!$record || !$record->tukin) {
+                return back()->with('error', 'File tukin tidak ditemukan. Silakan generate ulang.');
+            }
+
+            $filePath = storage_path('app/' . $record->tukin);
+
+            if (!file_exists($filePath)) {
+                return back()->with('error', 'File tukin tidak ditemukan di storage. Silakan generate ulang.');
+            }
+
+            $filename = basename($record->tukin);
+
+            return response()->download($filePath, $filename);
+        } catch (\Exception $e) {
+            Log::error("Download tukin error: " . $e->getMessage());
+            return back()->with('error', 'Gagal download tukin: ' . $e->getMessage());
+        }
     }
 }

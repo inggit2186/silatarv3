@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\CkhController;
 use App\Http\Controllers\Admin\RekapPresensiController;
 use App\Http\Controllers\Admin\AsnImportController;
 use App\Http\Controllers\Admin\SuratManualController;
+use App\Http\Controllers\Admin\PpidController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -184,11 +185,15 @@ Route::middleware(['auth', 'admin'])
         // Rekap Presensi Routes
         Route::get('/rekap-presensi', [RekapPresensiController::class, 'index'])->name('rekap-presensi');
         Route::post('/rekap-presensi/generate', [RekapPresensiController::class, 'generate'])->name('rekap-presensi.generate');
+        Route::post('/rekap-presensi/generate-tukin', [RekapPresensiController::class, 'generateTukin'])->name('rekap-presensi.generate-tukin');
         Route::get('/rekap-presensi/download-presensi', [RekapPresensiController::class, 'downloadPresensi'])->name('rekap-presensi.download-presensi');
         Route::get('/rekap-presensi/download-detail', [RekapPresensiController::class, 'downloadDetail'])->name('rekap-presensi.download-detail');
         Route::get('/rekap-presensi/download-tukin', [RekapPresensiController::class, 'downloadTukin'])->name('rekap-presensi.download-tukin');
+        Route::get('/rekap-presensi/download-tukin-direct/{dept_id}/{month}/{year}', [RekapPresensiController::class, 'downloadTukinDirect'])->name('rekap-presensi.download-tukin-direct');
+        Route::get('/rekap-presensi/download-tukin-temp/{dept_id}/{month}/{year}', [RekapPresensiController::class, 'downloadTukinTemp'])->name('rekap-presensi.download-tukin-temp');
         Route::get('/rekap-presensi/download-by-group', [RekapPresensiController::class, 'downloadByGroup'])->name('rekap-presensi.download-by-group');
         Route::post('/rekap-presensi/delete', [RekapPresensiController::class, 'delete'])->name('rekap-presensi.delete');
+        Route::get('/rekap-presensi/tukin/{satker}/{tanggal}', [RekapPresensiController::class, 'exportTukin'])->name('rekap-presensi.tukin-export');
 
         // Surat Manual Routes
         Route::prefix('surat-manual')->name('surat-manual.')->group(function () {
@@ -209,5 +214,23 @@ Route::middleware(['auth', 'admin'])
             Route::post('/preview', [AsnImportController::class, 'preview'])->name('preview');
             Route::post('/import', [AsnImportController::class, 'import'])->name('import');
             Route::get('/history', [AsnImportController::class, 'history'])->name('history');
+        });
+
+        // PPID Management Routes
+        Route::prefix('ppid')->name('ppid.')->group(function () {
+            Route::get('/', [PpidController::class, 'index'])->name('index');
+            Route::get('/{slug}', [PpidController::class, 'edit'])->name('edit');
+            Route::put('/{slug}', [PpidController::class, 'update'])->name('update');
+            Route::post('/{slug}/sections', [PpidController::class, 'storeSection'])->name('sections.store');
+            Route::put('/sections/{id}', [PpidController::class, 'updateSection'])->name('sections.update');
+            Route::delete('/sections/{id}', [PpidController::class, 'destroySection'])->name('sections.destroy');
+            Route::post('/sections/reorder', [PpidController::class, 'reorder'])->name('sections.reorder');
+            Route::post('/upload-image', [PpidController::class, 'uploadImage'])->name('upload-image');
+
+            // Gallery Routes
+            Route::get('/{slug}/gallery', [PpidController::class, 'gallery'])->name('gallery');
+            Route::post('/{slug}/gallery/upload', [PpidController::class, 'uploadGallery'])->name('gallery.upload');
+            Route::delete('/gallery/{id}', [PpidController::class, 'deleteGallery'])->name('gallery.delete');
+            Route::post('/gallery/reorder', [PpidController::class, 'reorderGallery'])->name('gallery.reorder');
         });
     });

@@ -30,6 +30,9 @@ class KtdTukin extends Model
         'potongan_lain',
         'potongan_lain_persen',
         'total_potongan',
+        'tukin_final',
+        'total_potongan_final',
+        'detail_potongan_calc',
         'import_batch_id',
         'imported_by',
         'imported_at',
@@ -55,6 +58,9 @@ class KtdTukin extends Model
         'potongan_lain' => 'decimal:2',
         'potongan_lain_persen' => 'decimal:2',
         'total_potongan' => 'decimal:2',
+        'tukin_final' => 'decimal:2',
+        'total_potongan_final' => 'decimal:2',
+        'detail_potongan_calc' => 'array',
         'imported_at' => 'datetime',
     ];
 

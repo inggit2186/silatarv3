@@ -53,135 +53,228 @@
                         Generate Rekap Presensi
                     </h2>
 
-                    <form action="{{ route('admin.rekap-presensi.generate') }}" method="POST" id="rekapForm">
-                        @csrf
+                    <div style="display: flex; flex-direction: column; gap: 14px;">
+                        <!-- Method Selection -->
+                        <div>
+                            <label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px;">
+                                Generate Berdasarkan *
+                            </label>
+                            <select
+                                name="method"
+                                x-model="method"
+                                style="width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; color: var(--text-primary); background: var(--card);"
+                                required
+                            >
+                                <option value="unit_kerja">Unit Kerja</option>
+                                <option value="kategori_bank">Kategori Bank</option>
+                            </select>
+                        </div>
 
-                        <div style="display: flex; flex-direction: column; gap: 14px;">
-                            <!-- Method Selection -->
+                        <!-- Unit Kerja Dropdown -->
+                        <div x-show="method === 'unit_kerja'" x-transition>
+                            <label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px;">
+                                Unit Kerja *
+                            </label>
+                            <select
+                                name="dept_id"
+                                :required="method === 'unit_kerja'"
+                                style="width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; color: var(--text-primary); background: var(--card);"
+                            >
+                                <option value="">-- Pilih Unit Kerja --</option>
+                                @foreach($departments as $dept)
+                                    <option value="{{ $dept->id }}" {{ old('dept_id') == $dept->id ? 'selected' : '' }}>
+                                        {{ $dept->nama }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('dept_id')
+                                <p style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Kategori Bank Dropdown -->
+                        <div x-show="method === 'kategori_bank'" x-transition>
+                            <label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px;">
+                                Kelompok *
+                            </label>
+                            <select
+                                name="group_key"
+                                x-model="selectedGroup"
+                                :required="method === 'kategori_bank'"
+                                style="width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; color: var(--text-primary); background: var(--card);"
+                            >
+                                <option value="">-- Pilih Kelompok --</option>
+                                @foreach($bankKategoriGroups as $group)
+                                    <option value="{{ $group['group_key'] }}" {{ old('group_key') == $group['group_key'] ? 'selected' : '' }}>
+                                        {{ $group['label'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('group_key')
+                                <p style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ $message }}</p>
+                            @enderror
+
+                            <!-- Status/Deskripsi Kelompok -->
+                            <div x-show="selectedGroup && selectedGroup !== ''" x-transition
+                                 style="margin-top: 10px; padding: 10px; background: var(--info-bg); border: 1px solid var(--info); border-radius: var(--radius-sm); font-size: 12px; color: var(--info);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">Data yang diambil:</div>
+                                <div style="display: flex; flex-direction: column; gap: 2px;">
+                                    <div><span style="font-weight: 500;">Status:</span> <span x-text="groupInfo.status"></span></div>
+                                    <div><span style="font-weight: 500;">Bank Kategori:</span> <span x-text="groupInfo.bank_kategori"></span></div>
+                                    <div x-show="groupInfo.serdik"><span style="font-weight: 500;">Sertifikasi:</span> <span x-text="groupInfo.serdik"></span></div>
+                                    <div x-show="groupInfo.total"><span style="font-weight: 500;">Jumlah User:</span> <span x-text="groupInfo.total"></span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Month & Year -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                             <div>
                                 <label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px;">
-                                    Generate Berdasarkan *
+                                    Bulan *
                                 </label>
                                 <select
-                                    name="method"
-                                    x-model="method"
+                                    name="month"
                                     style="width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; color: var(--text-primary); background: var(--card);"
                                     required
                                 >
-                                    <option value="unit_kerja">Unit Kerja</option>
-                                    <option value="kategori_bank">Kategori Bank</option>
+                                    @for($m = 1; $m <= 12; $m++)
+                                        <option value="{{ $m }}" {{ $m == $currentMonth ? 'selected' : '' }}>
+                                            {{ \Carbon\Carbon::create()->month($m)->format('F') }}
+                                        </option>
+                                    @endfor
                                 </select>
                             </div>
 
-                            <!-- Unit Kerja Dropdown -->
-                            <div x-show="method === 'unit_kerja'" x-transition>
+                            <div>
                                 <label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px;">
-                                    Unit Kerja *
+                                    Tahun *
                                 </label>
                                 <select
-                                    name="dept_id"
-                                    :required="method === 'unit_kerja'"
+                                    name="year"
                                     style="width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; color: var(--text-primary); background: var(--card);"
+                                    required
                                 >
-                                    <option value="">-- Pilih Unit Kerja --</option>
-                                    @foreach($departments as $dept)
-                                        <option value="{{ $dept->id }}" {{ old('dept_id') == $dept->id ? 'selected' : '' }}>
-                                            {{ $dept->nama }}
+                                    @for($y = $currentYear - 2; $y <= $currentYear + 1; $y++)
+                                        <option value="{{ $y }}" {{ $y == $currentYear ? 'selected' : '' }}>
+                                            {{ $y }}
                                         </option>
-                                    @endforeach
+                                    @endfor
                                 </select>
-                                @error('dept_id')
-                                    <p style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <!-- Kategori Bank Dropdown -->
-                            <div x-show="method === 'kategori_bank'" x-transition>
-                                <label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px;">
-                                    Kelompok *
-                                </label>
-                                <select
-                                    name="group_key"
-                                    x-model="selectedGroup"
-                                    :required="method === 'kategori_bank'"
-                                    style="width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; color: var(--text-primary); background: var(--card);"
-                                >
-                                    <option value="">-- Pilih Kelompok --</option>
-                                    @foreach($bankKategoriGroups as $group)
-                                        <option value="{{ $group['group_key'] }}" {{ old('group_key') == $group['group_key'] ? 'selected' : '' }}>
-                                            {{ $group['label'] }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('group_key')
-                                    <p style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ $message }}</p>
-                                @enderror
-
-                                <!-- Status/Deskripsi Kelompok -->
-                                <div x-show="selectedGroup && selectedGroup !== ''" x-transition
-                                     style="margin-top: 10px; padding: 10px; background: var(--info-bg); border: 1px solid var(--info); border-radius: var(--radius-sm); font-size: 12px; color: var(--info);">
-                                    <div style="font-weight: 600; margin-bottom: 4px;">Data yang diambil:</div>
-                                    <div style="display: flex; flex-direction: column; gap: 2px;">
-                                        <div><span style="font-weight: 500;">Status:</span> <span x-text="groupInfo.status"></span></div>
-                                        <div><span style="font-weight: 500;">Bank Kategori:</span> <span x-text="groupInfo.bank_kategori"></span></div>
-                                        <div x-show="groupInfo.serdik"><span style="font-weight: 500;">Sertifikasi:</span> <span x-text="groupInfo.serdik"></span></div>
-                                        <div x-show="groupInfo.total"><span style="font-weight: 500;">Jumlah User:</span> <span x-text="groupInfo.total"></span></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Month & Year -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                <div>
-                                    <label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px;">
-                                        Bulan *
-                                    </label>
-                                    <select
-                                        name="month"
-                                        style="width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; color: var(--text-primary); background: var(--card);"
-                                        required
-                                    >
-                                        @for($m = 1; $m <= 12; $m++)
-                                            <option value="{{ $m }}" {{ $m == $currentMonth ? 'selected' : '' }}>
-                                                {{ \Carbon\Carbon::create()->month($m)->format('F') }}
-                                            </option>
-                                        @endfor
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px;">
-                                        Tahun *
-                                    </label>
-                                    <select
-                                        name="year"
-                                        style="width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; color: var(--text-primary); background: var(--card);"
-                                        required
-                                    >
-                                        @for($y = $currentYear - 2; $y <= $currentYear + 1; $y++)
-                                            <option value="{{ $y }}" {{ $y == $currentYear ? 'selected' : '' }}>
-                                                {{ $y }}
-                                            </option>
-                                        @endfor
-                                    </select>
-                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Submit Button -->
-                        <div style="margin-top: 18px;">
-                            <button
-                                type="submit"
-                                id="generateBtn"
-                                style="width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 16px; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; color: var(--text-inverse); background: var(--primary); cursor: pointer;"
-                            >
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                </svg>
-                                Generate Rekap Presensi
-                            </button>
-                        </div>
-                    </form>
+                    <!-- Submit Buttons -->
+                    <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 10px;">
+                        <button
+                            type="button"
+                            id="generateBtn"
+                            onclick="submitForm('{{ route('admin.rekap-presensi.generate') }}')"
+                            style="width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 16px; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; color: var(--text-inverse); background: var(--primary); cursor: pointer;"
+                        >
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            Generate Rekap Presensi
+                        </button>
+                        <button
+                            type="button"
+                            id="generateTukinBtn"
+                            onclick="submitForm('{{ route('admin.rekap-presensi.generate-tukin') }}')"
+                            style="width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 16px; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; color: var(--text-inverse); background: #7C3AED; cursor: pointer;"
+                        >
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Generate Tukin
+                        </button>
+                    </div>
+
+                    <script>
+                        function submitForm(action) {
+                            // Get form values directly from the visible form fields
+                            const method = document.querySelector('select[name="method"]').value;
+                            const deptId = document.querySelector('select[name="dept_id"]')?.value || '';
+                            const groupKey = document.querySelector('select[name="group_key"]')?.value || '';
+                            const month = document.querySelector('select[name="month"]').value;
+                            const year = document.querySelector('select[name="year"]').value;
+
+                            // Create FormData
+                            const formData = new FormData();
+                            formData.append('_token', '{{ csrf_token() }}');
+                            formData.append('method', method);
+                            formData.append('dept_id', deptId);
+                            formData.append('group_key', groupKey);
+                            formData.append('month', month);
+                            formData.append('year', year);
+
+                            // Determine which button was clicked and set loading state
+                            const btn = document.getElementById('generateBtn');
+                            const btnTukin = document.getElementById('generateTukinBtn');
+
+                            if (action.includes('generate-tukin')) {
+                                btnTukin.disabled = true;
+                                btnTukin.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Generate Tukin...';
+                            } else {
+                                btn.disabled = true;
+                                btn.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Generate Rekap Presensi...';
+                            }
+
+                            // Show overlay
+                            showOverlay();
+
+                            // Make AJAX request
+                            fetch(action, {
+                                method: 'POST',
+                                body: formData,
+                                credentials: 'same-origin',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Accept': 'application/json'
+                                }
+                            })
+                            .then(res => {
+                                if (!res.ok) {
+                                    return res.json().catch(() => null).then(errData => {
+                                        throw { status: res.status, data: errData };
+                                    });
+                                }
+                                return res.json();
+                            })
+                            .then(data => {
+                                hideOverlay();
+                                // Reset buttons
+                                btn.disabled = false;
+                                btnTukin.disabled = false;
+                                btn.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Generate Rekap Presensi';
+                                btnTukin.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Generate Tukin';
+
+                                if (data.success) {
+                                    showFlash('success', data.message);
+                                    // Auto-download if URL provided
+                                    if (data.download_url) {
+                                        window.location.href = data.download_url;
+                                    }
+                                    setTimeout(() => location.reload(), 1500);
+                                } else {
+                                    showFlash('error', data.message || 'Gagal generate');
+                                }
+                            })
+                            .catch(err => {
+                                hideOverlay();
+                                // Reset buttons
+                                btn.disabled = false;
+                                btnTukin.disabled = false;
+                                btn.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Generate Rekap Presensi';
+                                btnTukin.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Generate Tukin';
+
+                                console.error('Generate error:', err);
+                                const msg = err?.data?.message || 'Terjadi kesalahan. Silakan coba lagi.';
+                                showFlash('error', msg);
+                            });
+                        }
+                    </script>
                 </div>
 
                 <!-- Info Card -->
@@ -291,27 +384,33 @@
                                         <td style="padding: 10px 8px; text-align: center;">
                                             <div style="display: flex; gap: 6px; justify-content: center;">
                                                 @if($item['group_key'])
-                                                    <a href="{{ route('admin.rekap-presensi.download-by-group', ['group_key' => $item['group_key'], 'month' => $item['bulan'], 'year' => $item['tahun'], 'type' => 'presensi']) }}"
-                                                       style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--info); color: var(--text-inverse);"
-                                                       title="Download Rekap">
-                                                        <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                                        </svg>
-                                                    </a>
-                                                    <a href="{{ route('admin.rekap-presensi.download-by-group', ['group_key' => $item['group_key'], 'month' => $item['bulan'], 'year' => $item['tahun'], 'type' => 'detail']) }}"
-                                                       style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--success); color: var(--text-inverse);"
-                                                       title="Download Detail">
-                                                        <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                                        </svg>
-                                                    </a>
-                                                    <a href="{{ route('admin.rekap-presensi.download-by-group', ['group_key' => $item['group_key'], 'month' => $item['bulan'], 'year' => $item['tahun'], 'type' => 'tukin']) }}"
-                                                       style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: #7C3AED; color: var(--text-inverse);"
-                                                       title="Download Tukin">
-                                                        <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                        </svg>
-                                                    </a>
+                                                    @if($item['has_uangmakan'])
+                                                        <a href="{{ route('admin.rekap-presensi.download-by-group', ['group_key' => $item['group_key'], 'month' => $item['bulan'], 'year' => $item['tahun'], 'type' => 'presensi']) }}"
+                                                           style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--info); color: var(--text-inverse);"
+                                                           title="Download Rekap">
+                                                            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                                            </svg>
+                                                        </a>
+                                                    @endif
+                                                    @if($item['has_presensi'])
+                                                        <a href="{{ route('admin.rekap-presensi.download-by-group', ['group_key' => $item['group_key'], 'month' => $item['bulan'], 'year' => $item['tahun'], 'type' => 'detail']) }}"
+                                                           style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--success); color: var(--text-inverse);"
+                                                           title="Download Detail">
+                                                            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                            </svg>
+                                                        </a>
+                                                    @endif
+                                                    @if($item['has_tukin'])
+                                                        <a href="{{ route('admin.rekap-presensi.download-by-group', ['group_key' => $item['group_key'], 'month' => $item['bulan'], 'year' => $item['tahun'], 'type' => 'tukin']) }}"
+                                                           style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: #7C3AED; color: var(--text-inverse);"
+                                                           title="Download Tukin">
+                                                            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                            </svg>
+                                                        </a>
+                                                    @endif
                                                     @if(auth()->user()->role === 'admin' || auth()->user()->role === 'superadmin')
                                                         <form action="{{ route('admin.rekap-presensi.delete') }}" method="POST" style="display: inline;"
                                                               onsubmit="return confirm('Apakah Anda yakin ingin menghapus rekap ini? File akan dihapus permanen!')">
@@ -329,27 +428,33 @@
                                                         </form>
                                                     @endif
                                                 @else
-                                                    <a href="{{ route('admin.rekap-presensi.download-presensi', ['dept_id' => $item['dept_id'] ?? 0, 'month' => $item['bulan'], 'year' => $item['tahun']]) }}"
-                                                       style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--info); color: var(--text-inverse);"
-                                                       title="Download Rekap">
-                                                        <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                                        </svg>
-                                                    </a>
-                                                    <a href="{{ route('admin.rekap-presensi.download-detail', ['dept_id' => $item['dept_id'] ?? 0, 'month' => $item['bulan'], 'year' => $item['tahun']]) }}"
-                                                       style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--success); color: var(--text-inverse);"
-                                                       title="Download Detail">
-                                                        <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                                        </svg>
-                                                    </a>
-                                                    <a href="{{ route('admin.rekap-presensi.download-tukin', ['dept_id' => $item['dept_id'] ?? 0, 'month' => $item['bulan'], 'year' => $item['tahun']]) }}"
-                                                       style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: #7C3AED; color: var(--text-inverse);"
-                                                       title="Download Tukin">
-                                                        <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                        </svg>
-                                                    </a>
+                                                    @if($item['has_uangmakan'])
+                                                        <a href="{{ route('admin.rekap-presensi.download-presensi', ['dept_id' => $item['dept_id'] ?? 0, 'month' => $item['bulan'], 'year' => $item['tahun']]) }}"
+                                                           style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--info); color: var(--text-inverse);"
+                                                           title="Download Rekap">
+                                                            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                                            </svg>
+                                                        </a>
+                                                    @endif
+                                                    @if($item['has_presensi'])
+                                                        <a href="{{ route('admin.rekap-presensi.download-detail', ['dept_id' => $item['dept_id'] ?? 0, 'month' => $item['bulan'], 'year' => $item['tahun']]) }}"
+                                                           style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--success); color: var(--text-inverse);"
+                                                           title="Download Detail">
+                                                            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                            </svg>
+                                                        </a>
+                                                    @endif
+                                                    @if($item['has_tukin'])
+                                                        <a href="{{ route('admin.rekap-presensi.download-tukin', ['dept_id' => $item['dept_id'] ?? 0, 'month' => $item['bulan'], 'year' => $item['tahun']]) }}"
+                                                           style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: #7C3AED; color: var(--text-inverse);"
+                                                           title="Download Tukin">
+                                                            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                            </svg>
+                                                        </a>
+                                                    @endif
                                                     @if(auth()->user()->role === 'admin' || auth()->user()->role === 'superadmin')
                                                         <form action="{{ route('admin.rekap-presensi.delete') }}" method="POST" style="display: inline;"
                                                               onsubmit="return confirm('Apakah Anda yakin ingin menghapus rekap ini? File akan dihapus permanen!')">
@@ -520,48 +625,45 @@
         }, 1000);
     }
 
+    function showOverlayTukin() {
+        elapsedSeconds = 0;
+        const overlay = document.getElementById('generateOverlay');
+        const msgEl = document.getElementById('overlayMessage');
+        const timeEl = document.getElementById('overlayTimer');
+        const progressEl = document.getElementById('overlayProgress');
+        overlay.style.display = 'flex';
+        msgEl.textContent = 'Memuat data tukin...';
+        timeEl.textContent = '0 detik';
+        progressEl.style.width = '0%';
+
+        const tukinStatusMessages = [
+            { time: 0, text: 'Memuat data tukin...' },
+            { time: 5, text: 'Mengambil data presensi...' },
+            { time: 15, text: 'Menghitung potongan per jenis...' },
+            { time: 30, text: 'Menghitung tukin final...' },
+            { time: 45, text: 'Menyimpan hasil perhitungan...' },
+            { time: 60, text: 'Masih diproses, mohon tunggu...' },
+        ];
+
+        generateTimer = setInterval(() => {
+            elapsedSeconds++;
+            // Get message based on elapsed time
+            let msg = tukinStatusMessages[0].text;
+            for (const s of tukinStatusMessages) {
+                if (elapsedSeconds >= s.time) msg = s.text;
+            }
+            msgEl.textContent = msg;
+            timeEl.textContent = elapsedSeconds + ' detik';
+            // Progress: naik perlahan, max 90% (100% saat selesai)
+            const pct = Math.min(90, (elapsedSeconds / 90) * 100);
+            progressEl.style.width = pct + '%';
+        }, 1000);
+    }
+
     function hideOverlay() {
         if (generateTimer) { clearInterval(generateTimer); generateTimer = null; }
         document.getElementById('generateOverlay').style.display = 'none';
     }
-
-    document.getElementById('rekapForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const form = this;
-        const formData = new FormData(form);
-
-        showOverlay();
-
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            credentials: 'same-origin',
-            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-        })
-        .then(res => {
-            if (!res.ok) {
-                return res.json().catch(() => null).then(errData => {
-                    throw { status: res.status, data: errData };
-                });
-            }
-            return res.json();
-        })
-        .then(data => {
-            hideOverlay();
-            if (data.success) {
-                showFlash('success', data.message);
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                showFlash('error', data.message || 'Gagal generate rekap presensi');
-            }
-        })
-        .catch(err => {
-            hideOverlay();
-            console.error('Generate error:', err);
-            const msg = err?.data?.message || 'Terjadi kesalahan. Silakan coba lagi.';
-            showFlash('error', msg);
-        });
-    });
 
     function showFlash(type, message) {
         const container = document.getElementById('flashContainer');

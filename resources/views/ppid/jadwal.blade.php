@@ -1,52 +1,71 @@
-<x-layouts.ppid-layout title="Jadwal Layanan - PPID">
+<x-layouts.ppid-layout title="{{ $page->title }}">
     <x-ppid.nav />
 
     <main class="ppid-content">
         <div class="ppid-page">
-            <div class="ppid-page-breadcrumb"><a href="{{ route('ppid') }}">PPID</a><span>/</span><span>Standar Layanan</span><span>/</span><span>Jadwal</span></div>
+            <div class="ppid-page-breadcrumb">
+                <a href="{{ route('ppid') }}">PPID</a>
+                <span>/</span>
+                <span>Standar Layanan</span>
+                <span>/</span>
+                <span>{{ $page->title }}</span>
+            </div>
             <div class="ppid-page-header" data-reveal>
-                <h1 class="ppid-page-title">Jadwal Layanan</h1>
-                <p class="ppid-page-subtitle">Waktu dan Hari Layanan Informasi Publik</p>
+                <h1 class="ppid-page-title">{{ $page->title }}</h1>
+                <p class="ppid-page-subtitle">{{ $page->subtitle ?? 'Waktu dan Hari Layanan Informasi Publik' }}</p>
             </div>
 
-            <section class="ppid-section" data-reveal>
-                <h2 class="ppid-section-title">Jam Operasional</h2>
-                <div style="background: white; border: 1px solid rgba(140, 135, 130, 0.15); border: 1px solid oklch(58% 0.06 76 / 0.15); border-radius: 1.5rem; overflow: hidden;">
-                    <table class="ppid-table" style="border-radius: 0;">
-                        <thead><tr><th>Hari</th><th>Jam Buka</th><th>Istirahat</th><th>Status</th></tr></thead>
-                        <tbody>
-                            <tr><td>Senin</td><td>08.00 WIB</td><td>12.00 - 13.00</td><td><span style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.7rem; font-weight: 600;">Buka</span></td></tr>
-                            <tr><td>Selasa</td><td>08.00 WIB</td><td>12.00 - 13.00</td><td><span style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.7rem; font-weight: 600;">Buka</span></td></tr>
-                            <tr><td>Rabu</td><td>08.00 WIB</td><td>12.00 - 13.00</td><td><span style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.7rem; font-weight: 600;">Buka</span></td></tr>
-                            <tr><td>Kamis</td><td>08.00 WIB</td><td>12.00 - 13.00</td><td><span style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.7rem; font-weight: 600;">Buka</span></td></tr>
-                            <tr><td>Jumat</td><td>08.00 WIB</td><td>11.30 - 13.30</td><td><span style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.7rem; font-weight: 600;">Buka</span></td></tr>
-                            <tr><td>Sabtu</td><td>08.00 WIB</td><td>12.00 - 13.00</td><td><span style="background: #f59e0b; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.7rem; font-weight: 600;">Buka</span></td></tr>
-                            <tr><td>Minggu</td><td>-</td><td>-</td><td><span style="background: #ef4444; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.7rem; font-weight: 600;">Tutup</span></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            {{-- Jadwal Table Section --}}
+            @if(isset($sectionsByType['jadwal_opsional']))
+                @php $jadwal = $sectionsByType['jadwal_opsional']->first(); @endphp
+                @php $tableData = json_decode($jadwal->metadata); @endphp
+                <section class="ppid-section" data-reveal>
+                    <h2 class="ppid-section-title">{{ $jadwal->title ?? 'Jam Operasional' }}</h2>
+                    <div style="background: white; border: 1px solid rgba(140, 135, 130, 0.15); border: 1px solid oklch(58% 0.06 76 / 0.15); border-radius: 1.5rem; overflow: hidden;">
+                        <table class="ppid-table" style="border-radius: 0;">
+                            <thead>
+                                <tr>
+                                    @foreach($tableData->headers as $header)
+                                        <th>{{ $header }}</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($tableData->rows as $row)
+                                    <tr>
+                                        @foreach($row as $cell)
+                                            <td>{{ $cell }}</td>
+                                        @endforeach
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            @endif
 
-            <section class="ppid-section" data-reveal>
-                <h2 class="ppid-section-title">Kontak Layanan</h2>
-                <div class="ppid-grid">
-                    <div class="ppid-card">
-                        <div class="ppid-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2"/></svg></div>
-                        <h3 class="ppid-card-title">Telepon</h3>
-                        <p class="ppid-card-text">(0752) 12345</p>
+            {{-- Kontak Section --}}
+            @if(isset($sectionsByType['kontak']))
+                @php $kontak = $sectionsByType['kontak']->first(); @endphp
+                @php $cards = json_decode($kontak->metadata)->cards ?? []; @endphp
+                <section class="ppid-section" data-reveal>
+                    <h2 class="ppid-section-title">{{ $kontak->title ?? 'Kontak Layanan' }}</h2>
+                    <div class="ppid-grid">
+                        @foreach($cards as $card)
+                            <div class="ppid-card">
+                                <div class="ppid-card-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="ppid-card-title">{{ $card->title }}</h3>
+                                <p class="ppid-card-text">{{ $card->description }}</p>
+                            </div>
+                        @endforeach
                     </div>
-                    <div class="ppid-card">
-                        <div class="ppid-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/></svg></div>
-                        <h3 class="ppid-card-title">Email</h3>
-                        <p class="ppid-card-text">ppid@kemenag-tanahdatar.go.id</p>
-                    </div>
-                    <div class="ppid-card">
-                        <div class="ppid-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg></div>
-                        <h3 class="ppid-card-title">Alamat</h3>
-                        <p class="ppid-card-text">Jl. Raya Batusangkar No. 1</p>
-                    </div>
-                </div>
-            </section>
+                </section>
+            @endif
         </div>
         @include('ppid.partials.footer')
-    </main></x-layouts.ppid-layout>
+    </main>
+</x-layouts.ppid-layout>
