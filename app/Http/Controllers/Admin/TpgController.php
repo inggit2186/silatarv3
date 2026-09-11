@@ -37,8 +37,8 @@ class TpgController extends Controller
             $currentTahun = $request->has('tahun') ? ($request->get('tahun') ?: null) : null;
         }
 
-        // Default status: admin sees SUBMITTED, staff sees all statuses
-        $defaultStatus = $user->role === 'admin' ? 'SUBMITTED' : null;
+        // Default status: both admin and staff default to SUBMITTED; staff cannot see DRAFT
+        $defaultStatus = 'SUBMITTED';
         $currentStatus = $request->has('status') ? ($request->get('status') ?: null) : $defaultStatus;
 
         $tipeLabels = [
@@ -95,6 +95,11 @@ class TpgController extends Controller
             $query->where('p.status', $currentStatus);
         }
 
+        // Non-admin (petugas) cannot see DRAFT submissions
+        if ($user->role !== 'admin') {
+            $query->where('p.status', '!=', 'DRAFT');
+        }
+
         if ($currentBulan) {
             $bulanNumber = $this->bulanToNumber($currentBulan);
             if ($bulanNumber) {
@@ -106,9 +111,7 @@ class TpgController extends Controller
             $query->whereYear('p.waktu', $currentTahun);
         }
 
-        if ($user->role !== 'admin') {
-            $query->where('p.dept_id', $user->dept_id);
-        }
+        // Dept filter already handled by allowedServiceIds (layanan_id with matching dept_id)
 
         $pemberkasan = $query
             ->orderByDesc('p.waktu')
@@ -116,8 +119,8 @@ class TpgController extends Controller
             ->paginate(20);
 
         foreach ($pemberkasan as $item) {
-            $item->metadata_parsed = json_decode($item->metadata ?? '{}', true) ?: [];
-            $item->files_parsed = json_decode($item->files ?? '[]', true) ?: [];
+            $item->metadata_parsed = $this->safeJsonDecode($item->metadata);
+            $item->files_parsed = $this->safeJsonDecode($item->files);
             $item->tipe_label = $tipeLabels[$item->tipe] ?? $item->tipe;
             $item->periode_label = $this->formatTpgPeriode($item);
             $item->status_label = $item->status === 'DRAFT'
@@ -143,7 +146,9 @@ class TpgController extends Controller
             ->selectRaw("\n                COUNT(*) as total,\n                SUM(p.status = 'DRAFT') as draft,\n                SUM(p.status IN ('SUBMITTED', 'PENDING')) as pending,\n                SUM(p.status = 'DITERIMA') as diterima,\n                SUM(p.status = 'DIPROSES') as diproses,\n                SUM(p.status = 'SUKSES') as sukses\n            ")
             ->first();
 
-        $statusOptions = ['DRAFT', 'SUBMITTED', 'PENDING', 'DITERIMA', 'DIPROSES', 'SUKSES', 'DITOLAK'];
+        $statusOptions = $user->role === 'admin'
+            ? ['DRAFT', 'SUBMITTED', 'PENDING', 'DITERIMA', 'DIPROSES', 'SUKSES', 'DITOLAK']
+            : ['SUBMITTED', 'PENDING', 'DITERIMA', 'DIPROSES', 'SUKSES', 'DITOLAK'];
 
         return view('admin.tpg.index', [
             'title' => 'Verifikasi TPG - SILATAR Admin',
@@ -183,16 +188,15 @@ class TpgController extends Controller
         }
         $tahunAjaranOptions = $tahunAjaranOptions->unique()->values()->all();
 
-        // Staff: no filter defaults (show all); Admin: default to current semester/year
+        // Staff: no filter defaults (show all); Admin: default to current semester/year; both default to SUBMITTED
         if ($user->role === 'admin') {
             $currentSemester = $request->has('semester') ? ($request->get('semester') ?: null) : 'Ganjil';
             $currentTahunAjaran = $request->has('tahun_ajaran') ? ($request->get('tahun_ajaran') ?: null) : $defaultYear;
-            $currentStatus = $request->has('status') ? ($request->get('status') ?: null) : 'SUBMITTED';
         } else {
             $currentSemester = $request->has('semester') ? ($request->get('semester') ?: null) : null;
             $currentTahunAjaran = $request->has('tahun_ajaran') ? ($request->get('tahun_ajaran') ?: null) : null;
-            $currentStatus = $request->has('status') ? ($request->get('status') ?: null) : null;
         }
+        $currentStatus = $request->has('status') ? ($request->get('status') ?: null) : 'SUBMITTED';
         $layananId = $request->get('layanan_id');
 
         $allowedServiceIds = $this->getDynamicServiceIds($user, 'semester');
@@ -250,9 +254,12 @@ class TpgController extends Controller
             $query->where('p.status', $currentStatus);
         }
 
+        // Non-admin (petugas) cannot see DRAFT submissions
         if ($user->role !== 'admin') {
-            $query->where('p.dept_id', $user->dept_id);
+            $query->where('p.status', '!=', 'DRAFT');
         }
+
+        // Dept filter already handled by allowedServiceIds (layanan_id with matching dept_id)
 
         $pemberkasan = $query
             ->orderByDesc('p.waktu')
@@ -260,8 +267,8 @@ class TpgController extends Controller
             ->paginate(20);
 
         foreach ($pemberkasan as $item) {
-            $item->metadata_parsed = json_decode($item->metadata ?? '{}', true) ?: [];
-            $item->files_parsed = json_decode($item->files ?? '[]', true) ?: [];
+            $item->metadata_parsed = $this->safeJsonDecode($item->metadata);
+            $item->files_parsed = $this->safeJsonDecode($item->files);
             $item->tipe_label = $tipeLabels[$item->tipe] ?? $item->tipe;
             $item->periode_label = $this->formatTpgPeriode($item);
             $item->status_label = $item->status === 'DRAFT'
@@ -284,7 +291,9 @@ class TpgController extends Controller
             ->selectRaw("\n                COUNT(*) as total,\n                SUM(p.status = 'DRAFT') as draft,\n                SUM(p.status IN ('SUBMITTED', 'PENDING')) as pending,\n                SUM(p.status = 'DITERIMA') as diterima,\n                SUM(p.status = 'DIPROSES') as diproses,\n                SUM(p.status = 'SUKSES') as sukses\n            ")
             ->first();
 
-        $statusOptions = ['DRAFT', 'SUBMITTED', 'PENDING', 'DITERIMA', 'DIPROSES', 'SUKSES', 'DITOLAK'];
+        $statusOptions = $user->role === 'admin'
+            ? ['DRAFT', 'SUBMITTED', 'PENDING', 'DITERIMA', 'DIPROSES', 'SUKSES', 'DITOLAK']
+            : ['SUBMITTED', 'PENDING', 'DITERIMA', 'DIPROSES', 'SUKSES', 'DITOLAK'];
         $layananOptions = $this->getDynamicLayananOptions($user, 'semester');
 
         return view('admin.tpg.semester-index', [
@@ -338,34 +347,19 @@ class TpgController extends Controller
         // TPG service IDs - semester and bulanan
         $tpgServiceIds = [1037, 1038, 1081, 1082];
 
-        // For staff/petugas, get services they can access
+        // For staff/petugas, get services owned by their dept (ktd_layanan.dept_id = user.dept_id)
+        // Submissions (satker_pemberkasan) may have different dept_id (school level),
+        // but are filtered by layanan_id which links back to the owning dept
         if ($user->role !== 'admin') {
-            // First, check if there are pemberkasan records with user's dept_id
-            // This is the most reliable way - staff sees submissions from their dept
-            $pemberkasanServiceIds = DB::table('satker_pemberkasan')
-                ->whereIn('layanan_id', $tpgServiceIds)
-                ->where('dept_id', $user->dept_id)
-                ->distinct()
-                ->pluck('layanan_id')
-                ->toArray();
-
-            if (!empty($pemberkasanServiceIds)) {
-                return $pemberkasanServiceIds;
-            }
-
-            // If no pemberkasan found, check ktd_layanan
             $deptServiceIds = DB::table('ktd_layanan as l')
                 ->where('l.status', 1)
                 ->where('l.dept_id', $user->dept_id)
                 ->pluck('l.id')
                 ->all();
 
-            if (!empty(array_intersect($deptServiceIds, $tpgServiceIds))) {
-                return array_intersect($deptServiceIds, $tpgServiceIds);
-            }
+            $matchedIds = array_intersect($deptServiceIds, $tpgServiceIds);
 
-            // Fallback: return all TPG service IDs (staff will be filtered by dept_id in main query)
-            return $tpgServiceIds;
+            return !empty($matchedIds) ? $matchedIds : $tpgServiceIds;
         }
 
         // For admin, return all TPG services
@@ -440,9 +434,12 @@ class TpgController extends Controller
             abort(404);
         }
 
-        // Check access
-        if ($user->role !== 'admin' && $itemData->dept_id != $user->dept_id) {
-            abort(403);
+        // Check access: non-admin can only view submissions for services in their dept
+        if ($user->role !== 'admin') {
+            $layananDeptId = DB::table('ktd_layanan')->where('id', $itemData->layanan_id)->value('dept_id');
+            if ($layananDeptId != $user->dept_id) {
+                abort(403);
+            }
         }
 
         $item = (object) [
@@ -462,8 +459,8 @@ class TpgController extends Controller
             'updated_at' => $itemData->updated_at,
             'metadata' => $itemData->metadata,
             'files' => $itemData->files,
-            'metadata_parsed' => json_decode($itemData->metadata ?? '{}', true) ?? [],
-            'files_parsed' => is_string($itemData->files) ? (json_decode($itemData->files, true) ?? []) : [],
+            'metadata_parsed' => $this->safeJsonDecode($itemData->metadata),
+            'files_parsed' => $this->safeJsonDecode($itemData->files),
         ];
 
         $pemohon = DB::table('users')->find($item->user_id);
@@ -499,8 +496,12 @@ class TpgController extends Controller
             abort(404);
         }
 
-        if ($user->role !== 'admin' && $item->dept_id != $user->dept_id) {
-            abort(403);
+        // Check access: non-admin can only verify submissions for services in their dept
+        if ($user->role !== 'admin') {
+            $layananDeptId = DB::table('ktd_layanan')->where('id', $item->layanan_id)->value('dept_id');
+            if ($layananDeptId != $user->dept_id) {
+                abort(403);
+            }
         }
 
         $request->validate([
@@ -531,8 +532,12 @@ class TpgController extends Controller
             abort(404);
         }
 
-        if ($user->role !== 'admin' && $item->dept_id != $user->dept_id) {
-            abort(403);
+        // Check access: non-admin can only reject submissions for services in their dept
+        if ($user->role !== 'admin') {
+            $layananDeptId = DB::table('ktd_layanan')->where('id', $item->layanan_id)->value('dept_id');
+            if ($layananDeptId != $user->dept_id) {
+                abort(403);
+            }
         }
 
         $request->validate([
@@ -566,8 +571,12 @@ class TpgController extends Controller
             abort(404);
         }
 
-        if ($user->role !== 'admin' && $item->dept_id != $user->dept_id) {
-            abort(403);
+        // Check access: non-admin can only download files for submissions in their dept
+        if ($user->role !== 'admin') {
+            $layananDeptId = DB::table('ktd_layanan')->where('id', $item->layanan_id)->value('dept_id');
+            if ($layananDeptId != $user->dept_id) {
+                abort(403);
+            }
         }
 
         $files = json_decode($item->files ?? '[]', true);
@@ -596,8 +605,12 @@ class TpgController extends Controller
             abort(404);
         }
 
-        if ($user->role !== 'admin' && $item->dept_id != $user->dept_id) {
-            abort(403);
+        // Check access: non-admin can only preview files for submissions in their dept
+        if ($user->role !== 'admin') {
+            $layananDeptId = DB::table('ktd_layanan')->where('id', $item->layanan_id)->value('dept_id');
+            if ($layananDeptId != $user->dept_id) {
+                abort(403);
+            }
         }
 
         $files = json_decode($item->files ?? '[]', true);
@@ -620,5 +633,24 @@ class TpgController extends Controller
         return response()->file($fullPath, [
             'Content-Type' => $mimeType,
         ]);
+    }
+
+    /**
+     * Safely decode JSON that may be double-encoded in the database.
+     */
+    private function safeJsonDecode(?string $value, mixed $default = []): mixed
+    {
+        if ($value === null || $value === '') {
+            return $default;
+        }
+
+        $decoded = json_decode($value, true);
+
+        // Handle double-encoded JSON (string after first decode)
+        if (is_string($decoded)) {
+            $decoded = json_decode($decoded, true);
+        }
+
+        return $decoded ?? $default;
     }
 }
