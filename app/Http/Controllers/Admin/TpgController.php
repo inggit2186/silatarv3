@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\FileHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\PageController;
 use Illuminate\Http\Request;
@@ -623,7 +624,7 @@ class TpgController extends Controller
             }
         }
 
-        $files = json_decode($item->files ?? '[]', true);
+        $files = $this->safeJsonDecode($item->files);
         $file = collect($files)->firstWhere('syarat_id', $syaratId);
 
         if (!$file || empty($file['filename']) || $file['filename'] === 'NONE') {
@@ -631,13 +632,22 @@ class TpgController extends Controller
         }
 
         $userData = DB::table('users')->find($item->user_id);
-        $path = "{$userData->nomor_induk}/{$file['filename']}";
+        $nomorInduk = $userData->nomor_induk;
+        $filename = $file['filename'];
 
-        if (!Storage::disk('users_berkas')->exists($path)) {
-            abort(404);
+        // Check new location first (public disk)
+        $newPath = FileHelper::getPemberkasanPath($nomorInduk, $filename);
+        if (Storage::disk('public')->exists($newPath)) {
+            return Storage::disk('public')->download($newPath, $filename);
         }
 
-        return Storage::disk('users_berkas')->download($path);
+        // Fallback to legacy location (users_berkas disk)
+        $legacyPath = FileHelper::getLegacyPath($nomorInduk, $filename);
+        if (Storage::disk('users_berkas')->exists($legacyPath)) {
+            return Storage::disk('users_berkas')->download($legacyPath, $filename);
+        }
+
+        abort(404);
     }
 
     public function previewFile(int $id, int $syaratId)
@@ -657,7 +667,7 @@ class TpgController extends Controller
             }
         }
 
-        $files = json_decode($item->files ?? '[]', true);
+        $files = $this->safeJsonDecode($item->files);
         $file = collect($files)->firstWhere('syarat_id', $syaratId);
 
         if (!$file || empty($file['filename']) || $file['filename'] === 'NONE') {
@@ -665,18 +675,26 @@ class TpgController extends Controller
         }
 
         $userData = DB::table('users')->find($item->user_id);
-        $path = "{$userData->nomor_induk}/{$file['filename']}";
+        $nomorInduk = $userData->nomor_induk;
+        $filename = $file['filename'];
 
-        if (!Storage::disk('users_berkas')->exists($path)) {
-            abort(404);
+        // Check new location first (public disk)
+        $newPath = FileHelper::getPemberkasanPath($nomorInduk, $filename);
+        if (Storage::disk('public')->exists($newPath)) {
+            $fullPath = Storage::disk('public')->path($newPath);
+            $mimeType = Storage::disk('public')->mimeType($newPath);
+            return response()->file($fullPath, ['Content-Type' => $mimeType]);
         }
 
-        $fullPath = Storage::disk('users_berkas')->path($path);
-        $mimeType = Storage::disk('users_berkas')->mimeType($path);
+        // Fallback to legacy location (users_berkas disk)
+        $legacyPath = FileHelper::getLegacyPath($nomorInduk, $filename);
+        if (Storage::disk('users_berkas')->exists($legacyPath)) {
+            $fullPath = Storage::disk('users_berkas')->path($legacyPath);
+            $mimeType = Storage::disk('users_berkas')->mimeType($legacyPath);
+            return response()->file($fullPath, ['Content-Type' => $mimeType]);
+        }
 
-        return response()->file($fullPath, [
-            'Content-Type' => $mimeType,
-        ]);
+        abort(404);
     }
 
     /**
