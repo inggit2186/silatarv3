@@ -1,10 +1,8 @@
 <x-admin.layouts.app>
     <?php
     $title = 'Detail Verifikasi TPG';
-    $metadataParsed = json_decode($item->metadata ?? '{}', true) ?? [];
-    $filesRaw = $item->files ?? '[]';
-    $filesParsed = is_string($filesRaw) ? (json_decode($filesRaw, true) ?? []) : [];
-    $files = is_array($filesParsed) ? $filesParsed : [];
+    $metadataParsed = $item->metadata_parsed ?? [];
+    $files = $item->files_parsed ?? [];
     ?>
 
     <!-- Page Header -->
@@ -88,9 +86,6 @@
             <!-- Dokumen -->
             <div class="card">
                 <div class="card-header">
-@php
-    $files = is_array($filesParsed) ? $filesParsed : [];
-@endphp
                     <div class="flex items-center gap-3">
                         <div class="stat-icon emerald" style="width: 36px; height: 36px;">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
