@@ -34,6 +34,7 @@
     @php
         $activeFilters = collect([
             $currentLayananId ? ($layananOptions[$currentLayananId] ?? null) : null,
+            $currentDeptId ? ($deptOptions[$currentDeptId] ?? null) : null,
             $currentSemester ?: null,
             $currentTahunAjaran ?: null,
             $currentStatus ?: null,
@@ -138,13 +139,23 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="GET" action="{{ route('admin.tpg.semester.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <form method="GET" action="{{ route('admin.tpg.semester.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                 <div class="form-group">
                     <label class="form-label">Nama Layanan</label>
                     <select name="layanan_id" class="form-select" onchange="this.form.submit()">
                         <option value="">Semua Layanan</option>
                         @foreach($layananOptions as $id => $nama)
                             <option value="{{ $id }}" {{ $currentLayananId == $id ? 'selected' : '' }}>{{ $nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Unit Kerja</label>
+                    <select name="dept_id" class="form-select" onchange="this.form.submit()">
+                        <option value="">Semua Unit Kerja</option>
+                        @foreach($deptOptions as $id => $nama)
+                            <option value="{{ $id }}" {{ $currentDeptId == $id ? 'selected' : '' }}>{{ $nama }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -184,7 +195,7 @@
                     <input type="text" name="search" value="{{ $currentSearch ?? '' }}" placeholder="Nama, NIP, no req..." class="form-input" onchange="this.form.submit()">
                 </div>
 
-                <div class="col-span-1 md:col-span-2 lg:col-span-5 flex items-center gap-3">
+                <div class="col-span-1 md:col-span-2 lg:col-span-6 flex items-center gap-3">
                     @if($activeFilters->isNotEmpty())
                         <a href="{{ route('admin.tpg.semester.index') }}" class="btn btn-secondary">Reset</a>
                     @endif
@@ -196,6 +207,9 @@
                     <span class="text-sm text-muted">Filter aktif:</span>
                     @if($currentLayananId)
                         <span class="badge badge-info">{{ $layananOptions[$currentLayananId] ?? null }}</span>
+                    @endif
+                    @if($currentDeptId)
+                        <span class="badge badge-info">{{ $deptOptions[$currentDeptId] ?? null }}</span>
                     @endif
                     @if($currentSemester)
                         <span class="badge badge-neutral">{{ $currentSemester }}</span>

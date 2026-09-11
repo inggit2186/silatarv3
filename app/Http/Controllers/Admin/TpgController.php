@@ -16,6 +16,7 @@ class TpgController extends Controller
         $user = Auth::user();
         $search = $request->get('search');
         $layananId = $request->get('layanan_id');
+        $deptId = $request->get('dept_id');
 
         $bulanOptions = [
             'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -91,6 +92,11 @@ class TpgController extends Controller
             $query->where('p.layanan_id', $layananId);
         }
 
+        $currentDeptId = $deptId ?: null;
+        if ($currentDeptId) {
+            $query->where('p.dept_id', $currentDeptId);
+        }
+
         if ($currentStatus) {
             $query->where('p.status', $currentStatus);
         }
@@ -131,6 +137,10 @@ class TpgController extends Controller
         $statsQuery = DB::table('satker_pemberkasan as p')
             ->whereIn('p.layanan_id', !empty($allowedServiceIds) ? $allowedServiceIds : [0]);
 
+        if ($currentDeptId) {
+            $statsQuery->where('p.dept_id', $currentDeptId);
+        }
+
         if ($currentBulan) {
             $bulanNumber = $this->bulanToNumber($currentBulan);
             if ($bulanNumber) {
@@ -150,6 +160,16 @@ class TpgController extends Controller
             ? ['DRAFT', 'SUBMITTED', 'PENDING', 'DITERIMA', 'DIPROSES', 'SUKSES', 'DITOLAK']
             : ['SUBMITTED', 'PENDING', 'DITERIMA', 'DIPROSES', 'SUKSES', 'DITOLAK'];
 
+        $deptOptions = DB::table('satker_pemberkasan as p')
+            ->join('ktd_department as d', 'd.id', '=', 'p.dept_id')
+            ->whereIn('p.layanan_id', !empty($allowedServiceIds) ? $allowedServiceIds : [0])
+            ->where('p.status', '!=', 'DRAFT')
+            ->select('d.id', 'd.nama')
+            ->distinct()
+            ->orderBy('d.nama')
+            ->pluck('d.nama', 'd.id')
+            ->all();
+
         return view('admin.tpg.index', [
             'title' => 'Verifikasi TPG - SILATAR Admin',
             'breadcrumbs' => [
@@ -159,9 +179,11 @@ class TpgController extends Controller
             'pemberkasan' => $pemberkasan,
             'stats' => $stats,
             'layananOptions' => $this->getDynamicLayananOptions($user, 'bulanan'),
+            'deptOptions' => $deptOptions,
             'statusOptions' => $statusOptions,
             'bulanOptions' => $bulanOptions,
             'currentLayananId' => $layananId,
+            'currentDeptId' => $currentDeptId,
             'currentStatus' => $currentStatus,
             'currentBulan' => $currentBulan,
             'currentTahun' => $currentTahun,
@@ -198,6 +220,8 @@ class TpgController extends Controller
         }
         $currentStatus = $request->has('status') ? ($request->get('status') ?: null) : 'SUBMITTED';
         $layananId = $request->get('layanan_id');
+        $deptId = $request->get('dept_id');
+        $currentDeptId = $deptId ?: null;
 
         $allowedServiceIds = $this->getDynamicServiceIds($user, 'semester');
 
@@ -242,6 +266,10 @@ class TpgController extends Controller
             $query->where('p.layanan_id', $layananId);
         }
 
+        if ($currentDeptId) {
+            $query->where('p.dept_id', $currentDeptId);
+        }
+
         if ($currentSemester) {
             $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(p.metadata, '$.semester')) = ?", [$currentSemester]);
         }
@@ -279,6 +307,10 @@ class TpgController extends Controller
         $statsQuery = DB::table('satker_pemberkasan as p')
             ->whereIn('p.layanan_id', !empty($allowedServiceIds) ? $allowedServiceIds : [0]);
 
+        if ($currentDeptId) {
+            $statsQuery->where('p.dept_id', $currentDeptId);
+        }
+
         if ($currentSemester) {
             $statsQuery->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(p.metadata, '$.semester')) = ?", [$currentSemester]);
         }
@@ -296,6 +328,16 @@ class TpgController extends Controller
             : ['SUBMITTED', 'PENDING', 'DITERIMA', 'DIPROSES', 'SUKSES', 'DITOLAK'];
         $layananOptions = $this->getDynamicLayananOptions($user, 'semester');
 
+        $deptOptions = DB::table('satker_pemberkasan as p')
+            ->join('ktd_department as d', 'd.id', '=', 'p.dept_id')
+            ->whereIn('p.layanan_id', !empty($allowedServiceIds) ? $allowedServiceIds : [0])
+            ->where('p.status', '!=', 'DRAFT')
+            ->select('d.id', 'd.nama')
+            ->distinct()
+            ->orderBy('d.nama')
+            ->pluck('d.nama', 'd.id')
+            ->all();
+
         return view('admin.tpg.semester-index', [
             'title' => 'Verifikasi TPG Semester - SILATAR Admin',
             'breadcrumbs' => [
@@ -309,10 +351,12 @@ class TpgController extends Controller
             'tahunAjaranOptions' => $tahunAjaranOptions,
             'statusOptions' => $statusOptions,
             'layananOptions' => $layananOptions,
+            'deptOptions' => $deptOptions,
             'currentSemester' => $currentSemester,
             'currentTahunAjaran' => $currentTahunAjaran,
             'currentStatus' => $currentStatus,
             'currentLayananId' => $layananId,
+            'currentDeptId' => $currentDeptId,
             'currentSearch' => $search,
             'activeTab' => 'semester',
         ]);
