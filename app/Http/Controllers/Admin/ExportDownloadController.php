@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExportDownloadController extends Controller
 {
@@ -19,15 +17,15 @@ class ExportDownloadController extends Controller
         // Get all year directories
         $years = [];
         if (file_exists($exportPath)) {
-            $yearDirs = glob($exportPath . '/*', GLOB_ONLYDIR);
+            $yearDirs = glob($exportPath.'/*', GLOB_ONLYDIR);
             foreach ($yearDirs as $yearDir) {
                 $year = basename($yearDir);
                 $months = [];
 
-                $monthDirs = glob($yearDir . '/*', GLOB_ONLYDIR);
+                $monthDirs = glob($yearDir.'/*', GLOB_ONLYDIR);
                 foreach ($monthDirs as $monthDir) {
                     $month = basename($monthDir);
-                    $files = glob($monthDir . '/*.xlsx');
+                    $files = glob($monthDir.'/*.xlsx');
 
                     $monthFiles = [];
                     foreach ($files as $file) {
@@ -36,11 +34,11 @@ class ExportDownloadController extends Controller
                             'size' => $this->formatFileSize(filesize($file)),
                             'size_bytes' => filesize($file),
                             'modified' => date('d M Y H:i', filemtime($file)),
-                            'path' => str_replace($exportPath . '/', '', $file),
+                            'path' => str_replace($exportPath.'/', '', $file),
                         ];
                     }
 
-                    if (!empty($monthFiles)) {
+                    if (! empty($monthFiles)) {
                         $months[$this->getMonthName((int) $month)] = [
                             'month' => $month,
                             'files' => $monthFiles,
@@ -50,7 +48,7 @@ class ExportDownloadController extends Controller
                     }
                 }
 
-                if (!empty($months)) {
+                if (! empty($months)) {
                     $years[$year] = [
                         'months' => $months,
                         'total_files' => array_sum(array_column($months, 'total_files')),
@@ -75,14 +73,14 @@ class ExportDownloadController extends Controller
         ]);
 
         $filePath = $request->file;
-        $fullPath = storage_path('app/exports/presensi/' . $filePath);
+        $fullPath = storage_path('app/exports/presensi/'.$filePath);
 
         // Security check: ensure file is within exports directory
-        if (!str_starts_with(realpath($fullPath), realpath(storage_path('app/exports/presensi')))) {
+        if (! str_starts_with(realpath($fullPath), realpath(storage_path('app/exports/presensi')))) {
             abort(403, 'Unauthorized file access');
         }
 
-        if (!file_exists($fullPath)) {
+        if (! file_exists($fullPath)) {
             abort(404, 'File not found');
         }
 
@@ -107,11 +105,11 @@ class ExportDownloadController extends Controller
         $month = $request->month;
         $monthPath = storage_path("app/exports/presensi/{$year}/{$month}");
 
-        if (!file_exists($monthPath)) {
+        if (! file_exists($monthPath)) {
             abort(404, 'Month directory not found');
         }
 
-        $files = glob($monthPath . '/*.xlsx');
+        $files = glob($monthPath.'/*.xlsx');
         if (empty($files)) {
             abort(404, 'No files found for this month');
         }
@@ -120,7 +118,7 @@ class ExportDownloadController extends Controller
         $zipFilename = "presensi_{$year}_{$month}.zip";
         $zipPath = storage_path("app/exports/{$zipFilename}");
 
-        $zip = new \ZipArchive();
+        $zip = new \ZipArchive;
         if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
             foreach ($files as $file) {
                 $zip->addFile($file, basename($file));
@@ -143,14 +141,14 @@ class ExportDownloadController extends Controller
         ]);
 
         $filePath = $request->file;
-        $fullPath = storage_path('app/exports/presensi/' . $filePath);
+        $fullPath = storage_path('app/exports/presensi/'.$filePath);
 
         // Security check
-        if (!str_starts_with(realpath($fullPath), realpath(storage_path('app/exports/presensi')))) {
+        if (! str_starts_with(realpath($fullPath), realpath(storage_path('app/exports/presensi')))) {
             abort(403, 'Unauthorized file access');
         }
 
-        if (!file_exists($fullPath)) {
+        if (! file_exists($fullPath)) {
             abort(404, 'File not found');
         }
 
@@ -167,7 +165,7 @@ class ExportDownloadController extends Controller
         $pow = min($pow, count($units) - 1);
         $bytes /= pow(1024, $pow);
 
-        return round($bytes, 2) . ' ' . $units[$pow];
+        return round($bytes, 2).' '.$units[$pow];
     }
 
     protected function getMonthName(int $month): string

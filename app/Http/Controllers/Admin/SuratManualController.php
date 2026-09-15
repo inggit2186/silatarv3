@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class SuratManualController extends Controller
 {
@@ -44,8 +43,8 @@ class SuratManualController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('ur.no_surat', 'like', "%{$search}%")
-                  ->orWhere('ur.judul', 'like', "%{$search}%")
-                  ->orWhere('ur.no_req', 'like', "%{$search}%");
+                    ->orWhere('ur.judul', 'like', "%{$search}%")
+                    ->orWhere('ur.no_req', 'like', "%{$search}%");
             });
         }
 
@@ -81,20 +80,20 @@ class SuratManualController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'pemohon'     => 'required|string|max:255',
-            'tgl_surat'   => 'required|date',
-            'no_surat'    => 'required|string|max:255',
-            'layanan_id'  => 'required|integer',
-            'judul'       => 'required|string|max:50',
-            'tujuan'      => 'nullable|string|max:255',
+            'pemohon' => 'required|string|max:255',
+            'tgl_surat' => 'required|date',
+            'no_surat' => 'required|string|max:255',
+            'layanan_id' => 'required|integer',
+            'judul' => 'required|string|max:50',
+            'tujuan' => 'nullable|string|max:255',
             'asal_pengirim' => 'nullable|string|max:255',
-            'deskripsi'   => 'nullable|string',
-            'file_surat'  => 'nullable|file|max:2048',
-            'lampiran'    => 'nullable|file|max:2048',
+            'deskripsi' => 'nullable|string',
+            'file_surat' => 'nullable|file|max:2048',
+            'lampiran' => 'nullable|file|max:2048',
         ]);
 
         $user = auth()->user();
-        $noReq = 'MANUAL-' . now()->format('ymdHis') . '-' . rand(100, 999);
+        $noReq = 'MANUAL-'.now()->format('ymdHis').'-'.rand(100, 999);
 
         $fileSuratName = null;
         $lampiranName = null;
@@ -102,42 +101,42 @@ class SuratManualController extends Controller
         // Upload file surat
         if ($request->hasFile('file_surat')) {
             $file = $request->file('file_surat');
-            $fileSuratName = $noReq . '_surat.' . $file->getClientOriginalExtension();
+            $fileSuratName = $noReq.'_surat.'.$file->getClientOriginalExtension();
             $file->storeAs('surat/manual', $fileSuratName, 'public');
         }
 
         // Upload lampiran
         if ($request->hasFile('lampiran')) {
             $file = $request->file('lampiran');
-            $lampiranName = $noReq . '_lampiran.' . $file->getClientOriginalExtension();
+            $lampiranName = $noReq.'_lampiran.'.$file->getClientOriginalExtension();
             $file->storeAs('surat/manual', $lampiranName, 'public');
         }
 
         DB::table('users_request')->insert([
-            'no_req'      => $noReq,
-            'pemohon'     => $validated['pemohon'],
-            'no_surat'    => $validated['no_surat'],
-            'tgl_surat'   => $validated['tgl_surat'],
-            'user_id'     => $user->id,
-            'dept_id'     => $user->dept_id,
-            'layanan_id'  => $validated['layanan_id'],
-            'judul'       => $validated['judul'],
-            'tujuan'      => $validated['tujuan'] ?? null,
+            'no_req' => $noReq,
+            'pemohon' => $validated['pemohon'],
+            'no_surat' => $validated['no_surat'],
+            'tgl_surat' => $validated['tgl_surat'],
+            'user_id' => $user->id,
+            'dept_id' => $user->dept_id,
+            'layanan_id' => $validated['layanan_id'],
+            'judul' => $validated['judul'],
+            'tujuan' => $validated['tujuan'] ?? null,
             'asal_pengirim' => $validated['asal_pengirim'] ?? null,
-            'deskripsi'   => $validated['deskripsi'] ?? null,
-            'file_surat'  => $fileSuratName,
-            'lampiran'    => $lampiranName,
-            'status'      => 'SUKSES',
-            'staff_id'    => $user->id,
-            'step'        => 1,
-            'petugas'     => $user->id,
-            'kategori'    => 'Personal',
-            'created_at'  => now(),
-            'updated_at'  => now(),
+            'deskripsi' => $validated['deskripsi'] ?? null,
+            'file_surat' => $fileSuratName,
+            'lampiran' => $lampiranName,
+            'status' => 'SUKSES',
+            'staff_id' => $user->id,
+            'step' => 1,
+            'petugas' => $user->id,
+            'kategori' => 'Personal',
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         return redirect()->route('admin.surat-manual.index')
-            ->with('success', 'Surat berhasil disimpan dengan nomor req: ' . $noReq)
+            ->with('success', 'Surat berhasil disimpan dengan nomor req: '.$noReq)
             ->with('print_url', route('admin.surat-manual.print', $noReq));
     }
 
@@ -152,7 +151,7 @@ class SuratManualController extends Controller
             ->where('ur.no_req', $noReq)
             ->first();
 
-        if (!$surat) {
+        if (! $surat) {
             abort(404);
         }
 
@@ -173,7 +172,7 @@ class SuratManualController extends Controller
             ->where('ur.no_req', 'like', 'MANUAL-%')
             ->first();
 
-        if (!$surat) {
+        if (! $surat) {
             abort(404);
         }
 
@@ -187,7 +186,7 @@ class SuratManualController extends Controller
             ->where('no_req', 'like', 'MANUAL-%')
             ->first();
 
-        if (!$surat) {
+        if (! $surat) {
             abort(404);
         }
 
@@ -212,21 +211,21 @@ class SuratManualController extends Controller
             ->where('no_req', 'like', 'MANUAL-%')
             ->first();
 
-        if (!$surat) {
+        if (! $surat) {
             abort(404);
         }
 
         $validated = $request->validate([
-            'pemohon'     => 'required|string|max:255',
-            'tgl_surat'   => 'required|date',
-            'no_surat'    => 'required|string|max:255',
-            'layanan_id'  => 'required|integer',
-            'judul'       => 'required|string|max:50',
-            'tujuan'      => 'nullable|string|max:255',
+            'pemohon' => 'required|string|max:255',
+            'tgl_surat' => 'required|date',
+            'no_surat' => 'required|string|max:255',
+            'layanan_id' => 'required|integer',
+            'judul' => 'required|string|max:50',
+            'tujuan' => 'nullable|string|max:255',
             'asal_pengirim' => 'nullable|string|max:255',
-            'deskripsi'   => 'nullable|string',
-            'file_surat'  => 'nullable|file|max:2048',
-            'lampiran'    => 'nullable|file|max:2048',
+            'deskripsi' => 'nullable|string',
+            'file_surat' => 'nullable|file|max:2048',
+            'lampiran' => 'nullable|file|max:2048',
         ]);
 
         $fileSuratName = $surat->file_surat;
@@ -236,10 +235,10 @@ class SuratManualController extends Controller
         if ($request->hasFile('file_surat')) {
             // Hapus file lama
             if ($surat->file_surat) {
-                Storage::disk('public')->delete('surat/manual/' . $surat->file_surat);
+                Storage::disk('public')->delete('surat/manual/'.$surat->file_surat);
             }
             $file = $request->file('file_surat');
-            $fileSuratName = $surat->no_req . '_surat.' . $file->getClientOriginalExtension();
+            $fileSuratName = $surat->no_req.'_surat.'.$file->getClientOriginalExtension();
             $file->storeAs('surat/manual', $fileSuratName, 'public');
         }
 
@@ -247,26 +246,26 @@ class SuratManualController extends Controller
         if ($request->hasFile('lampiran')) {
             // Hapus file lama
             if ($surat->lampiran) {
-                Storage::disk('public')->delete('surat/manual/' . $surat->lampiran);
+                Storage::disk('public')->delete('surat/manual/'.$surat->lampiran);
             }
             $file = $request->file('lampiran');
-            $lampiranName = $surat->no_req . '_lampiran.' . $file->getClientOriginalExtension();
+            $lampiranName = $surat->no_req.'_lampiran.'.$file->getClientOriginalExtension();
             $file->storeAs('surat/manual', $lampiranName, 'public');
         }
 
         DB::table('users_request')
             ->where('id', $id)
             ->update([
-                'pemohon'    => $validated['pemohon'],
-                'no_surat'   => $validated['no_surat'],
-                'tgl_surat'  => $validated['tgl_surat'],
+                'pemohon' => $validated['pemohon'],
+                'no_surat' => $validated['no_surat'],
+                'tgl_surat' => $validated['tgl_surat'],
                 'layanan_id' => $validated['layanan_id'],
-                'judul'      => $validated['judul'],
-                'tujuan'     => $validated['tujuan'] ?? null,
+                'judul' => $validated['judul'],
+                'tujuan' => $validated['tujuan'] ?? null,
                 'asal_pengirim' => $validated['asal_pengirim'] ?? null,
-                'deskripsi'  => $validated['deskripsi'] ?? null,
+                'deskripsi' => $validated['deskripsi'] ?? null,
                 'file_surat' => $fileSuratName,
-                'lampiran'   => $lampiranName,
+                'lampiran' => $lampiranName,
                 'updated_at' => now(),
             ]);
 
@@ -281,16 +280,16 @@ class SuratManualController extends Controller
             ->where('no_req', 'like', 'MANUAL-%')
             ->first();
 
-        if (!$surat) {
+        if (! $surat) {
             abort(404);
         }
 
         // Hapus file
         if ($surat->file_surat) {
-            Storage::disk('public')->delete('surat/manual/' . $surat->file_surat);
+            Storage::disk('public')->delete('surat/manual/'.$surat->file_surat);
         }
         if ($surat->lampiran) {
-            Storage::disk('public')->delete('surat/manual/' . $surat->lampiran);
+            Storage::disk('public')->delete('surat/manual/'.$surat->lampiran);
         }
 
         DB::table('users_request')->where('id', $id)->delete();
@@ -306,13 +305,13 @@ class SuratManualController extends Controller
             ->where('no_req', 'like', 'MANUAL-%')
             ->first();
 
-        if (!$surat || !$surat->file_surat) {
+        if (! $surat || ! $surat->file_surat) {
             abort(404);
         }
 
-        $path = 'surat/manual/' . $surat->file_surat;
+        $path = 'surat/manual/'.$surat->file_surat;
 
-        if (!Storage::disk('public')->exists($path)) {
+        if (! Storage::disk('public')->exists($path)) {
             abort(404);
         }
 

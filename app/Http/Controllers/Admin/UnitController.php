@@ -15,14 +15,14 @@ class UnitController extends Controller
     {
         // Only admin/superadmin/kepala can access Unit Kerja
         $currentUser = auth()->user();
-        if (!in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
+        if (! in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
             abort(403, 'Anda tidak memiliki akses ke menu ini.');
         }
 
         $query = DB::table('ktd_department as d')
             ->select([
                 'd.*',
-                DB::raw('(SELECT COUNT(*) FROM users WHERE users.dept_id = d.id) as user_count')
+                DB::raw('(SELECT COUNT(*) FROM users WHERE users.dept_id = d.id) as user_count'),
             ]);
 
         // Search filter
@@ -30,8 +30,8 @@ class UnitController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('d.nama', 'like', "%{$search}%")
-                  ->orWhere('d.alamat', 'like', "%{$search}%")
-                  ->orWhere('d.npsm', 'like', "%{$search}%");
+                    ->orWhere('d.alamat', 'like', "%{$search}%")
+                    ->orWhere('d.npsm', 'like', "%{$search}%");
             });
         }
 
@@ -149,7 +149,7 @@ class UnitController extends Controller
     {
         $department = DB::table('ktd_department')->where('id', $id)->first();
 
-        if (!$department) {
+        if (! $department) {
             abort(404, 'Unit kerja tidak ditemukan.');
         }
 
@@ -179,7 +179,7 @@ class UnitController extends Controller
     {
         $department = DB::table('ktd_department')->where('id', $id)->first();
 
-        if (!$department) {
+        if (! $department) {
             abort(404, 'Unit kerja tidak ditemukan.');
         }
 
@@ -221,7 +221,7 @@ class UnitController extends Controller
     {
         $department = DB::table('ktd_department')->where('id', $id)->first();
 
-        if (!$department) {
+        if (! $department) {
             return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan.'], 404);
         }
 
@@ -230,7 +230,7 @@ class UnitController extends Controller
         if ($userCount > 0) {
             return response()->json([
                 'success' => false,
-                'message' => "Unit kerja tidak dapat dihapus karena masih memiliki {$userCount} pengguna."
+                'message' => "Unit kerja tidak dapat dihapus karena masih memiliki {$userCount} pengguna.",
             ], 400);
         }
 
@@ -246,7 +246,7 @@ class UnitController extends Controller
     {
         $department = DB::table('ktd_department')->where('id', $id)->first();
 
-        if (!$department) {
+        if (! $department) {
             return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan.'], 404);
         }
 

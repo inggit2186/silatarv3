@@ -76,7 +76,17 @@
                     <h2 class="ppid-section-title">{{ $layanan->title ?? 'Jelajahi Layanan Kami' }}</h2>
                     <div class="ppid-grid">
                         @foreach($cards as $card)
-                            <a href="{{ route('ppid.' . ($card->link ?? '#')) }}" class="ppid-card">
+                            @php
+                                $link = $card->link ?? '#';
+                                $link = str_replace('/ppid/', '', $link);
+                                $link = ltrim($link, '/');
+                                if ($link === '' || $link === 'ppid') {
+                                    $routeName = 'ppid';
+                                } else {
+                                    $routeName = 'ppid.' . $link;
+                                }
+                            @endphp
+                            <a href="{{ route($routeName) }}" class="ppid-card">
                                 <div class="ppid-card-icon">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>

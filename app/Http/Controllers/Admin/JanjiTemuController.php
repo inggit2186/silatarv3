@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\JanjiTemu;
-use App\Models\User;
 use App\Models\Department;
+use App\Models\User;
 use App\Services\WhatsAppService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -33,7 +33,7 @@ class JanjiTemuController extends Controller
         $query = DB::table('ktd_bukutamu');
 
         // Filter based on role
-        if (!$isAdmin) {
+        if (! $isAdmin) {
             $query->where(function ($q) use ($user) {
                 // Appointments directed to this user (tipe asn) - filter by users.id
                 $q->where(function ($sub) use ($user) {
@@ -41,10 +41,10 @@ class JanjiTemuController extends Controller
                         ->where('nip_tujuan', $user->id);
                 })
                 // Or appointments directed to user's department (tipe satker) - filter by dept_id
-                ->orWhere(function ($sub) use ($user) {
-                    $sub->where('tipe', 'satker')
-                        ->where('nip_tujuan', $user->dept_id);
-                });
+                    ->orWhere(function ($sub) use ($user) {
+                        $sub->where('tipe', 'satker')
+                            ->where('nip_tujuan', $user->dept_id);
+                    });
             });
         }
 
@@ -55,8 +55,8 @@ class JanjiTemuController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama', 'LIKE', "%{$search}%")
-                  ->orWhere('nomor_induk', 'LIKE', "%{$search}%")
-                  ->orWhere('tujuan', 'LIKE', "%{$search}%");
+                    ->orWhere('nomor_induk', 'LIKE', "%{$search}%")
+                    ->orWhere('tujuan', 'LIKE', "%{$search}%");
             });
         }
 
@@ -72,7 +72,7 @@ class JanjiTemuController extends Controller
     {
         $janjiTemu = DB::table('ktd_bukutamu')->where('id', $id)->first();
 
-        if (!$janjiTemu) {
+        if (! $janjiTemu) {
             return redirect()->route('admin.janji-temu')
                 ->with('error', 'Janji temu tidak ditemukan');
         }
@@ -122,12 +122,12 @@ class JanjiTemuController extends Controller
 
         $appointment = DB::table('ktd_bukutamu')->where('id', $id)->first();
 
-        if (!$appointment) {
+        if (! $appointment) {
             return redirect()->route('admin.janji-temu')
                 ->with('error', 'Janji temu tidak ditemukan');
         }
 
-        if (!in_array($appointment->status, ['APPOINTMENT', 'PENDING'])) {
+        if (! in_array($appointment->status, ['APPOINTMENT', 'PENDING'])) {
             return redirect()->route('admin.janji-temu')
                 ->with('error', 'Janji temu tidak dapat diproses');
         }
@@ -161,12 +161,12 @@ class JanjiTemuController extends Controller
 
         $appointment = DB::table('ktd_bukutamu')->where('id', $id)->first();
 
-        if (!$appointment) {
+        if (! $appointment) {
             return redirect()->route('admin.janji-temu')
                 ->with('error', 'Janji temu tidak ditemukan');
         }
 
-        if (!in_array($appointment->status, ['APPOINTMENT', 'PENDING'])) {
+        if (! in_array($appointment->status, ['APPOINTMENT', 'PENDING'])) {
             return redirect()->route('admin.janji-temu')
                 ->with('error', 'Janji temu tidak dapat diproses');
         }
@@ -198,12 +198,12 @@ class JanjiTemuController extends Controller
                 ->where('telp', '!=', null)
                 ->first();
 
-            if (!$user || !$user->telp) {
+            if (! $user || ! $user->telp) {
                 return;
             }
 
             $phone = WhatsAppService::normalizePhoneNumber($user->telp);
-            $waktuFormatted = \Carbon\Carbon::parse($appointment->waktu)->format('d M Y, H:i');
+            $waktuFormatted = Carbon::parse($appointment->waktu)->format('d M Y, H:i');
 
             if ($isApproved) {
                 $message = "✅ *JANJI TEMU DISETUJUI* ✅\n\n".
@@ -212,7 +212,7 @@ class JanjiTemuController extends Controller
                           "📅 *Waktu:* {$waktuFormatted}\n".
                           "💬 *Keterangan:* {$appointment->komen}\n\n".
                           "Silakan datang sesuai jadwal.\n\n".
-                          "Terima kasih 🙏";
+                          'Terima kasih 🙏';
             } else {
                 $message = "❌ *JANJI TEMU DITOLAK* ❌\n\n".
                           "Halo, {$user->name}!\n\n".
@@ -220,7 +220,7 @@ class JanjiTemuController extends Controller
                           "📅 *Waktu:* {$waktuFormatted}\n".
                           "💬 *Alasan:* {$appointment->komen}\n\n".
                           "Silakan hubungi kami untuk informasi lebih lanjut.\n\n".
-                          "Terima kasih 🙏";
+                          'Terima kasih 🙏';
             }
 
             $this->waService->sendMessage($phone, $message);

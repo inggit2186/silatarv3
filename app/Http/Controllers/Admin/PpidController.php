@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\PpidPage;
-use App\Models\PpidSection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Facades\Image;
 
 class PpidController extends Controller
 {
@@ -40,7 +39,7 @@ class PpidController extends Controller
             ->where('slug', $slug)
             ->first();
 
-        if (!$page) {
+        if (! $page) {
             return redirect()->route('admin.ppid.index')
                 ->with('error', 'Halaman PPID tidak ditemukan.');
         }
@@ -69,7 +68,7 @@ class PpidController extends Controller
             ->where('slug', $slug)
             ->first();
 
-        if (!$page) {
+        if (! $page) {
             return redirect()->route('admin.ppid.index')
                 ->with('error', 'Halaman PPID tidak ditemukan.');
         }
@@ -99,6 +98,46 @@ class PpidController extends Controller
     }
 
     /**
+     * Show form for editing a section.
+     */
+    public function editSection(string $slug, int $sectionId)
+    {
+        $page = DB::table('ppid_pages')
+            ->where('slug', $slug)
+            ->first();
+
+        if (! $page) {
+            return redirect()->route('admin.ppid.index')
+                ->with('error', 'Halaman PPID tidak ditemukan.');
+        }
+
+        $section = DB::table('ppid_sections')
+            ->where('id', $sectionId)
+            ->where('page_id', $page->id)
+            ->first();
+
+        if (! $section) {
+            return redirect()->route('admin.ppid.edit', $slug)
+                ->with('error', 'Section tidak ditemukan.');
+        }
+
+        // Decode metadata JSON
+        if ($section->metadata) {
+            $section->metadata = json_decode($section->metadata, true);
+        }
+
+        $title = "Edit Section: {$section->section_key} - SILATAR Admin";
+        $breadcrumbs = [
+            ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
+            ['label' => 'PPID', 'url' => route('admin.ppid.index')],
+            ['label' => $page->title, 'url' => route('admin.ppid.edit', $page->slug)],
+            ['label' => 'Edit Section', 'url' => null],
+        ];
+
+        return view('admin.ppid.edit-section', compact('page', 'section', 'title', 'breadcrumbs'));
+    }
+
+    /**
      * Store a new section for a PPID page.
      */
     public function storeSection(Request $request, string $slug): JsonResponse
@@ -107,7 +146,7 @@ class PpidController extends Controller
             ->where('slug', $slug)
             ->first();
 
-        if (!$page) {
+        if (! $page) {
             return response()->json([
                 'success' => false,
                 'message' => 'Halaman PPID tidak ditemukan.',
@@ -136,6 +175,9 @@ class PpidController extends Controller
             'updated_at' => now(),
         ]);
 
+        // Clear cache for this page
+        Cache::forget("ppid_page_{$slug}");
+
         return response()->json([
             'success' => true,
             'message' => 'Section berhasil ditambahkan.',
@@ -152,7 +194,7 @@ class PpidController extends Controller
             ->where('id', $id)
             ->first();
 
-        if (!$section) {
+        if (! $section) {
             return response()->json([
                 'success' => false,
                 'message' => 'Section tidak ditemukan.',
@@ -163,8 +205,8 @@ class PpidController extends Controller
             'title' => 'nullable|string|max:255',
             'content' => 'nullable|string',
             'metadata' => 'nullable|array',
-            'sort_order' => 'integer|min:0',
-            'is_visible' => 'boolean',
+            'sort_order' => 'nullable|integer|min:0',
+            'is_visible' => 'nullable|boolean',
         ]);
 
         $updateData = [
@@ -180,15 +222,32 @@ class PpidController extends Controller
         }
 
         if (array_key_exists('metadata', $validated)) {
-            $updateData['metadata'] = json_encode($validated['metadata']);
+            // Handle nested JSON fields from form
+            $metadata = $section->metadata ? json_decode($section->metadata, true) : [];
+
+            foreach ($validated['metadata'] as $key => $value) {
+                // Try to decode JSON values
+                if (is_string($value)) {
+                    $decoded = json_decode($value, true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $metadata[$key] = $decoded;
+                    } else {
+                        $metadata[$key] = $value;
+                    }
+                } else {
+                    $metadata[$key] = $value;
+                }
+            }
+
+            $updateData['metadata'] = json_encode($metadata);
         }
 
-        if (array_key_exists('sort_order', $validated)) {
+        if (array_key_exists('sort_order', $validated) && $validated['sort_order'] !== null) {
             $updateData['sort_order'] = $validated['sort_order'];
         }
 
-        if (array_key_exists('is_visible', $validated)) {
-            $updateData['is_visible'] = $validated['is_visible'];
+        if (array_key_exists('is_visible', $validated) && $validated['is_visible'] !== null) {
+            $updateData['is_visible'] = $validated['is_visible'] ? true : false;
         }
 
         DB::table('ppid_sections')
@@ -219,7 +278,7 @@ class PpidController extends Controller
             ->where('id', $id)
             ->first();
 
-        if (!$section) {
+        if (! $section) {
             return response()->json([
                 'success' => false,
                 'message' => 'Section tidak ditemukan.',
@@ -233,6 +292,44 @@ class PpidController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Section berhasil dihapus.',
+        ]);
+    }
+
+    /**
+     * Toggle section visibility.
+     */
+    public function toggleVisibility(int $id): JsonResponse
+    {
+        $section = DB::table('ppid_sections')
+            ->where('id', $id)
+            ->first();
+
+        if (! $section) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Section tidak ditemukan.',
+            ], 404);
+        }
+
+        $newVisibility = ! $section->is_visible;
+
+        DB::table('ppid_sections')
+            ->where('id', $id)
+            ->update([
+                'is_visible' => $newVisibility,
+                'updated_at' => now(),
+            ]);
+
+        // Clear cache for the page
+        $page = DB::table('ppid_pages')->where('id', $section->page_id)->first();
+        if ($page) {
+            Cache::forget("ppid_page_{$page->slug}");
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Visibilitas section berhasil diubah.',
+            'is_visible' => $newVisibility,
         ]);
     }
 
@@ -272,26 +369,26 @@ class PpidController extends Controller
         ]);
 
         $file = $request->file('image');
-        $filename = 'ppid/' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $filename = 'ppid/'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
 
         // Store the file
         $path = $file->storeAs('public', $filename);
 
         // Optimize with Intervention Image if available
         try {
-            $img = \Intervention\Image\Facades\Image::read(storage_path('app/' . $path));
+            $img = Image::read(storage_path('app/'.$path));
             $img->resize(1200, null, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
             });
-            $img->toWebp(85)->save(storage_path('app/' . $path));
+            $img->toWebp(85)->save(storage_path('app/'.$path));
         } catch (\Exception $e) {
             // Fallback: keep original file
         }
 
         return response()->json([
             'success' => true,
-            'url' => asset('storage/' . $filename),
+            'url' => asset('storage/'.$filename),
             'path' => $filename,
         ]);
     }
@@ -305,7 +402,7 @@ class PpidController extends Controller
             ->where('slug', $slug)
             ->first();
 
-        if (!$page) {
+        if (! $page) {
             return redirect()->route('admin.ppid.index')
                 ->with('error', 'Halaman PPID tidak ditemukan.');
         }
@@ -337,19 +434,19 @@ class PpidController extends Controller
         ]);
 
         $file = $request->file('image');
-        $filename = 'ppid/gallery/' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $filename = 'ppid/gallery/'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
 
         // Store the file
         $path = $file->storeAs('public', $filename);
 
         // Optimize with Intervention Image
         try {
-            $img = \Intervention\Image\Facades\Image::read(storage_path('app/' . $path));
+            $img = Image::read(storage_path('app/'.$path));
             $img->resize(1200, null, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
             });
-            $img->toWebp(85)->save(storage_path('app/' . $path));
+            $img->toWebp(85)->save(storage_path('app/'.$path));
         } catch (\Exception $e) {
             // Fallback: keep original file
         }
@@ -374,7 +471,7 @@ class PpidController extends Controller
             'success' => true,
             'message' => 'Gambar berhasil diupload.',
             'gallery_id' => $galleryId,
-            'url' => asset('storage/' . $filename),
+            'url' => asset('storage/'.$filename),
         ]);
     }
 
@@ -387,7 +484,7 @@ class PpidController extends Controller
             ->where('id', $id)
             ->first();
 
-        if (!$gallery) {
+        if (! $gallery) {
             return response()->json([
                 'success' => false,
                 'message' => 'Gambar tidak ditemukan.',
@@ -395,8 +492,8 @@ class PpidController extends Controller
         }
 
         // Delete file from storage
-        if (Storage::exists('public/' . $gallery->image_path)) {
-            Storage::delete('public/' . $gallery->image_path);
+        if (Storage::exists('public/'.$gallery->image_path)) {
+            Storage::delete('public/'.$gallery->image_path);
         }
 
         DB::table('ppid_gallery')

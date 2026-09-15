@@ -4,9 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends BaseApiController
 {
@@ -26,13 +25,13 @@ class AuthController extends BaseApiController
 
         // Cek apakah login adalah email atau NIP
         $user = User::with('dept.hariKerja')
-            ->where(function($query) use ($login) {
+            ->where(function ($query) use ($login) {
                 $query->where('email', $login)
                     ->orWhere('nomor_induk', $login);
             })
             ->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             return $this->error('Email, NIP, atau password salah', 401);
         }
 
@@ -125,15 +124,33 @@ class AuthController extends BaseApiController
 
         // Map field names from API to database columns
         $data = [];
-        if ($request->has('name')) $data['name'] = $request->name;
-        if ($request->has('nik')) $data['nik'] = $request->nik;
-        if ($request->has('email')) $data['email'] = $request->email;
-        if ($request->has('no_hp')) $data['telp'] = $request->no_hp;
-        if ($request->has('alamat')) $data['alamat'] = $request->alamat;
-        if ($request->has('tempat_lahir')) $data['tempat_lahir'] = $request->tempat_lahir;
-        if ($request->has('tanggal_lahir')) $data['tanggal_lahir'] = $request->tanggal_lahir;
-        if ($request->has('jenis_kelamin')) $data['jk'] = $request->jenis_kelamin;
-        if ($request->has('bio')) $data['bio'] = $request->bio;
+        if ($request->has('name')) {
+            $data['name'] = $request->name;
+        }
+        if ($request->has('nik')) {
+            $data['nik'] = $request->nik;
+        }
+        if ($request->has('email')) {
+            $data['email'] = $request->email;
+        }
+        if ($request->has('no_hp')) {
+            $data['telp'] = $request->no_hp;
+        }
+        if ($request->has('alamat')) {
+            $data['alamat'] = $request->alamat;
+        }
+        if ($request->has('tempat_lahir')) {
+            $data['tempat_lahir'] = $request->tempat_lahir;
+        }
+        if ($request->has('tanggal_lahir')) {
+            $data['tanggal_lahir'] = $request->tanggal_lahir;
+        }
+        if ($request->has('jenis_kelamin')) {
+            $data['jk'] = $request->jenis_kelamin;
+        }
+        if ($request->has('bio')) {
+            $data['bio'] = $request->bio;
+        }
 
         $user->update($data);
 
@@ -155,7 +172,7 @@ class AuthController extends BaseApiController
 
         $user = $request->user();
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             return $this->error('Password lama salah', 400);
         }
 
@@ -182,7 +199,7 @@ class AuthController extends BaseApiController
         // Check if user exists
         $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
+        if (! $user) {
             // Don't reveal if email exists
             return $this->success(null, 'Jika email terdaftar, link reset akan dikirim');
         }
@@ -198,7 +215,7 @@ class AuthController extends BaseApiController
     private function formatUser(User $user): array
     {
         // Get data from tenaga_ktd table if exists
-        $tenaga = \Illuminate\Support\Facades\DB::table('tenaga_ktd')
+        $tenaga = DB::table('tenaga_ktd')
             ->where('user_id', $user->id)
             ->first();
 

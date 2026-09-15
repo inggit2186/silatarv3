@@ -37,6 +37,7 @@ class MigratePemberkasanFilePaths extends Command
 
         if ($totalRecords === 0) {
             $this->warn('No records found. Exiting.');
+
             return Command::SUCCESS;
         }
 
@@ -44,8 +45,9 @@ class MigratePemberkasanFilePaths extends Command
             return $this->dryRun($totalRecords);
         }
 
-        if (!$this->confirm("This will migrate files for {$totalRecords} records. Continue?")) {
+        if (! $this->confirm("This will migrate files for {$totalRecords} records. Continue?")) {
             $this->info('Migration cancelled.');
+
             return Command::FAILURE;
         }
 
@@ -62,7 +64,7 @@ class MigratePemberkasanFilePaths extends Command
         $filesDeleted = 0;
 
         $lastId = 0;
-        $deleteOld = !$this->option('keep-old');  // Default: delete, --keep-old to keep
+        $deleteOld = ! $this->option('keep-old');  // Default: delete, --keep-old to keep
 
         // Use cursor for memory-efficient processing
         $query = DB::table('satker_pemberkasan')
@@ -135,7 +137,7 @@ class MigratePemberkasanFilePaths extends Command
         $this->newLine();
         $this->info('Files migrated to: storage/app/public/users_berkas/{nomor_induk}/Request/');
 
-        if (!$this->option('keep-old')) {
+        if (! $this->option('keep-old')) {
             $this->info("Old files deleted: {$filesDeleted} files");
             $this->info('From: storage/app/users_berkas/{nomor_induk}/');
         } else {
@@ -186,9 +188,10 @@ class MigratePemberkasanFilePaths extends Command
                 $user = DB::table('users')->where('id', $record->user_id)->first();
                 $nomorInduk = $user->nomor_induk ?? null;
 
-                if (!$nomorInduk) {
+                if (! $nomorInduk) {
                     $status = 'error';
                     $details = 'User not found';
+
                     continue;
                 }
 
@@ -226,7 +229,7 @@ class MigratePemberkasanFilePaths extends Command
 
         if ($totalRecords > $sampleSize) {
             $this->newLine();
-            $this->info("... and " . ($totalRecords - $sampleSize) . " more records.");
+            $this->info('... and '.($totalRecords - $sampleSize).' more records.');
         }
 
         $this->newLine();
@@ -267,7 +270,7 @@ class MigratePemberkasanFilePaths extends Command
 
         // Get nomor_induk
         $user = DB::table('users')->where('id', $record->user_id)->first();
-        if (!$user || empty($user->nomor_induk)) {
+        if (! $user || empty($user->nomor_induk)) {
             return [
                 'success' => false,
                 'reason' => 'error',
@@ -300,13 +303,15 @@ class MigratePemberkasanFilePaths extends Command
             // Already in new location
             if ($existsNew) {
                 $skipped++;
+
                 continue;
             }
 
             // Not in legacy location either
-            if (!$existsLegacy) {
+            if (! $existsLegacy) {
                 $this->warn("  File not found: {$filename} for noreq {$record->noreq}");
                 $failed++;
+
                 continue;
             }
 

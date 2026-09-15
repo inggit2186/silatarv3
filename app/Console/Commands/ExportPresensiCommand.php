@@ -2,15 +2,19 @@
 
 namespace App\Console\Commands;
 
-use App\Exports\PresensiDetailExport;
 use App\Exports\PresensiAbsensiExport;
 use App\Exports\PresensiAbsensiHorizontalExport;
-use App\Exports\PresensiMultiUserHorizontalExport;
+use App\Exports\PresensiDetailExport;
 use App\Exports\PresensiDetailHorizontalExport;
+use App\Exports\PresensiMultiUserHorizontalExport;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class ExportPresensiCommand extends Command
 {
@@ -44,11 +48,13 @@ class ExportPresensiCommand extends Command
         // Validate month and year
         if ($month < 1 || $month > 12) {
             $this->error("❌ Bulan tidak valid: {$month}. Gunakan 1-12.");
+
             return Command::FAILURE;
         }
 
         if ($year < 2020 || $year > 2030) {
             $this->error("❌ Tahun tidak valid: {$year}.");
+
             return Command::FAILURE;
         }
 
@@ -56,31 +62,32 @@ class ExportPresensiCommand extends Command
         $departments = $this->getDepartmentsToExport($deptId, $exportAll);
 
         if ($departments->isEmpty()) {
-            $this->warn("⚠️  Tidak ada unit kerja yang ditemukan untuk diexport.");
+            $this->warn('⚠️  Tidak ada unit kerja yang ditemukan untuk diexport.');
+
             return Command::SUCCESS;
         }
 
-        $this->info("📊 Parameter Export:");
+        $this->info('📊 Parameter Export:');
         $this->info("   Bulan: {$this->getMonthName($month)} {$year}");
         $this->info("   Total Unit Kerja: {$departments->count()}");
-        $this->info("   Tipe: " . ucfirst($type));
+        $this->info('   Tipe: '.ucfirst($type));
         $this->newLine();
 
         // Create output directory
         $fullOutputPath = storage_path("app/{$outputPath}");
-        if (!file_exists($fullOutputPath)) {
+        if (! file_exists($fullOutputPath)) {
             mkdir($fullOutputPath, 0755, true);
         }
 
         // Create year directory
         $yearDir = "{$fullOutputPath}/{$year}";
-        if (!file_exists($yearDir)) {
+        if (! file_exists($yearDir)) {
             mkdir($yearDir, 0755, true);
         }
 
         // Create month directory
         $monthDir = "{$yearDir}/{$month}";
-        if (!file_exists($monthDir)) {
+        if (! file_exists($monthDir)) {
             mkdir($monthDir, 0755, true);
         }
 
@@ -89,14 +96,15 @@ class ExportPresensiCommand extends Command
         $errors = [];
 
         foreach ($departments as $dept) {
-            $this->line("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             $this->info("🏢 Unit Kerja: {$dept->nama} (ID: {$dept->id})");
 
             // Get users in this department
             $users = $this->getUsersByDept($dept->id);
 
             if ($users->isEmpty()) {
-                $this->warn("   ⚠️  Tidak ada user di unit kerja ini");
+                $this->warn('   ⚠️  Tidak ada user di unit kerja ini');
+
                 continue;
             }
 
@@ -125,7 +133,7 @@ class ExportPresensiCommand extends Command
                     $this->exportDeptHorizontal($users, $dept, $month, $year, $monthDir);
                 }
                 $exportedCount++;
-                $this->info("   ✅ Berhasil");
+                $this->info('   ✅ Berhasil');
             } catch (\Exception $e) {
                 $errors[] = [
                     'dept' => $dept->nama,
@@ -143,7 +151,7 @@ class ExportPresensiCommand extends Command
         return Command::SUCCESS;
     }
 
-    protected function getDepartmentsToExport(?int $deptId, bool $exportAll): \Illuminate\Support\Collection
+    protected function getDepartmentsToExport(?int $deptId, bool $exportAll): Collection
     {
         // Pendekatan efisien: Ambil dept_id yang ada di ktd_presensi
         // Tidak perlu ambil semua users dulu
@@ -153,7 +161,7 @@ class ExportPresensiCommand extends Command
             ->select('users.dept_id')
             ->groupBy('users.dept_id');
 
-        if (!$exportAll && $deptId) {
+        if (! $exportAll && $deptId) {
             $query->where('users.dept_id', $deptId);
         }
 
@@ -170,7 +178,7 @@ class ExportPresensiCommand extends Command
             ->get();
     }
 
-    protected function getUsersByDept(int $deptId): \Illuminate\Support\Collection
+    protected function getUsersByDept(int $deptId): Collection
     {
         // Ambil SEMUA users di dept_id tertentu
         // (termasuk yang tidak ada data presensinya)
@@ -192,7 +200,7 @@ class ExportPresensiCommand extends Command
         $export = new PresensiDetailExport($user->id, $month, $year);
 
         // Write directly to file using PhpSpreadsheet
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Get the export data
@@ -203,7 +211,7 @@ class ExportPresensiCommand extends Command
         $this->buildDetailSheet($sheet, $sheetExport, $user, $month, $year);
 
         // Save to file
-        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save($fullPath);
 
         $this->line("   📄 Detail: {$filename}");
@@ -218,14 +226,14 @@ class ExportPresensiCommand extends Command
         $export = new PresensiAbsensiExport($user->id, $month, $year);
 
         // Write directly to file using PhpSpreadsheet
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Build the sheet manually
         $this->buildAbsensiSheet($sheet, $export, $user, $month, $year);
 
         // Save to file
-        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save($fullPath);
 
         $this->line("   📄 Absensi: {$filename}");
@@ -240,14 +248,14 @@ class ExportPresensiCommand extends Command
         $export = new PresensiAbsensiHorizontalExport($user->id, $month, $year);
 
         // Write directly to file using PhpSpreadsheet
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Build the sheet manually
         $this->buildAbsensiHorizontalSheet($sheet, $export, $user, $month, $year);
 
         // Save to file
-        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save($fullPath);
 
         $this->line("   📄 Absensi Horizontal: {$filename}");
@@ -264,14 +272,14 @@ class ExportPresensiCommand extends Command
         $export = new PresensiMultiUserHorizontalExport($users, $month, $year);
 
         // Write directly to file using PhpSpreadsheet
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Build the sheet manually
         $this->buildDeptHorizontalSheet($sheet, $export, $users, $dept, $month, $year);
 
         // Save to file
-        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save($fullPath);
 
         $this->line("   📄 File: {$filename}");
@@ -288,14 +296,14 @@ class ExportPresensiCommand extends Command
         $export = new PresensiDetailHorizontalExport($users, $month, $year);
 
         // Write directly to file using PhpSpreadsheet
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Build the sheet manually
         $this->buildDeptDetailHorizontalSheet($sheet, $export, $users, $dept, $month, $year);
 
         // Save to file
-        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save($fullPath);
 
         $this->line("   📄 File: {$filename}");
@@ -310,14 +318,14 @@ class ExportPresensiCommand extends Command
         $export = new PresensiMultiUserHorizontalExport($users, $month, $year);
 
         // Write directly to file using PhpSpreadsheet
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Build the sheet manually
         $this->buildMultiHorizontalSheet($sheet, $export, $users, $month, $year);
 
         // Save to file
-        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save($fullPath);
 
         $this->line("   📄 Multi-User Horizontal: {$filename}");
@@ -329,17 +337,17 @@ class ExportPresensiCommand extends Command
         $sheet->mergeCells('A1:I1');
         $sheet->setCellValue('A1', 'REKAP PRESENSI BULANAN');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells('A2:I2');
-        $sheet->setCellValue('A2', $user->name . ' - NIP: ' . $user->nomor_induk);
+        $sheet->setCellValue('A2', $user->name.' - NIP: '.$user->nomor_induk);
         $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(11);
-        $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells('A3:I3');
-        $sheet->setCellValue('A3', 'Bulan: ' . $this->getMonthName($month) . ' ' . $year);
+        $sheet->setCellValue('A3', 'Bulan: '.$this->getMonthName($month).' '.$year);
         $sheet->getStyle('A3')->getFont()->setBold(true)->setSize(11);
-        $sheet->getStyle('A3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Headers
         $headers = ['No', 'Tanggal', 'Hari', 'Jam Masuk', 'Telat (Menit)', 'Jam Pulang', 'PSW (Menit)', 'Status', 'Keterangan'];
@@ -350,8 +358,8 @@ class ExportPresensiCommand extends Command
 
         // Style headers
         $sheet->getStyle('A5:I5')->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-        $sheet->getStyle('A5:I5')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('2E86AB');
-        $sheet->getStyle('A5:I5')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A5:I5')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('2E86AB');
+        $sheet->getStyle('A5:I5')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Get data
         $data = $sheetExport->collection()->toArray();
@@ -399,17 +407,17 @@ class ExportPresensiCommand extends Command
         $sheet->mergeCells('A1:E1');
         $sheet->setCellValue('A1', 'REKAP ABSENSI HARIAN');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells('A2:E2');
-        $sheet->setCellValue('A2', $user->name . ' - NIP: ' . $user->nomor_induk);
+        $sheet->setCellValue('A2', $user->name.' - NIP: '.$user->nomor_induk);
         $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(11);
-        $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells('A3:E3');
-        $sheet->setCellValue('A3', 'Bulan: ' . $this->getMonthName($month) . ' ' . $year);
+        $sheet->setCellValue('A3', 'Bulan: '.$this->getMonthName($month).' '.$year);
         $sheet->getStyle('A3')->getFont()->setBold(true)->setSize(11);
-        $sheet->getStyle('A3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Headers
         $headers = ['Tanggal', 'Hari', 'Absen Masuk', 'Absen Pulang', 'Status'];
@@ -420,8 +428,8 @@ class ExportPresensiCommand extends Command
 
         // Style headers
         $sheet->getStyle('A5:E5')->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-        $sheet->getStyle('A5:E5')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('28A745');
-        $sheet->getStyle('A5:E5')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A5:E5')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('28A745');
+        $sheet->getStyle('A5:E5')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Get data
         $data = $export->collection()->toArray();
@@ -436,7 +444,7 @@ class ExportPresensiCommand extends Command
 
             // Highlight weekends
             if ($row['is_weekend']) {
-                $sheet->getStyle("A{$rowNum}:E{$rowNum}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('FFF3CD');
+                $sheet->getStyle("A{$rowNum}:E{$rowNum}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FFF3CD');
             }
 
             $rowNum++;
@@ -462,9 +470,10 @@ class ExportPresensiCommand extends Command
             $column = '';
             while ($index > 0) {
                 $index--;
-                $column = chr(65 + ($index % 26)) . $column;
+                $column = chr(65 + ($index % 26)).$column;
                 $index = (int) ($index / 26);
             }
+
             return $column;
         };
 
@@ -473,17 +482,17 @@ class ExportPresensiCommand extends Command
         $sheet->mergeCells("A1:{$lastCol}1");
         $sheet->setCellValue('A1', 'REKAP ABSENSI BULANAN - FORMAT HORIZONTAL');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells("A2:{$lastCol}2");
-        $sheet->setCellValue('A2', $user->name . ' - NIP: ' . $user->nomor_induk);
+        $sheet->setCellValue('A2', $user->name.' - NIP: '.$user->nomor_induk);
         $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(11);
-        $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells("A3:{$lastCol}3");
-        $sheet->setCellValue('A3', 'Bulan: ' . $this->getMonthName($month) . ' ' . $year);
+        $sheet->setCellValue('A3', 'Bulan: '.$this->getMonthName($month).' '.$year);
         $sheet->getStyle('A3')->getFont()->setBold(true)->setSize(11);
-        $sheet->getStyle('A3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Headers: Hari, 1, 2, 3, ..., 31, Total
         $sheet->setCellValue('A5', 'Hari');
@@ -496,8 +505,8 @@ class ExportPresensiCommand extends Command
 
         // Style headers
         $sheet->getStyle("A5:{$totalCol}5")->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-        $sheet->getStyle("A5:{$totalCol}5")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('28A745');
-        $sheet->getStyle("A5:{$totalCol}5")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("A5:{$totalCol}5")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('28A745');
+        $sheet->getStyle("A5:{$totalCol}5")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Get data
         $data = $export->collection()->toArray();
@@ -522,15 +531,15 @@ class ExportPresensiCommand extends Command
 
             // Highlight weekends (Sabtu=5, Minggu=6)
             if (in_array($row['day_name'], ['Sabtu', 'Minggu'])) {
-                $sheet->getStyle("A{$rowNum}:{$totalCol}{$rowNum}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('FFF3CD');
+                $sheet->getStyle("A{$rowNum}:{$totalCol}{$rowNum}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FFF3CD');
             }
 
             $rowNum++;
         }
 
         // Style data area
-        $sheet->getStyle("A6:{$totalCol}" . ($rowNum - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle("A6:{$totalCol}" . ($rowNum - 1))->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        $sheet->getStyle("A6:{$totalCol}".($rowNum - 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("A6:{$totalCol}".($rowNum - 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
         // Auto filter
         $sheet->setAutoFilter("A5:{$totalCol}5");
@@ -555,9 +564,10 @@ class ExportPresensiCommand extends Command
             $column = '';
             while ($index > 0) {
                 $index--;
-                $column = chr(65 + ($index % 26)) . $column;
+                $column = chr(65 + ($index % 26)).$column;
                 $index = (int) ($index / 26);
             }
+
             return $column;
         };
 
@@ -566,17 +576,17 @@ class ExportPresensiCommand extends Command
         $sheet->mergeCells("A1:{$lastCol}1");
         $sheet->setCellValue('A1', 'REKAP ABSENSI BULANAN - SEMUA USER');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells("A2:{$lastCol}2");
-        $sheet->setCellValue('A2', 'Bulan: ' . $this->getMonthName($month) . ' ' . $year);
+        $sheet->setCellValue('A2', 'Bulan: '.$this->getMonthName($month).' '.$year);
         $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(11);
-        $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells("A3:{$lastCol}3");
-        $sheet->setCellValue('A3', 'Total: ' . $users->count() . ' User');
+        $sheet->setCellValue('A3', 'Total: '.$users->count().' User');
         $sheet->getStyle('A3')->getFont()->setBold(true)->setSize(11);
-        $sheet->getStyle('A3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Headers: NIP, Nama, 1, 2, ..., 31, Total
         $sheet->setCellValue('A5', 'NIP');
@@ -590,8 +600,8 @@ class ExportPresensiCommand extends Command
 
         // Style headers
         $sheet->getStyle("A5:{$totalCol}5")->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-        $sheet->getStyle("A5:{$totalCol}5")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('2E86AB');
-        $sheet->getStyle("A5:{$totalCol}5")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("A5:{$totalCol}5")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('2E86AB');
+        $sheet->getStyle("A5:{$totalCol}5")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Get data
         $data = $export->collection()->toArray();
@@ -609,7 +619,7 @@ class ExportPresensiCommand extends Command
                 $col = $getColumnName($day + 2);
                 // Dianggap hadir jika ada m_absen atau p_absen, dengan status null
                 $hasPresensi = isset($userPresensi[$day]) &&
-                    (!empty($userPresensi[$day]->m_absen) || !empty($userPresensi[$day]->p_absen)) &&
+                    (! empty($userPresensi[$day]->m_absen) || ! empty($userPresensi[$day]->p_absen)) &&
                     ($userPresensi[$day]->status === null);
 
                 $sheet->setCellValue("{$col}{$rowNum}", $hasPresensi ? 1 : '');
@@ -623,8 +633,8 @@ class ExportPresensiCommand extends Command
         }
 
         // Style data area
-        $sheet->getStyle("A6:{$totalCol}" . ($rowNum - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle("A6:{$totalCol}" . ($rowNum - 1))->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        $sheet->getStyle("A6:{$totalCol}".($rowNum - 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("A6:{$totalCol}".($rowNum - 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
         // Auto filter
         $sheet->setAutoFilter("A5:{$totalCol}5");
@@ -651,28 +661,29 @@ class ExportPresensiCommand extends Command
             $column = '';
             while ($index > 0) {
                 $index--;
-                $column = chr(65 + ($index % 26)) . $column;
+                $column = chr(65 + ($index % 26)).$column;
                 $index = (int) ($index / 26);
             }
+
             return $column;
         };
 
         // Title
         $lastCol = $getColumnName($daysInMonth + 3); // +3 for NIP, Nama, Total
         $sheet->mergeCells("A1:{$lastCol}1");
-        $sheet->setCellValue('A1', 'REKAP ABSENSI BULANAN - ' . strtoupper($dept->nama));
+        $sheet->setCellValue('A1', 'REKAP ABSENSI BULANAN - '.strtoupper($dept->nama));
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells("A2:{$lastCol}2");
-        $sheet->setCellValue('A2', 'Bulan: ' . $this->getMonthName($month) . ' ' . $year);
+        $sheet->setCellValue('A2', 'Bulan: '.$this->getMonthName($month).' '.$year);
         $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(11);
-        $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells("A3:{$lastCol}3");
-        $sheet->setCellValue('A3', 'Total: ' . $users->count() . ' User');
+        $sheet->setCellValue('A3', 'Total: '.$users->count().' User');
         $sheet->getStyle('A3')->getFont()->setBold(true)->setSize(11);
-        $sheet->getStyle('A3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Headers: NIP, Nama, 1, 2, ..., 31, Total
         $sheet->setCellValue('A5', 'NIP');
@@ -686,8 +697,8 @@ class ExportPresensiCommand extends Command
 
         // Style headers
         $sheet->getStyle("A5:{$totalCol}5")->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-        $sheet->getStyle("A5:{$totalCol}5")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('2E86AB');
-        $sheet->getStyle("A5:{$totalCol}5")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("A5:{$totalCol}5")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('2E86AB');
+        $sheet->getStyle("A5:{$totalCol}5")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Get data
         $data = $export->collection()->toArray();
@@ -705,7 +716,7 @@ class ExportPresensiCommand extends Command
                 $col = $getColumnName($day + 2);
                 // Dianggap hadir jika ada m_absen atau p_absen, dengan status null
                 $hasPresensi = isset($userPresensi[$day]) &&
-                    (!empty($userPresensi[$day]->m_absen) || !empty($userPresensi[$day]->p_absen)) &&
+                    (! empty($userPresensi[$day]->m_absen) || ! empty($userPresensi[$day]->p_absen)) &&
                     ($userPresensi[$day]->status === null);
 
                 $sheet->setCellValue("{$col}{$rowNum}", $hasPresensi ? 1 : '');
@@ -719,8 +730,8 @@ class ExportPresensiCommand extends Command
         }
 
         // Style data area
-        $sheet->getStyle("A6:{$totalCol}" . ($rowNum - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle("A6:{$totalCol}" . ($rowNum - 1))->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        $sheet->getStyle("A6:{$totalCol}".($rowNum - 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("A6:{$totalCol}".($rowNum - 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
         // Highlight value 1 (green)
         for ($row = 6; $row < $rowNum; $row++) {
@@ -729,14 +740,14 @@ class ExportPresensiCommand extends Command
                 $cell = $sheet->getCell("{$col}{$row}");
                 if ($cell->getValue() === 1) {
                     $sheet->getStyle("{$col}{$row}")->getFont()->setBold(true)->getColor()->setRGB('155724');
-                    $sheet->getStyle("{$col}{$row}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('D4EDDA');
+                    $sheet->getStyle("{$col}{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('D4EDDA');
                 }
             }
         }
 
         // Total column styling
-        $sheet->getStyle("{$totalCol}6:{$totalCol}" . ($rowNum - 1))->getFont()->setBold(true);
-        $sheet->getStyle("{$totalCol}6:{$totalCol}" . ($rowNum - 1))->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('E2E3E5');
+        $sheet->getStyle("{$totalCol}6:{$totalCol}".($rowNum - 1))->getFont()->setBold(true);
+        $sheet->getStyle("{$totalCol}6:{$totalCol}".($rowNum - 1))->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E2E3E5');
 
         // Auto filter
         $sheet->setAutoFilter("A5:{$totalCol}5");
@@ -763,28 +774,29 @@ class ExportPresensiCommand extends Command
             $column = '';
             while ($index > 0) {
                 $index--;
-                $column = chr(65 + ($index % 26)) . $column;
+                $column = chr(65 + ($index % 26)).$column;
                 $index = (int) ($index / 26);
             }
+
             return $column;
         };
 
         // Title
         $lastCol = $getColumnName($daysInMonth + 3); // +3 for NIP, Nama, Total
         $sheet->mergeCells("A1:{$lastCol}1");
-        $sheet->setCellValue('A1', 'DETAIL JAM PRESENSI - ' . strtoupper($dept->nama));
+        $sheet->setCellValue('A1', 'DETAIL JAM PRESENSI - '.strtoupper($dept->nama));
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells("A2:{$lastCol}2");
-        $sheet->setCellValue('A2', 'Bulan: ' . $this->getMonthName($month) . ' ' . $year);
+        $sheet->setCellValue('A2', 'Bulan: '.$this->getMonthName($month).' '.$year);
         $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(11);
-        $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells("A3:{$lastCol}3");
         $sheet->setCellValue('A3', 'Format: Jam Masuk / Jam Pulang');
         $sheet->getStyle('A3')->getFont()->setItalic(true)->setSize(10);
-        $sheet->getStyle('A3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Headers: NIP, Nama, 1, 2, ..., 31, Total
         $sheet->setCellValue('A5', 'NIP');
@@ -798,8 +810,8 @@ class ExportPresensiCommand extends Command
 
         // Style headers
         $sheet->getStyle("A5:{$totalCol}5")->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-        $sheet->getStyle("A5:{$totalCol}5")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('6C757D');
-        $sheet->getStyle("A5:{$totalCol}5")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("A5:{$totalCol}5")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('6C757D');
+        $sheet->getStyle("A5:{$totalCol}5")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Get data
         $data = $export->collection()->toArray();
@@ -817,7 +829,7 @@ class ExportPresensiCommand extends Command
                 $col = $getColumnName($day + 2);
                 // Dianggap hadir jika ada m_absen atau p_absen, dengan status null
                 $hasPresensi = isset($userPresensi[$day]) &&
-                    (!empty($userPresensi[$day]->m_absen) || !empty($userPresensi[$day]->p_absen)) &&
+                    (! empty($userPresensi[$day]->m_absen) || ! empty($userPresensi[$day]->p_absen)) &&
                     ($userPresensi[$day]->status === null);
 
                 if ($hasPresensi) {
@@ -835,12 +847,12 @@ class ExportPresensiCommand extends Command
         }
 
         // Style data area
-        $sheet->getStyle("A6:{$totalCol}" . ($rowNum - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle("A6:{$totalCol}" . ($rowNum - 1))->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        $sheet->getStyle("A6:{$totalCol}".($rowNum - 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("A6:{$totalCol}".($rowNum - 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
         // Total column styling
-        $sheet->getStyle("{$totalCol}6:{$totalCol}" . ($rowNum - 1))->getFont()->setBold(true);
-        $sheet->getStyle("{$totalCol}6:{$totalCol}" . ($rowNum - 1))->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('E2E3E5');
+        $sheet->getStyle("{$totalCol}6:{$totalCol}".($rowNum - 1))->getFont()->setBold(true);
+        $sheet->getStyle("{$totalCol}6:{$totalCol}".($rowNum - 1))->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E2E3E5');
 
         // Auto filter
         $sheet->setAutoFilter("A5:{$totalCol}5");
@@ -906,8 +918,8 @@ class ExportPresensiCommand extends Command
 
         $this->info("📊 Total Unit Kerja Diexport: {$exportedCount}");
 
-        if (!empty($errors)) {
-            $this->error("❌ Total Gagal: " . count($errors));
+        if (! empty($errors)) {
+            $this->error('❌ Total Gagal: '.count($errors));
             $this->newLine();
 
             foreach ($errors as $error) {
@@ -918,7 +930,7 @@ class ExportPresensiCommand extends Command
         $this->newLine();
         $this->info("📂 Lokasi File: {$outputPath}/{$year}/{$month}/");
         $this->newLine();
-        $this->info("💡 File yang dihasilkan (1 per unit kerja):");
-        $this->line("   - presensi_{nama_unit_kerja}_{year}_{month}.xlsx");
+        $this->info('💡 File yang dihasilkan (1 per unit kerja):');
+        $this->line('   - presensi_{nama_unit_kerja}_{year}_{month}.xlsx');
     }
 }

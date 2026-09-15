@@ -51,11 +51,13 @@ class HariKerja extends Model
      */
     private function formatJam(?string $jam): ?string
     {
-        if (!$jam) return null;
+        if (! $jam) {
+            return null;
+        }
 
         $parts = explode('.', $jam);
         if (count($parts) >= 2) {
-            return $parts[0] . ':' . $parts[1];
+            return $parts[0].':'.$parts[1];
         }
 
         return $jam;
@@ -66,7 +68,7 @@ class HariKerja extends Model
      */
     public function isWorkDay(int $dayOfWeek): bool
     {
-        return match($dayOfWeek) {
+        return match ($dayOfWeek) {
             1 => true, // Senin
             2 => true, // Selasa
             3 => true, // Rabu

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ktd_presensi', function (Blueprint $table) {
-            if (!Schema::hasColumn('ktd_presensi', 'error_taken_at')) {
+            if (! Schema::hasColumn('ktd_presensi', 'error_taken_at')) {
                 $table->time('error_taken_at')->nullable()->after('keterangan');
             }
         });

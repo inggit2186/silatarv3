@@ -1,21 +1,52 @@
-<x-layouts.ppid-layout title="Fasilitas Publik - Gallery PPID">
+<x-layouts.ppid-layout title="{{ $page->title }}">
     <x-ppid.nav />
 
     <main class="ppid-content">
         <div class="ppid-page">
-            <div class="ppid-page-breadcrumb"><a href="{{ route('ppid') }}">PPID</a><span>/</span><span>Gallery</span><span>/</span><span>Fasilitas</span></div>
+            <div class="ppid-page-breadcrumb">
+                <a href="{{ route('ppid') }}">PPID</a>
+                <span>/</span>
+                <span>Gallery</span>
+                <span>/</span>
+                <span>Fasilitas</span>
+            </div>
             <div class="ppid-page-header" data-reveal>
-                <h1 class="ppid-page-title">Fasilitas Publik</h1>
-                <p class="ppid-page-subtitle">Dokumentasi fasilitas untuk masyarakat</p>
+                <h1 class="ppid-page-title">{{ $page->title }}</h1>
+                <p class="ppid-page-subtitle">{{ $page->subtitle ?? 'Dokumentasi fasilitas untuk masyarakat' }}</p>
             </div>
 
             <section class="ppid-section" data-reveal>
-                <div class="ppid-grid">
-                    <div class="ppid-card" style="padding: 0; overflow: hidden;"><div style="aspect-ratio: 16/10; background: linear-gradient(135deg, rgba(10, 100, 150, 0.2), rgba(10, 100, 150, 0.1)), linear-gradient(135deg, oklch(8% 0.15 190 / 0.2), oklch(8% 0.15 190 / 0.1)); display: flex; align-items: center; justify-content: center;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--ppid-primary);"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div><div style="padding: 1.25rem;"><h3 class="ppid-card-title">Ruang Layanan</h3><p class="ppid-card-text">Ruang khusus pelayanan informasi</p></div></div>
-                    <div class="ppid-card" style="padding: 0; overflow: hidden;"><div style="aspect-ratio: 16/10; background: linear-gradient(135deg, rgba(10, 100, 150, 0.2), rgba(10, 100, 150, 0.1)), linear-gradient(135deg, oklch(8% 0.15 190 / 0.2), oklch(8% 0.15 190 / 0.1)); display: flex; align-items: center; justify-content: center;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--ppid-primary);"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg></div><div style="padding: 1.25rem;"><h3 class="ppid-card-title">Kios Informasi</h3><p class="ppid-card-text">Kios informasi digital</p></div></div>
-                    <div class="ppid-card" style="padding: 0; overflow: hidden;"><div style="aspect-ratio: 16/10; background: linear-gradient(135deg, rgba(10, 100, 150, 0.2), rgba(10, 100, 150, 0.1)), linear-gradient(135deg, oklch(8% 0.15 190 / 0.2), oklch(8% 0.15 190 / 0.1)); display: flex; align-items: center; justify-content: center;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--ppid-primary);"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div style="padding: 1.25rem;"><h3 class="ppid-card-title">Ruang Baca</h3><p class="ppid-card-text">Area membaca informasi</p></div></div>
-                </div>
+                @if($galleryItems->count() > 0)
+                    <div class="ppid-grid">
+                        @foreach($galleryItems as $item)
+                            <div class="ppid-card" style="padding: 0; overflow: hidden;">
+                                <div style="aspect-ratio: 16/10; background: linear-gradient(135deg, rgba(10, 100, 150, 0.2), rgba(10, 100, 150, 0.1)), linear-gradient(135deg, oklch(8% 0.15 190 / 0.2), oklch(8% 0.15 190 / 0.1)); display: flex; align-items: center; justify-content: center;">
+                                    @if($item->image_path)
+                                        <img src="{{ asset('storage/' . $item->image_path) }}" alt="{{ $item->title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    @else
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--ppid-primary);">
+                                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                                            <path d="M21 15l-5-5L5 21"/>
+                                        </svg>
+                                    @endif
+                                </div>
+                                <div style="padding: 1.25rem;">
+                                    <h3 class="ppid-card-title">{{ $item->title }}</h3>
+                                    @if($item->description)
+                                        <p class="ppid-card-text">{{ $item->description }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                        <p>Belum ada gambar fasilitas yang tersedia.</p>
+                    </div>
+                @endif
             </section>
         </div>
         @include('ppid.partials.footer')
-    </main></x-layouts.ppid-layout>
+    </main>
+</x-layouts.ppid-layout>

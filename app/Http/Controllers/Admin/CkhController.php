@@ -35,7 +35,7 @@ class CkhController extends Controller
             ]);
 
         // Filter by role (non-admin)
-        if (!$isAdmin) {
+        if (! $isAdmin) {
             $query->where(function ($q) use ($user) {
                 // 1. Dept ID yang sama (selalu bisa lihat)
                 $q->where('ckh.dept_id', $user->dept_id);
@@ -65,7 +65,7 @@ class CkhController extends Controller
 
         // Set default values if no filters applied
         $hasAnyFilter = $bulan || $tahun || $filterDeptId || $status || $search;
-        if (!$hasAnyFilter) {
+        if (! $hasAnyFilter) {
             // Default: bulan sebelumnya dan tahun saat ini
             $bulan = now()->subMonth()->month;
             $tahun = now()->year;
@@ -95,14 +95,14 @@ class CkhController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('u.name', 'like', "%{$search}%")
-                  ->orWhere('u.nomor_induk', 'like', "%{$search}%")
-                  ->orWhere('dept.nama', 'like', "%{$search}%");
+                    ->orWhere('u.nomor_induk', 'like', "%{$search}%")
+                    ->orWhere('dept.nama', 'like', "%{$search}%");
             });
         }
 
         // Order by
         $query->orderBy('ckh.bulan', 'desc')
-              ->orderBy('u.name', 'asc');
+            ->orderBy('u.name', 'asc');
 
         // Paginate
         $ckhList = $query->paginate(15)->withQueryString();
@@ -178,14 +178,14 @@ class CkhController extends Controller
             ->where('ckh.id', $id)
             ->first();
 
-        if (!$ckh) {
+        if (! $ckh) {
             return redirect()->route('admin.ckh.index')
                 ->with('error', 'Laporan CKH tidak ditemukan');
         }
 
         // Check if user can view this CKH
-        if (!$isAdmin) {
-            if (!$this->canViewCkh($user, $ckh)) {
+        if (! $isAdmin) {
+            if (! $this->canViewCkh($user, $ckh)) {
                 abort(403, 'Anda tidak memiliki akses untuk melihat laporan ini.');
             }
         }
@@ -193,7 +193,7 @@ class CkhController extends Controller
         // Get CKH items (data_json)
         $items = [];
         if ($ckh->filename) {
-            $filePath = storage_path('app/public/' . $ckh->filename);
+            $filePath = storage_path('app/public/'.$ckh->filename);
             if (file_exists($filePath)) {
                 $fileContent = file_get_contents($filePath);
                 $items = json_decode($fileContent, true) ?? [];
@@ -224,13 +224,13 @@ class CkhController extends Controller
         $user = auth()->user();
         $ckh = DB::table('satker_ckh')->where('id', $id)->first();
 
-        if (!$ckh) {
+        if (! $ckh) {
             return redirect()->route('admin.ckh.index')
                 ->with('error', 'Laporan CKH tidak ditemukan');
         }
 
         // Check if user can verify this CKH
-        if (!$this->canVerifyCkh($user, $ckh)) {
+        if (! $this->canVerifyCkh($user, $ckh)) {
             abort(403, 'Anda tidak memiliki akses untuk memverifikasi laporan ini.');
         }
 
@@ -254,13 +254,13 @@ class CkhController extends Controller
         $user = auth()->user();
         $ckh = DB::table('satker_ckh')->where('id', $id)->first();
 
-        if (!$ckh) {
+        if (! $ckh) {
             return redirect()->route('admin.ckh.index')
                 ->with('error', 'Laporan CKH tidak ditemukan');
         }
 
         // Check if user can verify this CKH
-        if (!$this->canVerifyCkh($user, $ckh)) {
+        if (! $this->canVerifyCkh($user, $ckh)) {
             abort(403, 'Anda tidak memiliki akses untuk memverifikasi laporan ini.');
         }
 
@@ -324,27 +324,43 @@ class CkhController extends Controller
 
         // dept_id = 5: bisa verifikasi dept_id 998 (semua role), dept_id 5 (hanya kasi)
         if ($user->dept_id == 5) {
-            if ($ckh->dept_id == 998) return true;
-            if ($ckh->dept_id == 5 && $user->role == 'kasi') return true;
+            if ($ckh->dept_id == 998) {
+                return true;
+            }
+            if ($ckh->dept_id == 5 && $user->role == 'kasi') {
+                return true;
+            }
         }
 
         // dept_id = 7: bisa verifikasi kategori min/mtsn/man (semua role),
         //               dept_id 999 (semua role), dept_id 7 (hanya kasi)
         if ($user->dept_id == 7) {
-            if (in_array($ckh->dept_kategori, ['min', 'mtsn', 'man'])) return true;
-            if ($ckh->dept_id == 999) return true;
-            if ($ckh->dept_id == 7 && $user->role == 'kasi') return true;
+            if (in_array($ckh->dept_kategori, ['min', 'mtsn', 'man'])) {
+                return true;
+            }
+            if ($ckh->dept_id == 999) {
+                return true;
+            }
+            if ($ckh->dept_id == 7 && $user->role == 'kasi') {
+                return true;
+            }
         }
 
         // dept_id = 8: bisa verifikasi kategori kua (semua role), dept_id 8 (hanya kasi)
         if ($user->dept_id == 8) {
-            if ($ckh->dept_kategori == 'kua') return true;
-            if ($ckh->dept_id == 8 && $user->role == 'kasi') return true;
+            if ($ckh->dept_kategori == 'kua') {
+                return true;
+            }
+            if ($ckh->dept_id == 8 && $user->role == 'kasi') {
+                return true;
+            }
         }
 
         // Lainnya: hanya kasi/kasubbag, dept_id sama
         if (in_array($user->role, ['kasi', 'kasubbag'])) {
-            if ($ckh->dept_id == $user->dept_id) return true;
+            if ($ckh->dept_id == $user->dept_id) {
+                return true;
+            }
         }
 
         return false;

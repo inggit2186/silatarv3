@@ -23,7 +23,7 @@ class CekAsnCommand extends BaseCommand
         // Escape special LIKE characters to prevent unexpected results
         $searchName = WhatsAppService::escapeLikeQuery($name);
 
-        $users = User::where('name', 'LIKE', '%' . $searchName . '%')
+        $users = User::where('name', 'LIKE', '%'.$searchName.'%')
             ->with('dept')
             ->get();
 

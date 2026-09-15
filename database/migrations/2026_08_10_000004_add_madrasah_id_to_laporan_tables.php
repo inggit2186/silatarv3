@@ -13,7 +13,7 @@ return new class extends Migration
     {
         // Add madrasah_id to ktd_laporan_semester_madrasah
         Schema::table('ktd_laporan_semester_madrasah', function (Blueprint $table) {
-            if (!Schema::hasColumn('ktd_laporan_semester_madrasah', 'madrasah_id')) {
+            if (! Schema::hasColumn('ktd_laporan_semester_madrasah', 'madrasah_id')) {
                 $table->unsignedBigInteger('madrasah_id')->nullable()->after('dept_id');
                 $table->index('madrasah_id');
             }
@@ -21,7 +21,7 @@ return new class extends Migration
 
         // Add madrasah_id to ktd_laporan_bulanan_madrasah
         Schema::table('ktd_laporan_bulanan_madrasah', function (Blueprint $table) {
-            if (!Schema::hasColumn('ktd_laporan_bulanan_madrasah', 'madrasah_id')) {
+            if (! Schema::hasColumn('ktd_laporan_bulanan_madrasah', 'madrasah_id')) {
                 $table->unsignedBigInteger('madrasah_id')->nullable()->after('dept_id');
                 $table->index('madrasah_id');
             }

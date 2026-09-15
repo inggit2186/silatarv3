@@ -2,26 +2,29 @@
 
 namespace App\Exports;
 
-use Maatwebsite\Excel\Concerns\FromCollection;
+use Illuminate\Support\Enumerable;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Concerns\Export;
+use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\Exportable;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Enumerable;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class PresensiDetailHorizontalExport implements \Maatwebsite\Excel\Concerns\Export, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class PresensiDetailHorizontalExport implements Export, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
 {
     use Exportable;
 
     protected $users;
+
     protected $month;
+
     protected $year;
+
     public $presensiData;
 
     public function __construct($users, int $month, int $year)
@@ -84,7 +87,7 @@ class PresensiDetailHorizontalExport implements \Maatwebsite\Excel\Concerns\Expo
 
         for ($day = 1; $day <= $daysInMonth; $day++) {
             $hasPresensi = isset($userPresensi[$day]) &&
-                (!empty($userPresensi[$day]->m_absen) || !empty($userPresensi[$day]->p_absen)) &&
+                (! empty($userPresensi[$day]->m_absen) || ! empty($userPresensi[$day]->p_absen)) &&
                 ($userPresensi[$day]->status === null);
 
             if ($hasPresensi) {
@@ -130,9 +133,10 @@ class PresensiDetailHorizontalExport implements \Maatwebsite\Excel\Concerns\Expo
             $column = '';
             while ($index > 0) {
                 $index--;
-                $column = chr(65 + ($index % 26)) . $column;
+                $column = chr(65 + ($index % 26)).$column;
                 $index = (int) ($index / 26);
             }
+
             return $column;
         };
 
@@ -145,7 +149,7 @@ class PresensiDetailHorizontalExport implements \Maatwebsite\Excel\Concerns\Expo
         $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells("A2:{$lastCol}2");
-        $sheet->setCellValue('A2', 'Bulan: ' . $this->getMonthName() . ' ' . $this->year);
+        $sheet->setCellValue('A2', 'Bulan: '.$this->getMonthName().' '.$this->year);
         $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(11);
         $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 

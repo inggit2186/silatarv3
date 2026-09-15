@@ -17,7 +17,7 @@ class PenilaianKinerjaController extends Controller
     {
         // Check if user is kepala
         $user = auth()->user();
-        if (!$user || $user->role !== 'kepala') {
+        if (! $user || $user->role !== 'kepala') {
             abort(403, 'Hanya Kepala Kantor yang dapat mengakses halaman ini.');
         }
 
@@ -69,7 +69,7 @@ class PenilaianKinerjaController extends Controller
     public function create(Request $request)
     {
         $user = auth()->user();
-        if (!$user || $user->role !== 'kepala') {
+        if (! $user || $user->role !== 'kepala') {
             abort(403, 'Hanya Kepala Kantor yang dapat mengakses halaman ini.');
         }
 
@@ -135,7 +135,7 @@ class PenilaianKinerjaController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        if (!$user || $user->role !== 'kepala') {
+        if (! $user || $user->role !== 'kepala') {
             abort(403, 'Hanya Kepala Kantor yang dapat mengakses halaman ini.');
         }
 
@@ -149,7 +149,7 @@ class PenilaianKinerjaController extends Controller
         ]);
 
         $pejabat = User::find($request->pejabat_id);
-        if (!in_array($pejabat->kat_jabatan, ['kasubbag', 'kasubag', 'kasi', 'kepala'])) {
+        if (! in_array($pejabat->kat_jabatan, ['kasubbag', 'kasubag', 'kasi', 'kepala'])) {
             return redirect()->back()->withInput()->with('error', 'Pejabat tidak valid untuk dinilai.');
         }
 
@@ -205,7 +205,8 @@ class PenilaianKinerjaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
     }
 
@@ -300,7 +301,8 @@ class PenilaianKinerjaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
     }
 
@@ -336,6 +338,7 @@ class PenilaianKinerjaController extends Controller
         for ($y = $currentYear - 2; $y <= $currentYear + 1; $y++) {
             $years[$y] = $y;
         }
+
         return $years;
     }
 

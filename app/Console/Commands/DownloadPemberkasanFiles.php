@@ -72,6 +72,7 @@ class DownloadPemberkasanFiles extends Command
 
         if ($totalRecords === 0) {
             $this->warn('No records found. Exiting.');
+
             return Command::SUCCESS;
         }
 
@@ -79,8 +80,9 @@ class DownloadPemberkasanFiles extends Command
             return $this->dryRun($records, $totalRecords);
         }
 
-        if (!$this->confirm("This will download files for {$totalRecords} records. Continue?")) {
+        if (! $this->confirm("This will download files for {$totalRecords} records. Continue?")) {
             $this->info('Migration cancelled.');
+
             return Command::FAILURE;
         }
 
@@ -160,7 +162,7 @@ class DownloadPemberkasanFiles extends Command
             if ($apiResult) {
                 $apiStatus = 'success';
                 $syarat = $apiResult['syarat'] ?? [];
-                $fileCount = count(array_filter($syarat, fn($s) => !empty($s['fileUrl']) && $s['fileUrl'] !== 'NONE'));
+                $fileCount = count(array_filter($syarat, fn ($s) => ! empty($s['fileUrl']) && $s['fileUrl'] !== 'NONE'));
             } elseif ($apiResult === false) {
                 $apiStatus = '404';
             }
@@ -179,7 +181,7 @@ class DownloadPemberkasanFiles extends Command
 
         if ($totalRecords > 20) {
             $this->newLine();
-            $this->info('... and ' . ($totalRecords - 20) . ' more records.');
+            $this->info('... and '.($totalRecords - 20).' more records.');
         }
 
         return Command::SUCCESS;
@@ -197,7 +199,7 @@ class DownloadPemberkasanFiles extends Command
             return 'skipped';
         }
 
-        if (!$apiData) {
+        if (! $apiData) {
             return 'failed';
         }
 
@@ -243,6 +245,7 @@ class DownloadPemberkasanFiles extends Command
                     'uploaded_at' => null,
                     'source' => 'ptsp_api',
                 ];
+
                 continue;
             }
 
@@ -262,6 +265,7 @@ class DownloadPemberkasanFiles extends Command
                     'source' => 'ptsp_api',
                 ];
                 $downloaded++;
+
                 continue;
             }
 
@@ -346,7 +350,7 @@ class DownloadPemberkasanFiles extends Command
     /**
      * Fetch pemberkasan data from external PTSP API.
      *
-     * @return array|false|null  Array with 'data' key on success, false on 404, null on error
+     * @return array|false|null Array with 'data' key on success, false on 404, null on error
      */
     protected function fetchApiData(string $noreq): array|false|null
     {
@@ -361,12 +365,14 @@ class DownloadPemberkasanFiles extends Command
 
             if ($response->successful()) {
                 $body = $response->json();
+
                 return $body;
             }
 
             return null;
         } catch (\Exception $e) {
             $this->warn("\n  API error for {$noreq}: {$e->getMessage()}");
+
             return null;
         }
     }

@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\KtdPresensi;
 use App\Models\Department;
-use Illuminate\Http\Request;
+use App\Models\KtdPresensi;
 use Carbon\Carbon;
+use Carbon\CarbonInterval;
+use Illuminate\Http\Request;
 
 class PresensiController extends BaseApiController
 {
@@ -47,9 +48,9 @@ class PresensiController extends BaseApiController
             ->whereDate('tanggal', $today)
             ->first();
 
-        if (!$presensi) {
+        if (! $presensi) {
             // Create new record
-            $presensi = new KtdPresensi();
+            $presensi = new KtdPresensi;
             $presensi->user_nip = $user->nomor_induk;
             $presensi->dept_id = $deptId;
             $presensi->tanggal = $today;
@@ -82,11 +83,11 @@ class PresensiController extends BaseApiController
                     if ($now->gt($jamMasuk)) {
                         $status = 'TERLAMBAT';
                         $selisihFormatted = $this->formatSelisih($diff);
-                        $message = 'Presensi masuk berhasil (Terlambat ' . $selisihFormatted . ')';
+                        $message = 'Presensi masuk berhasil (Terlambat '.$selisihFormatted.')';
                     } else {
                         $status = 'MASUK';
                         $selisihFormatted = $this->formatSelisih($diff);
-                        $message = 'Presensi masuk berhasil (lebih awal ' . $selisihFormatted . ')';
+                        $message = 'Presensi masuk berhasil (lebih awal '.$selisihFormatted.')';
                     }
                 } else {
                     $status = 'MASUK';
@@ -113,11 +114,11 @@ class PresensiController extends BaseApiController
                     if ($now->lt($jamPulang)) {
                         $status = 'PULANG_CEPAT';
                         $selisihFormatted = $this->formatSelisih($diff);
-                        $message = 'Presensi pulang berhasil (Pulang cepat ' . $selisihFormatted . ')';
+                        $message = 'Presensi pulang berhasil (Pulang cepat '.$selisihFormatted.')';
                     } else {
                         $status = 'PULANG';
                         $selisihFormatted = $this->formatSelisih($diff);
-                        $message = 'Presensi pulang berhasil (Lembur ' . $selisihFormatted . ')';
+                        $message = 'Presensi pulang berhasil (Lembur '.$selisihFormatted.')';
                     }
                 } else {
                     $status = 'PULANG';
@@ -215,7 +216,7 @@ class PresensiController extends BaseApiController
             ->whereMonth('tanggal', $bulan)
             ->orderBy('tanggal', 'asc')
             ->get()
-            ->map(fn($p) => $this->formatPresensi($p));
+            ->map(fn ($p) => $this->formatPresensi($p));
 
         return $this->success([
             'bulan' => $bulan,
@@ -287,7 +288,7 @@ class PresensiController extends BaseApiController
     /**
      * Format selisih waktu ke format "XX Jam XX Menit XX Detik"
      */
-    private function formatSelisih(\Carbon\CarbonInterval $diff): string
+    private function formatSelisih(CarbonInterval $diff): string
     {
         $jam = $diff->h + ($diff->days * 24);
         $menit = $diff->i;
@@ -295,13 +296,13 @@ class PresensiController extends BaseApiController
 
         $parts = [];
         if ($jam > 0) {
-            $parts[] = $jam . ' Jam';
+            $parts[] = $jam.' Jam';
         }
         if ($menit > 0) {
-            $parts[] = $menit . ' Menit';
+            $parts[] = $menit.' Menit';
         }
         if ($detik > 0 || empty($parts)) {
-            $parts[] = $detik . ' Detik';
+            $parts[] = $detik.' Detik';
         }
 
         return implode(' ', $parts);

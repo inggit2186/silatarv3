@@ -12,8 +12,8 @@ return new class extends Migration
     {
         // Make presensi and uangmakan columns nullable for tukin-only generation
         // Using raw SQL because doctrine/dbal is not installed
-        DB::statement("ALTER TABLE `ktd_presensifiles` MODIFY COLUMN `presensi` VARCHAR(255) NULL");
-        DB::statement("ALTER TABLE `ktd_presensifiles` MODIFY COLUMN `uangmakan` VARCHAR(255) NULL");
+        DB::statement('ALTER TABLE `ktd_presensifiles` MODIFY COLUMN `presensi` VARCHAR(255) NULL');
+        DB::statement('ALTER TABLE `ktd_presensifiles` MODIFY COLUMN `uangmakan` VARCHAR(255) NULL');
     }
 
     /**
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE `ktd_presensifiles` MODIFY COLUMN `presensi` VARCHAR(255) NOT NULL");
-        DB::statement("ALTER TABLE `ktd_presensifiles` MODIFY COLUMN `uangmakan` VARCHAR(255) NOT NULL");
+        DB::statement('ALTER TABLE `ktd_presensifiles` MODIFY COLUMN `presensi` VARCHAR(255) NOT NULL');
+        DB::statement('ALTER TABLE `ktd_presensifiles` MODIFY COLUMN `uangmakan` VARCHAR(255) NOT NULL');
     }
 };

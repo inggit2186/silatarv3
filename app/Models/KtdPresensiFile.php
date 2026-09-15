@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class KtdPresensiFile extends Model
 {
@@ -38,7 +37,7 @@ class KtdPresensiFile extends Model
      */
     public function getPresensiFullPath(): ?string
     {
-        return $this->presensi ? storage_path('app/' . $this->presensi) : null;
+        return $this->presensi ? storage_path('app/'.$this->presensi) : null;
     }
 
     /**
@@ -46,6 +45,6 @@ class KtdPresensiFile extends Model
      */
     public function getUangmakanFullPath(): ?string
     {
-        return $this->uangmakan ? storage_path('app/' . $this->uangmakan) : null;
+        return $this->uangmakan ? storage_path('app/'.$this->uangmakan) : null;
     }
 }

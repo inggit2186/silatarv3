@@ -94,9 +94,11 @@
                                             <strong>{{ $section->section_key }}</strong>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <button @click="toggleVisibility({{ $section->id }})" class="btn btn-sm" :class="{{ $section->is_visible ? 'btn-success' : 'btn-warning' }}">
-                                                {{ $section->is_visible ? 'Visible' : 'Hidden' }}
-                                            </button>
+                                            @if($section->is_visible)
+                                                <button @click="toggleVisibility({{ $section->id }})" class="btn btn-sm btn-success">Visible</button>
+                                            @else
+                                                <button @click="toggleVisibility({{ $section->id }})" class="btn btn-sm btn-warning">Hidden</button>
+                                            @endif
                                             <button @click="editSection({{ $section->id }})" class="btn btn-sm btn-secondary">Edit</button>
                                             <button @click="deleteSection({{ $section->id }})" class="btn btn-sm btn-danger">Hapus</button>
                                         </div>
@@ -301,8 +303,8 @@
                 },
 
                 editSection(id) {
-                    // For now, just alert. In the future, could open a modal or redirect
-                    alert('Edit section ID: ' + id);
+                    // Navigate to section edit page
+                    window.location.href = `/admin/ppid/{{ $page->slug }}/edit-section/${id}`;
                 },
 
                 async deleteSection(id) {
@@ -335,7 +337,7 @@
                 async toggleVisibility(id) {
                     // Toggle visibility via AJAX
                     try {
-                        const response = await fetch(`/admin/ppid/sections/${id}/toggle`, {
+                        const response = await fetch(`/admin/ppid/sections/${id}/toggle-visibility`, {
                             method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),

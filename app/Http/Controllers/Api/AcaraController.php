@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\User;
 use App\Services\WhatsAppService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -63,7 +64,7 @@ class AcaraController extends BaseApiController
 
         $acara = DB::table('ktd_acara')->where('id', $id)->first();
 
-        if (!$acara) {
+        if (! $acara) {
             return $this->notFound('Acara tidak ditemukan');
         }
 
@@ -98,7 +99,7 @@ class AcaraController extends BaseApiController
 
         $acara = DB::table('ktd_acara')->where('id', $id)->first();
 
-        if (!$acara) {
+        if (! $acara) {
             return $this->notFound('Acara tidak ditemukan');
         }
 
@@ -113,7 +114,7 @@ class AcaraController extends BaseApiController
 
             // Validate GPS location if radius is set
             if ($acara->radius && $acara->radius > 0 && $distance > $acara->radius) {
-                return $this->error("Anda berada di luar radius lokasi acara. Jarak: " . round($distance) . "m, Radius: {$acara->radius}m", 400);
+                return $this->error('Anda berada di luar radius lokasi acara. Jarak: '.round($distance)."m, Radius: {$acara->radius}m", 400);
             }
         }
 
@@ -141,8 +142,8 @@ class AcaraController extends BaseApiController
                     'distance' => $request->distance,
                     'location' => $request->location,
                     'foto' => $fotoPath,
-                    'tanggal' => \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d'),
-                    'waktu_absen' => \Carbon\Carbon::now('Asia/Jakarta')->format('H:i:s'),
+                    'tanggal' => Carbon::now('Asia/Jakarta')->format('Y-m-d'),
+                    'waktu_absen' => Carbon::now('Asia/Jakarta')->format('H:i:s'),
                     'updated_at' => now(),
                 ]);
         } else {
@@ -157,8 +158,8 @@ class AcaraController extends BaseApiController
                 'distance' => $request->distance,
                 'location' => $request->location,
                 'foto' => $fotoPath,
-                'tanggal' => \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d'),
-                'waktu_absen' => \Carbon\Carbon::now('Asia/Jakarta')->format('H:i:s'),
+                'tanggal' => Carbon::now('Asia/Jakarta')->format('Y-m-d'),
+                'waktu_absen' => Carbon::now('Asia/Jakarta')->format('H:i:s'),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -166,7 +167,7 @@ class AcaraController extends BaseApiController
 
         return $this->success([
             'status' => 'hadir',
-            'waktu' => \Carbon\Carbon::now('Asia/Jakarta')->format('H:i:s'),
+            'waktu' => Carbon::now('Asia/Jakarta')->format('H:i:s'),
         ], 'Presensi berhasil');
     }
 
@@ -204,14 +205,15 @@ class AcaraController extends BaseApiController
             }
 
             $imageData = base64_decode($base64Photo);
-            $filename = 'presensi_acara_' . $acaraId . '_' . $userNip . '_' . time() . '.jpg';
-            $path = 'presensi_acara/' . $filename;
+            $filename = 'presensi_acara_'.$acaraId.'_'.$userNip.'_'.time().'.jpg';
+            $path = 'presensi_acara/'.$filename;
 
             Storage::disk('public')->put($path, $imageData);
 
             return $path;
         } catch (\Exception $e) {
             Log::error('Failed to save photo', ['error' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -230,7 +232,7 @@ class AcaraController extends BaseApiController
 
         $acara = DB::table('ktd_acara')->where('id', $id)->first();
 
-        if (!$acara) {
+        if (! $acara) {
             return $this->notFound('Acara tidak ditemukan');
         }
 

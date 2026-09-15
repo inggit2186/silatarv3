@@ -2,37 +2,44 @@
 
 namespace App\Services;
 
+use App\Commands\Webhook\CekAsnCommand;
+use App\Commands\Webhook\CekNipCommand;
+use App\Commands\Webhook\CekPtspCommand;
+use App\Commands\Webhook\CekSatkerCommand;
+use App\Commands\Webhook\CetakSlipGajiCommand;
+use App\Commands\Webhook\HalalCommand;
+use App\Commands\Webhook\HelpCommand;
+use App\Commands\Webhook\LupaPasswordCommand;
+use App\Commands\Webhook\MenuLayananCommand;
+use App\Commands\Webhook\P3HKecamatanCommand;
+use App\Commands\Webhook\ReqLayananCommand;
+use App\Commands\Webhook\SetWhatsappCommand;
+use App\Commands\Webhook\TestCommand;
 use Illuminate\Http\Request;
-use App\Commands\Webhook\{
-    BaseCommand,
-    TestCommand,
-    CekNipCommand,
-    CekAsnCommand,
-    CekPtspCommand,
-    CekSatkerCommand,
-    MenuLayananCommand,
-    ReqLayananCommand,
-    SetWhatsappCommand,
-    HelpCommand,
-    LupaPasswordCommand,
-    CetakSlipGajiCommand,
-    HalalCommand,
-    P3HKecamatanCommand
-};
 use Illuminate\Support\Facades\Log;
 
 class CommandHandler
 {
     private Request $request;
+
     private string $phoneNumber;
+
     private string $message;
+
     private string $senderName;
+
     private string $device;
+
     private ?string $ppUrl;
+
     private ?string $participant;
+
     private ?array $media;
+
     private ?string $mimetype;
+
     private array $parts;
+
     private WhatsAppService $waService;
 
     public function __construct(Request $request, WhatsAppService $waService)
@@ -149,7 +156,7 @@ class CommandHandler
     private function parseMessage(string $message): array
     {
         // Remove asterisks and normalize whitespace
-        $cleaned = preg_replace("/[[:blank:]]+/", " ", trim($message, " *"));
+        $cleaned = preg_replace('/[[:blank:]]+/', ' ', trim($message, ' *'));
 
         return explode(' ', $cleaned);
     }
@@ -184,7 +191,8 @@ class CommandHandler
     private function getRawArg(): ?string
     {
         $args = $this->getArgs();
-        return !empty($args) ? implode(' ', $args) : null;
+
+        return ! empty($args) ? implode(' ', $args) : null;
     }
 
     /**
@@ -200,6 +208,7 @@ class CommandHandler
                 'from' => $this->phoneNumber,
                 'participant' => $this->participant,
             ]);
+
             return null;
         }
 
@@ -415,6 +424,7 @@ class CommandHandler
     private function isGreeting(): bool
     {
         $greetings = ['halo', 'hai', 'assalamualaikum', 'hello', 'asw'];
+
         return in_array($this->message, $greetings) ||
                str_starts_with($this->message, 'halo') ||
                str_starts_with($this->message, 'hai') ||
@@ -456,6 +466,7 @@ class CommandHandler
     private function sendLink(string $title, string $url, string $description): ?array
     {
         $textWA = $this->formatMessage($title, $description, $url);
+
         return $this->waService->sendMessage($this->phoneNumber, $textWA);
     }
 
@@ -465,6 +476,7 @@ class CommandHandler
     private function sendGuide(string $title, string $intro, string $command, string $example): ?array
     {
         $textWA = $this->formatGuideMessage($title, $intro, $command, $example);
+
         return $this->waService->sendMessage($this->phoneNumber, $textWA);
     }
 
@@ -474,10 +486,10 @@ class CommandHandler
     private function sendUnknownCommand(): ?array
     {
         $textWA = "*:: SILATAR CHAT ::*\n\n"
-            . "*Maaf, perintah yang Anda masukkan tidak dikenali*\n\n"
-            . "Silahkan ketik *halo* untuk melihat menu layanan\n\n\n"
-            . "_Hormat Kami,_\n\n"
-            . "_*SILATAR AI*_";
+            ."*Maaf, perintah yang Anda masukkan tidak dikenali*\n\n"
+            ."Silahkan ketik *halo* untuk melihat menu layanan\n\n\n"
+            ."_Hormat Kami,_\n\n"
+            .'_*SILATAR AI*_';
 
         return $this->waService->sendMessage($this->phoneNumber, $textWA);
     }
@@ -488,11 +500,11 @@ class CommandHandler
     private function formatMessage(string $title, string $description, string $url): string
     {
         return "*:: SILATAR AI-CHAT ::*\n\n"
-            . $description . "\n\n"
-            . "Silahkan klik Link-dessous ini : \n\n"
-            . "*{$url}* \n\n\n"
-            . "_Hormat Kami,_\n\n"
-            . "_*SILATAR AI*_";
+            .$description."\n\n"
+            ."Silahkan klik Link-dessous ini : \n\n"
+            ."*{$url}* \n\n\n"
+            ."_Hormat Kami,_\n\n"
+            .'_*SILATAR AI*_';
     }
 
     /**
@@ -501,10 +513,10 @@ class CommandHandler
     private function formatGuideMessage(string $title, string $intro, string $command, string $example): string
     {
         return "*:: SILATAR AI-CHAT ::*\n\n"
-            . $intro . " \n {$command} \n"
-            . "contoh : \n {$example} \n\n\n"
-            . "_Hormat Kami,_\n\n"
-            . "_*SILATAR AI*_";
+            .$intro." \n {$command} \n"
+            ."contoh : \n {$example} \n\n\n"
+            ."_Hormat Kami,_\n\n"
+            .'_*SILATAR AI*_';
     }
 
     /**

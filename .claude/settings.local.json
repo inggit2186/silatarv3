@@ -129,7 +129,19 @@
       "Bash(git commit -m 'fix\\(rekap-presensi\\): replace cal_days_in_month with date function *)",
       "Bash(git commit -m 'fix\\(rekap-presensi\\): add tukin download button and info *)",
       "Bash(git commit -m 'fix\\(tukin\\): add default value for grade column *)",
-      "Bash(git commit -m 'feat\\(rekap-presensi\\): add timestamp to filename & cleanup old files *)"
+      "Bash(git commit -m 'feat\\(rekap-presensi\\): add timestamp to filename & cleanup old files *)",
+      "Bash(findstr -i page)",
+      "Bash(grep -A 30 \"CREATE TABLE \\\\`ktd_tukin\\\\`\" \"d:\\\\work\\\\SourceCode\\\\silatarV2\\\\database\\\\kemenagtd_db.sql\")",
+      "Bash(grep -E \"\\\\.php$\")",
+      "Bash(awk '{print $NF}')",
+      "Bash(grep -A 20 \"CREATE TABLE \\\\`ktd_slipgaji\\\\`\" \"d:\\\\work\\\\SourceCode\\\\silatarV2\\\\database\\\\kemenagtd_db.sql\")",
+      "Bash(grep -A 15 \"CREATE TABLE \\\\`ktd_ketidakhadiran\\\\`\" \"d:\\\\work\\\\SourceCode\\\\silatarV2\\\\database\\\\kemenagtd_db.sql\")",
+      "Bash(grep -A 25 \"CREATE TABLE \\\\`users\\\\`\" \"d:\\\\work\\\\SourceCode\\\\silatarV2\\\\database\\\\kemenagtd_db.sql\")",
+      "Bash(grep -i \"CREATE TABLE \\\\`hari_kerja\\\\`\" \"d:\\\\work\\\\SourceCode\\\\silatarV2\\\\database\\\\kemenagtd_db.sql\" -A 20)",
+      "Bash(grep -i \"ALTER TABLE \\\\`users\\\\`\" \"d:\\\\work\\\\SourceCode\\\\silatarV2\\\\database\\\\kemenagtd_db.sql\" -A 3)",
+      "Bash(grep -A 50 \"CREATE TABLE \\\\`tenaga_ktd\\\\`\" \"d:\\\\work\\\\SourceCode\\\\silatarV2\\\\database\\\\kemenagtd_db.sql\")",
+      "Bash(xargs grep -l \"tenaga_ktd\")",
+      "Bash(grep -A 40 \"CREATE TABLE \\\\`ktd_tukin\\\\`\" \"d:\\\\work\\\\SourceCode\\\\silatarV2\\\\database\\\\kemenagtd_db.sql\")"
     ],
     "additionalDirectories": [
       "D:\\work\\SourceCode\\silatarV2\\bootstrap\\cache",

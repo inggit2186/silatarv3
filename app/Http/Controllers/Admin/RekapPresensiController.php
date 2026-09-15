@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\PresensiTukin;
 use App\Http\Controllers\Controller;
-use Carbon\Carbon;
-use App\Models\KtdPresensiFile;
 use App\Models\Department;
+use App\Models\KtdPresensiFile;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Maatwebsite\Excel\Facades\Excel;
 
 class RekapPresensiController extends Controller
 {
@@ -22,7 +25,9 @@ class RekapPresensiController extends Controller
     protected function canAccess(): bool
     {
         $user = auth()->user();
-        if (!$user) return false;
+        if (! $user) {
+            return false;
+        }
 
         // Admin roles have full access
         if (in_array($user->role, ['admin', 'superadmin', 'kepala'])) {
@@ -43,7 +48,7 @@ class RekapPresensiController extends Controller
     public function index(Request $request)
     {
         // Check access
-        if (!$this->canAccess()) {
+        if (! $this->canAccess()) {
             abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
         }
         $departments = Department::whereIn('status', [1, 2])->orderBy('nama')->get();
@@ -76,7 +81,7 @@ class RekapPresensiController extends Controller
         $aggregated = [];
         foreach ($rawGroups as $row) {
             $key = $this->buildGroupKey($row->bank_kategori, $row->status, $row->serdik);
-            if (!isset($aggregated[$key])) {
+            if (! isset($aggregated[$key])) {
                 $aggregated[$key] = [
                     'group_key' => $key,
                     'bank_kategori' => $row->bank_kategori,
@@ -89,12 +94,12 @@ class RekapPresensiController extends Controller
         }
 
         $bankKategoriGroups = collect($aggregated)
-            ->map(fn($g) => [
+            ->map(fn ($g) => [
                 'group_key' => $g['group_key'],
                 'label' => $this->buildGroupLabel($g['bank_kategori'], $g['status'], $g['serdik']),
                 'total' => $g['total'],
             ])
-            ->filter(fn($g) => $g['total'] > 0)
+            ->filter(fn ($g) => $g['total'] > 0)
             ->values();
 
         $belumCount = DB::table('users')
@@ -105,7 +110,7 @@ class RekapPresensiController extends Controller
         if ($belumCount > 0) {
             $bankKategoriGroups->push([
                 'group_key' => 'belum_dikategorikan',
-                'label' => 'Belum Dikategorikan (' . $belumCount . ' user)',
+                'label' => 'Belum Dikategorikan ('.$belumCount.' user)',
                 'total' => $belumCount,
             ]);
         }
@@ -156,9 +161,9 @@ class RekapPresensiController extends Controller
                 'tahun' => $record->tahun,
                 'updated_at' => $record->updated_at,
                 'generated_by' => $record->generated_by ?? '-',
-                'has_presensi' => !empty($record->presensi),
-                'has_uangmakan' => !empty($record->uangmakan),
-                'has_tukin' => !empty($record->tukin),
+                'has_presensi' => ! empty($record->presensi),
+                'has_uangmakan' => ! empty($record->uangmakan),
+                'has_tukin' => ! empty($record->tukin),
             ];
         }
 
@@ -180,7 +185,7 @@ class RekapPresensiController extends Controller
     public function generate(Request $request)
     {
         // Check access
-        if (!$this->canAccess()) {
+        if (! $this->canAccess()) {
             abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
         }
 
@@ -197,14 +202,16 @@ class RekapPresensiController extends Controller
             if ($isAjax) {
                 return response()->json(['success' => false, 'message' => 'Metode generate tidak valid']);
             }
+
             return back()->with('error', 'Metode generate tidak valid');
 
         } catch (\Exception $e) {
-            Log::error("Generate rekap presensi error: " . $e->getMessage());
+            Log::error('Generate rekap presensi error: '.$e->getMessage());
             if ($isAjax) {
-                return response()->json(['success' => false, 'message' => 'Terjadi kesalahan server: ' . $e->getMessage()], 500);
+                return response()->json(['success' => false, 'message' => 'Terjadi kesalahan server: '.$e->getMessage()], 500);
             }
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+
+            return back()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
     }
 
@@ -214,7 +221,7 @@ class RekapPresensiController extends Controller
      */
     public function generateTukin(Request $request)
     {
-        if (!$this->canAccess()) {
+        if (! $this->canAccess()) {
             abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
         }
 
@@ -226,7 +233,7 @@ class RekapPresensiController extends Controller
                 'month' => 'required|integer|between:1,12',
                 'year' => 'required|integer|between:2020,2030',
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             if ($isAjax) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
             }
@@ -238,25 +245,28 @@ class RekapPresensiController extends Controller
         $year = $request->year;
 
         $dept = Department::find($deptId);
-        if (!$dept) {
-            if ($isAjax) return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan']);
+        if (! $dept) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan']);
+            }
+
             return back()->with('error', 'Unit kerja tidak ditemukan');
         }
 
         try {
             $tanggal = sprintf('%04d-%02d-01', $year, $month);
-            $export = new \App\Exports\PresensiTukin($deptId, $tanggal);
+            $export = new PresensiTukin($deptId, $tanggal);
             $cleanName = preg_replace('/[^a-zA-Z0-9]/', '_', $dept->nama);
 
             Log::info("Generating tukin for dept: {$dept->nama}, period: {$month}/{$year}");
 
             // Create directory if not exists
             $rekapDir = storage_path('app/rekap_presensi');
-            if (!file_exists($rekapDir)) {
+            if (! file_exists($rekapDir)) {
                 mkdir($rekapDir, 0755, true);
             }
             $deptDir = "{$rekapDir}/{$cleanName}";
-            if (!file_exists($deptDir)) {
+            if (! file_exists($deptDir)) {
                 mkdir($deptDir, 0755, true);
             }
 
@@ -267,7 +277,7 @@ class RekapPresensiController extends Controller
             $fullPath = storage_path("app/{$tukinPath}");
 
             // Store Excel file directly (same method as presensi)
-            $tukinFile = \Maatwebsite\Excel\Facades\Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
+            $tukinFile = Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
             file_put_contents($fullPath, $tukinFile);
 
             Log::info("Tukin file stored at: {$fullPath}");
@@ -281,8 +291,8 @@ class RekapPresensiController extends Controller
 
             if ($existing) {
                 // Hapus file LAMA jika ada
-                if (isset($existing->tukin) && $existing->tukin && file_exists(storage_path('app/' . $existing->tukin))) {
-                    unlink(storage_path('app/' . $existing->tukin));
+                if (isset($existing->tukin) && $existing->tukin && file_exists(storage_path('app/'.$existing->tukin))) {
+                    unlink(storage_path('app/'.$existing->tukin));
                 }
 
                 // Update record di database
@@ -294,7 +304,7 @@ class RekapPresensiController extends Controller
 
                 $existing->touch();
 
-                Log::info("Tukin file diupdate", [
+                Log::info('Tukin file diupdate', [
                     'id' => $existing->id,
                     'dept' => $dept->nama,
                     'updated_at' => now()->toDateTimeString(),
@@ -311,13 +321,13 @@ class RekapPresensiController extends Controller
                     'tukin' => $tukinPath,
                 ]);
 
-                Log::info("Tukin file dibuat baru", [
+                Log::info('Tukin file dibuat baru', [
                     'id' => $newRecord->id,
                     'dept' => $dept->nama,
                 ]);
             }
 
-            Log::info("Tukin berhasil digenerate", [
+            Log::info('Tukin berhasil digenerate', [
                 'dept' => $dept->nama,
                 'month' => $month,
                 'year' => $year,
@@ -328,22 +338,23 @@ class RekapPresensiController extends Controller
             if ($isAjax) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Tukin berhasil di-generate untuk ' . $dept->nama,
+                    'message' => 'Tukin berhasil di-generate untuk '.$dept->nama,
                     'download_url' => route('admin.rekap-presensi.download-tukin-direct', [
                         'dept_id' => $deptId,
                         'month' => $month,
-                        'year' => $year
-                    ])
+                        'year' => $year,
+                    ]),
                 ]);
             }
 
             return Excel::download($export, $tukinFilename);
         } catch (\Exception $e) {
-            Log::error("Generate tukin error: " . $e->getMessage());
+            Log::error('Generate tukin error: '.$e->getMessage());
             if ($isAjax) {
-                return response()->json(['success' => false, 'message' => 'Gagal generate tukin: ' . $e->getMessage()], 500);
+                return response()->json(['success' => false, 'message' => 'Gagal generate tukin: '.$e->getMessage()], 500);
             }
-            return back()->with('error', 'Gagal generate tukin: ' . $e->getMessage());
+
+            return back()->with('error', 'Gagal generate tukin: '.$e->getMessage());
         }
     }
 
@@ -358,7 +369,7 @@ class RekapPresensiController extends Controller
                 'month' => 'required|integer|between:1,12',
                 'year' => 'required|integer|between:2020,2030',
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             if ($isAjax) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
             }
@@ -370,8 +381,11 @@ class RekapPresensiController extends Controller
         $year = $request->year;
 
         $dept = Department::find($deptId);
-        if (!$dept) {
-            if ($isAjax) return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan']);
+        if (! $dept) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan']);
+            }
+
             return back()->with('error', 'Unit kerja tidak ditemukan');
         }
 
@@ -385,7 +399,10 @@ class RekapPresensiController extends Controller
             ->get();
 
         if ($users->isEmpty()) {
-            if ($isAjax) return response()->json(['success' => false, 'message' => 'Tidak ada user di unit kerja ini']);
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada user di unit kerja ini']);
+            }
+
             return back()->with('error', 'Tidak ada user di unit kerja ini');
         }
 
@@ -400,6 +417,7 @@ class RekapPresensiController extends Controller
         }
 
         $flashMethod = $result['success'] ? 'success' : 'error';
+
         return back()->with($flashMethod, $result['message'])
             ->with('dept_id', $deptId)
             ->with('group_key', $groupKey)
@@ -418,8 +436,10 @@ class RekapPresensiController extends Controller
                 'month' => 'required|integer|between:1,12',
                 'year' => 'required|integer|between:2020,2030',
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            if ($isAjax) return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        } catch (ValidationException $e) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
             throw $e;
         }
 
@@ -432,9 +452,12 @@ class RekapPresensiController extends Controller
         }
 
         $group = $this->resolveGroup($groupKey);
-        if (!$group) {
-            if ($isAjax) return response()->json(['success' => false, 'message' => 'Kelompok tidak ditemukan: ' . $groupKey]);
-            return back()->with('error', 'Kelompok tidak ditemukan: ' . $groupKey);
+        if (! $group) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Kelompok tidak ditemukan: '.$groupKey]);
+            }
+
+            return back()->with('error', 'Kelompok tidak ditemukan: '.$groupKey);
         }
 
         $query = DB::table('users')
@@ -444,10 +467,16 @@ class RekapPresensiController extends Controller
             ->where('users.status', 1); // Hanya users dengan status aktif
 
         if (isset($group['serdik'])) {
-            $query->where(function ($q) use ($group) {
-                $q->where('tenaga_ktd.serdik', $group['serdik'])
-                    ->orWhereNull('tenaga_ktd.serdik');
-            });
+            if ($group['serdik'] === 'non-guru') {
+                // Non-guru: hanya yang serdik = 'non-guru', tidak termasuk NULL
+                $query->where('tenaga_ktd.serdik', 'non-guru');
+            } else {
+                // Kategori lain: include NULL juga
+                $query->where(function ($q) use ($group) {
+                    $q->where('tenaga_ktd.serdik', $group['serdik'])
+                        ->orWhereNull('tenaga_ktd.serdik');
+                });
+            }
         }
 
         $users = $query
@@ -458,7 +487,10 @@ class RekapPresensiController extends Controller
             ->get();
 
         if ($users->isEmpty()) {
-            if ($isAjax) return response()->json(['success' => false, 'message' => 'Tidak ada user di kelompok ini']);
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada user di kelompok ini']);
+            }
+
             return back()->with('error', 'Tidak ada user di kelompok ini');
         }
 
@@ -467,9 +499,12 @@ class RekapPresensiController extends Controller
 
         $result = $this->processAndSave($users, $title, $cleanName, $month, $year, $title, $groupKey);
 
-        if ($isAjax) return response()->json($result, $result['success'] ? 200 : 500);
+        if ($isAjax) {
+            return response()->json($result, $result['success'] ? 200 : 500);
+        }
 
         $flashMethod = $result['success'] ? 'success' : 'error';
+
         return back()->with($flashMethod, $result['message'])
             ->with('group_key', $groupKey)
             ->with('month', $month)
@@ -493,7 +528,10 @@ class RekapPresensiController extends Controller
             ->get();
 
         if ($users->isEmpty()) {
-            if ($isAjax) return response()->json(['success' => false, 'message' => 'Tidak ada user tanpa kategori bank']);
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada user tanpa kategori bank']);
+            }
+
             return back()->with('error', 'Tidak ada user tanpa kategori bank');
         }
 
@@ -503,9 +541,12 @@ class RekapPresensiController extends Controller
 
         $result = $this->processAndSave($users, $title, $cleanName, $month, $year, $title, $groupKey);
 
-        if ($isAjax) return response()->json($result, $result['success'] ? 200 : 500);
+        if ($isAjax) {
+            return response()->json($result, $result['success'] ? 200 : 500);
+        }
 
         $flashMethod = $result['success'] ? 'success' : 'error';
+
         return back()->with($flashMethod, $result['message']);
     }
 
@@ -550,11 +591,11 @@ class RekapPresensiController extends Controller
             $detailFile = $this->generateDetailPresensiExcel($users, $presensiData, $title, $month, $year);
 
             $rekapDir = storage_path('app/rekap_presensi');
-            if (!file_exists($rekapDir)) {
+            if (! file_exists($rekapDir)) {
                 mkdir($rekapDir, 0755, true);
             }
             $deptDir = "{$rekapDir}/{$cleanName}";
-            if (!file_exists($deptDir)) {
+            if (! file_exists($deptDir)) {
                 mkdir($deptDir, 0755, true);
             }
 
@@ -584,11 +625,11 @@ class RekapPresensiController extends Controller
 
             if ($existing) {
                 // Hapus file LAMA presensi dan uangmakan jika ada
-                if ($existing->presensi && file_exists(storage_path('app/' . $existing->presensi))) {
-                    unlink(storage_path('app/' . $existing->presensi));
+                if ($existing->presensi && file_exists(storage_path('app/'.$existing->presensi))) {
+                    unlink(storage_path('app/'.$existing->presensi));
                 }
-                if ($existing->uangmakan && file_exists(storage_path('app/' . $existing->uangmakan))) {
-                    unlink(storage_path('app/' . $existing->uangmakan));
+                if ($existing->uangmakan && file_exists(storage_path('app/'.$existing->uangmakan))) {
+                    unlink(storage_path('app/'.$existing->uangmakan));
                 }
 
                 // Update record - hanya presensi dan uangmakan, JANGAN ubah tukin
@@ -602,7 +643,7 @@ class RekapPresensiController extends Controller
                 // Force touch untuk memastikan timestamps berubah
                 $existing->touch();
 
-                Log::info("Rekap presensi diupdate", [
+                Log::info('Rekap presensi diupdate', [
                     'id' => $existing->id,
                     'dept' => $deptLabel,
                     'group_key' => $groupKey,
@@ -620,14 +661,14 @@ class RekapPresensiController extends Controller
                     'tukin' => null,
                 ]);
 
-                Log::info("Rekap presensi dibuat baru", [
+                Log::info('Rekap presensi dibuat baru', [
                     'id' => $newRecord->id,
                     'dept' => $deptLabel,
                     'group_key' => $groupKey,
                 ]);
             }
 
-            Log::info("Rekap presensi berhasil digenerate", [
+            Log::info('Rekap presensi berhasil digenerate', [
                 'dept' => $deptLabel,
                 'group_key' => $groupKey,
                 'month' => $month,
@@ -635,11 +676,12 @@ class RekapPresensiController extends Controller
                 'users' => $users->count(),
             ]);
 
-            return ['success' => true, 'message' => 'Rekap presensi berhasil digenerate untuk ' . $deptLabel];
+            return ['success' => true, 'message' => 'Rekap presensi berhasil digenerate untuk '.$deptLabel];
 
         } catch (\Exception $e) {
-            Log::error("Gagal generate rekap presensi: " . $e->getMessage());
-            return ['success' => false, 'message' => 'Gagal generate rekap presensi: ' . $e->getMessage()];
+            Log::error('Gagal generate rekap presensi: '.$e->getMessage());
+
+            return ['success' => false, 'message' => 'Gagal generate rekap presensi: '.$e->getMessage()];
         }
     }
 
@@ -649,7 +691,7 @@ class RekapPresensiController extends Controller
     public function downloadPresensi(Request $request)
     {
         // Check access
-        if (!$this->canAccess()) {
+        if (! $this->canAccess()) {
             abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
         }
 
@@ -660,7 +702,7 @@ class RekapPresensiController extends Controller
         ]);
 
         $dept = Department::find($request->dept_id);
-        if (!$dept) {
+        if (! $dept) {
             return back()->with('error', 'Unit kerja tidak ditemukan');
         }
 
@@ -685,7 +727,7 @@ class RekapPresensiController extends Controller
         ]);
 
         $dept = Department::find($request->dept_id);
-        if (!$dept) {
+        if (! $dept) {
             return back()->with('error', 'Unit kerja tidak ditemukan');
         }
 
@@ -704,7 +746,7 @@ class RekapPresensiController extends Controller
     public function downloadByGroup(Request $request)
     {
         // Check access
-        if (!$this->canAccess()) {
+        if (! $this->canAccess()) {
             abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
         }
         $request->validate([
@@ -733,12 +775,12 @@ class RekapPresensiController extends Controller
      */
     protected function sendFile($record, string $column)
     {
-        if (!$record || !$record->{$column}) {
+        if (! $record || ! $record->{$column}) {
             return back()->with('error', 'File tidak ditemukan');
         }
 
-        $fullPath = storage_path('app/' . $record->{$column});
-        if (!file_exists($fullPath)) {
+        $fullPath = storage_path('app/'.$record->{$column});
+        if (! file_exists($fullPath)) {
             return back()->with('error', 'File tidak ditemukan di server');
         }
 
@@ -761,7 +803,7 @@ class RekapPresensiController extends Controller
         ]);
 
         $dept = Department::find($request->dept_id);
-        if (!$dept) {
+        if (! $dept) {
             return back()->with('error', 'Unit kerja tidak ditemukan');
         }
 
@@ -780,7 +822,7 @@ class RekapPresensiController extends Controller
     public function delete(Request $request)
     {
         // Check access - only admin can delete
-        if (!$this->isAdmin()) {
+        if (! $this->isAdmin()) {
             abort(403, 'Hanya admin yang bisa menghapus rekap presensi.');
         }
 
@@ -804,25 +846,25 @@ class RekapPresensiController extends Controller
 
         $record = $query->first();
 
-        if (!$record) {
+        if (! $record) {
             return back()->with('error', 'Data rekap tidak ditemukan');
         }
 
         // Delete files
-        if ($record->presensi && file_exists(storage_path('app/' . $record->presensi))) {
-            unlink(storage_path('app/' . $record->presensi));
+        if ($record->presensi && file_exists(storage_path('app/'.$record->presensi))) {
+            unlink(storage_path('app/'.$record->presensi));
         }
-        if ($record->uangmakan && file_exists(storage_path('app/' . $record->uangmakan))) {
-            unlink(storage_path('app/' . $record->uangmakan));
+        if ($record->uangmakan && file_exists(storage_path('app/'.$record->uangmakan))) {
+            unlink(storage_path('app/'.$record->uangmakan));
         }
-        if (isset($record->tukin) && $record->tukin && file_exists(storage_path('app/' . $record->tukin))) {
-            unlink(storage_path('app/' . $record->tukin));
+        if (isset($record->tukin) && $record->tukin && file_exists(storage_path('app/'.$record->tukin))) {
+            unlink(storage_path('app/'.$record->tukin));
         }
 
         // Delete record from database
         $record->delete();
 
-        Log::info("Rekap presensi dihapus", [
+        Log::info('Rekap presensi dihapus', [
             'dept' => $record->dept,
             'group_key' => $record->group_key,
             'month' => $request->month,
@@ -830,7 +872,7 @@ class RekapPresensiController extends Controller
             'deleted_by' => auth()->id(),
         ]);
 
-        return back()->with('success', 'Rekap presensi berhasil dihapus untuk ' . $record->dept);
+        return back()->with('success', 'Rekap presensi berhasil dihapus untuk '.$record->dept);
     }
 
     /**
@@ -839,6 +881,7 @@ class RekapPresensiController extends Controller
     protected function isAdmin(): bool
     {
         $user = auth()->user();
+
         return in_array($user->role, ['admin', 'superadmin']);
     }
 
@@ -847,7 +890,7 @@ class RekapPresensiController extends Controller
      */
     protected function generateTukinExcel($users, $tukinData, string $title, int $month, int $year): string
     {
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->freezePane('A6');
 
@@ -866,7 +909,7 @@ class RekapPresensiController extends Controller
 
         // Title
         $sheet->mergeCells("A1:{$lastCol}1");
-        $sheet->setCellValue('A1', 'REKAP TUKIN - ' . $title);
+        $sheet->setCellValue('A1', 'REKAP TUKIN - '.$title);
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('FFFFFF');
         $sheet->getStyle('A1')->getAlignment()->setHorizontal('center')->setVertical('center');
         $sheet->getStyle("A1:{$lastCol}1")->getFill()->setFillType('solid')->getStartColor()->setRGB($headerBg);
@@ -874,7 +917,7 @@ class RekapPresensiController extends Controller
 
         // Subtitle
         $sheet->mergeCells("A2:{$lastCol}2");
-        $sheet->setCellValue('A2', 'Bulan: ' . $this->getMonthName($month) . ' ' . $year);
+        $sheet->setCellValue('A2', 'Bulan: '.$this->getMonthName($month).' '.$year);
         $sheet->getStyle('A2')->getFont()->setItalic(true)->setSize(11)->getColor()->setRGB('6D28D9');
         $sheet->getStyle('A2')->getAlignment()->setHorizontal('center')->setVertical('center');
         $sheet->getStyle("A2:{$lastCol}2")->getFill()->setFillType('solid')->getStartColor()->setRGB($dayRowBg);
@@ -885,11 +928,11 @@ class RekapPresensiController extends Controller
             'No', 'NIP', 'Nama', 'TUKIN', 'TK Jml', 'TK %',
             'TL (Telat)', 'TL %', 'PSW', 'PSW %', 'Hukdis',
             'Hukdis %', 'CPNS', 'CPNS %', 'SKP', 'SKP %',
-            'TB', 'TB %', 'Pot Lain', 'Pot Lain %', 'Total Pot', 'Tukin Dibayar'
+            'TB', 'TB %', 'Pot Lain', 'Pot Lain %', 'Total Pot', 'Tukin Dibayar',
         ];
 
         foreach ($headers as $col => $header) {
-            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col + 1);
+            $colLetter = Coordinate::stringFromColumnIndex($col + 1);
             $sheet->setCellValue("{$colLetter}{$headerRow}", $header);
         }
 
@@ -1023,7 +1066,7 @@ class RekapPresensiController extends Controller
 
         // Save to temp file then read
         $tempFile = tempnam(sys_get_temp_dir(), 'tukin_');
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer = new Xlsx($spreadsheet);
         $writer->save($tempFile);
         $excelContent = file_get_contents($tempFile);
         unlink($tempFile);
@@ -1068,42 +1111,42 @@ class RekapPresensiController extends Controller
         $groupKey = $this->buildGroupKey($bankKategori, $status, $serdik);
 
         $labels = [
-            'pns_keagamaan_bank_nagari'          => 'PNS - KEAGAMAAN BANK NAGARI',
-            'pppk_keagamaan_bank_nagari'         => 'PPPK - KEAGAMAAN BANK NAGARI',
-            'pns_keagamaan_nagari'               => 'PNS - KEAGAMAAN PPPK NAGARI',
-            'pppk_keagamaan_nagari'              => 'PPPK - KEAGAMAAN PPPK NAGARI',
-            'pns_keagamaan_bsi'                  => 'PNS - KEAGAMAAN BSI',
-            'cpns_keagamaan_bsi'                 => 'CPNS - KEAGAMAAN BSI',
-            'pns_kependidikan_bank_nagari_serdik'     => 'PNS - KEPENDIDIKAN BANK NAGARI - Sertifikasi',
-            'pns_kependidikan_bank_nagari_nonserdik'  => 'PNS - KEPENDIDIKAN BANK NAGARI - Non-sertifikasi',
-            'pns_kependidikan_bank_nagari_nonguru'    => 'PNS - KEPENDIDIKAN BANK NAGARI - Non-guru',
-            'pns_kependidikan_bank_nagari_unknown'    => 'PNS - KEPENDIDIKAN BANK NAGARI - Unknown',
-            'pppk_kependidikan_bsi_serdik'      => 'PPPK - KEPENDIDIKAN PPPK BSI - Sertifikasi',
-            'pppk_kependidikan_bsi_nonserdik'   => 'PPPK - KEPENDIDIKAN PPPK BSI - Non-sertifikasi',
-            'pppk_kependidikan_bsi_nonguru'     => 'PPPK - KEPENDIDIKAN PPPK BSI - Non-guru',
-            'pppk_kependidikan_bsi_unknown'     => 'PPPK - KEPENDIDIKAN PPPK BSI - Unknown',
-            'pppk_kependidikan_nagari_serdik'     => 'PPPK - KEPENDIDIKAN PPPK NAGARI - Sertifikasi',
-            'pppk_kependidikan_nagari_nonserdik'  => 'PPPK - KEPENDIDIKAN PPPK NAGARI - Non-sertifikasi',
-            'pppk_kependidikan_nagari_nonguru'    => 'PPPK - KEPENDIDIKAN PPPK NAGARI - Non-guru',
-            'pppk_kependidikan_nagari_unknown'    => 'PPPK - KEPENDIDIKAN PPPK NAGARI - Unknown',
-            'pns_kependidikan_bri_serdik'         => 'PNS - KEPENDIDIKAN BRI - Sertifikasi',
-            'pns_kependidikan_bri_nonserdik'      => 'PNS - KEPENDIDIKAN BRI - Non-sertifikasi',
-            'pns_kependidikan_bri_nonguru'        => 'PNS - KEPENDIDIKAN BRI - Non-guru',
-            'pns_kependidikan_bri_unknown'        => 'PNS - KEPENDIDIKAN BRI - Unknown',
-            'pppk_kependidikan_bri_serdik'        => 'PPPK - KEPENDIDIKAN BRI - Sertifikasi',
-            'pppk_kependidikan_bri_nonserdik'     => 'PPPK - KEPENDIDIKAN BRI - Non-sertifikasi',
-            'pppk_kependidikan_bri_nonguru'       => 'PPPK - KEPENDIDIKAN BRI - Non-guru',
-            'pppk_kependidikan_bri_unknown'       => 'PPPK - KEPENDIDIKAN BRI - Unknown',
-            'pns_kependidikan_bsi_serdik'         => 'PNS - KEPENDIDIKAN BSI - Sertifikasi',
-            'pns_kependidikan_bsi_nonserdik'      => 'PNS - KEPENDIDIKAN BSI - Non-sertifikasi',
-            'pns_kependidikan_bsi_nonguru'        => 'PNS - KEPENDIDIKAN BSI - Non-guru',
-            'pns_kependidikan_bsi_unknown'        => 'PNS - KEPENDIDIKAN BSI - Unknown',
-            'cpns_kependidikan_bsi_nonserdik'     => 'CPNS - KEPENDIDIKAN BSI - Non-sertifikasi',
-            'pppk_kependidikan_bsi_serdik_bsi'      => 'PPPK - KEPENDIDIKAN BSI - Sertifikasi',
-            'pppk_kependidikan_bsi_nonserdik_bsi'   => 'PPPK - KEPENDIDIKAN BSI - Non-sertifikasi',
+            'pns_keagamaan_bank_nagari' => 'PNS - KEAGAMAAN BANK NAGARI',
+            'pppk_keagamaan_bank_nagari' => 'PPPK - KEAGAMAAN BANK NAGARI',
+            'pns_keagamaan_nagari' => 'PNS - KEAGAMAAN PPPK NAGARI',
+            'pppk_keagamaan_nagari' => 'PPPK - KEAGAMAAN PPPK NAGARI',
+            'pns_keagamaan_bsi' => 'PNS - KEAGAMAAN BSI',
+            'cpns_keagamaan_bsi' => 'CPNS - KEAGAMAAN BSI',
+            'pns_kependidikan_bank_nagari_serdik' => 'PNS - KEPENDIDIKAN BANK NAGARI - Sertifikasi',
+            'pns_kependidikan_bank_nagari_nonserdik' => 'PNS - KEPENDIDIKAN BANK NAGARI - Non-sertifikasi',
+            'pns_kependidikan_bank_nagari_nonguru' => 'PNS - KEPENDIDIKAN BANK NAGARI - Non-guru',
+            'pns_kependidikan_bank_nagari_unknown' => 'PNS - KEPENDIDIKAN BANK NAGARI - Unknown',
+            'pppk_kependidikan_bsi_serdik' => 'PPPK - KEPENDIDIKAN PPPK BSI - Sertifikasi',
+            'pppk_kependidikan_bsi_nonserdik' => 'PPPK - KEPENDIDIKAN PPPK BSI - Non-sertifikasi',
+            'pppk_kependidikan_bsi_nonguru' => 'PPPK - KEPENDIDIKAN PPPK BSI - Non-guru',
+            'pppk_kependidikan_bsi_unknown' => 'PPPK - KEPENDIDIKAN PPPK BSI - Unknown',
+            'pppk_kependidikan_nagari_serdik' => 'PPPK - KEPENDIDIKAN PPPK NAGARI - Sertifikasi',
+            'pppk_kependidikan_nagari_nonserdik' => 'PPPK - KEPENDIDIKAN PPPK NAGARI - Non-sertifikasi',
+            'pppk_kependidikan_nagari_nonguru' => 'PPPK - KEPENDIDIKAN PPPK NAGARI - Non-guru',
+            'pppk_kependidikan_nagari_unknown' => 'PPPK - KEPENDIDIKAN PPPK NAGARI - Unknown',
+            'pns_kependidikan_bri_serdik' => 'PNS - KEPENDIDIKAN BRI - Sertifikasi',
+            'pns_kependidikan_bri_nonserdik' => 'PNS - KEPENDIDIKAN BRI - Non-sertifikasi',
+            'pns_kependidikan_bri_nonguru' => 'PNS - KEPENDIDIKAN BRI - Non-guru',
+            'pns_kependidikan_bri_unknown' => 'PNS - KEPENDIDIKAN BRI - Unknown',
+            'pppk_kependidikan_bri_serdik' => 'PPPK - KEPENDIDIKAN BRI - Sertifikasi',
+            'pppk_kependidikan_bri_nonserdik' => 'PPPK - KEPENDIDIKAN BRI - Non-sertifikasi',
+            'pppk_kependidikan_bri_nonguru' => 'PPPK - KEPENDIDIKAN BRI - Non-guru',
+            'pppk_kependidikan_bri_unknown' => 'PPPK - KEPENDIDIKAN BRI - Unknown',
+            'pns_kependidikan_bsi_serdik' => 'PNS - KEPENDIDIKAN BSI - Sertifikasi',
+            'pns_kependidikan_bsi_nonserdik' => 'PNS - KEPENDIDIKAN BSI - Non-sertifikasi',
+            'pns_kependidikan_bsi_nonguru' => 'PNS - KEPENDIDIKAN BSI - Non-guru',
+            'pns_kependidikan_bsi_unknown' => 'PNS - KEPENDIDIKAN BSI - Unknown',
+            'cpns_kependidikan_bsi_nonserdik' => 'CPNS - KEPENDIDIKAN BSI - Non-sertifikasi',
+            'pppk_kependidikan_bsi_serdik_bsi' => 'PPPK - KEPENDIDIKAN BSI - Sertifikasi',
+            'pppk_kependidikan_bsi_nonserdik_bsi' => 'PPPK - KEPENDIDIKAN BSI - Non-sertifikasi',
         ];
 
-        return $labels[$groupKey] ?? strtoupper($status) . ' - ' . $bankKategori;
+        return $labels[$groupKey] ?? strtoupper($status).' - '.$bankKategori;
     }
 
     /**
@@ -1112,46 +1155,47 @@ class RekapPresensiController extends Controller
     protected function resolveGroup(string $groupKey): ?array
     {
         $labels = [
-            'pns_keagamaan_bank_nagari'              => ['bk' => 'KEAGAMAAN_BANK NAGARI', 'status' => 'pns'],
-            'pppk_keagamaan_bank_nagari'             => ['bk' => 'KEAGAMAAN_BANK NAGARI', 'status' => 'pppk'],
-            'pns_keagamaan_nagari'                   => ['bk' => 'KEAGAMAAN_PPPK_NAGARI', 'status' => 'pns'],
-            'pppk_keagamaan_nagari'                  => ['bk' => 'KEAGAMAAN_PPPK_NAGARI', 'status' => 'pppk'],
-            'pns_keagamaan_bsi'                      => ['bk' => 'KEAGAMAAN_BSI', 'status' => 'pns'],
-            'cpns_keagamaan_bsi'                     => ['bk' => 'KEAGAMAAN_BSI', 'status' => 'cpns'],
-            'pns_kependidikan_bank_nagari_serdik'     => ['bk' => 'KEPENDIDIKAN_BANK NAGARI', 'status' => 'pns', 'serdik' => 'sertifikasi'],
-            'pns_kependidikan_bank_nagari_nonserdik'  => ['bk' => 'KEPENDIDIKAN_BANK NAGARI', 'status' => 'pns', 'serdik' => 'non-sertifikasi'],
-            'pns_kependidikan_bank_nagari_nonguru'    => ['bk' => 'KEPENDIDIKAN_BANK NAGARI', 'status' => 'pns', 'serdik' => 'non-guru'],
-            'pns_kependidikan_bank_nagari_unknown'    => ['bk' => 'KEPENDIDIKAN_BANK NAGARI', 'status' => 'pns', 'serdik' => 'unknown'],
-            'pppk_kependidikan_bsi_serdik'      => ['bk' => 'KEPENDIDIKAN_PPPK_BSI', 'status' => 'pppk', 'serdik' => 'sertifikasi'],
-            'pppk_kependidikan_bsi_nonserdik'   => ['bk' => 'KEPENDIDIKAN_PPPK_BSI', 'status' => 'pppk', 'serdik' => 'non-sertifikasi'],
-            'pppk_kependidikan_bsi_nonguru'     => ['bk' => 'KEPENDIDIKAN_PPPK_BSI', 'status' => 'pppk', 'serdik' => 'non-guru'],
-            'pppk_kependidikan_bsi_unknown'     => ['bk' => 'KEPENDIDIKAN_PPPK_BSI', 'status' => 'pppk', 'serdik' => 'unknown'],
-            'pppk_kependidikan_nagari_serdik'     => ['bk' => 'KEPENDIDIKAN_PPPK_NAGARI', 'status' => 'pppk', 'serdik' => 'sertifikasi'],
-            'pppk_kependidikan_nagari_nonserdik'  => ['bk' => 'KEPENDIDIKAN_PPPK_NAGARI', 'status' => 'pppk', 'serdik' => 'non-sertifikasi'],
-            'pppk_kependidikan_nagari_nonguru'    => ['bk' => 'KEPENDIDIKAN_PPPK_NAGARI', 'status' => 'pppk', 'serdik' => 'non-guru'],
-            'pppk_kependidikan_nagari_unknown'    => ['bk' => 'KEPENDIDIKAN_PPPK_NAGARI', 'status' => 'pppk', 'serdik' => 'unknown'],
-            'pns_kependidikan_bri_serdik'         => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pns', 'serdik' => 'sertifikasi'],
-            'pns_kependidikan_bri_nonserdik'      => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pns', 'serdik' => 'non-sertifikasi'],
-            'pns_kependidikan_bri_nonguru'        => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pns', 'serdik' => 'non-guru'],
-            'pns_kependidikan_bri_unknown'        => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pns', 'serdik' => 'unknown'],
-            'pppk_kependidikan_bri_serdik'        => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pppk', 'serdik' => 'sertifikasi'],
-            'pppk_kependidikan_bri_nonserdik'     => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pppk', 'serdik' => 'non-sertifikasi'],
-            'pppk_kependidikan_bri_nonguru'       => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pppk', 'serdik' => 'non-guru'],
-            'pppk_kependidikan_bri_unknown'       => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pppk', 'serdik' => 'unknown'],
-            'pns_kependidikan_bsi_serdik'         => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pns', 'serdik' => 'sertifikasi'],
-            'pns_kependidikan_bsi_nonserdik'      => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pns', 'serdik' => 'non-sertifikasi'],
-            'pns_kependidikan_bsi_nonguru'        => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pns', 'serdik' => 'non-guru'],
-            'pns_kependidikan_bsi_unknown'        => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pns', 'serdik' => 'unknown'],
-            'cpns_kependidikan_bsi_nonserdik'     => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'cpns', 'serdik' => 'non-sertifikasi'],
-            'pppk_kependidikan_bsi_serdik_bsi'      => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pppk', 'serdik' => 'sertifikasi'],
-            'pppk_kependidikan_bsi_nonserdik_bsi'   => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pppk', 'serdik' => 'non-sertifikasi'],
+            'pns_keagamaan_bank_nagari' => ['bk' => 'KEAGAMAAN_BANK NAGARI', 'status' => 'pns'],
+            'pppk_keagamaan_bank_nagari' => ['bk' => 'KEAGAMAAN_BANK NAGARI', 'status' => 'pppk'],
+            'pns_keagamaan_nagari' => ['bk' => 'KEAGAMAAN_PPPK_NAGARI', 'status' => 'pns'],
+            'pppk_keagamaan_nagari' => ['bk' => 'KEAGAMAAN_PPPK_NAGARI', 'status' => 'pppk'],
+            'pns_keagamaan_bsi' => ['bk' => 'KEAGAMAAN_BSI', 'status' => 'pns'],
+            'cpns_keagamaan_bsi' => ['bk' => 'KEAGAMAAN_BSI', 'status' => 'cpns'],
+            'pns_kependidikan_bank_nagari_serdik' => ['bk' => 'KEPENDIDIKAN_BANK NAGARI', 'status' => 'pns', 'serdik' => 'sertifikasi'],
+            'pns_kependidikan_bank_nagari_nonserdik' => ['bk' => 'KEPENDIDIKAN_BANK NAGARI', 'status' => 'pns', 'serdik' => 'non-sertifikasi'],
+            'pns_kependidikan_bank_nagari_nonguru' => ['bk' => 'KEPENDIDIKAN_BANK NAGARI', 'status' => 'pns', 'serdik' => 'non-guru'],
+            'pns_kependidikan_bank_nagari_unknown' => ['bk' => 'KEPENDIDIKAN_BANK NAGARI', 'status' => 'pns', 'serdik' => 'unknown'],
+            'pppk_kependidikan_bsi_serdik' => ['bk' => 'KEPENDIDIKAN_PPPK_BSI', 'status' => 'pppk', 'serdik' => 'sertifikasi'],
+            'pppk_kependidikan_bsi_nonserdik' => ['bk' => 'KEPENDIDIKAN_PPPK_BSI', 'status' => 'pppk', 'serdik' => 'non-sertifikasi'],
+            'pppk_kependidikan_bsi_nonguru' => ['bk' => 'KEPENDIDIKAN_PPPK_BSI', 'status' => 'pppk', 'serdik' => 'non-guru'],
+            'pppk_kependidikan_bsi_unknown' => ['bk' => 'KEPENDIDIKAN_PPPK_BSI', 'status' => 'pppk', 'serdik' => 'unknown'],
+            'pppk_kependidikan_nagari_serdik' => ['bk' => 'KEPENDIDIKAN_PPPK_NAGARI', 'status' => 'pppk', 'serdik' => 'sertifikasi'],
+            'pppk_kependidikan_nagari_nonserdik' => ['bk' => 'KEPENDIDIKAN_PPPK_NAGARI', 'status' => 'pppk', 'serdik' => 'non-sertifikasi'],
+            'pppk_kependidikan_nagari_nonguru' => ['bk' => 'KEPENDIDIKAN_PPPK_NAGARI', 'status' => 'pppk', 'serdik' => 'non-guru'],
+            'pppk_kependidikan_nagari_unknown' => ['bk' => 'KEPENDIDIKAN_PPPK_NAGARI', 'status' => 'pppk', 'serdik' => 'unknown'],
+            'pns_kependidikan_bri_serdik' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pns', 'serdik' => 'sertifikasi'],
+            'pns_kependidikan_bri_nonserdik' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pns', 'serdik' => 'non-sertifikasi'],
+            'pns_kependidikan_bri_nonguru' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pns', 'serdik' => 'non-guru'],
+            'pns_kependidikan_bri_unknown' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pns', 'serdik' => 'unknown'],
+            'pppk_kependidikan_bri_serdik' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pppk', 'serdik' => 'sertifikasi'],
+            'pppk_kependidikan_bri_nonserdik' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pppk', 'serdik' => 'non-sertifikasi'],
+            'pppk_kependidikan_bri_nonguru' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pppk', 'serdik' => 'non-guru'],
+            'pppk_kependidikan_bri_unknown' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pppk', 'serdik' => 'unknown'],
+            'pns_kependidikan_bsi_serdik' => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pns', 'serdik' => 'sertifikasi'],
+            'pns_kependidikan_bsi_nonserdik' => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pns', 'serdik' => 'non-sertifikasi'],
+            'pns_kependidikan_bsi_nonguru' => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pns', 'serdik' => 'non-guru'],
+            'pns_kependidikan_bsi_unknown' => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pns', 'serdik' => 'unknown'],
+            'cpns_kependidikan_bsi_nonserdik' => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'cpns', 'serdik' => 'non-sertifikasi'],
+            'pppk_kependidikan_bsi_serdik_bsi' => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pppk', 'serdik' => 'sertifikasi'],
+            'pppk_kependidikan_bsi_nonserdik_bsi' => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pppk', 'serdik' => 'non-sertifikasi'],
         ];
 
-        if (!isset($labels[$groupKey])) {
+        if (! isset($labels[$groupKey])) {
             return null;
         }
 
         $def = $labels[$groupKey];
+
         return [
             'bank_kategori' => $def['bk'],
             'status' => $def['status'],
@@ -1171,9 +1215,10 @@ class RekapPresensiController extends Controller
             $column = '';
             while ($index > 0) {
                 $index--;
-                $column = chr(65 + ($index % 26)) . $column;
+                $column = chr(65 + ($index % 26)).$column;
                 $index = (int) ($index / 26);
             }
+
             return $column;
         };
 
@@ -1194,7 +1239,7 @@ class RekapPresensiController extends Controller
         $totalBg = '0E7490';
         $borderColor = 'CBD5E1';
 
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->freezePane('A6');
 
@@ -1205,7 +1250,7 @@ class RekapPresensiController extends Controller
 
         // Row 1: Title
         $sheet->mergeCells("A1:{$lastCol}1");
-        $sheet->setCellValue('A1', 'REKAP ABSENSI - ' . $title);
+        $sheet->setCellValue('A1', 'REKAP ABSENSI - '.$title);
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB($headerBg);
         $sheet->getStyle('A1')->getAlignment()->setHorizontal('center')->setVertical('center');
         $sheet->getStyle("A1:{$lastCol}1")->getFill()->setFillType('solid')->getStartColor()->setRGB($dayRowBg);
@@ -1213,7 +1258,7 @@ class RekapPresensiController extends Controller
 
         // Row 2: Subtitle
         $sheet->mergeCells("A2:{$lastCol}2");
-        $sheet->setCellValue('A2', 'Bulan: ' . $this->getMonthName($month) . ' ' . $year);
+        $sheet->setCellValue('A2', 'Bulan: '.$this->getMonthName($month).' '.$year);
         $sheet->getStyle('A2')->getFont()->setItalic(true)->setSize(11)->getColor()->setRGB('64748B');
         $sheet->getStyle('A2')->getAlignment()->setHorizontal('center')->setVertical('center');
 
@@ -1282,7 +1327,7 @@ class RekapPresensiController extends Controller
                 for ($day = 1; $day <= $daysInMonth; $day++) {
                     $presensi = $userPresensi[$day] ?? null;
                     $hasPresensi = $presensi &&
-                        (!empty($presensi->m_absen) || !empty($presensi->p_absen)) &&
+                        (! empty($presensi->m_absen) || ! empty($presensi->p_absen)) &&
                         ($presensi->status === null);
 
                     if ($hasPresensi) {
@@ -1327,7 +1372,7 @@ class RekapPresensiController extends Controller
         }
 
         // Batch apply: weekend column backgrounds
-        if ($lastDataRow >= $dataStartRow && !empty($weekendCols)) {
+        if ($lastDataRow >= $dataStartRow && ! empty($weekendCols)) {
             foreach ($weekendCols as $day => $_) {
                 $col = $getColumnName($day + 3);
                 $sheet->getStyle("{$col}{$dataStartRow}:{$col}{$lastDataRow}")
@@ -1355,9 +1400,10 @@ class RekapPresensiController extends Controller
             $column = '';
             while ($index > 0) {
                 $index--;
-                $column = chr(65 + ($index % 26)) . $column;
+                $column = chr(65 + ($index % 26)).$column;
                 $index = (int) ($index / 26);
             }
+
             return $column;
         };
 
@@ -1371,6 +1417,7 @@ class RekapPresensiController extends Controller
             if (preg_match('/^\d{2}:\d{2}$/', $jam)) {
                 return $jam;
             }
+
             return $jam;
         };
 
@@ -1391,7 +1438,7 @@ class RekapPresensiController extends Controller
         $totalBg = '0E7490';
         $borderColor = 'CBD5E1';
 
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->freezePane('A6');
 
@@ -1402,7 +1449,7 @@ class RekapPresensiController extends Controller
 
         // Row 1: Title
         $sheet->mergeCells("A1:{$lastCol}1");
-        $sheet->setCellValue('A1', 'DETAIL JAM PRESENSI - ' . $title);
+        $sheet->setCellValue('A1', 'DETAIL JAM PRESENSI - '.$title);
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB($headerBg);
         $sheet->getStyle('A1')->getAlignment()->setHorizontal('center')->setVertical('center');
         $sheet->getStyle("A1:{$lastCol}1")->getFill()->setFillType('solid')->getStartColor()->setRGB($dayRowBg);
@@ -1410,7 +1457,7 @@ class RekapPresensiController extends Controller
 
         // Row 2: Subtitle
         $sheet->mergeCells("A2:{$lastCol}2");
-        $sheet->setCellValue('A2', 'Bulan: ' . $this->getMonthName($month) . ' ' . $year);
+        $sheet->setCellValue('A2', 'Bulan: '.$this->getMonthName($month).' '.$year);
         $sheet->getStyle('A2')->getFont()->setItalic(true)->setSize(11)->getColor()->setRGB('64748B');
         $sheet->getStyle('A2')->getAlignment()->setHorizontal('center')->setVertical('center');
 
@@ -1477,7 +1524,7 @@ class RekapPresensiController extends Controller
                 for ($day = 1; $day <= $daysInMonth; $day++) {
                     $presensi = $userPresensi[$day] ?? null;
                     $hasPresensi = $presensi &&
-                        (!empty($presensi->m_absen) || !empty($presensi->p_absen)) &&
+                        (! empty($presensi->m_absen) || ! empty($presensi->p_absen)) &&
                         ($presensi->status === null);
 
                     if ($hasPresensi) {
@@ -1485,7 +1532,7 @@ class RekapPresensiController extends Controller
                         $jamPulang = $formatJam($presensi->p_absen);
                         $sheet->setCellValue("{$getColumnName($day + 3)}{$rowNum}", "{$jamMasuk} / {$jamPulang}");
                         $total++;
-                    } elseif ($presensi && !empty($presensi->status)) {
+                    } elseif ($presensi && ! empty($presensi->status)) {
                         $sheet->setCellValue("{$getColumnName($day + 3)}{$rowNum}", strtoupper($presensi->status));
                     }
                 }
@@ -1524,7 +1571,7 @@ class RekapPresensiController extends Controller
         }
 
         // Batch: weekend column backgrounds
-        if ($lastDataRow >= $dataStartRow && !empty($weekendCols)) {
+        if ($lastDataRow >= $dataStartRow && ! empty($weekendCols)) {
             foreach ($weekendCols as $day => $_) {
                 $col = $getColumnName($day + 3);
                 $sheet->getStyle("{$col}{$dataStartRow}:{$col}{$lastDataRow}")
@@ -1548,6 +1595,7 @@ class RekapPresensiController extends Controller
             5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
         ];
+
         return $months[$month] ?? 'Unknown';
     }
 
@@ -1557,16 +1605,18 @@ class RekapPresensiController extends Controller
      */
     public function exportTukin($satker, $tanggal)
     {
-        if (!$this->canAccess()) {
+        if (! $this->canAccess()) {
             abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
         }
 
         try {
-            $export = new \App\Exports\PresensiTukin($satker, $tanggal);
-            return \Maatwebsite\Excel\Facades\Excel::download($export, "rekap-tukin-{$satker}-{$tanggal}.xlsx");
+            $export = new PresensiTukin($satker, $tanggal);
+
+            return Excel::download($export, "rekap-tukin-{$satker}-{$tanggal}.xlsx");
         } catch (\Exception $e) {
-            Log::error("Export tukin error: " . $e->getMessage());
-            return back()->with('error', 'Gagal export tukin: ' . $e->getMessage());
+            Log::error('Export tukin error: '.$e->getMessage());
+
+            return back()->with('error', 'Gagal export tukin: '.$e->getMessage());
         }
     }
 
@@ -1576,13 +1626,13 @@ class RekapPresensiController extends Controller
      */
     public function downloadTukinTemp($deptId, $month, $year)
     {
-        if (!$this->canAccess()) {
+        if (! $this->canAccess()) {
             abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
         }
 
         $tempPath = storage_path("app/rekap_tukin_temp_{$deptId}_{$year}_{$month}.xlsx");
 
-        if (!file_exists($tempPath)) {
+        if (! file_exists($tempPath)) {
             return back()->with('error', 'File tukin tidak ditemukan. Silakan generate ulang.');
         }
 
@@ -1600,13 +1650,13 @@ class RekapPresensiController extends Controller
      */
     public function downloadTukinDirect($deptId, $month, $year)
     {
-        if (!$this->canAccess()) {
+        if (! $this->canAccess()) {
             abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
         }
 
         try {
             $dept = Department::find($deptId);
-            if (!$dept) {
+            if (! $dept) {
                 return back()->with('error', 'Unit kerja tidak ditemukan');
             }
 
@@ -1616,13 +1666,13 @@ class RekapPresensiController extends Controller
                 ->where('tahun', $year)
                 ->first();
 
-            if (!$record || !$record->tukin) {
+            if (! $record || ! $record->tukin) {
                 return back()->with('error', 'File tukin tidak ditemukan. Silakan generate ulang.');
             }
 
-            $filePath = storage_path('app/' . $record->tukin);
+            $filePath = storage_path('app/'.$record->tukin);
 
-            if (!file_exists($filePath)) {
+            if (! file_exists($filePath)) {
                 return back()->with('error', 'File tukin tidak ditemukan di storage. Silakan generate ulang.');
             }
 
@@ -1630,8 +1680,9 @@ class RekapPresensiController extends Controller
 
             return response()->download($filePath, $filename);
         } catch (\Exception $e) {
-            Log::error("Download tukin error: " . $e->getMessage());
-            return back()->with('error', 'Gagal download tukin: ' . $e->getMessage());
+            Log::error('Download tukin error: '.$e->getMessage());
+
+            return back()->with('error', 'Gagal download tukin: '.$e->getMessage());
         }
     }
 }

@@ -72,12 +72,12 @@ class PengajuanController extends BaseApiController
             ->where('is_active', 1)
             ->first();
 
-        if (!$layanan) {
+        if (! $layanan) {
             return $this->notFound('Layanan tidak ditemukan');
         }
 
         // Generate no pengajuan
-        $noPengajuan = 'PNJ-' . date('Ymd') . '-' . str_pad($user->id, 4, '0', STR_PAD_LEFT) . '-' . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
+        $noPengajuan = 'PNJ-'.date('Ymd').'-'.str_pad($user->id, 4, '0', STR_PAD_LEFT).'-'.str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
 
         // Check if draft mode
         $isDraft = $request->input('is_draft', false);
@@ -118,7 +118,8 @@ class PengajuanController extends BaseApiController
             ], 'Pengajuan berhasil dibuat', 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Gagal membuat pengajuan: ' . $e->getMessage(), 500);
+
+            return $this->error('Gagal membuat pengajuan: '.$e->getMessage(), 500);
         }
     }
 
@@ -150,7 +151,7 @@ class PengajuanController extends BaseApiController
             ->where('ur.user_id', $user->id)
             ->first();
 
-        if (!$pengajuan) {
+        if (! $pengajuan) {
             return $this->notFound('Pengajuan tidak ditemukan');
         }
 
@@ -194,7 +195,7 @@ class PengajuanController extends BaseApiController
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$pengajuan) {
+        if (! $pengajuan) {
             return $this->notFound('Pengajuan tidak ditemukan');
         }
 
@@ -254,7 +255,8 @@ class PengajuanController extends BaseApiController
             ], 'Pengajuan berhasil diupdate');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Gagal update pengajuan: ' . $e->getMessage(), 500);
+
+            return $this->error('Gagal update pengajuan: '.$e->getMessage(), 500);
         }
     }
 
@@ -271,7 +273,7 @@ class PengajuanController extends BaseApiController
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$pengajuan) {
+        if (! $pengajuan) {
             return $this->notFound('Pengajuan tidak ditemukan');
         }
 
@@ -309,7 +311,8 @@ class PengajuanController extends BaseApiController
             return $this->success(null, 'Pengajuan berhasil dihapus');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Gagal hapus pengajuan: ' . $e->getMessage(), 500);
+
+            return $this->error('Gagal hapus pengajuan: '.$e->getMessage(), 500);
         }
     }
 
@@ -327,7 +330,7 @@ class PengajuanController extends BaseApiController
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$pengajuan) {
+        if (! $pengajuan) {
             return $this->notFound('Pengajuan tidak ditemukan');
         }
 
@@ -340,7 +343,7 @@ class PengajuanController extends BaseApiController
         try {
             $file = $request->file('file');
             $filename = $file->getClientOriginalName();
-            $path = $file->store('uploads/pengajuan/' . $id, 'public');
+            $path = $file->store('uploads/pengajuan/'.$id, 'public');
 
             $berkasId = DB::table('users_berkas')->insertGetId([
                 'user_request_id' => $id,
@@ -358,7 +361,7 @@ class PengajuanController extends BaseApiController
                 'path' => $path,
             ], 'File berhasil diupload', 201);
         } catch (\Exception $e) {
-            return $this->error('Gagal upload file: ' . $e->getMessage(), 500);
+            return $this->error('Gagal upload file: '.$e->getMessage(), 500);
         }
     }
 
@@ -376,7 +379,7 @@ class PengajuanController extends BaseApiController
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$pengajuan) {
+        if (! $pengajuan) {
             return $this->notFound('Pengajuan tidak ditemukan');
         }
 

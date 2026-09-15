@@ -72,6 +72,7 @@ class MigrateCkhFiles extends Command
 
         if ($totalRecords === 0) {
             $this->warn('No records found. Exiting.');
+
             return Command::SUCCESS;
         }
 
@@ -94,15 +95,16 @@ class MigrateCkhFiles extends Command
 
             if ($totalRecords > 10) {
                 $this->newLine();
-                $this->info("... and " . ($totalRecords - 10) . " more records.");
+                $this->info('... and '.($totalRecords - 10).' more records.');
             }
 
             return Command::SUCCESS;
         }
 
         // Confirm before starting
-        if (!$this->confirm("This will attempt to download {$totalRecords} files. Continue?")) {
+        if (! $this->confirm("This will attempt to download {$totalRecords} files. Continue?")) {
             $this->info('Migration cancelled.');
+
             return Command::FAILURE;
         }
 
@@ -124,15 +126,15 @@ class MigrateCkhFiles extends Command
                 switch ($result) {
                     case 'success':
                         $successCount++;
-                        $bar->setMessage("<fg=green>OK</>");
+                        $bar->setMessage('<fg=green>OK</>');
                         break;
                     case 'skipped':
                         $skippedCount++;
-                        $bar->setMessage("<fg=yellow>SKIP</>");
+                        $bar->setMessage('<fg=yellow>SKIP</>');
                         break;
                     case 'failed':
                         $failedCount++;
-                        $bar->setMessage("<fg=red>FAIL</>");
+                        $bar->setMessage('<fg=red>FAIL</>');
                         break;
                 }
 
@@ -209,15 +211,18 @@ class MigrateCkhFiles extends Command
             if ($response->successful()) {
                 // Save file
                 Storage::disk('public')->put($destinationPath, $response->body());
+
                 return 'success';
             }
 
             // Log failed download
             $this->warn("\nFailed to download ID {$record->id}: HTTP {$response->status()} - {$sourceUrl}");
+
             return 'failed';
 
         } catch (\Exception $e) {
             $this->warn("\nError downloading ID {$record->id}: {$e->getMessage()}");
+
             return 'failed';
         }
     }

@@ -2,26 +2,26 @@
 
 namespace App\Exports;
 
-use App\Models\User;
-use App\Models\KtdTukin;
-use App\Models\Department;
-use App\Models\KtdPresensi;
-use App\Models\Ketidakhadiran;
 use App\Models\HariKerja;
+use App\Models\Ketidakhadiran;
+use App\Models\KtdPresensi;
+use App\Models\KtdTukin;
+use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Illuminate\Support\Collection;
+use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
 {
     protected $satker;
+
     protected $tanggalView;
 
     public function __construct($satker, $tanggalView)
@@ -35,26 +35,26 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
         ini_set('max_execution_time', '0');
         set_time_limit(0);
 
-        $xdate   = Carbon::parse($this->tanggalView);
-        $month   = $xdate->format('M Y');
+        $xdate = Carbon::parse($this->tanggalView);
+        $month = $xdate->format('M Y');
         $periode = $xdate->format('Y-m');
-        $start   = $xdate->copy()->startOfMonth();
-        $end     = $xdate->copy()->endOfMonth();
-        $period  = CarbonPeriod::create($start, $end);
+        $start = $xdate->copy()->startOfMonth();
+        $end = $xdate->copy()->endOfMonth();
+        $period = CarbonPeriod::create($start, $end);
 
-        Log::info("=== PRESENSI TUKIN EXPORT ===");
+        Log::info('=== PRESENSI TUKIN EXPORT ===');
         Log::info("Satker: {$this->satker}; Periode: {$start->toDateString()} s/d {$end->toDateString()}");
 
         // Load ketidakhadiran statuses (dynamic from database)
         $ketidakhadiran = Ketidakhadiran::all();
         // Filter out TL and PSW (calculated from timing, not status values)
         $ketidakhadiranStatuses = $ketidakhadiran
-            ->filter(fn($k) => !str_contains(strtolower($k->jenis), 'tl') && !str_contains(strtolower($k->jenis), 'psw'))
+            ->filter(fn ($k) => ! str_contains(strtolower($k->jenis), 'tl') && ! str_contains(strtolower($k->jenis), 'psw'))
             ->pluck('jenis')
-            ->map(fn($jenis) => strtolower(trim($jenis)))
+            ->map(fn ($jenis) => strtolower(trim($jenis)))
             ->toArray();
 
-        Log::info("Ketidakhadiran statuses (excluding TL/PSW): " . json_encode($ketidakhadiranStatuses));
+        Log::info('Ketidakhadiran statuses (excluding TL/PSW): '.json_encode($ketidakhadiranStatuses));
 
         // Hari, libur
         $day = [];
@@ -63,14 +63,14 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
         $allLibur = DB::table('hari_libur')
             ->whereBetween('tanggal', [$start->format('Y-m-d'), $end->format('Y-m-d')])
             ->get()
-            ->keyBy(fn($l) => Carbon::parse($l->tanggal)->format('Y-m-d'));
+            ->keyBy(fn ($l) => Carbon::parse($l->tanggal)->format('Y-m-d'));
 
         foreach ($period as $date) {
-            $n   = (int)$date->day;
+            $n = (int) $date->day;
             $ymd = $date->format('Y-m-d');
             $day[$n] = $ymd;
 
-            $weekDay = (int)$date->format('w');
+            $weekDay = (int) $date->format('w');
             $hari[$n] = match ($weekDay) {
                 5 => 'jumat',
                 6 => 'sabtu',
@@ -85,22 +85,22 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
 
         // Load ASN
         $users = User::with(['dept', 'tenaga'])
-            ->where('dept_id', (string)$this->satker)
+            ->where('dept_id', (string) $this->satker)
             ->whereNotIn('role', ['pindah', 'pensiun'])
             ->get();
 
-        Log::info("Jumlah user ASN ditemukan: " . $users->count());
+        Log::info('Jumlah user ASN ditemukan: '.$users->count());
 
         // buat list NIP yang dinormalisasi (digits only)
         $nipList = $users->pluck('nomor_induk')
             ->filter()
             ->unique()
-            ->map(fn($n) => preg_replace('/\D/', '', (string)$n))
+            ->map(fn ($n) => preg_replace('/\D/', '', (string) $n))
             ->filter()
             ->unique()
             ->values();
 
-        Log::info('Normalized ASN NIPs count: ' . $nipList->count());
+        Log::info('Normalized ASN NIPs count: '.$nipList->count());
 
         // Data reference
         $hariKerjaAll = HariKerja::all()->keyBy('id');
@@ -111,13 +111,13 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
             ->get()
             ->keyBy('user_nip');
 
-        Log::info("Existing ktd_tukin records for this period: " . $existingTukin->count());
+        Log::info('Existing ktd_tukin records for this period: '.$existingTukin->count());
 
         // ---- Ambil Presensi ----
         $presensiAll = collect();
 
         $dateStart = $start->format('Y-m-d 00:00:00');
-        $dateEnd   = $end->format('Y-m-d 23:59:59');
+        $dateEnd = $end->format('Y-m-d 23:59:59');
 
         if ($nipList->isNotEmpty()) {
             $nipArray = $nipList->toArray();
@@ -128,21 +128,22 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
                     ->whereIn(DB::raw("REGEXP_REPLACE(user_nip, '[^0-9]', '')"), $nipArray)
                     ->get();
 
-                Log::info('Presensi fetched via REGEXP_REPLACE count: ' . $presRaw->count());
+                Log::info('Presensi fetched via REGEXP_REPLACE count: '.$presRaw->count());
                 $presensiAll = $presRaw->groupBy('nip_norm');
             } catch (\Throwable $e) {
-                Log::warning('REGEXP_REPLACE query failed: ' . $e->getMessage() . ' — fallback to PHP filter');
+                Log::warning('REGEXP_REPLACE query failed: '.$e->getMessage().' — fallback to PHP filter');
 
                 $presRaw = KtdPresensi::whereBetween('tanggal', [$dateStart, $dateEnd])->get();
-                Log::info('Presensi fetched fallback (by date) count: ' . $presRaw->count());
+                Log::info('Presensi fetched fallback (by date) count: '.$presRaw->count());
 
                 $presRaw = $presRaw->map(function ($p) {
                     $p->nip_norm = preg_replace('/\D/', '', (string) ($p->user_nip ?? ''));
+
                     return $p;
                 });
 
-                $presFiltered = $presRaw->filter(fn($p) => in_array($p->nip_norm, $nipArray));
-                Log::info('Presensi after PHP filter count: ' . $presFiltered->count());
+                $presFiltered = $presRaw->filter(fn ($p) => in_array($p->nip_norm, $nipArray));
+                Log::info('Presensi after PHP filter count: '.$presFiltered->count());
 
                 $presensiAll = $presFiltered->groupBy('nip_norm');
             }
@@ -155,8 +156,9 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
         foreach ($users as $asn) {
             // Check if user has existing record in ktd_tukin
             $existingRecord = $existingTukin->get($asn->nomor_induk);
-            if (!$existingRecord) {
+            if (! $existingRecord) {
                 Log::info("User {$asn->nomor_induk} skipped - no record in ktd_tukin");
+
                 continue;
             }
 
@@ -182,13 +184,13 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
                 $asn->asn_status = strtoupper($asn->tenaga->status ?? '-');
             }
 
-            $absen = $ketidakhadiran->pluck('id')->mapWithKeys(fn($id) => [$id => 0])->toArray();
+            $absen = $ketidakhadiran->pluck('id')->mapWithKeys(fn ($id) => [$id => 0])->toArray();
 
             // Hari kerja ASN
             $hk = DB::table('asn_harikerja')->where('user_id', $asn->id)->first();
             $asnhk = $hk ? $hk->harikerja : ($asn->dept->hari_kerja ?? null);
 
-            $harilibur  = ($asnhk == 11) ? 'jumat' : (($asnhk == 10) ? 'minggu' : 'sabtu');
+            $harilibur = ($asnhk == 11) ? 'jumat' : (($asnhk == 10) ? 'minggu' : 'sabtu');
             $harilibur2 = ($asnhk == 11 || $asnhk == 10) ? 'none' : 'minggu';
 
             // ambil presensi user berdasarkan normalized nip
@@ -205,19 +207,25 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
                 }
                 $processedTanggal[$tanggalKey] = true;
 
-                $n = (int)$tglObj->day;
-                if (!isset($hari[$n])) continue;
+                $n = (int) $tglObj->day;
+                if (! isset($hari[$n])) {
+                    continue;
+                }
 
                 $isLibur = $libur[$n] ?? 0;
                 $hariIni = $hari[$n];
                 $harikerja_id = $asnhk;
 
                 $jamkerja = $hariKerjaAll->get($harikerja_id);
-                if (!$jamkerja) continue;
+                if (! $jamkerja) {
+                    continue;
+                }
 
                 // Only process on working days
-                $isWorkingDay = !$isLibur && $hariIni != $harilibur && $hariIni != $harilibur2;
-                if (!$isWorkingDay) continue;
+                $isWorkingDay = ! $isLibur && $hariIni != $harilibur && $hariIni != $harilibur2;
+                if (! $isWorkingDay) {
+                    continue;
+                }
 
                 // Check presensi status - dynamic from ktd_ketidakhadiran
                 $status = strtolower(trim((string) ($item->status ?? '')));
@@ -228,24 +236,26 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
                     if ($ketidakhadiranItem) {
                         $absen[$ketidakhadiranItem->id] += 1;
                     }
+
                     continue; // Skip TL/PSW calculation for ketidakhadiran status
                 }
 
                 // Status not in ketidakhadiran = "hadir" - process TL/PSW logic
-                $masuk  = $this->safeParseTime($item->m_absen);
+                $masuk = $this->safeParseTime($item->m_absen);
                 $pulang = $this->safeParseTime($item->p_absen);
 
                 // If no clock-in and no clock-out on a working day, count as "Tanpa Keterangan"
-                if (!$masuk && !$pulang) {
+                if (! $masuk && ! $pulang) {
                     $tkItem = $ketidakhadiran->firstWhere('jenis', 'Tanpa Keterangan');
                     if ($tkItem) {
                         $absen[$tkItem->id] += 1;
                     }
+
                     continue;
                 }
 
                 // If has clock-in but no clock-out, count as PSW4
-                if ($masuk && !$pulang) {
+                if ($masuk && ! $pulang) {
                     $pswItem = $ketidakhadiran->firstWhere('jenis', 'PSW4');
                     if ($pswItem) {
                         $absen[$pswItem->id] += 1;
@@ -287,7 +297,9 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
             $rekap_per_jenis = [];
             foreach ($ketidakhadiran as $k) {
                 $jml = $absen[$k->id] ?? 0;
-                if ($jml == 0) continue;
+                if ($jml == 0) {
+                    continue;
+                }
 
                 $jmlKenaPotongan = strcasecmp((string) $k->jenis, 'Tanpa Keterangan') === 0
                     ? max(0, $jml - 1)
@@ -299,7 +311,7 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
                 $rekap_per_jenis[$k->id] = [
                     'jenis' => $k->jenis,
                     'jml' => $jml,
-                    'potongan' => $potongan
+                    'potongan' => $potongan,
                 ];
             }
 
@@ -347,8 +359,8 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
 
         $sheet->freezePane('C5');
         $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(1, 4);
-        $sheet->getPageSetup()->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
-        $sheet->getPageSetup()->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4);
+        $sheet->getPageSetup()->setOrientation(PageSetup::ORIENTATION_LANDSCAPE);
+        $sheet->getPageSetup()->setPaperSize(PageSetup::PAPERSIZE_A4);
         $sheet->getPageSetup()->setScale(70);
         $sheet->getPageMargins()->setTop(0.25);
 
@@ -366,8 +378,12 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
     // Helper parse
     protected function safeParseTime($time)
     {
-        if (empty($time) || $time === '00:00:00') return null;
-        if ($time instanceof Carbon) return $time;
+        if (empty($time) || $time === '00:00:00') {
+            return null;
+        }
+        if ($time instanceof Carbon) {
+            return $time;
+        }
         try {
             return Carbon::parse($time);
         } catch (\Exception) {
@@ -375,10 +391,13 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
         }
     }
 
-    protected function hitungTerlambatKey(Carbon $masuk, Carbon $jamMasuk = null)
+    protected function hitungTerlambatKey(Carbon $masuk, ?Carbon $jamMasuk = null)
     {
-        if (!$jamMasuk || $masuk->lte($jamMasuk)) return null;
+        if (! $jamMasuk || $masuk->lte($jamMasuk)) {
+            return null;
+        }
         $diff = $masuk->diffInMinutes($jamMasuk);
+
         return match (true) {
             $diff <= 30 => 'TL1',
             $diff <= 60 => 'TL2',
@@ -387,17 +406,24 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
         };
     }
 
-    protected function hitungPulangKey(Carbon $pulang, Carbon $jamPulangTarget = null)
+    protected function hitungPulangKey(Carbon $pulang, ?Carbon $jamPulangTarget = null)
     {
-        if (!$jamPulangTarget) return null;
-        if ($pulang->between($jamPulangTarget->copy()->subMinutes(30), $jamPulangTarget->copy()->subSecond()))
+        if (! $jamPulangTarget) {
+            return null;
+        }
+        if ($pulang->between($jamPulangTarget->copy()->subMinutes(30), $jamPulangTarget->copy()->subSecond())) {
             return 'PSW1';
-        if ($pulang->between($jamPulangTarget->copy()->subMinutes(60), $jamPulangTarget->copy()->subMinutes(30)->subSecond()))
+        }
+        if ($pulang->between($jamPulangTarget->copy()->subMinutes(60), $jamPulangTarget->copy()->subMinutes(30)->subSecond())) {
             return 'PSW2';
-        if ($pulang->between($jamPulangTarget->copy()->subMinutes(90), $jamPulangTarget->copy()->subMinutes(60)->subSecond()))
+        }
+        if ($pulang->between($jamPulangTarget->copy()->subMinutes(90), $jamPulangTarget->copy()->subMinutes(60)->subSecond())) {
             return 'PSW3';
-        if ($pulang->lt($jamPulangTarget->copy()->subMinutes(90)) && $pulang->gt(Carbon::parse('12:00:00')))
+        }
+        if ($pulang->lt($jamPulangTarget->copy()->subMinutes(90)) && $pulang->gt(Carbon::parse('12:00:00'))) {
             return 'PSW4';
+        }
+
         return null;
     }
 }

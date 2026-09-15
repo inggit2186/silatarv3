@@ -5,14 +5,18 @@ namespace App\Services;
 use App\Models\KtdTukin;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\Exception;
 
 class TukinImportService
 {
     protected $errors = [];
+
     protected $validRows = [];
+
     protected $invalidRows = [];
+
     protected $batchId;
 
     /**
@@ -30,14 +34,14 @@ class TukinImportService
             $highestCol = $sheet->getHighestColumn();
 
             // Convert column letter to index (A=0, B=1, ..., Z=25, AA=26, etc.)
-            $highestColIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestCol);
+            $highestColIndex = Coordinate::columnIndexFromString($highestCol);
 
             $data = [];
             for ($row = 2; $row <= $highestRow; $row++) {
                 $rowData = [];
                 for ($colIndex = 1; $colIndex <= $highestColIndex; $colIndex++) {
-                    $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
-                    $rowData[] = $sheet->getCell($colLetter . $row)->getValue();
+                    $colLetter = Coordinate::stringFromColumnIndex($colIndex);
+                    $rowData[] = $sheet->getCell($colLetter.$row)->getValue();
                 }
                 $data[] = $rowData;
 
@@ -54,10 +58,11 @@ class TukinImportService
                 'total_rows' => $highestRow - 1, // Excluding header
             ];
         } catch (Exception $e) {
-            Log::error('Excel parse error: ' . $e->getMessage());
+            Log::error('Excel parse error: '.$e->getMessage());
+
             return [
                 'success' => false,
-                'error' => 'Gagal membaca file Excel: ' . $e->getMessage(),
+                'error' => 'Gagal membaca file Excel: '.$e->getMessage(),
             ];
         }
     }
@@ -69,12 +74,13 @@ class TukinImportService
     {
         $headers = [];
         $highestCol = $sheet->getHighestColumn();
-        $highestColIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestCol);
+        $highestColIndex = Coordinate::columnIndexFromString($highestCol);
 
         for ($colIndex = 1; $colIndex <= $highestColIndex; $colIndex++) {
-            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
-            $headers[] = $sheet->getCell($colLetter . '1')->getValue();
+            $colLetter = Coordinate::stringFromColumnIndex($colIndex);
+            $headers[] = $sheet->getCell($colLetter.'1')->getValue();
         }
+
         return $headers;
     }
 
@@ -95,7 +101,7 @@ class TukinImportService
             $nip = $row[2] ?? null; // Kolom C
             if (empty($nip)) {
                 $rowErrors[] = 'NIP kosong';
-            } elseif (!preg_match('/^\d{18}$/', (string) $nip)) {
+            } elseif (! preg_match('/^\d{18}$/', (string) $nip)) {
                 $rowErrors[] = 'NIP harus 18 digit';
             }
 
@@ -114,12 +120,12 @@ class TukinImportService
             }
 
             // Cek apakah NIP ada di database
-            if (!empty($nip) && preg_match('/^\d{18}$/', (string) $nip)) {
+            if (! empty($nip) && preg_match('/^\d{18}$/', (string) $nip)) {
                 $userExists = DB::table('users')
                     ->where('nomor_induk', $nip)
                     ->exists();
 
-                if (!$userExists) {
+                if (! $userExists) {
                     $rowErrors[] = 'NIP tidak ditemukan di database';
                 }
             }
@@ -198,7 +204,8 @@ class TukinImportService
         foreach ($romanMap as $roman => $number) {
             if (str_starts_with($excelGolongan, $roman)) {
                 $letter = substr($excelGolongan, strlen($roman));
-                return $number . strtolower($letter);
+
+                return $number.strtolower($letter);
             }
         }
 
@@ -211,7 +218,7 @@ class TukinImportService
      */
     public function importToDatabase(array $validatedData, int $userId): array
     {
-        $this->batchId = 'TUKIN_' . date('Ymd_His') . '_' . uniqid();
+        $this->batchId = 'TUKIN_'.date('Ymd_His').'_'.uniqid();
         $importedCount = 0;
         $skippedCount = 0;
         $updatedGolonganCount = 0;
@@ -221,7 +228,7 @@ class TukinImportService
 
             foreach ($validatedData['valid_rows'] as $rowData) {
                 // Update users.golongan jika ada perubahan
-                if (!empty($rowData['golongan'])) {
+                if (! empty($rowData['golongan'])) {
                     $userGolongan = DB::table('users')
                         ->where('nomor_induk', $rowData['nip'])
                         ->value('golongan');
@@ -299,7 +306,7 @@ class TukinImportService
 
             DB::commit();
 
-            Log::info("Import tukin berhasil", [
+            Log::info('Import tukin berhasil', [
                 'batch_id' => $this->batchId,
                 'imported' => $importedCount,
                 'updated_golongan' => $updatedGolonganCount,
@@ -317,14 +324,14 @@ class TukinImportService
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Import tukin gagal: ' . $e->getMessage(), [
+            Log::error('Import tukin gagal: '.$e->getMessage(), [
                 'batch_id' => $this->batchId,
                 'trace' => $e->getTraceAsString(),
             ]);
 
             return [
                 'success' => false,
-                'error' => 'Gagal import data: ' . $e->getMessage(),
+                'error' => 'Gagal import data: '.$e->getMessage(),
             ];
         }
     }
@@ -338,7 +345,7 @@ class TukinImportService
             $deletedCount = KtdTukin::where('import_batch_id', $batchId)
                 ->delete();
 
-            Log::info("Rollback import tukin", [
+            Log::info('Rollback import tukin', [
                 'batch_id' => $batchId,
                 'deleted' => $deletedCount,
             ]);
@@ -350,10 +357,11 @@ class TukinImportService
             ];
 
         } catch (\Exception $e) {
-            Log::error('Rollback import tukin gagal: ' . $e->getMessage());
+            Log::error('Rollback import tukin gagal: '.$e->getMessage());
+
             return [
                 'success' => false,
-                'error' => 'Gagal rollback: ' . $e->getMessage(),
+                'error' => 'Gagal rollback: '.$e->getMessage(),
             ];
         }
     }
@@ -370,6 +378,7 @@ class TukinImportService
             ->get()
             ->map(function ($item) {
                 $user = DB::table('users')->find($item->imported_by);
+
                 return [
                     'batch_id' => $item->import_batch_id,
                     'imported_by' => $user->name ?? 'Unknown',

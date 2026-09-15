@@ -98,7 +98,7 @@ class PenilaianKinerja extends Model
      */
     public function getTriwulanLabelAttribute(): string
     {
-        return 'Triwulan ' . $this->triwulan . ' / ' . $this->tahun;
+        return 'Triwulan '.$this->triwulan.' / '.$this->tahun;
     }
 
     /**

@@ -2,28 +2,33 @@
 
 namespace App\Exports;
 
-use Maatwebsite\Excel\Concerns\FromCollection;
+use Illuminate\Support\Enumerable;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Concerns\Export;
+use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\Exportable;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Enumerable;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class PresensiAbsensiHorizontalExport implements \Maatwebsite\Excel\Concerns\Export, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class PresensiAbsensiHorizontalExport implements Export, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
 {
     use Exportable;
 
     protected $userId;
+
     protected $month;
+
     protected $year;
+
     protected $userName;
+
     protected $userNip;
+
     protected $presensiData;
 
     public function __construct(int $userId, int $month, int $year)
@@ -92,7 +97,7 @@ class PresensiAbsensiHorizontalExport implements \Maatwebsite\Excel\Concerns\Exp
                 if ($actualDayOfWeek === $dayOfWeek) {
                     // Check if has presensi
                     $hasPresensi = isset($this->presensiData[$day]) &&
-                        (!empty($this->presensiData[$day]->m_absen) || !empty($this->presensiData[$day]->p_absen));
+                        (! empty($this->presensiData[$day]->m_absen) || ! empty($this->presensiData[$day]->p_absen));
 
                     $row['values'][$day] = $hasPresensi ? 1 : 0;
                     if ($hasPresensi) {
@@ -136,12 +141,12 @@ class PresensiAbsensiHorizontalExport implements \Maatwebsite\Excel\Concerns\Exp
         $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells("A2:{$lastCol}2");
-        $sheet->setCellValue('A2', $this->userName . ' - NIP: ' . $this->userNip);
+        $sheet->setCellValue('A2', $this->userName.' - NIP: '.$this->userNip);
         $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(11);
         $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells("A3:{$lastCol}3");
-        $sheet->setCellValue('A3', 'Bulan: ' . $this->getMonthName() . ' ' . $this->year);
+        $sheet->setCellValue('A3', 'Bulan: '.$this->getMonthName().' '.$this->year);
         $sheet->getStyle('A3')->getFont()->setBold(true)->setSize(11);
         $sheet->getStyle('A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 

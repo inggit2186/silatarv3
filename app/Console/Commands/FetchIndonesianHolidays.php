@@ -2,15 +2,16 @@
 
 namespace App\Console\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class FetchIndonesianHolidays extends Command
 {
     protected $signature = 'holidays:fetch {year?}';
+
     protected $description = 'Fetch Indonesian public holidays from Nager.Date API and save to hari_libur table';
 
     public function handle()
@@ -29,7 +30,9 @@ class FetchIndonesianHolidays extends Command
             ];
 
             foreach ($apiSources as $source) {
-                if (!empty($holidays)) break;
+                if (! empty($holidays)) {
+                    break;
+                }
 
                 try {
                     $this->line("Trying {$source['name']} API...");
@@ -37,35 +40,36 @@ class FetchIndonesianHolidays extends Command
 
                     if ($response->successful()) {
                         $data = $response->json();
-                        if (!empty($data) && is_array($data)) {
+                        if (! empty($data) && is_array($data)) {
                             // Normalize API response format
-                            $holidays = array_map(function ($item) use ($year) {
+                            $holidays = array_map(function ($item) {
                                 return [
                                     'date' => $item['date'] ?? $item['Date'] ?? '',
                                     'localName' => $item['localName'] ?? $item['LocalName'] ?? $item['name'] ?? $item['Name'] ?? '',
                                     'status' => 'libur',
                                 ];
                             }, $data);
-                            $this->info("✓ Fetched " . count($holidays) . " holidays from {$source['name']}");
+                            $this->info('✓ Fetched '.count($holidays)." holidays from {$source['name']}");
                         }
                     }
                 } catch (\Exception $e) {
-                    $this->warn("  ✗ {$source['name']} API failed: " . $e->getMessage());
+                    $this->warn("  ✗ {$source['name']} API failed: ".$e->getMessage());
                 }
             }
 
             // If all APIs failed, use hardcoded Indonesian holidays
             if (empty($holidays)) {
-                $this->warn("All APIs failed, using local holiday database...");
+                $this->warn('All APIs failed, using local holiday database...');
                 $holidays = $this->getIndonesianHolidays($year);
             }
 
             if (empty($holidays)) {
                 $this->warn("No holidays found for {$year}");
+
                 return 0;
             }
 
-            $this->info("Found " . count($holidays) . " holidays. Syncing to database...");
+            $this->info('Found '.count($holidays).' holidays. Syncing to database...');
 
             $synced = 0;
             $skipped = 0;
@@ -80,7 +84,7 @@ class FetchIndonesianHolidays extends Command
                     ->whereDate('tanggal', $date->format('Y-m-d'))
                     ->first();
 
-                if (!$existing) {
+                if (! $existing) {
                     DB::table('hari_libur')->insert([
                         'tanggal' => $date->format('Y-m-d'),
                         'keterangan' => $localName,
@@ -102,8 +106,9 @@ class FetchIndonesianHolidays extends Command
             return 0;
 
         } catch (\Exception $e) {
-            $this->error("Error fetching holidays: " . $e->getMessage());
-            Log::error("Holiday fetch error: " . $e->getMessage());
+            $this->error('Error fetching holidays: '.$e->getMessage());
+            Log::error('Holiday fetch error: '.$e->getMessage());
+
             return 1;
         }
     }

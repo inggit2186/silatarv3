@@ -19,7 +19,10 @@ class Pendidikan extends Model
     ];
 
     const STATUS_PENDING = 0;
+
     const STATUS_APPROVED = 1;
+
     const STATUS_REJECTED = 2;
+
     const STATUS_EXPIRED = 99;
 }

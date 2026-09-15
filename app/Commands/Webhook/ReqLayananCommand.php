@@ -20,24 +20,24 @@ class ReqLayananCommand extends BaseCommand
 
         $searchName = WhatsAppService::escapeLikeQuery($name);
 
-        $layanan = Layanan::where('nama', 'LIKE', '%' . $searchName . '%')->first();
+        $layanan = Layanan::where('nama', 'LIKE', '%'.$searchName.'%')->first();
 
-        if (!$layanan) {
+        if (! $layanan) {
             return $this->waService->sendMessage(
                 $this->phoneNumber,
                 $this->notFound('Layanan')
             );
         }
 
-        $url = "https://silatar.kemenag.go.id/v2/LayananDetail/" . $layanan->dept_id . "/" . $layanan->id;
+        $url = 'https://silatar.kemenag.go.id/v2/LayananDetail/'.$layanan->dept_id.'/'.$layanan->id;
 
         $textWA = "*:: SILATAR AI-CHAT ::*\n\n"
-            . "Layanan : *{$layanan->nama}* \n"
-            . "Deskripsi : *{$layanan->deskripsi}* \n\n"
-            . "Untuk membuat permintaan Layanan ini please click link-dessous ini \n"
-            . "*{$url}* \n\n\n"
-            . "_Hormat Kami,_\n\n"
-            . "_*SILATAR AI*_";
+            ."Layanan : *{$layanan->nama}* \n"
+            ."Deskripsi : *{$layanan->deskripsi}* \n\n"
+            ."Untuk membuat permintaan Layanan ini please click link-dessous ini \n"
+            ."*{$url}* \n\n\n"
+            ."_Hormat Kami,_\n\n"
+            .'_*SILATAR AI*_';
 
         return $this->waService->sendMessage($this->phoneNumber, $textWA);
     }

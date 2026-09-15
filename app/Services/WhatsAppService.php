@@ -2,15 +2,17 @@
 
 namespace App\Services;
 
-use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppService
 {
     private string $apiKey;
+
     private string $sender;
+
     private string $waServerUrl;
+
     private string $defaultFooter;
 
     public function __construct()
@@ -18,7 +20,7 @@ class WhatsAppService
         $this->apiKey = env('WA_TOKEN');
         $this->sender = env('WA_NUMBER');
         $this->waServerUrl = env('URL_WA_SERVER');
-        $this->defaultFooter = '© ' . date('Y') . ' SILATAR AI (Reply Otomatis)';
+        $this->defaultFooter = '© '.date('Y').' SILATAR AI (Reply Otomatis)';
     }
 
     /**
@@ -27,12 +29,12 @@ class WhatsAppService
     public function sendMessage(string $number, string $message, ?string $footer = null): ?array
     {
         try {
-            $response = Http::post($this->waServerUrl . "/send-message", [
-                "api_key" => $this->apiKey,
-                "sender" => $this->sender,
-                "number" => $number,
-                "message" => $message,
-                "footer" => $footer ?? $this->defaultFooter,
+            $response = Http::post($this->waServerUrl.'/send-message', [
+                'api_key' => $this->apiKey,
+                'sender' => $this->sender,
+                'number' => $number,
+                'message' => $message,
+                'footer' => $footer ?? $this->defaultFooter,
             ]);
 
             $this->logResponse('send-message', $response);
@@ -40,6 +42,7 @@ class WhatsAppService
             return $response->successful() ? $response->json() : null;
         } catch (\Exception $e) {
             $this->logError('send-message', $e);
+
             return null;
         }
     }
@@ -55,14 +58,14 @@ class WhatsAppService
         ?string $footer = null
     ): ?array {
         try {
-            $response = Http::post($this->waServerUrl . "/send-media", [
-                "api_key" => $this->apiKey,
-                "sender" => $this->sender,
-                "number" => $number,
-                "media_type" => $mediaType,
-                "caption" => $caption,
-                "footer" => $footer ?? $this->defaultFooter,
-                "url" => $url,
+            $response = Http::post($this->waServerUrl.'/send-media', [
+                'api_key' => $this->apiKey,
+                'sender' => $this->sender,
+                'number' => $number,
+                'media_type' => $mediaType,
+                'caption' => $caption,
+                'footer' => $footer ?? $this->defaultFooter,
+                'url' => $url,
             ]);
 
             $this->logResponse('send-media', $response);
@@ -70,6 +73,7 @@ class WhatsAppService
             return $response->successful() ? $response->json() : null;
         } catch (\Exception $e) {
             $this->logError('send-media', $e);
+
             return null;
         }
     }
@@ -91,29 +95,30 @@ class WhatsAppService
             $defaultImage = 'https://sms.kemenagtanahdatar.id/themes/vuexy/img/front-pages/landing-page/hero-elements-light.png';
 
             $payload = [
-                "api_key" => $this->apiKey,
-                "sender" => $this->sender,
-                "number" => $number,
-                "name" => strtoupper(str_replace(' ', '_', $title)),
-                "title" => $title,
-                "buttontext" => $buttonText,
-                "message" => $message,
-                "footer" => $footer ?? $this->defaultFooter,
-                "image" => $defaultImage,
-                "sections" => $sections,
+                'api_key' => $this->apiKey,
+                'sender' => $this->sender,
+                'number' => $number,
+                'name' => strtoupper(str_replace(' ', '_', $title)),
+                'title' => $title,
+                'buttontext' => $buttonText,
+                'message' => $message,
+                'footer' => $footer ?? $this->defaultFooter,
+                'image' => $defaultImage,
+                'sections' => $sections,
             ];
 
             if ($full) {
                 $payload['full'] = 1;
             }
 
-            $response = Http::post($this->waServerUrl . "/send-list", $payload);
+            $response = Http::post($this->waServerUrl.'/send-list', $payload);
 
             $this->logResponse('send-list', $response);
 
             return $response->successful() ? $response->json() : null;
         } catch (\Exception $e) {
             $this->logError('send-list', $e);
+
             return null;
         }
     }
@@ -130,25 +135,26 @@ class WhatsAppService
     ): ?array {
         try {
             $payload = [
-                "api_key" => $this->apiKey,
-                "sender" => $this->sender,
-                "number" => $number,
-                "message" => $message,
-                "footer" => $footer ?? $this->defaultFooter,
-                "button" => $buttons,
+                'api_key' => $this->apiKey,
+                'sender' => $this->sender,
+                'number' => $number,
+                'message' => $message,
+                'footer' => $footer ?? $this->defaultFooter,
+                'button' => $buttons,
             ];
 
             if ($imageUrl) {
                 $payload['url'] = $imageUrl;
             }
 
-            $response = Http::post($this->waServerUrl . "/send-button", $payload);
+            $response = Http::post($this->waServerUrl.'/send-button', $payload);
 
             $this->logResponse('send-button', $response);
 
             return $response->successful() ? $response->json() : null;
         } catch (\Exception $e) {
             $this->logError('send-button', $e);
+
             return null;
         }
     }
@@ -168,11 +174,11 @@ class WhatsAppService
 
         // If starts with 0, replace with 62
         if (str_starts_with($phone, '0')) {
-            return '62' . substr($phone, 1);
+            return '62'.substr($phone, 1);
         }
 
         // Otherwise, assume it's local number and add 62
-        return '62' . $phone;
+        return '62'.$phone;
     }
 
     /**
@@ -185,7 +191,7 @@ class WhatsAppService
 
         // Remove country code for display
         if (str_starts_with($phone, '62')) {
-            $phone = '0' . substr($phone, 2);
+            $phone = '0'.substr($phone, 2);
         }
 
         return preg_replace('/(?<=\d)(?=(\d{4})+$)/', ' ', $phone);

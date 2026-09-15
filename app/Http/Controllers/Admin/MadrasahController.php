@@ -162,7 +162,7 @@ class MadrasahController extends Controller
             ->where('id', $id)
             ->first();
 
-        if (!$madrasah) {
+        if (! $madrasah) {
             return response()->json(['error' => 'Madrasah tidak ditemukan'], 404);
         }
 
@@ -179,7 +179,7 @@ class MadrasahController extends Controller
     {
         $madrasah = DB::table('ktd_madrasah')->where('id', $id)->first();
 
-        if (!$madrasah) {
+        if (! $madrasah) {
             return redirect()->back()->with('error', 'Madrasah tidak ditemukan');
         }
 

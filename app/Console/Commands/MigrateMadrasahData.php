@@ -51,6 +51,7 @@ class MigrateMadrasahData extends Command
                 if ($existing) {
                     $deptToMadrasah[$dept->id] = $existing->id;
                     $this->line("  SKIP: {$dept->nama} (NSM: {$dept->nsm}) - already exists");
+
                     continue;
                 }
 
@@ -150,7 +151,7 @@ class MigrateMadrasahData extends Command
             $this->info('Migration completed successfully!');
             $this->newLine();
             $this->info('Summary:');
-            $this->info("  - Madrasah entries created: " . count($deptToMadrasah));
+            $this->info('  - Madrasah entries created: '.count($deptToMadrasah));
             $this->info("  - Users updated: {$updatedUsers}");
             $this->info("  - Tenaga KTD updated: {$updatedTenaga}");
             $this->info("  - Semester reports updated: {$updatedSemester}");
@@ -158,7 +159,8 @@ class MigrateMadrasahData extends Command
 
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->error("Migration failed: " . $e->getMessage());
+            $this->error('Migration failed: '.$e->getMessage());
+
             return 1;
         }
 

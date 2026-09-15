@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\PresensiImportService;
 use App\Models\Department;
+use App\Services\PresensiImportService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class PresensiImportController extends Controller
 {
@@ -42,14 +42,14 @@ class PresensiImportController extends Controller
         try {
             // Simpan file sementara
             $file = $request->file('file');
-            $filename = 'presensi_import_' . time() . '.' . $file->getClientOriginalExtension();
+            $filename = 'presensi_import_'.time().'.'.$file->getClientOriginalExtension();
             $path = $file->storeAs('imports', $filename, 'local');
 
             // Parse Excel
             $fullPath = Storage::disk('local')->path($path);
             $parsed = $this->importService->parseExcel($fullPath);
 
-            if (!$parsed['success']) {
+            if (! $parsed['success']) {
                 return back()->with('error', $parsed['error']);
             }
 
@@ -70,7 +70,7 @@ class PresensiImportController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal memproses file: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memproses file: '.$e->getMessage());
         }
     }
 
@@ -83,7 +83,7 @@ class PresensiImportController extends Controller
         $importFile = session('import_file');
         $deptId = session('import_dept_id');
 
-        if (!$validatedData || !$importFile) {
+        if (! $validatedData || ! $importFile) {
             return back()->with('error', 'Data import tidak ditemukan. Silakan upload ulang.');
         }
 
@@ -108,7 +108,7 @@ class PresensiImportController extends Controller
             }
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal import: ' . $e->getMessage());
+            return back()->with('error', 'Gagal import: '.$e->getMessage());
         }
     }
 

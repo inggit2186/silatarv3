@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__.'/../vendor/autoload.php';
 
-$app = require __DIR__ . '/../bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$app = require __DIR__.'/../bootstrap/app.php';
+$kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
 
 $baseUrl = 'https://ptsp.kemenagtanahdatar.cloud/uploads/UsersBerkas';
@@ -26,8 +27,8 @@ $skipped = 0;
 $failed = 0;
 
 foreach ($users as $index => $user) {
-    $directory = $targetRoot . DIRECTORY_SEPARATOR . $user->nomor_induk;
-    $filePath = $directory . DIRECTORY_SEPARATOR . $user->pp;
+    $directory = $targetRoot.DIRECTORY_SEPARATOR.$user->nomor_induk;
+    $filePath = $directory.DIRECTORY_SEPARATOR.$user->pp;
     $fileExists = file_exists($filePath) && filesize($filePath) > 0;
 
     if ($fileExists) {
@@ -35,6 +36,7 @@ foreach ($users as $index => $user) {
         if (($index + 1) % 100 === 0 || $index + 1 === $total) {
             echo sprintf("[%d/%d] skipped %d, synced %d, failed %d\n", $index + 1, $total, $skipped, $synced, $failed);
         }
+
         continue;
     }
 
@@ -42,13 +44,13 @@ foreach ($users as $index => $user) {
         mkdir($directory, 0777, true);
     }
 
-    $remoteUrl = $baseUrl . '/' . rawurlencode((string) $user->nomor_induk) . '/' . rawurlencode((string) $user->pp);
+    $remoteUrl = $baseUrl.'/'.rawurlencode((string) $user->nomor_induk).'/'.rawurlencode((string) $user->pp);
 
     try {
         $response = Http::timeout(60)->retry(3, 1000)->get($remoteUrl);
 
         if (! $response->successful()) {
-            throw new RuntimeException('HTTP ' . $response->status());
+            throw new RuntimeException('HTTP '.$response->status());
         }
 
         file_put_contents($filePath, $response->body());

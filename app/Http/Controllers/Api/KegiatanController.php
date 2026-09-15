@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class KegiatanController extends BaseApiController
 {
@@ -28,7 +29,7 @@ class KegiatanController extends BaseApiController
             $month = $request->input('month', Carbon::now()->format('Y-m'));
 
             // Validate month format
-            if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
+            if (! preg_match('/^\d{4}-\d{2}$/', $month)) {
                 return $this->error('Format bulan tidak valid', 400);
             }
 
@@ -40,7 +41,7 @@ class KegiatanController extends BaseApiController
                 ->where('user_id', $user->id)
                 ->whereBetween('tanggal', [
                     $selectedMonthStart->toDateString(),
-                    $selectedMonthEnd->toDateString()
+                    $selectedMonthEnd->toDateString(),
                 ])
                 ->orderBy('tanggal')
                 ->get();
@@ -51,7 +52,7 @@ class KegiatanController extends BaseApiController
             $totalVolume = 0;
             $latestUpdate = null;
 
-            Log::info('Found ' . $dailyEntries->count() . ' kegiatan entries');
+            Log::info('Found '.$dailyEntries->count().' kegiatan entries');
 
             foreach ($dailyEntries as $row) {
                 $date = Carbon::parse($row->tanggal)->toDateString();
@@ -59,12 +60,12 @@ class KegiatanController extends BaseApiController
                 $items = $jsonData['items'] ?? [];
 
                 // Handle legacy format
-                if (empty($items) && !empty($row->kegiatan)) {
+                if (empty($items) && ! empty($row->kegiatan)) {
                     $items = [[
                         'id' => $row->id,
                         'k' => $row->kegiatan,
                         'v' => $row->volume ?? 0,
-                        's' => $row->satuan ?? 'Kegiatan'
+                        's' => $row->satuan ?? 'Kegiatan',
                     ]];
                 }
 
@@ -81,7 +82,7 @@ class KegiatanController extends BaseApiController
                         'kegiatan' => trim((string) ($item['k'] ?? '')),
                         'volume' => $volume,
                         'satuan' => $satuan,
-                        'meta' => $volume > 0 ? trim($volume . ' ' . $satuan) : $satuan,
+                        'meta' => $volume > 0 ? trim($volume.' '.$satuan) : $satuan,
                         'tanggal' => $row->tanggal,
                     ];
                 }, array_values($items));
@@ -91,13 +92,13 @@ class KegiatanController extends BaseApiController
                 $totalEntries += $dayEntries;
                 $totalVolume += $dayVolume;
 
-                if ($row->updated_at && (!$latestUpdate || $row->updated_at > $latestUpdate)) {
+                if ($row->updated_at && (! $latestUpdate || $row->updated_at > $latestUpdate)) {
                     $latestUpdate = $row->updated_at;
                 }
 
                 $dateCarbon = Carbon::parse($date);
 
-                if (!isset($dailyGroups[$date])) {
+                if (! isset($dailyGroups[$date])) {
                     $dailyGroups[$date] = [
                         'date' => $dateCarbon->toDateString(),
                         'label' => $this->indonesianDateLabel($dateCarbon),
@@ -133,7 +134,8 @@ class KegiatanController extends BaseApiController
                 ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Error getting kegiatan: ' . $e->getMessage());
+            Log::error('Error getting kegiatan: '.$e->getMessage());
+
             return $this->error('Gagal memuat kegiatan', 500);
         }
     }
@@ -160,7 +162,7 @@ class KegiatanController extends BaseApiController
 
             // Filter empty items
             $items = array_filter($items, function ($item) {
-                return !empty(trim($item['k'] ?? ''));
+                return ! empty(trim($item['k'] ?? ''));
             });
 
             if (empty($items)) {
@@ -233,10 +235,11 @@ class KegiatanController extends BaseApiController
                 'message' => 'Kegiatan berhasil disimpan',
                 'tanggal' => $tanggal,
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return $this->error($e->getMessage(), 422, $e->errors());
         } catch (\Exception $e) {
-            Log::error('Error storing kegiatan: ' . $e->getMessage());
+            Log::error('Error storing kegiatan: '.$e->getMessage());
+
             return $this->error('Gagal menyimpan kegiatan', 500);
         }
     }
@@ -263,7 +266,7 @@ class KegiatanController extends BaseApiController
 
             // Filter empty items
             $items = array_filter($items, function ($item) {
-                return !empty(trim($item['k'] ?? ''));
+                return ! empty(trim($item['k'] ?? ''));
             });
 
             if (empty($items)) {
@@ -276,13 +279,13 @@ class KegiatanController extends BaseApiController
                 ->whereDate('tanggal', $tanggal)
                 ->first();
 
-            if (!$existing) {
+            if (! $existing) {
                 return $this->error('Data kegiatan tidak ditemukan', 404);
             }
 
             // Update items with IDs
             foreach ($items as &$item) {
-                if (!isset($item['id'])) {
+                if (! isset($item['id'])) {
                     $item['id'] = uniqid();
                 }
             }
@@ -301,10 +304,11 @@ class KegiatanController extends BaseApiController
                 'message' => 'Kegiatan berhasil diupdate',
                 'tanggal' => $tanggal,
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return $this->error($e->getMessage(), 422, $e->errors());
         } catch (\Exception $e) {
-            Log::error('Error updating kegiatan: ' . $e->getMessage());
+            Log::error('Error updating kegiatan: '.$e->getMessage());
+
             return $this->error('Gagal update kegiatan', 500);
         }
     }
@@ -329,17 +333,18 @@ class KegiatanController extends BaseApiController
                 ->whereDate('tanggal', $tanggal)
                 ->delete();
 
-            if (!$deleted) {
+            if (! $deleted) {
                 return $this->error('Data kegiatan tidak ditemukan', 404);
             }
 
             return $this->success([
                 'message' => 'Kegiatan berhasil dihapus',
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return $this->error($e->getMessage(), 422, $e->errors());
         } catch (\Exception $e) {
-            Log::error('Error deleting kegiatan: ' . $e->getMessage());
+            Log::error('Error deleting kegiatan: '.$e->getMessage());
+
             return $this->error('Gagal hapus kegiatan', 500);
         }
     }
@@ -355,12 +360,12 @@ class KegiatanController extends BaseApiController
             $year = $request->input('year', Carbon::now()->format('Y'));
 
             // Validate year format
-            if (!preg_match('/^\d{4}$/', $year)) {
+            if (! preg_match('/^\d{4}$/', $year)) {
                 return $this->error('Format tahun tidak valid', 400);
             }
 
-            $yearStart = Carbon::createFromFormat('Y-m-d', $year . '-01-01')->startOfYear();
-            $yearEnd = Carbon::createFromFormat('Y-m-d', $year . '-12-31')->endOfYear();
+            $yearStart = Carbon::createFromFormat('Y-m-d', $year.'-01-01')->startOfYear();
+            $yearEnd = Carbon::createFromFormat('Y-m-d', $year.'-12-31')->endOfYear();
 
             // Get bulanan reports from satker_ckh
             $reports = DB::table('satker_ckh as ck')
@@ -412,7 +417,7 @@ class KegiatanController extends BaseApiController
                         'status_color' => $status['color'],
                         'alasan' => $item->alasan,
                         'sending' => $item->sending ? Carbon::parse($item->sending)->format('d/m/Y H:i') : null,
-                        'pdf_url' => $item->filename ? url('storage/satker_ckh/' . $item->user_id . '/' . $item->filename) : null,
+                        'pdf_url' => $item->filename ? url('storage/satker_ckh/'.$item->user_id.'/'.$item->filename) : null,
                     ];
                 });
 
@@ -431,7 +436,8 @@ class KegiatanController extends BaseApiController
                 'year' => $year,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error getting bulanan reports: ' . $e->getMessage());
+            Log::error('Error getting bulanan reports: '.$e->getMessage());
+
             return $this->error('Gagal memuat laporan bulanan', 500);
         }
     }
@@ -447,7 +453,7 @@ class KegiatanController extends BaseApiController
             $month = $request->input('month', Carbon::now()->format('Y-m'));
 
             // Validate month format
-            if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
+            if (! preg_match('/^\d{4}-\d{2}$/', $month)) {
                 return $this->error('Format bulan tidak valid', 400);
             }
 
@@ -458,7 +464,7 @@ class KegiatanController extends BaseApiController
                 ->where('user_id', $user->id)
                 ->whereBetween('tanggal', [
                     $selectedMonthStart->toDateString(),
-                    $selectedMonthEnd->toDateString()
+                    $selectedMonthEnd->toDateString(),
                 ])
                 ->get();
 
@@ -470,7 +476,7 @@ class KegiatanController extends BaseApiController
                 $jsonData = json_decode((string) ($row->data_json ?? '{"items":[]}'), true) ?: ['items' => []];
                 $items = $jsonData['items'] ?? [];
 
-                if (empty($items) && !empty($row->kegiatan)) {
+                if (empty($items) && ! empty($row->kegiatan)) {
                     $items = [['k' => $row->kegiatan, 'v' => $row->volume ?? 0, 's' => $row->satuan ?? 'Kegiatan']];
                 }
 
@@ -479,7 +485,7 @@ class KegiatanController extends BaseApiController
                     $totalVolume += (int) ($item['v'] ?? 0);
                 }
 
-                if ($row->updated_at && (!$latestUpdate || $row->updated_at > $latestUpdate)) {
+                if ($row->updated_at && (! $latestUpdate || $row->updated_at > $latestUpdate)) {
                     $latestUpdate = $row->updated_at;
                 }
             }
@@ -491,7 +497,8 @@ class KegiatanController extends BaseApiController
                 'latest_update' => $latestUpdate,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error getting rekap: ' . $e->getMessage());
+            Log::error('Error getting rekap: '.$e->getMessage());
+
             return $this->error('Gagal memuat rekap', 500);
         }
     }
@@ -544,7 +551,7 @@ class KegiatanController extends BaseApiController
             $manualSignatureNip = $request->input('signature_nip');
 
             // Validate month format
-            if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
+            if (! preg_match('/^\d{4}-\d{2}$/', $month)) {
                 return $this->error('Format bulan tidak valid', 400);
             }
 
@@ -556,7 +563,7 @@ class KegiatanController extends BaseApiController
                 ->where('user_id', $user->id)
                 ->whereBetween('tanggal', [
                     $selectedMonthStart->toDateString(),
-                    $selectedMonthEnd->toDateString()
+                    $selectedMonthEnd->toDateString(),
                 ])
                 ->orderBy('tanggal')
                 ->get();
@@ -571,12 +578,12 @@ class KegiatanController extends BaseApiController
                 $jsonData = json_decode((string) ($row->data_json ?? '{"items":[]}'), true) ?: ['items' => []];
                 $items = $jsonData['items'] ?? [];
 
-                if (empty($items) && !empty($row->kegiatan)) {
+                if (empty($items) && ! empty($row->kegiatan)) {
                     $items = [[
                         'id' => $row->id,
                         'k' => $row->kegiatan,
                         'v' => $row->volume ?? 0,
-                        's' => $row->satuan ?? 'Kegiatan'
+                        's' => $row->satuan ?? 'Kegiatan',
                     ]];
                 }
 
@@ -594,7 +601,7 @@ class KegiatanController extends BaseApiController
 
                 $dayVolume = array_sum(array_column($mappedItems, 'volume'));
 
-                if (!isset($dailyGroups[$date])) {
+                if (! isset($dailyGroups[$date])) {
                     $dailyGroups[$date] = [
                         'date' => $date,
                         'label' => $this->indonesianDateLabel(Carbon::parse($date)),
@@ -632,7 +639,7 @@ class KegiatanController extends BaseApiController
             $isUserAtasan = in_array($user->kat_jabatan, $atasanJabatan);
 
             // Cek custom supervisor dulu (priority tertinggi)
-            if (!empty($user->custom_supervisor_id)) {
+            if (! empty($user->custom_supervisor_id)) {
                 $customSupervisor = DB::table('users')
                     ->where('id', $user->custom_supervisor_id)
                     ->first();
@@ -641,7 +648,7 @@ class KegiatanController extends BaseApiController
                     $isCustomSupervisor = true;
                     $signatureName = $customSupervisor->name;
                     $signatureNip = $customSupervisor->nomor_induk
-                        ? 'NIP. ' . $customSupervisor->nomor_induk
+                        ? 'NIP. '.$customSupervisor->nomor_induk
                         : '';
                 }
             }
@@ -656,7 +663,7 @@ class KegiatanController extends BaseApiController
 
                 if ($kepalaKankemenag) {
                     $signatureName = $kepalaKankemenag->name;
-                    $signatureNip = $kepalaKankemenag->nomor_induk ? 'NIP. ' . $kepalaKankemenag->nomor_induk : '';
+                    $signatureNip = $kepalaKankemenag->nomor_induk ? 'NIP. '.$kepalaKankemenag->nomor_induk : '';
                 }
             } elseif ($pltPlh) {
                 // PLT exist - gunakan user PLT
@@ -664,7 +671,7 @@ class KegiatanController extends BaseApiController
                 if ($pltUser) {
                     $isPlh = true;
                     $signatureName = $pltUser->name;
-                    $signatureNip = $pltUser->nomor_induk ? 'NIP. ' . $pltUser->nomor_induk : '';
+                    $signatureNip = $pltUser->nomor_induk ? 'NIP. '.$pltUser->nomor_induk : '';
                 }
             } else {
                 // Cari kepala/kasi/kasubbag berdasarkan dept_id
@@ -675,18 +682,18 @@ class KegiatanController extends BaseApiController
 
                 if ($kepala) {
                     $signatureName = $kepala->name;
-                    $signatureNip = $kepala->nomor_induk ? 'NIP. ' . $kepala->nomor_induk : '';
+                    $signatureNip = $kepala->nomor_induk ? 'NIP. '.$kepala->nomor_induk : '';
                 }
             }
 
             // For dept_id 998/999, use manual signature input if provided
             $specialDeptIds = [998, 999];
             if (in_array((int) $user->dept_id, $specialDeptIds)) {
-                if (!empty($manualSignatureName)) {
+                if (! empty($manualSignatureName)) {
                     $signatureName = $manualSignatureName;
                 }
-                if (!empty($manualSignatureNip)) {
-                    $signatureNip = 'NIP. ' . $manualSignatureNip;
+                if (! empty($manualSignatureNip)) {
+                    $signatureNip = 'NIP. '.$manualSignatureNip;
                 }
             }
 
@@ -762,7 +769,7 @@ class KegiatanController extends BaseApiController
             $pdfBinary = $pdf->output();
 
             // Ensure directory exists before saving
-            $fullDirPath = storage_path('app/public/satker_ckh/' . $user->id);
+            $fullDirPath = storage_path('app/public/satker_ckh/'.$user->id);
             if (! is_dir($fullDirPath)) {
                 if (! mkdir($fullDirPath, 0755, true) && ! is_dir($fullDirPath)) {
                     Log::error('Gagal membuat direktori untuk PDF CKH', [
@@ -810,7 +817,8 @@ class KegiatanController extends BaseApiController
                 'Content-Disposition' => "inline; filename=\"{$filename}\"",
             ]);
         } catch (\Exception $e) {
-            Log::error('Error generating PDF: ' . $e->getMessage());
+            Log::error('Error generating PDF: '.$e->getMessage());
+
             return $this->error('Gagal generate PDF', 500);
         }
     }

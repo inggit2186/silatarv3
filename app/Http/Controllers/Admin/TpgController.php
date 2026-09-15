@@ -78,7 +78,7 @@ class TpgController extends Controller
                 'd.nama as dept_name',
                 'l.nama as layanan_name',
             ])
-            ->whereIn('p.layanan_id', !empty($allowedServiceIds) ? $allowedServiceIds : [0]);
+            ->whereIn('p.layanan_id', ! empty($allowedServiceIds) ? $allowedServiceIds : [0]);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -136,7 +136,7 @@ class TpgController extends Controller
         }
 
         $statsQuery = DB::table('satker_pemberkasan as p')
-            ->whereIn('p.layanan_id', !empty($allowedServiceIds) ? $allowedServiceIds : [0]);
+            ->whereIn('p.layanan_id', ! empty($allowedServiceIds) ? $allowedServiceIds : [0]);
 
         if ($currentDeptId) {
             $statsQuery->where('p.dept_id', $currentDeptId);
@@ -163,7 +163,7 @@ class TpgController extends Controller
 
         $deptOptions = DB::table('satker_pemberkasan as p')
             ->join('ktd_department as d', 'd.id', '=', 'p.dept_id')
-            ->whereIn('p.layanan_id', !empty($allowedServiceIds) ? $allowedServiceIds : [0])
+            ->whereIn('p.layanan_id', ! empty($allowedServiceIds) ? $allowedServiceIds : [0])
             ->where('p.status', '!=', 'DRAFT')
             ->select('d.id', 'd.nama')
             ->distinct()
@@ -200,14 +200,14 @@ class TpgController extends Controller
         $semesterOptions = ['Ganjil', 'Genap'];
 
         $defaultYear = ((int) date('n') >= 7)
-            ? date('Y') . '/' . (date('Y') + 1)
-            : (date('Y') - 1) . '/' . date('Y');
+            ? date('Y').'/'.(date('Y') + 1)
+            : (date('Y') - 1).'/'.date('Y');
 
         $tahunAjaranOptions = collect();
         $startYear = (int) date('Y') - 3;
         $endYear = (int) date('Y') + 1;
         for ($y = $startYear; $y <= $endYear; $y++) {
-            $tahunAjaranOptions->push($y . '/' . ($y + 1));
+            $tahunAjaranOptions->push($y.'/'.($y + 1));
         }
         $tahunAjaranOptions = $tahunAjaranOptions->unique()->values()->all();
 
@@ -252,7 +252,7 @@ class TpgController extends Controller
                 'd.nama as dept_name',
                 'l.nama as layanan_name',
             ])
-            ->whereIn('p.layanan_id', !empty($allowedServiceIds) ? $allowedServiceIds : [0]);
+            ->whereIn('p.layanan_id', ! empty($allowedServiceIds) ? $allowedServiceIds : [0]);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -306,7 +306,7 @@ class TpgController extends Controller
         }
 
         $statsQuery = DB::table('satker_pemberkasan as p')
-            ->whereIn('p.layanan_id', !empty($allowedServiceIds) ? $allowedServiceIds : [0]);
+            ->whereIn('p.layanan_id', ! empty($allowedServiceIds) ? $allowedServiceIds : [0]);
 
         if ($currentDeptId) {
             $statsQuery->where('p.dept_id', $currentDeptId);
@@ -331,7 +331,7 @@ class TpgController extends Controller
 
         $deptOptions = DB::table('satker_pemberkasan as p')
             ->join('ktd_department as d', 'd.id', '=', 'p.dept_id')
-            ->whereIn('p.layanan_id', !empty($allowedServiceIds) ? $allowedServiceIds : [0])
+            ->whereIn('p.layanan_id', ! empty($allowedServiceIds) ? $allowedServiceIds : [0])
             ->where('p.status', '!=', 'DRAFT')
             ->select('d.id', 'd.nama')
             ->distinct()
@@ -404,7 +404,7 @@ class TpgController extends Controller
 
             $matchedIds = array_intersect($deptServiceIds, $tpgServiceIds);
 
-            return !empty($matchedIds) ? $matchedIds : $tpgServiceIds;
+            return ! empty($matchedIds) ? $matchedIds : $tpgServiceIds;
         }
 
         // For admin, return all TPG services
@@ -455,11 +455,11 @@ class TpgController extends Controller
         $metadata = $item->metadata_parsed ?? [];
 
         if (! empty($metadata['bulan']) && ! empty($metadata['tahun'])) {
-            return $metadata['bulan'] . ' ' . $metadata['tahun'];
+            return $metadata['bulan'].' '.$metadata['tahun'];
         }
 
         if (! empty($metadata['bulan']) && ! empty($metadata['tahun_ajaran'])) {
-            return $metadata['bulan'] . ' ' . $metadata['tahun_ajaran'];
+            return $metadata['bulan'].' '.$metadata['tahun_ajaran'];
         }
 
         if (! empty($item->waktu)) {
@@ -475,7 +475,7 @@ class TpgController extends Controller
 
         $itemData = DB::table('satker_pemberkasan')->find($id);
 
-        if (!$itemData) {
+        if (! $itemData) {
             abort(404);
         }
 
@@ -519,7 +519,7 @@ class TpgController extends Controller
         ];
 
         return view('admin.tpg.show', [
-            'title' => 'Verifikasi ' . ($tipeLabels[$item->tipe] ?? $item->tipe) . ' - SILATAR Admin',
+            'title' => 'Verifikasi '.($tipeLabels[$item->tipe] ?? $item->tipe).' - SILATAR Admin',
             'breadcrumbs' => [
                 ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
                 ['label' => 'Verifikasi TPG', 'url' => route('admin.tpg.index')],
@@ -537,7 +537,7 @@ class TpgController extends Controller
         $user = Auth::user();
 
         $item = DB::table('satker_pemberkasan')->find($id);
-        if (!$item) {
+        if (! $item) {
             abort(404);
         }
 
@@ -573,7 +573,7 @@ class TpgController extends Controller
         $user = Auth::user();
 
         $item = DB::table('satker_pemberkasan')->find($id);
-        if (!$item) {
+        if (! $item) {
             abort(404);
         }
 
@@ -612,7 +612,7 @@ class TpgController extends Controller
         $user = Auth::user();
 
         $item = DB::table('satker_pemberkasan')->find($id);
-        if (!$item) {
+        if (! $item) {
             abort(404);
         }
 
@@ -627,7 +627,7 @@ class TpgController extends Controller
         $files = $this->safeJsonDecode($item->files);
         $file = collect($files)->firstWhere('syarat_id', $syaratId);
 
-        if (!$file || empty($file['filename']) || $file['filename'] === 'NONE') {
+        if (! $file || empty($file['filename']) || $file['filename'] === 'NONE') {
             abort(404);
         }
 
@@ -655,7 +655,7 @@ class TpgController extends Controller
         $user = Auth::user();
 
         $item = DB::table('satker_pemberkasan')->find($id);
-        if (!$item) {
+        if (! $item) {
             abort(404);
         }
 
@@ -670,7 +670,7 @@ class TpgController extends Controller
         $files = $this->safeJsonDecode($item->files);
         $file = collect($files)->firstWhere('syarat_id', $syaratId);
 
-        if (!$file || empty($file['filename']) || $file['filename'] === 'NONE') {
+        if (! $file || empty($file['filename']) || $file['filename'] === 'NONE') {
             abort(404);
         }
 
@@ -683,6 +683,7 @@ class TpgController extends Controller
         if (Storage::disk('public')->exists($newPath)) {
             $fullPath = Storage::disk('public')->path($newPath);
             $mimeType = Storage::disk('public')->mimeType($newPath);
+
             return response()->file($fullPath, ['Content-Type' => $mimeType]);
         }
 
@@ -691,6 +692,7 @@ class TpgController extends Controller
         if (Storage::disk('users_berkas')->exists($legacyPath)) {
             $fullPath = Storage::disk('users_berkas')->path($legacyPath);
             $mimeType = Storage::disk('users_berkas')->mimeType($legacyPath);
+
             return response()->file($fullPath, ['Content-Type' => $mimeType]);
         }
 

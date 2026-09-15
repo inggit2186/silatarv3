@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class KtdPresensi extends Model
 {
@@ -72,7 +71,7 @@ class KtdPresensi extends Model
      */
     public function hasMasuk(): bool
     {
-        return !empty($this->m_absen);
+        return ! empty($this->m_absen);
     }
 
     /**
@@ -80,7 +79,7 @@ class KtdPresensi extends Model
      */
     public function hasPulang(): bool
     {
-        return !empty($this->p_absen);
+        return ! empty($this->p_absen);
     }
 
     /**

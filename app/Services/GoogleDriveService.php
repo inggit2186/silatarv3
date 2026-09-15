@@ -4,15 +4,15 @@ namespace App\Services;
 
 use Google\Client;
 use Google\Service\Drive;
-use Google\Service\Drive\DriveFile;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Yaza\LaravelGoogleDriveStorage\Gdrive;
 
 class GoogleDriveService
 {
     protected ?Client $client = null;
+
     protected ?Drive $service = null;
+
     protected string $folderId;
 
     public function __construct()
@@ -23,7 +23,7 @@ class GoogleDriveService
     /**
      * Upload file to Google Drive using OAuth2 (Recommended)
      */
-    public function upload(UploadedFile|string $file, string $filename = null, string $subfolder = ''): array
+    public function upload(UploadedFile|string $file, ?string $filename = null, string $subfolder = ''): array
     {
         $fileContent = $file instanceof UploadedFile
             ? file_get_contents($file->getRealPath())
@@ -55,12 +55,13 @@ class GoogleDriveService
     {
         try {
             $files = Storage::disk('gdrive')->listContents($path);
-            if (!empty($files)) {
+            if (! empty($files)) {
                 return $files[0]['path'] ?? null;
             }
         } catch (\Exception $e) {
             // Fallback
         }
+
         return null;
     }
 

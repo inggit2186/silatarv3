@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->unsignedBigInteger('custom_supervisor_id')
-                  ->nullable()
-                  ->after('dept_id')
-                  ->foreign('custom_supervisor_id')
-                  ->references('id')
-                  ->on('users')
-                  ->nullOnDelete();
+                ->nullable()
+                ->after('dept_id')
+                ->foreign('custom_supervisor_id')
+                ->references('id')
+                ->on('users')
+                ->nullOnDelete();
         });
     }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -282,15 +283,17 @@ class DashboardController extends Controller
         if ($diff < 1) {
             return 'Baru saja';
         } elseif ($diff < 60) {
-            return $diff . ' menit lalu';
+            return $diff.' menit lalu';
         } elseif ($diff < 1440) {
             $hours = floor($diff / 60);
-            return $hours . ' jam lalu';
+
+            return $hours.' jam lalu';
         } elseif ($diff < 10080) {
             $days = floor($diff / 1440);
-            return $days . ' hari lalu';
+
+            return $days.' hari lalu';
         } else {
-            return \Carbon\Carbon::parse($timestamp)->format('d M');
+            return Carbon::parse($timestamp)->format('d M');
         }
     }
 
@@ -346,6 +349,7 @@ class DashboardController extends Controller
 
         if ($combinations->isEmpty()) {
             $result = "Tidak ada data yang perlu dikonversi.\n";
+
             return redirect()->route('admin.dashboard')->with('migration_result', $result);
         }
 
@@ -436,7 +440,7 @@ class DashboardController extends Controller
             ->where('bulan', $data['bulan'])
             ->first();
 
-        if (!$report) {
+        if (! $report) {
             return response()->json([
                 'success' => false,
                 'message' => 'Laporan tidak ditemukan.',
@@ -458,7 +462,7 @@ class DashboardController extends Controller
         $this->logActivity(
             $request->user()->id,
             'verifikasi_laporan',
-            "Laporan kinerja {$data['bulan']} " . ($data['action'] === 'approve' ? 'disetujui' : 'ditolak'),
+            "Laporan kinerja {$data['bulan']} ".($data['action'] === 'approve' ? 'disetujui' : 'ditolak'),
             $report->id
         );
 

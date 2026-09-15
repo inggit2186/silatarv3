@@ -71,7 +71,7 @@ class LayananController extends BaseApiController
             ->where('is_active', 1)
             ->first();
 
-        if (!$layanan) {
+        if (! $layanan) {
             return $this->notFound('Layanan tidak ditemukan');
         }
 
@@ -97,7 +97,7 @@ class LayananController extends BaseApiController
             ->where('is_active', 1)
             ->first();
 
-        if (!$layanan) {
+        if (! $layanan) {
             return $this->notFound('Layanan tidak ditemukan');
         }
 

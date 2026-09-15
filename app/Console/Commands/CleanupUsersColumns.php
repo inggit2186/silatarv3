@@ -187,18 +187,21 @@ class CleanupUsersColumns extends Command
             // Skip protected columns
             if (in_array($col, $this->protectedColumns)) {
                 $this->line("   🔒 PROTECTED: {$col} - tidak bisa dihapus (still used)");
+
                 continue;
             }
 
-            if (!Schema::hasColumn('users', $col)) {
+            if (! Schema::hasColumn('users', $col)) {
                 $this->line("   ⏭️  Lewati: {$col} tidak ada di tabel.");
                 $skipped++;
+
                 continue;
             }
 
             if ($dryRun) {
                 $this->line("   [DRY RUN] ✓ Akan menghapus: {$col}");
                 $removed++;
+
                 continue;
             }
 
@@ -209,7 +212,7 @@ class CleanupUsersColumns extends Command
                 $this->line("   ✓ Berhasil menghapus: {$col}");
                 $removed++;
             } catch (\Exception $e) {
-                $this->error("   ✗ Gagal menghapus {$col}: " . $e->getMessage());
+                $this->error("   ✗ Gagal menghapus {$col}: ".$e->getMessage());
                 $skipped++;
             }
         }
@@ -237,15 +240,17 @@ class CleanupUsersColumns extends Command
                 continue;
             }
 
-            if (!Schema::hasColumn('users', $col)) {
+            if (! Schema::hasColumn('users', $col)) {
                 $this->line("   ⏭️  Lewati: {$col} tidak ada di tabel.");
                 $skipped++;
+
                 continue;
             }
 
             if ($dryRun) {
                 $this->line("   [DRY RUN] ✓ Akan menghapus: {$col}");
                 $removed++;
+
                 continue;
             }
 
@@ -256,7 +261,7 @@ class CleanupUsersColumns extends Command
                 $this->line("   ✓ Berhasil menghapus: {$col}");
                 $removed++;
             } catch (\Exception $e) {
-                $this->error("   ✗ Gagal menghapus {$col}: " . $e->getMessage());
+                $this->error("   ✗ Gagal menghapus {$col}: ".$e->getMessage());
                 $skipped++;
             }
         }
@@ -266,7 +271,7 @@ class CleanupUsersColumns extends Command
         $this->newLine();
 
         // Also drop the duplicate gol/golongan columns
-        if (!$dryRun && Schema::hasColumn('users', 'gol') && Schema::hasColumn('users', 'golongan')) {
+        if (! $dryRun && Schema::hasColumn('users', 'gol') && Schema::hasColumn('users', 'golongan')) {
             $this->warn('PERHATIAN: Terdeteksi duplikasi gol & golongan di users.');
             if ($this->confirm('Hapus kolom gol? (golongan akan disimpan)', true)) {
                 Schema::table('users', function ($table) {
@@ -288,8 +293,9 @@ class CleanupUsersColumns extends Command
         $tables = ['guru_madrasah', 'pegawai_madrasah'];
 
         foreach ($tables as $table) {
-            if (!Schema::hasTable($table)) {
+            if (! Schema::hasTable($table)) {
                 $this->line("   ⏭️  Lewati: {$table} tidak ada.");
+
                 continue;
             }
 
@@ -298,11 +304,13 @@ class CleanupUsersColumns extends Command
 
             if ($dryRun) {
                 $this->line("   [DRY RUN] ✓ Akan menghapus tabel {$table}");
+
                 continue;
             }
 
-            if (!$this->confirm("Hapus tabel {$table} ({$count} records)?", false)) {
-                $this->line("   Dilewati.");
+            if (! $this->confirm("Hapus tabel {$table} ({$count} records)?", false)) {
+                $this->line('   Dilewati.');
+
                 continue;
             }
 
@@ -310,7 +318,7 @@ class CleanupUsersColumns extends Command
                 Schema::dropIfExists($table);
                 $this->info("   ✓ Tabel {$table} dihapus.");
             } catch (\Exception $e) {
-                $this->error("   ✗ Gagal menghapus {$table}: " . $e->getMessage());
+                $this->error("   ✗ Gagal menghapus {$table}: ".$e->getMessage());
             }
         }
 

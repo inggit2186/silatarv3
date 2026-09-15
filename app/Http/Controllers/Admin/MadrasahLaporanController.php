@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MadrasahLaporanController extends Controller
 {
@@ -18,7 +19,7 @@ class MadrasahLaporanController extends Controller
 
         // Only admin/superadmin/kepala or users with dept_id=7 can access Laporan Madrasah
         $isAdmin = in_array($user->role, ['admin', 'superadmin', 'kepala']);
-        if (!$isAdmin && $user->dept_id != 7) {
+        if (! $isAdmin && $user->dept_id != 7) {
             abort(403, 'Anda tidak memiliki akses ke menu ini.');
         }
 
@@ -58,7 +59,7 @@ class MadrasahLaporanController extends Controller
                 ->first();
 
             // Skip if no laporan submitted yet
-            if (!$laporanBulanan && !$laporanSemester) {
+            if (! $laporanBulanan && ! $laporanSemester) {
                 continue;
             }
 
@@ -120,6 +121,7 @@ class MadrasahLaporanController extends Controller
         // Sort by: submitted records first, then by submitted_at desc, then by name
         $allLaporan = $allLaporan->sortBy(function ($item) {
             $statusOrder = ['submitted' => 0, 'approved' => 1, 'revisi' => 2];
+
             return $statusOrder[$item->status] ?? 5;
         })->sortByDesc('submitted_at')->values();
 
@@ -131,7 +133,7 @@ class MadrasahLaporanController extends Controller
         $paginatedLaporan = $allLaporan->slice($offset, $perPage)->values();
 
         // Create paginator object for view
-        $laporan = new \Illuminate\Pagination\LengthAwarePaginator(
+        $laporan = new LengthAwarePaginator(
             $paginatedLaporan,
             $totalItems,
             $perPage,
@@ -217,7 +219,7 @@ class MadrasahLaporanController extends Controller
                 ->where('ktd_laporan_bulanan_madrasah.id', $id)
                 ->first();
 
-            if (!$laporan) {
+            if (! $laporan) {
                 abort(404);
             }
 
@@ -227,8 +229,8 @@ class MadrasahLaporanController extends Controller
             $laporan->jenis = 'bulanan';
             $laporan->nama_madrasah = $laporan->nama_madrasah_snapshot ?? $laporan->nama_madrasah_db;
             $laporan->instansi = $laporan->instansi_snapshot;
-            $laporan->periode = $laporan->bulan_laporan . ' ' . $laporan->tahun_laporan;
-            $laporan->periode_detail = $laporan->bulan_laporan . ' ' . $laporan->tahun_laporan . ' | ' . $laporan->tahun_ajaran . ' Semester ' . $laporan->semester;
+            $laporan->periode = $laporan->bulan_laporan.' '.$laporan->tahun_laporan;
+            $laporan->periode_detail = $laporan->bulan_laporan.' '.$laporan->tahun_laporan.' | '.$laporan->tahun_ajaran.' Semester '.$laporan->semester;
 
         } elseif ($type === 'semester') {
             $laporan = DB::table('ktd_laporan_semester_madrasah')
@@ -244,7 +246,7 @@ class MadrasahLaporanController extends Controller
                 ->where('ktd_laporan_semester_madrasah.id', $id)
                 ->first();
 
-            if (!$laporan) {
+            if (! $laporan) {
                 abort(404);
             }
 
@@ -263,13 +265,13 @@ class MadrasahLaporanController extends Controller
             ];
 
             foreach ($jsonFields as $field) {
-                $jsonColumn = $field . '_json';
+                $jsonColumn = $field.'_json';
                 $laporan->$field = json_decode($laporan->$jsonColumn, true) ?? [];
             }
 
             $laporan->jenis = 'semester';
-            $laporan->periode = ucfirst($laporan->semester) . ' ' . $laporan->tahun_ajaran;
-            $laporan->periode_detail = 'Semester ' . ucfirst($laporan->semester) . ' | ' . $laporan->tahun_ajaran;
+            $laporan->periode = ucfirst($laporan->semester).' '.$laporan->tahun_ajaran;
+            $laporan->periode_detail = 'Semester '.ucfirst($laporan->semester).' | '.$laporan->tahun_ajaran;
 
         } else {
             abort(404);
@@ -333,7 +335,7 @@ class MadrasahLaporanController extends Controller
 
         $laporan = DB::table($table)->where('id', $id)->first();
 
-        if (!$laporan) {
+        if (! $laporan) {
             abort(404);
         }
 
@@ -364,7 +366,7 @@ class MadrasahLaporanController extends Controller
 
         $laporan = DB::table($table)->where('id', $id)->first();
 
-        if (!$laporan) {
+        if (! $laporan) {
             abort(404);
         }
 
@@ -400,7 +402,7 @@ class MadrasahLaporanController extends Controller
 
         $laporan = DB::table($table)->where('id', $id)->first();
 
-        if (!$laporan) {
+        if (! $laporan) {
             abort(404);
         }
 

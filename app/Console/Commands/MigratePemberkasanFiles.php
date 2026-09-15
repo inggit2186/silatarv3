@@ -45,15 +45,17 @@ class MigratePemberkasanFiles extends Command
             $this->newLine();
 
             $headers = ['noreq'];
-            $rows = $noreqList->map(fn($noreq) => [$noreq])->toArray();
+            $rows = $noreqList->map(fn ($noreq) => [$noreq])->toArray();
 
             $this->table($headers, $rows);
+
             return Command::SUCCESS;
         }
 
-        if (!$this->option('force')) {
-            if (!$this->confirm("This will migrate {$totalRecords} noreq records. Continue?")) {
+        if (! $this->option('force')) {
+            if (! $this->confirm("This will migrate {$totalRecords} noreq records. Continue?")) {
                 $this->info('Migration cancelled.');
+
                 return Command::FAILURE;
             }
         }
@@ -78,6 +80,7 @@ class MigratePemberkasanFiles extends Command
                 if ($files->isEmpty()) {
                     $skipCount++;
                     $bar->advance();
+
                     continue;
                 }
 
@@ -88,16 +91,18 @@ class MigratePemberkasanFiles extends Command
                     ->where('noreq', $noreq)
                     ->first();
 
-                if (!$existing) {
+                if (! $existing) {
                     $skipCount++;
                     $bar->advance();
+
                     continue;
                 }
 
                 // Check if already migrated
-                if (!empty($existing->files)) {
+                if (! empty($existing->files)) {
                     $skipCount++;
                     $bar->advance();
+
                     continue;
                 }
 
@@ -154,6 +159,7 @@ class MigratePemberkasanFiles extends Command
             DB::rollBack();
             $this->newLine(2);
             $this->error("Migration failed: {$e->getMessage()}");
+
             return Command::FAILURE;
         }
 

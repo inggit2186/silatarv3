@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Buat tabel jika belum ada
-        if (!Schema::hasTable('ktd_presensifiles')) {
+        if (! Schema::hasTable('ktd_presensifiles')) {
             Schema::create('ktd_presensifiles', function (Blueprint $table) {
                 $table->id();
                 $table->string('dept')->index(); // Nama unit kerja
@@ -27,13 +27,13 @@ return new class extends Migration
             });
         } else {
             // Tabel sudah ada, tambah kolom path jika belum ada
-            if (!Schema::hasColumn('ktd_presensifiles', 'presensi_path')) {
+            if (! Schema::hasColumn('ktd_presensifiles', 'presensi_path')) {
                 Schema::table('ktd_presensifiles', function (Blueprint $table) {
                     $table->string('presensi_path')->nullable()->comment('Path file Excel detail presensi');
                 });
             }
 
-            if (!Schema::hasColumn('ktd_presensifiles', 'uangmakan_path')) {
+            if (! Schema::hasColumn('ktd_presensifiles', 'uangmakan_path')) {
                 Schema::table('ktd_presensifiles', function (Blueprint $table) {
                     $table->string('uangmakan_path')->nullable()->comment('Path file Excel rekap presensi');
                 });

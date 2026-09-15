@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ktd_presensi', function (Blueprint $table) {
-            if (!Schema::hasColumn('ktd_presensi', 'error_masuk_taken_at')) {
+            if (! Schema::hasColumn('ktd_presensi', 'error_masuk_taken_at')) {
                 $table->time('error_masuk_taken_at')->nullable()->after('keterangan');
             }
-            if (!Schema::hasColumn('ktd_presensi', 'error_pulang_taken_at')) {
+            if (! Schema::hasColumn('ktd_presensi', 'error_pulang_taken_at')) {
                 $table->time('error_pulang_taken_at')->nullable()->after('error_masuk_taken_at');
             }
             // Drop kolom lama jika ada

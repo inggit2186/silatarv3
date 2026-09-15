@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PpidController extends Controller
@@ -17,7 +16,7 @@ class PpidController extends Controller
             ->where('is_active', true)
             ->first();
 
-        if (!$page) {
+        if (! $page) {
             return null;
         }
 
@@ -44,7 +43,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('index');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -62,7 +61,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('profil-singkat');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -80,7 +79,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('visi-misi');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -98,7 +97,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('tugas-fungsi');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -116,7 +115,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('struktur');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -134,7 +133,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('regulasi');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -152,7 +151,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('maklumat');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -170,7 +169,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('jadwal');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -188,7 +187,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('biaya');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -206,7 +205,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('laporan-layanan');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -224,7 +223,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('prosedur-permohonan');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -242,7 +241,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('prosedur-keberatan');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -260,7 +259,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('prosedur-sengketa');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -278,7 +277,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('formulir-permohonan');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -296,7 +295,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('formulir-keberatan');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -314,7 +313,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('informasi-berkala');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -332,7 +331,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('informasi-serta-merta');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -350,7 +349,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('informasi-setiap-saat');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -368,7 +367,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('pengaduan');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -386,7 +385,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('gallery-fasilitas');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -412,7 +411,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('gallery-kegiatan');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -438,7 +437,7 @@ class PpidController extends Controller
     {
         $data = $this->getPageData('tentang-kami');
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 

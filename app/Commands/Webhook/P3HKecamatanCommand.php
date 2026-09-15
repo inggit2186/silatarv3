@@ -3,7 +3,6 @@
 namespace App\Commands\Webhook;
 
 use App\Models\HakAkses;
-use App\Services\WhatsAppService;
 
 class P3HKecamatanCommand extends BaseCommand
 {
@@ -21,20 +20,20 @@ class P3HKecamatanCommand extends BaseCommand
         }
 
         $textWA = "*:: SILATAR AI-CHAT ::*\n\n"
-            . "Silahkan pilih Pendamping Proses Produk Halal (P3H) yang ingin anda Hubungi...!! \n\n\n"
-            . "_*SILATAR AI*_";
+            ."Silahkan pilih Pendamping Proses Produk Halal (P3H) yang ingin anda Hubungi...!! \n\n\n"
+            .'_*SILATAR AI*_';
 
-        $rows = $p3hList->map(fn($p3h, $i) => [
-            "title" => "*({$p3h->id}) {$p3h->user->name}*",
-            "rowId" => "id" . ($i + 1),
-            "description" => "P3H Domisili " . strtoupper($dom)
+        $rows = $p3hList->map(fn ($p3h, $i) => [
+            'title' => "*({$p3h->id}) {$p3h->user->name}*",
+            'rowId' => 'id'.($i + 1),
+            'description' => 'P3H Domisili '.strtoupper($dom),
         ])->values()->all();
 
         $sections = [
             [
-                "title" => "List Nama P3H",
-                "description" => "Nama Pendamping Proses Produk Halal (P3H).",
-                "rows" => $rows,
+                'title' => 'List Nama P3H',
+                'description' => 'Nama Pendamping Proses Produk Halal (P3H).',
+                'rows' => $rows,
             ],
         ];
 

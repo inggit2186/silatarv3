@@ -32,7 +32,7 @@ class SimpegController extends BaseApiController
             ->select('id', 'nomor_induk', 'name', 'email', 'telp', 'dept_id')
             ->first();
 
-        if (!$userData) {
+        if (! $userData) {
             return $this->error('Data user tidak ditemukan', 404);
         }
 
@@ -53,7 +53,7 @@ class SimpegController extends BaseApiController
 
         // Create request in ktd_pengaduan
         $requestId = DB::table('ktd_pengaduan')->insertGetId([
-            'kode' => 'SIMPEG-' . date('YmdHis'),
+            'kode' => 'SIMPEG-'.date('YmdHis'),
             'jenis' => 'SIMPEG',
             'user_nip' => $userData->nomor_induk,
             'nama' => $userData->name,
@@ -108,7 +108,7 @@ class SimpegController extends BaseApiController
             ->where('jenis', 'SIMPEG')
             ->first();
 
-        if (!$simpegRequest) {
+        if (! $simpegRequest) {
             return $this->notFound('Request tidak ditemukan');
         }
 
@@ -121,8 +121,9 @@ class SimpegController extends BaseApiController
     private function sendWhatsAppNotification($userData, $targetStaff, int $requestId): void
     {
         try {
-            if (!$targetStaff || !$targetStaff->telp) {
+            if (! $targetStaff || ! $targetStaff->telp) {
                 Log::warning('Target staff not found or no phone number');
+
                 return;
             }
 
@@ -141,7 +142,7 @@ class SimpegController extends BaseApiController
                        "📧 *Email:* {$userEmail}\n".
                        "📱 *Telp:* {$userTelp}\n\n".
                        "Silakan hubungi user untuk proses selanjutnya.\n\n".
-                       "Terima kasih 🙏";
+                       'Terima kasih 🙏';
 
             $this->waService->sendMessage($phone, $message);
         } catch (\Exception $e) {
@@ -185,7 +186,7 @@ class SimpegController extends BaseApiController
             ->where('jenis', 'SIMPEG')
             ->first();
 
-        if (!$simpegRequest) {
+        if (! $simpegRequest) {
             return $this->notFound('Request tidak ditemukan');
         }
 
@@ -208,7 +209,7 @@ class SimpegController extends BaseApiController
             ->where('jenis', 'SIMPEG')
             ->first();
 
-        if (!$simpegRequest) {
+        if (! $simpegRequest) {
             return $this->notFound('Request tidak ditemukan');
         }
 
@@ -243,13 +244,14 @@ class SimpegController extends BaseApiController
                 ->where('telp', '!=', null)
                 ->first();
 
-            if (!$requester || !$requester->telp) {
+            if (! $requester || ! $requester->telp) {
                 Log::warning('Requester not found or no phone number');
+
                 return;
             }
 
             $phone = WhatsAppService::normalizePhoneNumber($requester->telp);
-            $statusIcon = match($status) {
+            $statusIcon = match ($status) {
                 'SUKSES' => '✅',
                 'GAGAL' => '❌',
                 'DIPROSES' => '🔄',
@@ -257,7 +259,7 @@ class SimpegController extends BaseApiController
                 default => '📋',
             };
 
-            $statusLabel = match($status) {
+            $statusLabel = match ($status) {
                 'SUKSES' => 'Berhasil Diproses',
                 'GAGAL' => 'Gagal Diproses',
                 'DIPROSES' => 'Sedang Diproses',
@@ -271,7 +273,7 @@ class SimpegController extends BaseApiController
                        "📋 *Status:* {$statusLabel}\n".
                        "💬 *Keterangan:* {$keterangan}\n\n".
                        "Silakan hubungi petugas jika ada pertanyaan.\n\n".
-                       "Terima kasih 🙏";
+                       'Terima kasih 🙏';
 
             $this->waService->sendMessage($phone, $message);
         } catch (\Exception $e) {

@@ -22,18 +22,20 @@ class AdminAccess
         $user = $request->user();
 
         // Check if user is authenticated
-        if (!$user) {
+        if (! $user) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
+
             return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
         }
 
         // Check if user's role can access admin panel
-        if (!in_array($user->role, $this->allowedRoles)) {
+        if (! in_array($user->role, $this->allowedRoles)) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Forbidden - Admin access required'], 403);
             }
+
             return redirect()->route('pelayanan')->with('error', 'Anda tidak memiliki akses ke halaman admin.');
         }
 
@@ -46,7 +48,10 @@ class AdminAccess
     public static function isAdmin($userId): bool
     {
         $user = DB::table('users')->where('id', $userId)->first();
-        if (!$user) return false;
+        if (! $user) {
+            return false;
+        }
+
         return in_array($user->role, ['admin', 'superadmin']);
     }
 
@@ -56,7 +61,10 @@ class AdminAccess
     public static function canAccessAdmin($userId): bool
     {
         $user = DB::table('users')->where('id', $userId)->first();
-        if (!$user) return false;
+        if (! $user) {
+            return false;
+        }
+
         return in_array($user->role, ['petugas', 'kasi', 'kasubbag', 'admin', 'superadmin', 'kepala']);
     }
 
@@ -69,9 +77,12 @@ class AdminAccess
             ->where('user_id', $userId)
             ->first();
 
-        if (!$hakAkses) return false;
+        if (! $hakAkses) {
+            return false;
+        }
 
         $akses = json_decode($hakAkses->akses, true);
+
         return is_array($akses) && in_array('humas', $akses);
     }
 }

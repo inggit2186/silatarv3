@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\KtdPresensi;
-use App\Models\Department;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -12,8 +11,11 @@ use PhpOffice\PhpSpreadsheet\Reader\Exception;
 class PresensiImportService
 {
     protected $errors = [];
+
     protected $validRows = [];
+
     protected $invalidRows = [];
+
     protected $batchId;
 
     /**
@@ -34,7 +36,7 @@ class PresensiImportService
             for ($row = 2; $row <= $highestRow; $row++) {
                 $rowData = [];
                 for ($col = 'A'; ord($col) <= $highestColumn; $col++) {
-                    $rowData[] = $sheet->getCell($col . $row)->getValue();
+                    $rowData[] = $sheet->getCell($col.$row)->getValue();
                 }
                 $data[] = $rowData;
 
@@ -51,10 +53,11 @@ class PresensiImportService
                 'total_rows' => $highestRow - 1, // Excluding header
             ];
         } catch (Exception $e) {
-            Log::error('Excel parse error: ' . $e->getMessage());
+            Log::error('Excel parse error: '.$e->getMessage());
+
             return [
                 'success' => false,
-                'error' => 'Gagal membaca file Excel: ' . $e->getMessage(),
+                'error' => 'Gagal membaca file Excel: '.$e->getMessage(),
             ];
         }
     }
@@ -66,8 +69,9 @@ class PresensiImportService
     {
         $headers = [];
         for ($col = 'A'; $col <= $sheet->getHighestColumn(); $col++) {
-            $headers[] = $sheet->getCell($col . '1')->getValue();
+            $headers[] = $sheet->getCell($col.'1')->getValue();
         }
+
         return $headers;
     }
 
@@ -109,7 +113,7 @@ class PresensiImportService
             $nip = $row[1] ?? null;
             if (empty($nip)) {
                 $rowErrors[] = 'NIP kosong';
-            } elseif (!preg_match('/^\d{18}$/', $nip)) {
+            } elseif (! preg_match('/^\d{18}$/', $nip)) {
                 $rowErrors[] = 'NIP harus 18 digit';
             }
 
@@ -119,18 +123,18 @@ class PresensiImportService
                 $rowErrors[] = 'Tanggal kosong';
             } else {
                 $tanggal = $this->parseDate($tanggal);
-                if (!$tanggal) {
+                if (! $tanggal) {
                     $rowErrors[] = 'Format tanggal tidak valid';
                 }
             }
 
             // Cek apakah NIP ada di database
-            if (!empty($nip) && preg_match('/^\d{18}$/', $nip)) {
+            if (! empty($nip) && preg_match('/^\d{18}$/', $nip)) {
                 $userExists = DB::table('users')
                     ->where('nomor_induk', $nip)
                     ->exists();
 
-                if (!$userExists) {
+                if (! $userExists) {
                     $rowErrors[] = 'NIP tidak ditemukan di database';
                 }
             }
@@ -187,7 +191,7 @@ class PresensiImportService
      */
     public function importToDatabase(array $validatedData, int $userId): array
     {
-        $this->batchId = 'IMPORT_' . date('Ymd_His') . '_' . uniqid();
+        $this->batchId = 'IMPORT_'.date('Ymd_His').'_'.uniqid();
         $importedCount = 0;
         $skippedCount = 0;
         $errors = [];
@@ -203,6 +207,7 @@ class PresensiImportService
 
                 if ($exists) {
                     $skippedCount++;
+
                     continue;
                 }
 
@@ -227,7 +232,7 @@ class PresensiImportService
 
             DB::commit();
 
-            Log::info("Import presensi berhasil", [
+            Log::info('Import presensi berhasil', [
                 'batch_id' => $this->batchId,
                 'imported' => $importedCount,
                 'skipped' => $skippedCount,
@@ -244,14 +249,14 @@ class PresensiImportService
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Import presensi gagal: ' . $e->getMessage(), [
+            Log::error('Import presensi gagal: '.$e->getMessage(), [
                 'batch_id' => $this->batchId,
                 'trace' => $e->getTraceAsString(),
             ]);
 
             return [
                 'success' => false,
-                'error' => 'Gagal import data: ' . $e->getMessage(),
+                'error' => 'Gagal import data: '.$e->getMessage(),
             ];
         }
     }
@@ -265,7 +270,7 @@ class PresensiImportService
             $deletedCount = KtdPresensi::where('import_batch_id', $batchId)
                 ->delete();
 
-            Log::info("Rollback import presensi", [
+            Log::info('Rollback import presensi', [
                 'batch_id' => $batchId,
                 'deleted' => $deletedCount,
             ]);
@@ -277,10 +282,11 @@ class PresensiImportService
             ];
 
         } catch (\Exception $e) {
-            Log::error('Rollback import gagal: ' . $e->getMessage());
+            Log::error('Rollback import gagal: '.$e->getMessage());
+
             return [
                 'success' => false,
-                'error' => 'Gagal rollback: ' . $e->getMessage(),
+                'error' => 'Gagal rollback: '.$e->getMessage(),
             ];
         }
     }
@@ -297,6 +303,7 @@ class PresensiImportService
             ->get()
             ->map(function ($item) {
                 $user = DB::table('users')->find($item->imported_by);
+
                 return [
                     'batch_id' => $item->import_batch_id,
                     'imported_by' => $user->name ?? 'Unknown',
@@ -313,7 +320,7 @@ class PresensiImportService
      */
     protected function convertMinutesToDiff($minutes): ?string
     {
-        if (empty($minutes) || !is_numeric($minutes)) {
+        if (empty($minutes) || ! is_numeric($minutes)) {
             return null;
         }
 
@@ -325,7 +332,7 @@ class PresensiImportService
             return (string) $minutes;
         }
 
-        return "0";
+        return '0';
     }
 
     /**

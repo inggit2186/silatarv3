@@ -22,7 +22,7 @@ class AcaraController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('judul', 'LIKE', "%{$search}%")
-                  ->orWhere('lokasi', 'LIKE', "%{$search}%");
+                    ->orWhere('lokasi', 'LIKE', "%{$search}%");
             });
         }
 
@@ -46,7 +46,7 @@ class AcaraController extends Controller
     {
         // Only admin/superadmin/kepala can create acara
         $currentUser = auth()->user();
-        if (!in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
+        if (! in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
             abort(403, 'Anda tidak memiliki akses untuk membuat acara.');
         }
 
@@ -60,7 +60,7 @@ class AcaraController extends Controller
     {
         // Only admin/superadmin/kepala can create acara
         $currentUser = auth()->user();
-        if (!in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
+        if (! in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
             abort(403, 'Anda tidak memiliki akses untuk membuat acara.');
         }
 
@@ -81,7 +81,7 @@ class AcaraController extends Controller
         // Handle foto upload with compression
         $filename = null;
         if ($request->hasFile('foto')) {
-            $filename = 'acara_' . time() . '_' . $request->file('foto')->getClientOriginalName();
+            $filename = 'acara_'.time().'_'.$request->file('foto')->getClientOriginalName();
             $this->compressAndStorePhoto($request->file('foto'), $filename);
         }
 
@@ -106,12 +106,14 @@ class AcaraController extends Controller
 
         try {
             DB::table('ktd_acara')->insert($insertData);
+
             return redirect()->route('admin.acara')
                 ->with('success', 'Acara berhasil dibuat');
         } catch (\Exception $e) {
             \Log::error('Failed to insert acara', ['error' => $e->getMessage()]);
+
             return redirect()->route('admin.acara.create')
-                ->with('error', 'Gagal menyimpan data: ' . $e->getMessage())
+                ->with('error', 'Gagal menyimpan data: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -123,7 +125,7 @@ class AcaraController extends Controller
     {
         $acara = DB::table('ktd_acara')->where('id', $id)->first();
 
-        if (!$acara) {
+        if (! $acara) {
             return redirect()->route('admin.acara')
                 ->with('error', 'Acara tidak ditemukan');
         }
@@ -148,7 +150,7 @@ class AcaraController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('users.name', 'LIKE', "%{$search}%")
-                  ->orWhere('ktd_presensi_acara.user_nip', 'LIKE', "%{$search}%");
+                    ->orWhere('ktd_presensi_acara.user_nip', 'LIKE', "%{$search}%");
             });
         }
 
@@ -175,13 +177,13 @@ class AcaraController extends Controller
     {
         // Only admin/superadmin/kepala can edit acara
         $currentUser = auth()->user();
-        if (!in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
+        if (! in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit acara.');
         }
 
         $acara = DB::table('ktd_acara')->where('id', $id)->first();
 
-        if (!$acara) {
+        if (! $acara) {
             return redirect()->route('admin.acara')
                 ->with('error', 'Acara tidak ditemukan');
         }
@@ -196,7 +198,7 @@ class AcaraController extends Controller
     {
         // Only admin/superadmin/kepala can update acara
         $currentUser = auth()->user();
-        if (!in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
+        if (! in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
             abort(403, 'Anda tidak memiliki akses untuk mengupdate acara.');
         }
 
@@ -220,10 +222,10 @@ class AcaraController extends Controller
             // Delete old foto if exists
             $oldAcara = DB::table('ktd_acara')->where('id', $id)->first();
             if ($oldAcara && $oldAcara->filename) {
-                Storage::disk('public')->delete('acara/' . $oldAcara->filename);
+                Storage::disk('public')->delete('acara/'.$oldAcara->filename);
             }
 
-            $filename = 'acara_' . time() . '_' . $request->file('foto')->getClientOriginalName();
+            $filename = 'acara_'.time().'_'.$request->file('foto')->getClientOriginalName();
             $this->compressAndStorePhoto($request->file('foto'), $filename);
         } else {
             // Keep existing filename
@@ -258,8 +260,9 @@ class AcaraController extends Controller
                 ->with('success', 'Acara berhasil diupdate');
         } catch (\Exception $e) {
             \Log::error('Failed to update acara', ['error' => $e->getMessage()]);
+
             return redirect()->route('admin.acara.edit', $id)
-                ->with('error', 'Gagal mengupdate data: ' . $e->getMessage())
+                ->with('error', 'Gagal mengupdate data: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -271,7 +274,7 @@ class AcaraController extends Controller
     {
         // Only admin/superadmin/kepala can delete acara
         $currentUser = auth()->user();
-        if (!in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
+        if (! in_array($currentUser->role, ['admin', 'superadmin', 'kepala'])) {
             abort(403, 'Anda tidak memiliki akses untuk menghapus acara.');
         }
 
@@ -290,9 +293,10 @@ class AcaraController extends Controller
             // Get image info
             $imageInfo = getimagesize($file->getRealPath());
 
-            if (!$imageInfo) {
+            if (! $imageInfo) {
                 // Not a valid image, store original
                 $file->storeAs('public/acara', $filename);
+
                 return true;
             }
 
@@ -314,8 +318,9 @@ class AcaraController extends Controller
                     break;
             }
 
-            if (!$image) {
+            if (! $image) {
                 $file->storeAs('public/acara', $filename);
+
                 return true;
             }
 
@@ -323,7 +328,7 @@ class AcaraController extends Controller
             $maxWidth = 1200;
             if ($width > $maxWidth) {
                 $newWidth = $maxWidth;
-                $newHeight = (int)($height * ($maxWidth / $width));
+                $newHeight = (int) ($height * ($maxWidth / $width));
                 $resized = imagecreatetruecolor($newWidth, $newHeight);
                 imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
                 imagedestroy($image);
@@ -332,18 +337,19 @@ class AcaraController extends Controller
 
             // Store to disk with 80% quality
             $path = storage_path('app/public/acara');
-            if (!is_dir($path)) {
+            if (! is_dir($path)) {
                 mkdir($path, 0755, true);
             }
-            imagejpeg($image, $path . '/' . $filename, 80);
+            imagejpeg($image, $path.'/'.$filename, 80);
             imagedestroy($image);
 
             return true;
 
         } catch (\Exception $e) {
-            \Log::error('Failed to compress photo: ' . $e->getMessage());
+            \Log::error('Failed to compress photo: '.$e->getMessage());
             // Fallback: store original if compression fails
             $file->storeAs('public/acara', $filename);
+
             return true;
         }
     }

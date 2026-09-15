@@ -27,13 +27,14 @@ class OptimizeImagesCommand extends Command
         $replace = $this->option('replace');
 
         if ($specificPath) {
-            $targetPath = public_path('assets/img/' . ltrim($specificPath, '/'));
+            $targetPath = public_path('assets/img/'.ltrim($specificPath, '/'));
         } else {
             $targetPath = $basePath;
         }
 
-        if (!File::exists($targetPath)) {
+        if (! File::exists($targetPath)) {
             $this->error("Path not found: {$targetPath}");
+
             return self::FAILURE;
         }
 
@@ -43,11 +44,11 @@ class OptimizeImagesCommand extends Command
             $this->info("Max width: {$maxWidth}px");
         }
         if ($replace) {
-            $this->warn("Mode: REPLACE original files");
+            $this->warn('Mode: REPLACE original files');
         } else {
-            $this->info("Mode: Create .webp copies");
+            $this->info('Mode: Create .webp copies');
         }
-        $this->info("");
+        $this->info('');
 
         $stats = [
             'scanned' => 0,
@@ -64,7 +65,7 @@ class OptimizeImagesCommand extends Command
         foreach ($files as $file) {
             $extension = strtolower($file->getExtension());
 
-            if (!in_array($extension, $extensions)) {
+            if (! in_array($extension, $extensions)) {
                 continue;
             }
 
@@ -81,8 +82,9 @@ class OptimizeImagesCommand extends Command
             }
 
             // Skip if output already exists
-            if (File::exists($outputPath) && !$replace) {
+            if (File::exists($outputPath) && ! $replace) {
                 $stats['skipped']++;
+
                 continue;
             }
 
@@ -90,6 +92,7 @@ class OptimizeImagesCommand extends Command
                 $this->line("  [DRY-RUN] Would convert: {$file->getFilename()} ({$this->formatBytes($currentSize)})");
                 $stats['converted']++;
                 $stats['size_after'] += $currentSize * 0.5; // Estimate 50% reduction
+
                 continue;
             }
 
@@ -97,8 +100,8 @@ class OptimizeImagesCommand extends Command
                 // Read image with Sharp
                 $sharp = \imagecreatefromstring(File::get($currentPath));
 
-                if (!$sharp) {
-                    throw new \Exception("Failed to read image");
+                if (! $sharp) {
+                    throw new \Exception('Failed to read image');
                 }
 
                 // Get original dimensions
@@ -148,13 +151,13 @@ class OptimizeImagesCommand extends Command
             }
         }
 
-        $this->info("");
-        $this->info("=== Summary ===");
+        $this->info('');
+        $this->info('=== Summary ===');
         $this->info("Scanned: {$stats['scanned']} files");
         $this->info("Converted: {$stats['converted']} files");
         $this->info("Skipped: {$stats['skipped']} files");
         $this->info("Failed: {$stats['failed']} files");
-        $this->info("");
+        $this->info('');
 
         if ($stats['size_before'] > 0) {
             $totalReduction = round((1 - $stats['size_after'] / $stats['size_before']) * 100, 1);
@@ -174,6 +177,7 @@ class OptimizeImagesCommand extends Command
             $bytes /= 1024;
             $i++;
         }
-        return round($bytes, 1) . ' ' . $units[$i];
+
+        return round($bytes, 1).' '.$units[$i];
     }
 }

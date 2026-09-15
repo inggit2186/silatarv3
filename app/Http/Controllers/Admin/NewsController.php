@@ -7,10 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
-use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\Format;
+use Intervention\Image\ImageManager;
 
 class NewsController extends Controller
 {
@@ -45,12 +44,12 @@ class NewsController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$hakAkses) {
+        if (! $hakAkses) {
             return false;
         }
 
         $access = json_decode($hakAkses->akses, true);
-        if (!is_array($access)) {
+        if (! is_array($access)) {
             return false;
         }
 
@@ -70,7 +69,7 @@ class NewsController extends Controller
     {
         $user = $request->user();
 
-        if (!$this->userHasNewsAccess($user)) {
+        if (! $this->userHasNewsAccess($user)) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
@@ -92,9 +91,9 @@ class NewsController extends Controller
         // Search
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('excerpt', 'like', "%{$search}%");
+                    ->orWhere('excerpt', 'like', "%{$search}%");
             });
         }
 
@@ -138,7 +137,7 @@ class NewsController extends Controller
     public function create(Request $request)
     {
         $user = $request->user();
-        if (!$this->userHasNewsAccess($user)) {
+        if (! $this->userHasNewsAccess($user)) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
@@ -168,7 +167,7 @@ class NewsController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
-        if (!$this->userHasNewsAccess($user)) {
+        if (! $this->userHasNewsAccess($user)) {
             abort(403);
         }
 
@@ -193,11 +192,11 @@ class NewsController extends Controller
         $imagePath = null;
         if ($request->hasFile('image')) {
             $image = $request->file('image');
-            $filename = 'news_' . Str::slug($request->title) . '_' . time();
+            $filename = 'news_'.Str::slug($request->title).'_'.time();
 
             try {
                 // Create image manager with GD driver
-                $manager = new ImageManager(new Driver());
+                $manager = new ImageManager(new Driver);
                 $img = $manager->decode($image->getPathname());
 
                 // Resize only if dimensions exceed threshold - maintain aspect ratio
@@ -212,14 +211,14 @@ class NewsController extends Controller
                 // If smaller than max, keep original dimensions
 
                 // Save as WebP with high quality (90) - maintains aspect ratio
-                $outputPath = $filename . '.webp';
+                $outputPath = $filename.'.webp';
                 $encoded = $img->encodeUsingFormat(Format::WEBP, quality: 90);
-                Storage::disk('public')->put('news/' . $outputPath, $encoded->toString());
-                $imagePath = 'news/' . $outputPath;
+                Storage::disk('public')->put('news/'.$outputPath, $encoded->toString());
+                $imagePath = 'news/'.$outputPath;
             } catch (\Exception $e) {
                 // Fallback to original file
                 $ext = $image->getClientOriginalExtension();
-                $imagePath = $image->storeAs('news', $filename . '.' . $ext, 'public');
+                $imagePath = $image->storeAs('news', $filename.'.'.$ext, 'public');
             }
         }
 
@@ -235,7 +234,7 @@ class NewsController extends Controller
 
         // Ensure slug is unique
         while (DB::table('news')->where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $counter;
+            $slug = $baseSlug.'-'.$counter;
             $counter++;
         }
 
@@ -274,13 +273,13 @@ class NewsController extends Controller
     public function edit(Request $request, $id)
     {
         $user = $request->user();
-        if (!$this->userHasNewsAccess($user)) {
+        if (! $this->userHasNewsAccess($user)) {
             abort(403);
         }
 
         $news = DB::table('news')->where('id', $id)->first();
 
-        if (!$news) {
+        if (! $news) {
             abort(404, 'Berita tidak ditemukan.');
         }
 
@@ -310,13 +309,13 @@ class NewsController extends Controller
     public function update(Request $request, $id)
     {
         $user = $request->user();
-        if (!$this->userHasNewsAccess($user)) {
+        if (! $this->userHasNewsAccess($user)) {
             abort(403);
         }
 
         $news = DB::table('news')->where('id', $id)->first();
 
-        if (!$news) {
+        if (! $news) {
             abort(404);
         }
 
@@ -345,11 +344,11 @@ class NewsController extends Controller
                 Storage::disk('public')->delete($news->image);
             }
             $image = $request->file('image');
-            $filename = 'news_' . Str::slug($request->title) . '_' . time();
+            $filename = 'news_'.Str::slug($request->title).'_'.time();
 
             try {
                 // Create image manager with GD driver
-                $manager = new ImageManager(new Driver());
+                $manager = new ImageManager(new Driver);
                 $img = $manager->decode($image->getPathname());
 
                 // Resize only if dimensions exceed threshold - maintain aspect ratio
@@ -364,14 +363,14 @@ class NewsController extends Controller
                 // If smaller than max, keep original dimensions
 
                 // Save as WebP with high quality (90) - maintains aspect ratio
-                $outputPath = $filename . '.webp';
+                $outputPath = $filename.'.webp';
                 $encoded = $img->encodeUsingFormat(Format::WEBP, quality: 90);
-                Storage::disk('public')->put('news/' . $outputPath, $encoded->toString());
-                $imagePath = 'news/' . $outputPath;
+                Storage::disk('public')->put('news/'.$outputPath, $encoded->toString());
+                $imagePath = 'news/'.$outputPath;
             } catch (\Exception $e) {
                 // Fallback to original file
                 $ext = $image->getClientOriginalExtension();
-                $imagePath = $image->storeAs('news', $filename . '.' . $ext, 'public');
+                $imagePath = $image->storeAs('news', $filename.'.'.$ext, 'public');
             }
         }
 
@@ -407,13 +406,13 @@ class NewsController extends Controller
     public function destroy(Request $request, $id)
     {
         $user = $request->user();
-        if (!$this->userHasNewsAccess($user)) {
+        if (! $this->userHasNewsAccess($user)) {
             abort(403);
         }
 
         $news = DB::table('news')->where('id', $id)->first();
 
-        if (!$news) {
+        if (! $news) {
             abort(404);
         }
 
@@ -428,7 +427,7 @@ class NewsController extends Controller
         // Delete related content images from storage
         if ($news->content) {
             preg_match_all('/storage\/news\/content\/([^"\']+)/', $news->content, $matches);
-            if (!empty($matches[0])) {
+            if (! empty($matches[0])) {
                 foreach ($matches[0] as $path) {
                     $storagePath = str_replace('storage/', '', $path);
                     if (Storage::disk('public')->exists($storagePath)) {
@@ -450,7 +449,7 @@ class NewsController extends Controller
     public function uploadImage(Request $request)
     {
         $user = $request->user();
-        if (!$this->userHasNewsAccess($user)) {
+        if (! $this->userHasNewsAccess($user)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -462,11 +461,11 @@ class NewsController extends Controller
             $image = $request->file('image');
 
             // Generate unique filename
-            $filename = 'content_' . Str::random(12) . '_' . time();
+            $filename = 'content_'.Str::random(12).'_'.time();
 
             try {
                 // Create image manager with GD driver
-                $manager = new ImageManager(new Driver());
+                $manager = new ImageManager(new Driver);
 
                 // Read and process image
                 $img = $manager->decode($image->getPathname());
@@ -518,11 +517,11 @@ class NewsController extends Controller
                 // Note: GD driver strips EXIF by default when reencoding
 
                 // Encode with WebP format for better compression
-                $outputFilename = $filename . '.webp';
+                $outputFilename = $filename.'.webp';
                 $encoded = $img->encodeUsingFormat(Format::WEBP, quality: $config['quality']);
 
                 // Save to storage
-                $path = 'news/content/' . $outputFilename;
+                $path = 'news/content/'.$outputFilename;
                 Storage::disk('public')->put($path, $encoded->toString());
 
                 // Get file size for logging
@@ -533,28 +532,28 @@ class NewsController extends Controller
                 // Return success with metadata
                 return response()->json([
                     'success' => true,
-                    'url' => asset('storage/' . $path),
+                    'url' => asset('storage/'.$path),
                     'filename' => $outputFilename,
                     'meta' => [
                         'original_size' => $this->formatBytes($originalSize),
                         'compressed_size' => $this->formatBytes($fileSize),
-                        'saved_percent' => $savedPercent > 0 ? $savedPercent . '%' : '0%',
-                        'dimensions' => $img->width() . 'x' . $img->height(),
+                        'saved_percent' => $savedPercent > 0 ? $savedPercent.'%' : '0%',
+                        'dimensions' => $img->width().'x'.$img->height(),
                         'format' => 'webp',
-                    ]
+                    ],
                 ]);
             } catch (\Exception $e) {
                 // Fallback: save original file if processing fails
                 $extension = strtolower($image->getClientOriginalExtension());
-                $fallbackFilename = $filename . '.' . $extension;
+                $fallbackFilename = $filename.'.'.$extension;
                 $path = $image->storeAs('news/content', $fallbackFilename, 'public');
 
                 return response()->json([
                     'success' => true,
-                    'url' => asset('storage/' . $path),
+                    'url' => asset('storage/'.$path),
                     'filename' => $fallbackFilename,
                     'warning' => 'Image saved without processing',
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -569,10 +568,11 @@ class NewsController extends Controller
     {
         $units = ['B', 'KB', 'MB', 'GB'];
         $bytes = max($bytes, 0);
-        $pow = floor(($bytes ? log($bytes) :0) / log(1024));
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
         $pow = min($pow, count($units) - 1);
         $bytes /= (1 << (10 * $pow));
-        return round($bytes, $precision) . ' ' . $units[$pow];
+
+        return round($bytes, $precision).' '.$units[$pow];
     }
 
     /**

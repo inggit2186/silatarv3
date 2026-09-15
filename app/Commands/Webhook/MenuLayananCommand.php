@@ -21,11 +21,11 @@ class MenuLayananCommand extends BaseCommand
 
         $searchName = WhatsAppService::escapeLikeQuery($name);
 
-        $satker = Department::where('nama', 'LIKE', '%' . $searchName . '%')
-            ->orWhere('kode', 'LIKE', '%' . $searchName . '%')
+        $satker = Department::where('nama', 'LIKE', '%'.$searchName.'%')
+            ->orWhere('kode', 'LIKE', '%'.$searchName.'%')
             ->first();
 
-        if (!$satker) {
+        if (! $satker) {
             return $this->waService->sendMessage(
                 $this->phoneNumber,
                 $this->notFound('Unit Kerja')
@@ -38,19 +38,19 @@ class MenuLayananCommand extends BaseCommand
             return $this->waService->sendMessage(
                 $this->phoneNumber,
                 "*:: SILATAR CHAT ::*\n\n"
-                    . "*Mohon Maaf, Daftar Layanan pada {$satker->nama} masih kosong / belum diinput*\n\n\n"
-                    . "_Hormat Kami,_\n\n"
-                    . "_*SILATAR AI*_"
+                    ."*Mohon Maaf, Daftar Layanan pada {$satker->nama} masih kosong / belum diinput*\n\n\n"
+                    ."_Hormat Kami,_\n\n"
+                    .'_*SILATAR AI*_'
             );
         }
 
-        $listItems = $layanan->pluck('nama')->map(fn($item, $index) => ($index + 1) . ". " . $item)->implode("\n");
+        $listItems = $layanan->pluck('nama')->map(fn ($item, $index) => ($index + 1).'. '.$item)->implode("\n");
 
         $textWA = "*:: SILATAR CHAT ::*\n\n"
-            . "Daftar Layanan pada *{$satker->nama}*\n"
-            . $listItems . "\n\n\n"
-            . "_Hormat Kami,_\n\n"
-            . "_*SILATAR AI*_";
+            ."Daftar Layanan pada *{$satker->nama}*\n"
+            .$listItems."\n\n\n"
+            ."_Hormat Kami,_\n\n"
+            .'_*SILATAR AI*_';
 
         return $this->waService->sendMessage($this->phoneNumber, $textWA);
     }

@@ -17,5 +17,6 @@ class Konsul extends Model
     ];
 
     const STATUS_PENDING = 'PENDING';
+
     const STATUS_DONE = 'DONE';
 }

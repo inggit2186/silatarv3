@@ -6,12 +6,14 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Format;
+use Intervention\Image\ImageManager;
 
 class SyncProfilePictures extends Command
 {
     protected $signature = 'sync:pp {--dry-run : Preview without saving}';
+
     protected $description = 'Sync profile pictures from external API to local storage';
 
     public function handle(): int
@@ -23,21 +25,22 @@ class SyncProfilePictures extends Command
 
         $response = Http::timeout(60)->get('https://ptsp.kemenagtanahdatar.cloud/api/v1/getASNList');
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             $this->error('Failed to fetch API data');
+
             return 1;
         }
 
         $apiData = $response->json();
         $apiUsers = collect($apiData['data'])->keyBy('id');
 
-        $this->info("API users count: " . $apiUsers->count());
+        $this->info('API users count: '.$apiUsers->count());
 
         $localUsers = DB::table('users')->get();
-        $this->info("Local users count: " . $localUsers->count());
+        $this->info('Local users count: '.$localUsers->count());
 
         // Initialize ImageManager with GD driver
-        $manager = new ImageManager(new Driver());
+        $manager = new ImageManager(new Driver);
 
         $matched = 0;
         $skipped = 0;
@@ -46,7 +49,7 @@ class SyncProfilePictures extends Command
         $dryRun = $this->option('dry-run');
 
         $this->newLine();
-        $this->info("Starting sync with image compression (300x300, WebP, 75% quality)...");
+        $this->info('Starting sync with image compression (300x300, WebP, 75% quality)...');
 
         $bar = $this->output->createProgressBar($localUsers->count());
         $bar->start();
@@ -54,9 +57,10 @@ class SyncProfilePictures extends Command
         foreach ($localUsers as $user) {
             $apiUser = $apiUsers->get($user->id);
 
-            if (!$apiUser) {
+            if (! $apiUser) {
                 $skipped++;
                 $bar->advance();
+
                 continue;
             }
 
@@ -65,18 +69,19 @@ class SyncProfilePictures extends Command
             $ppUrl = $apiUser['pp'] ?? null;
             $nomorInduk = $apiUser['nomor_induk'] ?? null;
 
-            if (!$ppUrl || !$nomorInduk || str_contains($ppUrl, 'defaultpp.png')) {
+            if (! $ppUrl || ! $nomorInduk || str_contains($ppUrl, 'defaultpp.png')) {
                 $skipped++;
                 $bar->advance();
+
                 continue;
             }
 
             // Create folder in public storage (for symlink access)
-            $folderPath = 'users_berkas/' . $nomorInduk;
-            $filename = $nomorInduk . '.pp.webp';
-            $fullPath = $folderPath . '/' . $filename;
+            $folderPath = 'users_berkas/'.$nomorInduk;
+            $filename = $nomorInduk.'.pp.webp';
+            $fullPath = $folderPath.'/'.$filename;
 
-            if (!$dryRun) {
+            if (! $dryRun) {
                 try {
                     // Download image
                     $imageResponse = Http::timeout(30)->get($ppUrl);
@@ -89,10 +94,10 @@ class SyncProfilePictures extends Command
                         $image->cover(300, 300);
 
                         // Encode as webp with quality 75%
-                        $encodedImage = $image->encodeUsingFormat(\Intervention\Image\Format::WEBP, quality: 75);
+                        $encodedImage = $image->encodeUsingFormat(Format::WEBP, quality: 75);
 
                         // Use 'public' disk to save in storage/app/public
-                        if (!Storage::disk('public')->exists($folderPath)) {
+                        if (! Storage::disk('public')->exists($folderPath)) {
                             Storage::disk('public')->makeDirectory($folderPath);
                         }
 
@@ -115,13 +120,13 @@ class SyncProfilePictures extends Command
                             ->where('id', $user->id)
                             ->update([
                                 'pp' => $filename,
-                                'nomor_induk' => $nomorInduk
+                                'nomor_induk' => $nomorInduk,
                             ]);
 
                         $updated++;
                     }
                 } catch (\Exception $e) {
-                    $this->error("\nError processing PP for user {$user->id}: " . $e->getMessage());
+                    $this->error("\nError processing PP for user {$user->id}: ".$e->getMessage());
                     $errors++;
                 }
             }
@@ -150,7 +155,7 @@ class SyncProfilePictures extends Command
         if ($dryRun) {
             $this->warn('Dry run mode - no changes were saved');
         } else {
-            $this->info("Sync completed! Images resized to 300x300 WebP (quality 75%)");
+            $this->info('Sync completed! Images resized to 300x300 WebP (quality 75%)');
         }
 
         return $errors > 0 ? 1 : 0;

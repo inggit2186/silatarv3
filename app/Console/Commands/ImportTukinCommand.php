@@ -53,10 +53,11 @@ class ImportTukinCommand extends Command
         $importPath = $this->option('path') ?? 'public/uploads/pusaka/tukin';
         $fullPath = base_path($importPath);
 
-        if (!File::exists($fullPath)) {
+        if (! File::exists($fullPath)) {
             $this->error("❌ Folder tidak ditemukan: {$fullPath}");
             $this->newLine();
-            $this->info("💡 Pastikan folder ada atau gunakan --path untuk menentukan lokasi");
+            $this->info('💡 Pastikan folder ada atau gunakan --path untuk menentukan lokasi');
+
             return Command::FAILURE;
         }
 
@@ -66,20 +67,22 @@ class ImportTukinCommand extends Command
         if (empty($files)) {
             $this->warn("⚠️  Tidak ditemukan file Excel (.xlsx) di folder: {$importPath}");
             $this->newLine();
-            $this->info("💡 Format file yang diterima: .xlsx");
+            $this->info('💡 Format file yang diterima: .xlsx');
+
             return Command::SUCCESS;
         }
 
-        $this->info("📂 Ditemukan " . count($files) . " file Excel:");
+        $this->info('📂 Ditemukan '.count($files).' file Excel:');
         foreach ($files as $file) {
-            $this->line("   📄 " . basename($file));
+            $this->line('   📄 '.basename($file));
         }
         $this->newLine();
 
         // Single confirmation before processing all files
-        if (!$this->option('force') && !$this->option('dry-run')) {
-            if (!$this->confirm("Import semua file ini ke database?")) {
-                $this->warn("⏭️  Dibatalkan oleh user");
+        if (! $this->option('force') && ! $this->option('dry-run')) {
+            if (! $this->confirm('Import semua file ini ke database?')) {
+                $this->warn('⏭️  Dibatalkan oleh user');
+
                 return Command::SUCCESS;
             }
         }
@@ -103,9 +106,9 @@ class ImportTukinCommand extends Command
             $totalUpdatedGolongan += $result['updated_golongan'] ?? 0;
 
             // Delete file immediately after successful import (unless --keep-files or dry-run)
-            if (!$this->option('keep-files') && !$this->option('dry-run') && empty($result['errors']) && file_exists($file)) {
+            if (! $this->option('keep-files') && ! $this->option('dry-run') && empty($result['errors']) && file_exists($file)) {
                 unlink($file);
-                $this->line("   🗑️  File dihapus: " . basename($file));
+                $this->line('   🗑️  File dihapus: '.basename($file));
             }
         }
 
@@ -119,7 +122,7 @@ class ImportTukinCommand extends Command
     {
         $files = [];
 
-        $excelFiles = glob($path . '/*.xlsx');
+        $excelFiles = glob($path.'/*.xlsx');
 
         if ($excelFiles) {
             foreach ($excelFiles as $file) {
@@ -138,15 +141,16 @@ class ImportTukinCommand extends Command
     protected function processFile(string $filePath, bool $skipConfirmation = false): array
     {
         $filename = basename($filePath);
-        $this->line("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->info("📄 Processing: {$filename}");
         $this->newLine();
 
         // Parse Excel
         $parsed = $this->importService->parseExcel($filePath);
 
-        if (!$parsed['success']) {
+        if (! $parsed['success']) {
             $this->error("❌ Gagal membaca file: {$parsed['error']}");
+
             return [
                 'file' => $filename,
                 'imported' => 0,
@@ -157,7 +161,7 @@ class ImportTukinCommand extends Command
             ];
         }
 
-        $this->info("📊 Total baris: " . $parsed['total_rows']);
+        $this->info('📊 Total baris: '.$parsed['total_rows']);
 
         // Validate
         $validated = $this->importService->validateData($parsed['data']);
@@ -170,18 +174,19 @@ class ImportTukinCommand extends Command
             // Show first few errors
             $errors = array_slice($validated['invalid_rows'], 0, 5);
             foreach ($errors as $error) {
-                $this->line("   Row {$error['row']}: " . implode(', ', $error['errors']));
+                $this->line("   Row {$error['row']}: ".implode(', ', $error['errors']));
             }
 
             if ($validated['invalid_count'] > 5) {
-                $this->line("   ... dan " . ($validated['invalid_count'] - 5) . " error lainnya");
+                $this->line('   ... dan '.($validated['invalid_count'] - 5).' error lainnya');
             }
         }
 
         // If dry-run, stop here
         if ($this->option('dry-run')) {
             $this->newLine();
-            $this->info("🔍 [DRY RUN] Tidak ada data yang diimport");
+            $this->info('🔍 [DRY RUN] Tidak ada data yang diimport');
+
             return [
                 'file' => $filename,
                 'imported' => 0,
@@ -194,7 +199,7 @@ class ImportTukinCommand extends Command
 
         // Import
         $this->newLine();
-        $this->info("📥 Mengimport data...");
+        $this->info('📥 Mengimport data...');
 
         $result = $this->importService->importToDatabase($validated, auth()->id() ?? 1);
 
@@ -231,9 +236,10 @@ class ImportTukinCommand extends Command
         $this->warn("⚠️  Anda akan melakukan rollback untuk Batch ID: {$batchId}");
         $this->newLine();
 
-        if (!$this->option('force')) {
-            if (!$this->confirm("Apakah Anda yakin? Semua data dari batch ini akan dihapus PERMANEN!")) {
-                $this->info("❌ Dibatalkan oleh user");
+        if (! $this->option('force')) {
+            if (! $this->confirm('Apakah Anda yakin? Semua data dari batch ini akan dihapus PERMANEN!')) {
+                $this->info('❌ Dibatalkan oleh user');
+
                 return Command::SUCCESS;
             }
         }
@@ -242,9 +248,11 @@ class ImportTukinCommand extends Command
 
         if ($result['success']) {
             $this->info("✅ {$result['message']}");
+
             return Command::SUCCESS;
         } else {
             $this->error("❌ {$result['error']}");
+
             return Command::FAILURE;
         }
     }
@@ -259,11 +267,12 @@ class ImportTukinCommand extends Command
         $history = $this->importService->getImportHistory();
 
         if (empty($history)) {
-            $this->warn("⚠️  Belum ada riwayat import");
+            $this->warn('⚠️  Belum ada riwayat import');
+
             return Command::SUCCESS;
         }
 
-        $this->info("📊 Total import: " . count($history));
+        $this->info('📊 Total import: '.count($history));
         $this->newLine();
 
         // Table header
@@ -280,7 +289,7 @@ class ImportTukinCommand extends Command
         );
 
         $this->newLine();
-        $this->info("💡 Untuk rollback, gunakan: php artisan tukin:import --rollback={batch_id}");
+        $this->info('💡 Untuk rollback, gunakan: php artisan tukin:import --rollback={batch_id}');
 
         return Command::SUCCESS;
     }
@@ -293,20 +302,20 @@ class ImportTukinCommand extends Command
         $this->info('╚════════════════════════════════════════════════════════════╝');
         $this->newLine();
 
-        $this->info("📊 Total File: " . count($results));
+        $this->info('📊 Total File: '.count($results));
         $this->info("✅ Total Import: {$totalImported} data");
         $this->info("🔄 Golongan Diupdate: {$totalUpdatedGolongan} user");
         $this->info("❌ Total Invalid: {$totalInvalid} data");
         $this->newLine();
 
         if ($totalImported > 0) {
-            $this->info("✨ Import selesai! Data sudah tersimpan di database.");
+            $this->info('✨ Import selesai! Data sudah tersimpan di database.');
         } else {
-            $this->warn("⚠️  Tidak ada data yang diimport");
+            $this->warn('⚠️  Tidak ada data yang diimport');
         }
 
         $this->newLine();
-        $this->info("💡 Lihat riwayat: php artisan tukin:import --history");
-        $this->info("💡 Rollback: php artisan tukin:import --rollback={batch_id}");
+        $this->info('💡 Lihat riwayat: php artisan tukin:import --history');
+        $this->info('💡 Rollback: php artisan tukin:import --rollback={batch_id}');
     }
 }

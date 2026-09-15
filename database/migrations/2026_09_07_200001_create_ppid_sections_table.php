@@ -20,7 +20,7 @@ return new class extends Migration
                 'stats',
                 'table',
                 'form_fields',
-                'image'
+                'image',
             ]);
             $table->string('title', 255)->nullable();
             $table->longText('content')->nullable();

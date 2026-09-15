@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -38,8 +37,8 @@ class UserController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('u.name', 'like', "%{$search}%")
-                  ->orWhere('u.email', 'like', "%{$search}%")
-                  ->orWhere('u.nomor_induk', 'like', "%{$search}%");
+                    ->orWhere('u.email', 'like', "%{$search}%")
+                    ->orWhere('u.nomor_induk', 'like', "%{$search}%");
             });
         }
 
@@ -164,7 +163,7 @@ class UserController extends Controller
         ]);
 
         // Create tenaga_ktd record for ASN info (tipe_asn, serdik)
-        if (!empty($validated['tipe_asn']) || !empty($validated['serdik'])) {
+        if (! empty($validated['tipe_asn']) || ! empty($validated['serdik'])) {
             DB::table('tenaga_ktd')->insert([
                 'user_id' => $userId,
                 'nomor_induk' => $validated['nomor_induk'],
@@ -191,7 +190,7 @@ class UserController extends Controller
     {
         $user = DB::table('users')->where('id', $id)->first();
 
-        if (!$user) {
+        if (! $user) {
             abort(404, 'Pengguna tidak ditemukan.');
         }
 
@@ -239,73 +238,73 @@ class UserController extends Controller
             $user->linkedin = $tenaga->linkedin ?? null;
 
             // Use tenaga_ktd data if users table data is empty
-            if (empty($user->instansi) && !empty($tenaga->instansi)) {
+            if (empty($user->instansi) && ! empty($tenaga->instansi)) {
                 $user->instansi = $tenaga->instansi;
             }
-            if (empty($user->pekerjaan) && !empty($tenaga->pekerjaan)) {
+            if (empty($user->pekerjaan) && ! empty($tenaga->pekerjaan)) {
                 $user->pekerjaan = $tenaga->pekerjaan;
             }
-            if (empty($user->telp) && !empty($tenaga->telp)) {
+            if (empty($user->telp) && ! empty($tenaga->telp)) {
                 $user->telp = $tenaga->telp;
             }
-            if (empty($user->alamat) && !empty($tenaga->alamat)) {
+            if (empty($user->alamat) && ! empty($tenaga->alamat)) {
                 $user->alamat = $tenaga->alamat;
             }
-            if (empty($user->tempat_lahir) && !empty($tenaga->tempat_lahir)) {
+            if (empty($user->tempat_lahir) && ! empty($tenaga->tempat_lahir)) {
                 $user->tempat_lahir = $tenaga->tempat_lahir;
             }
-            if (empty($user->tanggal_lahir) && !empty($tenaga->tanggal_lahir)) {
+            if (empty($user->tanggal_lahir) && ! empty($tenaga->tanggal_lahir)) {
                 $user->tanggal_lahir = $tenaga->tanggal_lahir;
             }
-            if (empty($user->jk) && !empty($tenaga->jenis_kelamin)) {
+            if (empty($user->jk) && ! empty($tenaga->jenis_kelamin)) {
                 $user->jk = $tenaga->jenis_kelamin;
             }
             // Merge kepegawaian data from tenaga_ktd if empty in users
-            if (empty($user->gol) && !empty($tenaga->golongan)) {
+            if (empty($user->gol) && ! empty($tenaga->golongan)) {
                 $user->gol = $tenaga->golongan;
             }
-            if (empty($user->jabatan) && !empty($tenaga->jabatan)) {
+            if (empty($user->jabatan) && ! empty($tenaga->jabatan)) {
                 $user->jabatan = $tenaga->jabatan;
             }
-            if (empty($user->tmt_cpns) && !empty($tenaga->tmt_cpns)) {
+            if (empty($user->tmt_cpns) && ! empty($tenaga->tmt_cpns)) {
                 $user->tmt_cpns = $tenaga->tmt_cpns;
             }
-            if (empty($user->tmt_pns) && !empty($tenaga->tmt_pns)) {
+            if (empty($user->tmt_pns) && ! empty($tenaga->tmt_pns)) {
                 $user->tmt_pns = $tenaga->tmt_pns;
             }
-            if (empty($user->tmt_tugas) && !empty($tenaga->tmt_tugas)) {
+            if (empty($user->tmt_tugas) && ! empty($tenaga->tmt_tugas)) {
                 $user->tmt_tugas = $tenaga->tmt_tugas;
             }
-            if (empty($user->kgb) && !empty($tenaga->kgb)) {
+            if (empty($user->kgb) && ! empty($tenaga->kgb)) {
                 $user->kgb = $tenaga->kgb;
             }
-            if (empty($user->masa_kerja_tahun) && !empty($tenaga->masa_kerja_tahun)) {
+            if (empty($user->masa_kerja_tahun) && ! empty($tenaga->masa_kerja_tahun)) {
                 $user->masa_kerja_tahun = $tenaga->masa_kerja_tahun;
             }
-            if (empty($user->masa_kerja_bulan) && !empty($tenaga->masa_kerja_bulan)) {
+            if (empty($user->masa_kerja_bulan) && ! empty($tenaga->masa_kerja_bulan)) {
                 $user->masa_kerja_bulan = $tenaga->masa_kerja_bulan;
             }
             // Merge pendidikan data
-            if (empty($user->ijazah_pendidikan) && !empty($tenaga->pendidikan)) {
+            if (empty($user->ijazah_pendidikan) && ! empty($tenaga->pendidikan)) {
                 $user->ijazah_pendidikan = $tenaga->pendidikan;
             }
-            if (empty($user->ijazah_jurusan) && !empty($tenaga->jurusan)) {
+            if (empty($user->ijazah_jurusan) && ! empty($tenaga->jurusan)) {
                 $user->ijazah_jurusan = $tenaga->jurusan;
             }
-            if (empty($user->ijazah_fakultas) && !empty($tenaga->fakultas)) {
+            if (empty($user->ijazah_fakultas) && ! empty($tenaga->fakultas)) {
                 $user->ijazah_fakultas = $tenaga->fakultas;
             }
-            if (empty($user->ijazah_universitas) && !empty($tenaga->universitas)) {
+            if (empty($user->ijazah_universitas) && ! empty($tenaga->universitas)) {
                 $user->ijazah_universitas = $tenaga->universitas;
             }
-            if (empty($user->ijazah_tahun_lulus) && !empty($tenaga->tahun_lulus)) {
+            if (empty($user->ijazah_tahun_lulus) && ! empty($tenaga->tahun_lulus)) {
                 $user->ijazah_tahun_lulus = $tenaga->tahun_lulus;
             }
             // Merge tipe ASN and sertifikasi
-            if (empty($user->tipe_asn) && !empty($tenaga->status)) {
+            if (empty($user->tipe_asn) && ! empty($tenaga->status)) {
                 $user->tipe_asn = $tenaga->status;
             }
-            if (empty($user->serdik) && !empty($tenaga->serdik)) {
+            if (empty($user->serdik) && ! empty($tenaga->serdik)) {
                 $user->serdik = $tenaga->serdik;
             }
         }
@@ -335,6 +334,7 @@ class UserController extends Controller
                     ->where('id', $supervisor->dept_id)
                     ->first();
                 $supervisor->department_name = $dept->nama ?? '-';
+
                 return $supervisor;
             });
 
@@ -364,7 +364,7 @@ class UserController extends Controller
     {
         $user = DB::table('users')->where('id', $id)->first();
 
-        if (!$user) {
+        if (! $user) {
             abort(404, 'Pengguna tidak ditemukan.');
         }
 
@@ -457,7 +457,7 @@ class UserController extends Controller
         }
 
         // Only update password if provided
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $updateData['password'] = Hash::make($validated['password']);
         }
 
@@ -555,9 +555,9 @@ class UserController extends Controller
 
         // Update tenaga_ktd if record exists and has data to update
         $tenaga = DB::table('tenaga_ktd')->where('user_id', $id)->first();
-        if ($tenaga && !empty($tenagaData)) {
+        if ($tenaga && ! empty($tenagaData)) {
             DB::table('tenaga_ktd')->where('user_id', $id)->update($tenagaData);
-        } elseif (!empty($tenagaData)) {
+        } elseif (! empty($tenagaData)) {
             // Create tenaga_ktd record if it doesn't exist
             $tenagaData['user_id'] = $id;
             $tenagaData['nama'] = $validated['name'];
@@ -578,7 +578,7 @@ class UserController extends Controller
     {
         $user = DB::table('users')->where('id', $id)->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['success' => false, 'message' => 'Pengguna tidak ditemukan.'], 404);
         }
 
@@ -604,7 +604,7 @@ class UserController extends Controller
     {
         $user = DB::table('users')->where('id', $id)->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['success' => false, 'message' => 'Pengguna tidak ditemukan.'], 404);
         }
 
@@ -637,7 +637,7 @@ class UserController extends Controller
 
         $user = DB::table('users')->where('id', $id)->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['success' => false, 'message' => 'Pengguna tidak ditemukan.'], 404);
         }
 
@@ -670,7 +670,7 @@ class UserController extends Controller
         $user = auth()->user();
 
         // Verify old password
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             return response()->json(['success' => false, 'message' => 'Password lama salah.'], 400);
         }
 
@@ -699,7 +699,7 @@ class UserController extends Controller
             ])
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['success' => false, 'message' => 'Pengguna tidak ditemukan.'], 404);
         }
 
@@ -722,7 +722,7 @@ class UserController extends Controller
             ->where('u.id', $id)
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             abort(404, 'Pengguna tidak ditemukan.');
         }
 
@@ -769,51 +769,51 @@ class UserController extends Controller
             $user->instagram = $tenaga->instagram ?? null;
             $user->linkedin = $tenaga->linkedin ?? null;
             // Merge kepegawaian data
-            if (empty($user->gol) && !empty($tenaga->golongan)) {
+            if (empty($user->gol) && ! empty($tenaga->golongan)) {
                 $user->gol = $tenaga->golongan;
             }
-            if (empty($user->jabatan) && !empty($tenaga->jabatan)) {
+            if (empty($user->jabatan) && ! empty($tenaga->jabatan)) {
                 $user->jabatan = $tenaga->jabatan;
             }
-            if (empty($user->tmt_cpns) && !empty($tenaga->tmt_cpns)) {
+            if (empty($user->tmt_cpns) && ! empty($tenaga->tmt_cpns)) {
                 $user->tmt_cpns = $tenaga->tmt_cpns;
             }
-            if (empty($user->tmt_pns) && !empty($tenaga->tmt_pns)) {
+            if (empty($user->tmt_pns) && ! empty($tenaga->tmt_pns)) {
                 $user->tmt_pns = $tenaga->tmt_pns;
             }
-            if (empty($user->tmt_tugas) && !empty($tenaga->tmt_tugas)) {
+            if (empty($user->tmt_tugas) && ! empty($tenaga->tmt_tugas)) {
                 $user->tmt_tugas = $tenaga->tmt_tugas;
             }
-            if (empty($user->kgb) && !empty($tenaga->kgb)) {
+            if (empty($user->kgb) && ! empty($tenaga->kgb)) {
                 $user->kgb = $tenaga->kgb;
             }
-            if (empty($user->masa_kerja_tahun) && !empty($tenaga->masa_kerja_tahun)) {
+            if (empty($user->masa_kerja_tahun) && ! empty($tenaga->masa_kerja_tahun)) {
                 $user->masa_kerja_tahun = $tenaga->masa_kerja_tahun;
             }
-            if (empty($user->masa_kerja_bulan) && !empty($tenaga->masa_kerja_bulan)) {
+            if (empty($user->masa_kerja_bulan) && ! empty($tenaga->masa_kerja_bulan)) {
                 $user->masa_kerja_bulan = $tenaga->masa_kerja_bulan;
             }
             // Merge pendidikan data
-            if (empty($user->ijazah_pendidikan) && !empty($tenaga->pendidikan)) {
+            if (empty($user->ijazah_pendidikan) && ! empty($tenaga->pendidikan)) {
                 $user->ijazah_pendidikan = $tenaga->pendidikan;
             }
-            if (empty($user->ijazah_jurusan) && !empty($tenaga->jurusan)) {
+            if (empty($user->ijazah_jurusan) && ! empty($tenaga->jurusan)) {
                 $user->ijazah_jurusan = $tenaga->jurusan;
             }
-            if (empty($user->ijazah_fakultas) && !empty($tenaga->fakultas)) {
+            if (empty($user->ijazah_fakultas) && ! empty($tenaga->fakultas)) {
                 $user->ijazah_fakultas = $tenaga->fakultas;
             }
-            if (empty($user->ijazah_universitas) && !empty($tenaga->universitas)) {
+            if (empty($user->ijazah_universitas) && ! empty($tenaga->universitas)) {
                 $user->ijazah_universitas = $tenaga->universitas;
             }
-            if (empty($user->ijazah_tahun_lulus) && !empty($tenaga->tahun_lulus)) {
+            if (empty($user->ijazah_tahun_lulus) && ! empty($tenaga->tahun_lulus)) {
                 $user->ijazah_tahun_lulus = $tenaga->tahun_lulus;
             }
             // Merge tipe ASN and sertifikasi
-            if (empty($user->tipe_asn) && !empty($tenaga->status)) {
+            if (empty($user->tipe_asn) && ! empty($tenaga->status)) {
                 $user->tipe_asn = $tenaga->status;
             }
-            if (empty($user->serdik) && !empty($tenaga->serdik)) {
+            if (empty($user->serdik) && ! empty($tenaga->serdik)) {
                 $user->serdik = $tenaga->serdik;
             }
         }
@@ -844,7 +844,7 @@ class UserController extends Controller
             ->where('nomor_induk', $request->nip)
             ->first();
 
-        if (!$targetUser) {
+        if (! $targetUser) {
             return back()->with('error', 'NIP tidak ditemukan dalam sistem.');
         }
 
@@ -863,7 +863,7 @@ class UserController extends Controller
         auth()->loginUsingId($targetUser->id);
         session()->regenerate();
 
-        return redirect()->intended(route('pelayanan'))->with('success', 'Anda sekarang masuk sebagai ' . $targetUser->name);
+        return redirect()->intended(route('pelayanan'))->with('success', 'Anda sekarang masuk sebagai '.$targetUser->name);
     }
 
     /**
@@ -873,7 +873,7 @@ class UserController extends Controller
     {
         $impersonateData = session('impersonate');
 
-        if (!$impersonateData) {
+        if (! $impersonateData) {
             return redirect()->route('home');
         }
 
@@ -891,6 +891,6 @@ class UserController extends Controller
         // Clear impersonate session
         session()->forget('impersonate');
 
-        return redirect()->route('admin.dashboard')->with('success', 'Kembali ke akun admin: ' . $impersonateData['name']);
+        return redirect()->route('admin.dashboard')->with('success', 'Kembali ke akun admin: '.$impersonateData['name']);
     }
 }

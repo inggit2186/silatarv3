@@ -150,7 +150,7 @@ class PenilaianKinerjaController extends Controller
 
         // Cek apakah pejabat valid untuk dinilai
         $pejabat = User::find($request->pejabat_id);
-        if (!in_array($pejabat->kat_jabatan, ['kasubbag', 'kasubag', 'kasi', 'kepala'])) {
+        if (! in_array($pejabat->kat_jabatan, ['kasubbag', 'kasubag', 'kasi', 'kepala'])) {
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Pejabat tidak valid untuk dinilai.');
@@ -219,9 +219,10 @@ class PenilaianKinerjaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+                ->with('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
     }
 
@@ -270,7 +271,7 @@ class PenilaianKinerjaController extends Controller
             'breadcrumbs' => [
                 ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
                 ['label' => 'Penilaian Kinerja', 'url' => route('admin.penilaian-kinerja.index')],
-                ['label' => 'Edit: ' . $penilaian->pejabat->name, 'url' => null],
+                ['label' => 'Edit: '.$penilaian->pejabat->name, 'url' => null],
             ],
             'penilaian' => $penilaian,
             'kriterias' => $kriterias,
@@ -341,9 +342,10 @@ class PenilaianKinerjaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+                ->with('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
     }
 
@@ -423,6 +425,7 @@ class PenilaianKinerjaController extends Controller
         for ($y = $currentYear - 2; $y <= $currentYear + 1; $y++) {
             $years[$y] = $y;
         }
+
         return $years;
     }
 

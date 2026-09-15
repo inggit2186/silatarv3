@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Konsul;
+use App\Models\Pendidikan;
+use App\Models\Rating;
+use App\Models\User;
 use App\Services\CommandHandler;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class WebhookController extends Controller
 {
@@ -42,10 +46,11 @@ class WebhookController extends Controller
             ]);
 
             // Validate required fields
-            if (!$request->has('from') || !$request->has('message')) {
+            if (! $request->has('from') || ! $request->has('message')) {
                 Log::channel('whatsapp')->warning('Invalid webhook payload', [
                     'payload' => $request->all(),
                 ]);
+
                 return response()->json(['error' => 'Missing required fields'], 400);
             }
 
@@ -53,17 +58,18 @@ class WebhookController extends Controller
             $senderNumber = $request->from;
             $botNumber = env('WA_NUMBER');
 
-            if ($senderNumber === $botNumber || $senderNumber === '+' . $botNumber || $senderNumber === '0' . substr($botNumber, 2)) {
+            if ($senderNumber === $botNumber || $senderNumber === '+'.$botNumber || $senderNumber === '0'.substr($botNumber, 2)) {
                 Log::channel('whatsapp')->debug('Skipping message from bot number', [
                     'from' => $senderNumber,
                     'bot' => $botNumber,
                 ]);
+
                 return response()->json(['status' => 'ignored', 'reason' => 'message from bot']);
             }
 
             // Deduplication: Skip if same message already processed within 60 seconds
             $message = $request->message ?? '';
-            $cacheKey = 'wa_processed_' . md5($senderNumber . '|' . $message);
+            $cacheKey = 'wa_processed_'.md5($senderNumber.'|'.$message);
 
             Log::channel('whatsapp')->debug('Cache check', [
                 'cache_key' => $cacheKey,
@@ -75,6 +81,7 @@ class WebhookController extends Controller
                     'from' => $senderNumber,
                     'message' => $message,
                 ]);
+
                 return response()->json(['status' => 'ignored', 'reason' => 'duplicate']);
             }
 
@@ -84,7 +91,7 @@ class WebhookController extends Controller
                 'cache_key' => $cacheKey,
             ]);
 
-            $waService = new WhatsAppService();
+            $waService = new WhatsAppService;
             $handler = new CommandHandler($request, $waService);
 
             $result = $handler->handle();
@@ -123,23 +130,23 @@ class WebhookController extends Controller
             $val = rand($min, $max);
             $date = date('Y-m-d H:i:s', $val);
 
-            $name = \App\Models\User::where('id', $rand)->first();
+            $name = User::where('id', $rand)->first();
 
             if ($name) {
                 $input = [
-                    "Mantap", "OK", "Pelayanannya mantap", "Bagus",
-                    "Puas dengan hasilnya", "Rancak bana", "Mantap Bana",
-                    "Gak tau diisi apa", "Ok mantap", "Bagus",
-                    "Pelayanannya cepat", "Cepat tepat mantap", "Udah bagus",
-                    "Masih ada yang bisa ditingkatkan", "OK bagus", "Bagus sekali", "..."
+                    'Mantap', 'OK', 'Pelayanannya mantap', 'Bagus',
+                    'Puas dengan hasilnya', 'Rancak bana', 'Mantap Bana',
+                    'Gak tau diisi apa', 'Ok mantap', 'Bagus',
+                    'Pelayanannya cepat', 'Cepat tepat mantap', 'Udah bagus',
+                    'Masih ada yang bisa ditingkatkan', 'OK bagus', 'Bagus sekali', '...',
                 ];
                 $komen = array_rand($input, 1);
 
-                \App\Models\Rating::create([
+                Rating::create([
                     'nama' => $name->name,
                     'rating' => $rating,
                     'keterangan' => $input[$komen],
-                    'created_at' => $date
+                    'created_at' => $date,
                 ]);
             }
         }
@@ -156,13 +163,13 @@ class WebhookController extends Controller
     public function autoCleanDoc()
     {
         // Delete pending consultations
-        $konsul = \App\Models\Konsul::where('status', 'PENDING')->delete();
+        $konsul = Konsul::where('status', 'PENDING')->delete();
 
         // Get expired pendidikan records
-        $zfile = \App\Models\Pendidikan::where('status', 99)->get();
+        $zfile = Pendidikan::where('status', 99)->get();
 
         foreach ($zfile as $zfile) {
-            $xfile = public_path('uploads/UsersBerkas/' . $zfile->file);
+            $xfile = public_path('uploads/UsersBerkas/'.$zfile->file);
             if (file_exists($xfile)) {
                 unlink($xfile);
             }
@@ -192,12 +199,13 @@ class WebhookController extends Controller
 
         if ($token === $verifyToken && $challenge) {
             Log::info('WhatsApp webhook verified successfully');
+
             return response($challenge, 200);
         }
 
         Log::warning('WhatsApp webhook verification failed', [
             'token_match' => $token === $verifyToken,
-            'has_challenge' => !empty($challenge),
+            'has_challenge' => ! empty($challenge),
         ]);
 
         return response('Forbidden', 403);
@@ -240,7 +248,7 @@ class WebhookController extends Controller
             // Deduplication for test endpoint too
             $senderNumber = $testPayload['from'];
             $message = $testPayload['message'];
-            $cacheKey = 'wa_processed_' . md5($senderNumber . '|' . $message);
+            $cacheKey = 'wa_processed_'.md5($senderNumber.'|'.$message);
 
             Log::channel('whatsapp')->debug('TEST: Cache check', [
                 'cache_key' => $cacheKey,
@@ -253,13 +261,14 @@ class WebhookController extends Controller
                     'from' => $senderNumber,
                     'message' => $message,
                 ]);
+
                 return response()->json(['status' => 'ignored', 'reason' => 'duplicate']);
             }
 
             Cache::put($cacheKey, true, 5);
             Log::channel('whatsapp')->debug('TEST: Message marked as processed', ['cache_key' => $cacheKey]);
 
-            $waService = new WhatsAppService();
+            $waService = new WhatsAppService;
             $handler = new CommandHandler($fakeRequest, $waService);
 
             $result = $handler->handle();

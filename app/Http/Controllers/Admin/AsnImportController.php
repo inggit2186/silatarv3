@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\AsnImportService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class AsnImportController extends Controller
 {
@@ -38,13 +38,13 @@ class AsnImportController extends Controller
 
         try {
             $file = $request->file('file');
-            $filename = 'asn_import_' . time() . '.' . $file->getClientOriginalExtension();
+            $filename = 'asn_import_'.time().'.'.$file->getClientOriginalExtension();
             $path = $file->storeAs('imports', $filename, 'local');
 
             $fullPath = Storage::disk('local')->path($path);
             $parsed = $this->importService->parseExcel($fullPath);
 
-            if (!$parsed['success']) {
+            if (! $parsed['success']) {
                 return back()->with('error', $parsed['error']);
             }
 
@@ -61,7 +61,7 @@ class AsnImportController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal memproses file: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memproses file: '.$e->getMessage());
         }
     }
 
@@ -73,7 +73,7 @@ class AsnImportController extends Controller
         $validatedData = session('asn_import_data');
         $importFile = session('asn_import_file');
 
-        if (!$validatedData || !$importFile) {
+        if (! $validatedData || ! $importFile) {
             return back()->with('error', 'Data import tidak ditemukan. Silakan upload ulang.');
         }
 
@@ -96,7 +96,7 @@ class AsnImportController extends Controller
             }
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal import: ' . $e->getMessage());
+            return back()->with('error', 'Gagal import: '.$e->getMessage());
         }
     }
 

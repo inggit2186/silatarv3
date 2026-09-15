@@ -24,12 +24,12 @@ class CekSatkerCommand extends BaseCommand
         // Escape special LIKE characters
         $searchName = WhatsAppService::escapeLikeQuery($name);
 
-        $satker = Department::where('nama', 'LIKE', '%' . $searchName . '%')
-            ->orWhere('kode', 'LIKE', '%' . $searchName . '%')
+        $satker = Department::where('nama', 'LIKE', '%'.$searchName.'%')
+            ->orWhere('kode', 'LIKE', '%'.$searchName.'%')
             ->with('instansi')
             ->first();
 
-        if (!$satker) {
+        if (! $satker) {
             return $this->waService->sendMessage(
                 $this->phoneNumber,
                 $this->notFound('Unit Kerja')
@@ -60,19 +60,19 @@ class CekSatkerCommand extends BaseCommand
             $kontak = WhatsAppService::formatPhoneForDisplay($kontak);
         }
 
-        $url = "https://silatar.kemenag.go.id/v2/Satker/" . $satker->id;
+        $url = 'https://silatar.kemenag.go.id/v2/Satker/'.$satker->id;
 
         $textWA = "*:: SILATAR AI-CHAT ::*\n\n"
-            . "Unit Kerja : *{$satker->nama}* \n"
-            . "Kepala Satker : *{$namaKepala}* \n\n"
-            . "Alamat : *{$alamat}* \n"
-            . "Email : *{$email}* \n"
-            . "No Kontak : *{$kontak}*\n\n"
-            . "Jumlah Pegawai : *{$jmlPegawai} Orang* \n\n"
-            . "Untuk List Pegawai, please click link-dessous ini \n"
-            . "*{$url}* \n\n\n"
-            . "_Hormat Kami,_\n\n"
-            . "_*SILATAR AI*_";
+            ."Unit Kerja : *{$satker->nama}* \n"
+            ."Kepala Satker : *{$namaKepala}* \n\n"
+            ."Alamat : *{$alamat}* \n"
+            ."Email : *{$email}* \n"
+            ."No Kontak : *{$kontak}*\n\n"
+            ."Jumlah Pegawai : *{$jmlPegawai} Orang* \n\n"
+            ."Untuk List Pegawai, please click link-dessous ini \n"
+            ."*{$url}* \n\n\n"
+            ."_Hormat Kami,_\n\n"
+            .'_*SILATAR AI*_';
 
         return $this->waService->sendMessage($this->phoneNumber, $textWA);
     }

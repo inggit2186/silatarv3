@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jodit Default Toolbar Test</title>
+    <link rel="stylesheet" href="/js/jodit/jodit.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { color: #333; }
+        #status { margin: 20px 0; padding: 10px; background: #f0f0f0; }
+        #button-info { margin-top: 20px; padding: 15px; background: #e8f4e8; border: 1px solid #ccc; }
+        .button-item { margin: 5px 0; padding: 5px; background: white; border: 1px solid #ddd; }
+        .found { background: #d4edda; border-color: #28a745; }
+        .not-found { background: #f8d7da; border-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>Jodit Default Toolbar Debug</h1>
+
+    <div id="status"></div>
+    <div id="button-info"></div>
+
+    <h2>Editor:</h2>
+    <textarea id="test-editor" style="width:100%;height:300px;">
+        <p>Test content here</p>
+    </textarea>
+
+    <script src="/js/jodit/jodit.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const status = document.getElementById('status');
+            const buttonInfo = document.getElementById('button-info');
+
+            // Check if Jodit is loaded
+            if (typeof Jodit === 'undefined') {
+                status.innerHTML = '<p style="color:red;">❌ Jodit not loaded!</p>';
+                return;
+            }
+
+            status.innerHTML = '<p style="color:green;">✅ Jodit loaded! Version: ' + Jodit.version + '</p>';
+
+            // Initialize Jodit with default toolbar
+            const editor = Jodit.make('#test-editor', {
+                height: 300,
+                toolbar: true,
+                toolbarButtonSize: 'middle'
+            });
+
+            // Wait for editor to initialize
+            setTimeout(function() {
+                const toolbar = editor.toolbar;
+                if (!toolbar) {
+                    buttonInfo.innerHTML = '<p style="color:red;">❌ Toolbar not found</p>';
+                    return;
+                }
+
+                // Get all buttons
+                const buttons = toolbar.querySelectorAll('button');
+                let html = '<h3>Toolbar Buttons Found: ' + buttons.length + '</h3>';
+
+                // List all buttons
+                buttons.forEach(function(btn, index) {
+                    const name = btn.getAttribute('data-name') || 'unknown';
+                    const title = btn.title || '';
+                    const className = btn.className || '';
+
+                    html += '<div class="button-item">';
+                    html += '<strong>' + (index + 1) + '. ' + name + '</strong>';
+                    if (title) html += ' - ' + title;
+                    html += '</div>';
+                });
+
+                // Specifically check for image button
+                const imageBtn = toolbar.querySelector('[data-name="image"]');
+                if (imageBtn) {
+                    html += '<div class="button-item found">';
+                    html += '<strong>✅ IMAGE BUTTON FOUND!</strong>';
+                    html += '</div>';
+                } else {
+                    html += '<div class="button-item not-found">';
+                    html += '<strong>❌ IMAGE BUTTON NOT FOUND</strong>';
+                    html += '</div>';
+                }
+
+                buttonInfo.innerHTML = html;
+            }, 1500);
+        });
+    </script>
+</body>
+</html>

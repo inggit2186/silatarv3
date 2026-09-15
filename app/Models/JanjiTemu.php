@@ -113,7 +113,7 @@ class JanjiTemu extends Model
                 $sub->where('dept_id', $deptId);
             })
             // Or appointments directly to this satker
-            ->orWhere('nip_tujuan', $deptId);
+                ->orWhere('nip_tujuan', $deptId);
         });
     }
 
@@ -142,7 +142,7 @@ class JanjiTemu extends Model
      */
     public function getStatusLabelAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'APPOINTMENT' => 'Menunggu Konfirmasi',
             'PENDING' => 'Menunggu',
             'APPROVED' => 'Disetujui',
@@ -165,7 +165,7 @@ class JanjiTemu extends Model
      */
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'APPOINTMENT' => 'yellow',
             'PENDING' => 'blue',
             'APPROVED' => 'green',

@@ -2,10 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Services\PresensiImportService;
 use App\Models\Department;
+use App\Services\PresensiImportService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 
 class ImportPresensiCommand extends Command
@@ -55,10 +54,11 @@ class ImportPresensiCommand extends Command
         $importPath = $this->option('path') ?? 'public/uploads/pusaka/presensi';
         $fullPath = base_path($importPath);
 
-        if (!File::exists($fullPath)) {
+        if (! File::exists($fullPath)) {
             $this->error("❌ Folder tidak ditemukan: {$fullPath}");
             $this->newLine();
-            $this->info("💡 Pastikan folder ada atau gunakan --path untuk menentukan lokasi");
+            $this->info('💡 Pastikan folder ada atau gunakan --path untuk menentukan lokasi');
+
             return Command::FAILURE;
         }
 
@@ -68,20 +68,22 @@ class ImportPresensiCommand extends Command
         if (empty($files)) {
             $this->warn("⚠️  Tidak ditemukan file Excel (.xlsx) di folder: {$importPath}");
             $this->newLine();
-            $this->info("💡 Format file yang diterima: .xlsx");
+            $this->info('💡 Format file yang diterima: .xlsx');
+
             return Command::SUCCESS;
         }
 
-        $this->info("📂 Ditemukan " . count($files) . " file Excel:");
+        $this->info('📂 Ditemukan '.count($files).' file Excel:');
         foreach ($files as $file) {
-            $this->line("   📄 " . basename($file));
+            $this->line('   📄 '.basename($file));
         }
         $this->newLine();
 
         // Single confirmation before processing all files
-        if (!$this->option('force') && !$this->option('dry-run')) {
-            if (!$this->confirm("Import semua file ini ke database?")) {
-                $this->warn("⏭️  Dibatalkan oleh user");
+        if (! $this->option('force') && ! $this->option('dry-run')) {
+            if (! $this->confirm('Import semua file ini ke database?')) {
+                $this->warn('⏭️  Dibatalkan oleh user');
+
                 return Command::SUCCESS;
             }
         }
@@ -103,9 +105,9 @@ class ImportPresensiCommand extends Command
             $totalInvalid += $result['invalid'];
 
             // Delete file immediately after successful import (unless --keep-files)
-            if (!$this->option('keep-files') && empty($result['errors']) && file_exists($file)) {
+            if (! $this->option('keep-files') && empty($result['errors']) && file_exists($file)) {
                 unlink($file);
-                $this->line("   🗑️  File dihapus: " . basename($file));
+                $this->line('   🗑️  File dihapus: '.basename($file));
             }
         }
 
@@ -119,7 +121,7 @@ class ImportPresensiCommand extends Command
     {
         $files = [];
 
-        $excelFiles = glob($path . '/*.xlsx');
+        $excelFiles = glob($path.'/*.xlsx');
 
         if ($excelFiles) {
             foreach ($excelFiles as $file) {
@@ -163,15 +165,16 @@ class ImportPresensiCommand extends Command
     protected function processFile(string $filePath, bool $skipConfirmation = false): array
     {
         $filename = basename($filePath);
-        $this->line("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->info("📄 Processing: {$filename}");
         $this->newLine();
 
         // Parse Excel
         $parsed = $this->importService->parseExcel($filePath);
 
-        if (!$parsed['success']) {
+        if (! $parsed['success']) {
             $this->error("❌ Gagal membaca file: {$parsed['error']}");
+
             return [
                 'file' => $filename,
                 'imported' => 0,
@@ -181,7 +184,7 @@ class ImportPresensiCommand extends Command
             ];
         }
 
-        $this->info("📊 Total baris: " . $parsed['total_rows']);
+        $this->info('📊 Total baris: '.$parsed['total_rows']);
 
         // Validate (dept_id akan diambil dari users berdasarkan NIP)
         $validated = $this->importService->validateData($parsed['data']);
@@ -194,18 +197,19 @@ class ImportPresensiCommand extends Command
             // Show first few errors
             $errors = array_slice($validated['invalid_rows'], 0, 5);
             foreach ($errors as $error) {
-                $this->line("   Row {$error['row']}: " . implode(', ', $error['errors']));
+                $this->line("   Row {$error['row']}: ".implode(', ', $error['errors']));
             }
 
             if ($validated['invalid_count'] > 5) {
-                $this->line("   ... dan " . ($validated['invalid_count'] - 5) . " error lainnya");
+                $this->line('   ... dan '.($validated['invalid_count'] - 5).' error lainnya');
             }
         }
 
         // If dry-run, stop here
         if ($this->option('dry-run')) {
             $this->newLine();
-            $this->info("🔍 [DRY RUN] Tidak ada data yang diimport");
+            $this->info('🔍 [DRY RUN] Tidak ada data yang diimport');
+
             return [
                 'file' => $filename,
                 'imported' => 0,
@@ -216,10 +220,11 @@ class ImportPresensiCommand extends Command
         }
 
         // Confirm import (skip if already confirmed at start)
-        if (!$this->option('force') && !$skipConfirmation) {
+        if (! $this->option('force') && ! $skipConfirmation) {
             $this->newLine();
-            if (!$this->confirm("Import {$validated['valid_count']} data yang valid ke database?")) {
-                $this->warn("⏭️  Dibatalkan oleh user");
+            if (! $this->confirm("Import {$validated['valid_count']} data yang valid ke database?")) {
+                $this->warn('⏭️  Dibatalkan oleh user');
+
                 return [
                     'file' => $filename,
                     'imported' => 0,
@@ -232,7 +237,7 @@ class ImportPresensiCommand extends Command
 
         // Import
         $this->newLine();
-        $this->info("📥 Mengimport data...");
+        $this->info('📥 Mengimport data...');
 
         $result = $this->importService->importToDatabase($validated, auth()->id() ?? 1);
 
@@ -274,7 +279,7 @@ class ImportPresensiCommand extends Command
         $departments = Department::orderBy('nama')->get();
 
         $this->newLine();
-        $this->info("📋 Daftar Unit Kerja:");
+        $this->info('📋 Daftar Unit Kerja:');
 
         $deptList = [];
         $index = 1;
@@ -299,17 +304,18 @@ class ImportPresensiCommand extends Command
     {
         $batchId = $this->option('rollback');
 
-        $this->info("╔════════════════════════════════════════════════════════════╗");
-        $this->info("║            ROLLBACK IMPORT PRESENSI                       ║");
-        $this->info("╚════════════════════════════════════════════════════════════╝");
+        $this->info('╔════════════════════════════════════════════════════════════╗');
+        $this->info('║            ROLLBACK IMPORT PRESENSI                       ║');
+        $this->info('╚════════════════════════════════════════════════════════════╝');
         $this->newLine();
 
         $this->warn("⚠️  Anda akan melakukan rollback untuk Batch ID: {$batchId}");
         $this->newLine();
 
-        if (!$this->option('force')) {
-            if (!$this->confirm("Apakah Anda yakin? Semua data dari batch ini akan dihapus PERMANEN!")) {
-                $this->info("❌ Dibatalkan oleh user");
+        if (! $this->option('force')) {
+            if (! $this->confirm('Apakah Anda yakin? Semua data dari batch ini akan dihapus PERMANEN!')) {
+                $this->info('❌ Dibatalkan oleh user');
+
                 return Command::SUCCESS;
             }
         }
@@ -318,28 +324,31 @@ class ImportPresensiCommand extends Command
 
         if ($result['success']) {
             $this->info("✅ {$result['message']}");
+
             return Command::SUCCESS;
         } else {
             $this->error("❌ {$result['error']}");
+
             return Command::FAILURE;
         }
     }
 
     protected function handleHistory(): int
     {
-        $this->info("╔════════════════════════════════════════════════════════════╗");
-        $this->info("║            RIWAYAT IMPORT PRESENSI                        ║");
-        $this->info("╚════════════════════════════════════════════════════════════╝");
+        $this->info('╔════════════════════════════════════════════════════════════╗');
+        $this->info('║            RIWAYAT IMPORT PRESENSI                        ║');
+        $this->info('╚════════════════════════════════════════════════════════════╝');
         $this->newLine();
 
         $history = $this->importService->getImportHistory();
 
         if (empty($history)) {
-            $this->warn("⚠️  Belum ada riwayat import");
+            $this->warn('⚠️  Belum ada riwayat import');
+
             return Command::SUCCESS;
         }
 
-        $this->info("📊 Total import: " . count($history));
+        $this->info('📊 Total import: '.count($history));
         $this->newLine();
 
         // Table header
@@ -356,7 +365,7 @@ class ImportPresensiCommand extends Command
         );
 
         $this->newLine();
-        $this->info("💡 Untuk rollback, gunakan: php artisan presensi:import --rollback={batch_id}");
+        $this->info('💡 Untuk rollback, gunakan: php artisan presensi:import --rollback={batch_id}');
 
         return Command::SUCCESS;
     }
@@ -369,20 +378,20 @@ class ImportPresensiCommand extends Command
         $this->info('╚════════════════════════════════════════════════════════════╝');
         $this->newLine();
 
-        $this->info("📊 Total File: " . count($results));
+        $this->info('📊 Total File: '.count($results));
         $this->info("✅ Total Import: {$totalImported} data");
         $this->info("⏭️  Total Skip (Duplikat): {$totalSkipped} data");
         $this->info("❌ Total Invalid: {$totalInvalid} data");
         $this->newLine();
 
         if ($totalImported > 0) {
-            $this->info("✨ Import selesai! Data sudah tersimpan di database.");
+            $this->info('✨ Import selesai! Data sudah tersimpan di database.');
         } else {
-            $this->warn("⚠️  Tidak ada data yang diimport");
+            $this->warn('⚠️  Tidak ada data yang diimport');
         }
 
         $this->newLine();
-        $this->info("💡 Lihat riwayat: php artisan presensi:import --history");
-        $this->info("💡 Rollback: php artisan presensi:import --rollback={batch_id}");
+        $this->info('💡 Lihat riwayat: php artisan presensi:import --history');
+        $this->info('💡 Rollback: php artisan presensi:import --rollback={batch_id}');
     }
 }

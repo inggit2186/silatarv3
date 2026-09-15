@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ktd_layanan', function (Blueprint $table) {
-            if (!Schema::hasColumn('ktd_layanan', 'tipe')) {
+            if (! Schema::hasColumn('ktd_layanan', 'tipe')) {
                 $table->string('tipe')->default('normal')->after('status');
             }
         });

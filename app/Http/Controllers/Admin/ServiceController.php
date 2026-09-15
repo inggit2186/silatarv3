@@ -24,7 +24,7 @@ class ServiceController extends Controller
                 'l.dept_id',
                 'd.nama as dept_nama',
                 DB::raw('(SELECT COUNT(*) FROM users_request WHERE users_request.layanan_id = l.id) as request_count'),
-                DB::raw('(SELECT COUNT(*) FROM ktd_syarat WHERE ktd_syarat.layanan_id = l.id) as requirement_count')
+                DB::raw('(SELECT COUNT(*) FROM ktd_syarat WHERE ktd_syarat.layanan_id = l.id) as requirement_count'),
             ]);
 
         // Search filter
@@ -32,7 +32,7 @@ class ServiceController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('l.nama', 'like', "%{$search}%")
-                  ->orWhere('l.deskripsi', 'like', "%{$search}%");
+                    ->orWhere('l.deskripsi', 'like', "%{$search}%");
             });
         }
 
@@ -58,7 +58,7 @@ class ServiceController extends Controller
         $currentUser = auth()->user();
         $isAdmin = in_array($currentUser->role, ['admin', 'superadmin', 'kepala']);
 
-        if (!$isAdmin && $currentUser->dept_id) {
+        if (! $isAdmin && $currentUser->dept_id) {
             $query->where('l.dept_id', $currentUser->dept_id);
         }
 
@@ -154,7 +154,7 @@ class ServiceController extends Controller
     {
         $service = DB::table('ktd_layanan')->where('id', $id)->first();
 
-        if (!$service) {
+        if (! $service) {
             abort(404, 'Layanan tidak ditemukan.');
         }
 
@@ -185,7 +185,7 @@ class ServiceController extends Controller
     {
         $service = DB::table('ktd_layanan')->where('id', $id)->first();
 
-        if (!$service) {
+        if (! $service) {
             abort(404, 'Layanan tidak ditemukan.');
         }
 
@@ -225,7 +225,7 @@ class ServiceController extends Controller
     {
         $service = DB::table('ktd_layanan')->where('id', $id)->first();
 
-        if (!$service) {
+        if (! $service) {
             return response()->json(['success' => false, 'message' => 'Layanan tidak ditemukan.'], 404);
         }
 
@@ -234,7 +234,7 @@ class ServiceController extends Controller
         if ($requestCount > 0) {
             return response()->json([
                 'success' => false,
-                'message' => "Layanan tidak dapat dihapus karena masih digunakan oleh {$requestCount} pengajuan."
+                'message' => "Layanan tidak dapat dihapus karena masih digunakan oleh {$requestCount} pengajuan.",
             ], 400);
         }
 
@@ -327,7 +327,7 @@ class ServiceController extends Controller
             ->select(['l.*', 'd.nama as dept_nama'])
             ->first();
 
-        if (!$service) {
+        if (! $service) {
             return response()->json(['success' => false, 'message' => 'Layanan tidak ditemukan.'], 404);
         }
 

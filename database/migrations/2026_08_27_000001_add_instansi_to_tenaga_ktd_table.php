@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('tenaga_ktd', 'instansi')) {
+        if (! Schema::hasColumn('tenaga_ktd', 'instansi')) {
             Schema::table('tenaga_ktd', function (Blueprint $table) {
                 $table->string('instansi')->nullable()->after('pjob');
             });

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\AdminAccess;
+use App\Http\Middleware\EnsureIsKepala;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,8 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Register admin middleware alias
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminAccess::class,
-            'kepala' => \App\Http\Middleware\EnsureIsKepala::class,
+            'admin' => AdminAccess::class,
+            'kepala' => EnsureIsKepala::class,
         ]);
 
         // Override VerifyCsrfToken for webhook routes

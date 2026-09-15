@@ -17,5 +17,6 @@ class Rating extends Model
     public $timestamps = true;
 
     const CREATED_AT = 'created_at';
+
     const UPDATED_AT = null;
 }

@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Exports\PresensiDetailExport;
 use App\Exports\PresensiAbsensiExport;
+use App\Exports\PresensiDetailExport;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
-use Maatwebsite\Excel\HeadingsToArrayImport;
-use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class PresensiExportController extends Controller
 {
@@ -43,7 +41,7 @@ class PresensiExportController extends Controller
 
         $user = DB::table('users')->find($request->user_id);
 
-        if (!$user) {
+        if (! $user) {
             return back()->with('error', 'User tidak ditemukan');
         }
 
@@ -68,7 +66,7 @@ class PresensiExportController extends Controller
 
         $user = DB::table('users')->find($request->user_id);
 
-        if (!$user) {
+        if (! $user) {
             return back()->with('error', 'User tidak ditemukan');
         }
 
@@ -102,8 +100,8 @@ class PresensiExportController extends Controller
         $type = $request->type;
 
         // Create temp directory
-        $tempPath = storage_path("app/exports/temp");
-        if (!file_exists($tempPath)) {
+        $tempPath = storage_path('app/exports/temp');
+        if (! file_exists($tempPath)) {
             mkdir($tempPath, 0755, true);
         }
 
@@ -126,14 +124,14 @@ class PresensiExportController extends Controller
                 );
             }
 
-            $files[] = $tempPath . "/{$filename}";
+            $files[] = $tempPath."/{$filename}";
         }
 
         // Create zip file
         $zipFilename = "presensi_{$type}_{$year}_{$month}.zip";
         $zipPath = storage_path("app/exports/{$zipFilename}");
 
-        $zip = new \ZipArchive();
+        $zip = new \ZipArchive;
         if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
             foreach ($files as $file) {
                 $zip->addFile($file, basename($file));

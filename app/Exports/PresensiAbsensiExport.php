@@ -2,24 +2,28 @@
 
 namespace App\Exports;
 
+use Illuminate\Support\Enumerable;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Enumerable;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class PresensiAbsensiExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class PresensiAbsensiExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
 {
     protected $userId;
+
     protected $month;
+
     protected $year;
+
     protected $userName;
+
     protected $userNip;
 
     public function __construct(int $userId, int $month, int $year)
@@ -60,8 +64,8 @@ class PresensiAbsensiExport implements FromCollection, WithHeadings, WithMapping
                 'day' => $day,
                 'day_name' => $this->getDayName($dayOfWeek),
                 'is_weekend' => in_array($dayOfWeek, [6, 7]), // Saturday or Sunday
-                'has_masuk' => isset($presensi[$date]) && !empty($presensi[$date]->m_absen) ? 1 : 0,
-                'has_pulang' => isset($presensi[$date]) && !empty($presensi[$date]->p_absen) ? 1 : 0,
+                'has_masuk' => isset($presensi[$date]) && ! empty($presensi[$date]->m_absen) ? 1 : 0,
+                'has_pulang' => isset($presensi[$date]) && ! empty($presensi[$date]->p_absen) ? 1 : 0,
                 'status' => isset($presensi[$date]) ? ($presensi[$date]->status ?? '-') : '-',
             ];
 
@@ -106,12 +110,12 @@ class PresensiAbsensiExport implements FromCollection, WithHeadings, WithMapping
         $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells('A2:E2');
-        $sheet->setCellValue('A2', $this->userName . ' - NIP: ' . $this->userNip);
+        $sheet->setCellValue('A2', $this->userName.' - NIP: '.$this->userNip);
         $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(11);
         $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $sheet->mergeCells('A3:E3');
-        $sheet->setCellValue('A3', 'Bulan: ' . $this->getMonthName() . ' ' . $this->year);
+        $sheet->setCellValue('A3', 'Bulan: '.$this->getMonthName().' '.$this->year);
         $sheet->getStyle('A3')->getFont()->setBold(true)->setSize(11);
         $sheet->getStyle('A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
@@ -152,7 +156,7 @@ class PresensiAbsensiExport implements FromCollection, WithHeadings, WithMapping
             ],
         ];
 
-        $sheet->getStyle('A6:E' . ($daysInMonth + 5))->applyFromArray($dataStyle);
+        $sheet->getStyle('A6:E'.($daysInMonth + 5))->applyFromArray($dataStyle);
 
         // Highlight weekends (Saturday & Sunday)
         $weekendStyle = [
@@ -185,8 +189,8 @@ class PresensiAbsensiExport implements FromCollection, WithHeadings, WithMapping
 
             // Highlight days with attendance (value 1) in green
             if (isset($presensi[$date])) {
-                $hasMasuk = !empty($presensi[$date]->m_absen);
-                $hasPulang = !empty($presensi[$date]->p_absen);
+                $hasMasuk = ! empty($presensi[$date]->m_absen);
+                $hasPulang = ! empty($presensi[$date]->p_absen);
 
                 if ($hasMasuk || $hasPulang) {
                     $attendanceStyle = [
@@ -207,12 +211,12 @@ class PresensiAbsensiExport implements FromCollection, WithHeadings, WithMapping
 
             if (isset($presensi[$date])) {
                 // Highlight C (Absen Masuk) if value is 1
-                if (!empty($presensi[$date]->m_absen)) {
+                if (! empty($presensi[$date]->m_absen)) {
                     $sheet->getStyle("C{$rowNum}")->getFont()->setBold(true)->setColor(['rgb' => '155724']);
                 }
 
                 // Highlight D (Absen Pulang) if value is 1
-                if (!empty($presensi[$date]->p_absen)) {
+                if (! empty($presensi[$date]->p_absen)) {
                     $sheet->getStyle("D{$rowNum}")->getFont()->setBold(true)->setColor(['rgb' => '155724']);
                 }
             }

@@ -3,7 +3,6 @@
 namespace App\Commands\Webhook;
 
 use App\Models\User;
-use App\Services\WhatsAppService;
 
 class CekNipCommand extends BaseCommand
 {
@@ -22,7 +21,7 @@ class CekNipCommand extends BaseCommand
             ->with('dept')
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return $this->waService->sendMessage(
                 $this->phoneNumber,
                 $this->notFound('Data dengan NIP tersebut')

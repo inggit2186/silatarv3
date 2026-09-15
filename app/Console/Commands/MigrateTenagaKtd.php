@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -40,10 +41,11 @@ class MigrateTenagaKtd extends Command
 
         // Validate if it's a valid date
         try {
-            $date = \Carbon\Carbon::parse($value);
+            $date = Carbon::parse($value);
             if ($date->year < 1900 || $date->year > 2100) {
                 return null;
             }
+
             return $date->format('Y-m-d');
         } catch (\Exception $e) {
             return null;
@@ -90,7 +92,7 @@ class MigrateTenagaKtd extends Command
         }
 
         // Step 5: Cleanup (optional)
-        if ($this->option('drop-old') && !$dryRun) {
+        if ($this->option('drop-old') && ! $dryRun) {
             $this->cleanupOldTables();
         }
 
@@ -109,6 +111,7 @@ class MigrateTenagaKtd extends Command
 
         if (Schema::hasTable('tenaga_ktd')) {
             $this->warn('   Tabel tenaga_ktd sudah ada. Lewati.');
+
             return;
         }
 
@@ -124,6 +127,7 @@ class MigrateTenagaKtd extends Command
             $this->line('   - Contact: email, telp, alamat_ktp, alamat, keterangan');
             $this->line('   - Meta: is_active, user_id (nullable), source_table');
             $this->newLine();
+
             return;
         }
 
@@ -199,8 +203,9 @@ class MigrateTenagaKtd extends Command
     {
         $this->info('2. Migrasi data dari guru_madrasah...');
 
-        if (!Schema::hasTable('guru_madrasah')) {
+        if (! Schema::hasTable('guru_madrasah')) {
             $this->warn('   Tabel guru_madrasah tidak ditemukan. Lewati.');
+
             return;
         }
 
@@ -209,16 +214,18 @@ class MigrateTenagaKtd extends Command
 
         if ($count === 0) {
             $this->line('   Tidak ada data untuk dimigrasi.');
+
             return;
         }
 
         // Show sample data
         $sample = DB::table('guru_madrasah')->first();
-        $this->line('   Sample: ' . ($sample->nama ?? 'N/A') . ' - ' . ($sample->kat_jabatan ?? 'N/A'));
+        $this->line('   Sample: '.($sample->nama ?? 'N/A').' - '.($sample->kat_jabatan ?? 'N/A'));
         $this->newLine();
 
         if ($dryRun) {
-            $this->line('   [DRY RUN] Akan migrasi ' . $count . ' record dengan kat_jabatan="guru".');
+            $this->line('   [DRY RUN] Akan migrasi '.$count.' record dengan kat_jabatan="guru".');
+
             return;
         }
 
@@ -239,6 +246,7 @@ class MigrateTenagaKtd extends Command
 
             if ($exists) {
                 $bar->advance();
+
                 continue;
             }
 
@@ -296,8 +304,9 @@ class MigrateTenagaKtd extends Command
     {
         $this->info('3. Migrasi data dari pegawai_madrasah...');
 
-        if (!Schema::hasTable('pegawai_madrasah')) {
+        if (! Schema::hasTable('pegawai_madrasah')) {
             $this->warn('   Tabel pegawai_madrasah tidak ditemukan. Lewati.');
+
             return;
         }
 
@@ -306,16 +315,18 @@ class MigrateTenagaKtd extends Command
 
         if ($count === 0) {
             $this->line('   Tidak ada data untuk dimigrasi.');
+
             return;
         }
 
         // Show sample data
         $sample = DB::table('pegawai_madrasah')->first();
-        $this->line('   Sample: ' . ($sample->name ?? 'N/A') . ' - ' . ($sample->status ?? 'N/A'));
+        $this->line('   Sample: '.($sample->name ?? 'N/A').' - '.($sample->status ?? 'N/A'));
         $this->newLine();
 
         if ($dryRun) {
-            $this->line('   [DRY RUN] Akan migrasi ' . $count . ' record dengan kat_jabatan="staf".');
+            $this->line('   [DRY RUN] Akan migrasi '.$count.' record dengan kat_jabatan="staf".');
+
             return;
         }
 
@@ -336,6 +347,7 @@ class MigrateTenagaKtd extends Command
 
             if ($exists) {
                 $bar->advance();
+
                 continue;
             }
 
@@ -405,22 +417,24 @@ class MigrateTenagaKtd extends Command
 
         if ($count === 0) {
             $this->line('   Tidak ada data untuk dimigrasi.');
+
             return;
         }
 
         // Show breakdown by kat_jabatan
-        $this->line("   Breakdown by kat_jabatan:");
+        $this->line('   Breakdown by kat_jabatan:');
         $byKat = DB::table('users')
             ->select('kat_jabatan', DB::raw('COUNT(*) as total'))
             ->groupBy('kat_jabatan')
             ->get();
         foreach ($byKat as $item) {
-            $this->line("   - " . ($item->kat_jabatan ?? 'NULL') . ": {$item->total}");
+            $this->line('   - '.($item->kat_jabatan ?? 'NULL').": {$item->total}");
         }
         $this->newLine();
 
         if ($dryRun) {
-            $this->line('   [DRY RUN] Akan migrasi ' . $count . ' user dengan user_id sebagai referensi.');
+            $this->line('   [DRY RUN] Akan migrasi '.$count.' user dengan user_id sebagai referensi.');
+
             return;
         }
 
@@ -538,8 +552,9 @@ class MigrateTenagaKtd extends Command
     {
         $this->info('5. Cleanup tabel lama...');
 
-        if (!$this->confirm('   Yakin ingin menghapus tabel guru_madrasah dan pegawai_madrasah?', false)) {
+        if (! $this->confirm('   Yakin ingin menghapus tabel guru_madrasah dan pegawai_madrasah?', false)) {
             $this->warn('   Batal menghapus tabel lama.');
+
             return;
         }
 
@@ -552,11 +567,13 @@ class MigrateTenagaKtd extends Command
 
         if ($guruCount > 0 && $migratedFromGuru < $guruCount) {
             $this->error("   Ada {$guruCount} data di guru_madrasah, tapi hanya {$migratedFromGuru} yang dimigrasi!");
+
             return;
         }
 
         if ($pegawaiCount > 0 && $migratedFromPegawai < $pegawaiCount) {
             $this->error("   Ada {$pegawaiCount} data di pegawai_madrasah, tapi hanya {$migratedFromPegawai} yang dimigrasi!");
+
             return;
         }
 

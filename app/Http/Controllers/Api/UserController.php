@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends BaseApiController
 {
@@ -81,17 +81,35 @@ class UserController extends BaseApiController
         if ($tenaga) {
             // Update tenaga_ktd table
             $tenagaData = [];
-            if ($request->has('name')) $tenagaData['nama'] = $request->name;
-            if ($request->has('nik')) $tenagaData['nik'] = $request->nik;
-            if ($request->has('email')) $tenagaData['email'] = $request->email;
-            if ($request->has('no_hp')) $tenagaData['telp'] = $request->no_hp;
-            if ($request->has('alamat')) $tenagaData['alamat'] = $request->alamat;
-            if ($request->has('tempat_lahir')) $tenagaData['tempat_lahir'] = $request->tempat_lahir;
-            if ($request->has('tanggal_lahir')) $tenagaData['tanggal_lahir'] = $request->tanggal_lahir;
-            if ($request->has('jenis_kelamin')) $tenagaData['jenis_kelamin'] = $request->jenis_kelamin;
-            if ($request->has('bio')) $tenagaData['bio'] = $request->bio;
+            if ($request->has('name')) {
+                $tenagaData['nama'] = $request->name;
+            }
+            if ($request->has('nik')) {
+                $tenagaData['nik'] = $request->nik;
+            }
+            if ($request->has('email')) {
+                $tenagaData['email'] = $request->email;
+            }
+            if ($request->has('no_hp')) {
+                $tenagaData['telp'] = $request->no_hp;
+            }
+            if ($request->has('alamat')) {
+                $tenagaData['alamat'] = $request->alamat;
+            }
+            if ($request->has('tempat_lahir')) {
+                $tenagaData['tempat_lahir'] = $request->tempat_lahir;
+            }
+            if ($request->has('tanggal_lahir')) {
+                $tenagaData['tanggal_lahir'] = $request->tanggal_lahir;
+            }
+            if ($request->has('jenis_kelamin')) {
+                $tenagaData['jenis_kelamin'] = $request->jenis_kelamin;
+            }
+            if ($request->has('bio')) {
+                $tenagaData['bio'] = $request->bio;
+            }
 
-            if (!empty($tenagaData)) {
+            if (! empty($tenagaData)) {
                 DB::table('tenaga_ktd')
                     ->where('user_id', $user->id)
                     ->update($tenagaData);
@@ -99,17 +117,35 @@ class UserController extends BaseApiController
         } else {
             // Update users table
             $data = [];
-            if ($request->has('name')) $data['name'] = $request->name;
-            if ($request->has('nik')) $data['nik'] = $request->nik;
-            if ($request->has('email')) $data['email'] = $request->email;
-            if ($request->has('no_hp')) $data['telp'] = $request->no_hp;
-            if ($request->has('alamat')) $data['alamat'] = $request->alamat;
-            if ($request->has('tempat_lahir')) $data['tempat_lahir'] = $request->tempat_lahir;
-            if ($request->has('tanggal_lahir')) $data['tanggal_lahir'] = $request->tanggal_lahir;
-            if ($request->has('jenis_kelamin')) $data['jk'] = $request->jenis_kelamin;
-            if ($request->has('bio')) $data['bio'] = $request->bio;
+            if ($request->has('name')) {
+                $data['name'] = $request->name;
+            }
+            if ($request->has('nik')) {
+                $data['nik'] = $request->nik;
+            }
+            if ($request->has('email')) {
+                $data['email'] = $request->email;
+            }
+            if ($request->has('no_hp')) {
+                $data['telp'] = $request->no_hp;
+            }
+            if ($request->has('alamat')) {
+                $data['alamat'] = $request->alamat;
+            }
+            if ($request->has('tempat_lahir')) {
+                $data['tempat_lahir'] = $request->tempat_lahir;
+            }
+            if ($request->has('tanggal_lahir')) {
+                $data['tanggal_lahir'] = $request->tanggal_lahir;
+            }
+            if ($request->has('jenis_kelamin')) {
+                $data['jk'] = $request->jenis_kelamin;
+            }
+            if ($request->has('bio')) {
+                $data['bio'] = $request->bio;
+            }
 
-            if (!empty($data)) {
+            if (! empty($data)) {
                 $user->update($data);
             }
         }
@@ -145,10 +181,10 @@ class UserController extends BaseApiController
 
             return $this->success([
                 'foto' => $path,
-                'foto_url' => asset('storage/' . $path),
+                'foto_url' => asset('storage/'.$path),
             ], 'Foto berhasil diupdate');
         } catch (\Exception $e) {
-            return $this->error('Gagal update foto: ' . $e->getMessage(), 500);
+            return $this->error('Gagal update foto: '.$e->getMessage(), 500);
         }
     }
 }

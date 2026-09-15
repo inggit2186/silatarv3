@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AcaraController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\JanjiTemuController;
@@ -10,6 +9,7 @@ use App\Http\Controllers\Api\PengajuanController;
 use App\Http\Controllers\Api\PresensiController;
 use App\Http\Controllers\Api\SimpegController;
 use App\Http\Controllers\Api\UserController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------

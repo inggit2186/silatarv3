@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jodit Buttons Test</title>
+    <link rel="stylesheet" href="/js/jodit/jodit.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { color: #333; }
+        #status { margin: 20px 0; padding: 10px; background: #f0f0f0; }
+        .success { color: green; }
+        .error { color: red; }
+        #button-list { margin-top: 20px; padding: 10px; background: #e8f4e8; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Jodit Default Toolbar Test</h1>
+
+    <div id="status"></div>
+    <div id="button-list"></div>
+
+    <h2>Editor:</h2>
+    <textarea id="test-editor" style="width:100%;height:300px;">
+        <p>Test content</p>
+    </textarea>
+
+    <script src="/js/jodit/jodit.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const status = document.getElementById('status');
+            const buttonList = document.getElementById('button-list');
+
+            // Check if Jodit is loaded
+            if (typeof Jodit === 'undefined') {
+                status.innerHTML = '<p class="error">❌ Jodit not loaded!</p>';
+                return;
+            }
+
+            status.innerHTML = '<p class="success">✅ Jodit loaded! Version: ' + Jodit.version + '</p>';
+
+            // Initialize Jodit with default toolbar
+            const editor = Jodit.make('#test-editor', {
+                height: 300,
+                toolbar: true,
+                toolbarButtonSize: 'middle'
+            });
+
+            // List all buttons in toolbar
+            setTimeout(function() {
+                const toolbar = editor.toolbar;
+                if (toolbar) {
+                    const buttons = toolbar.querySelectorAll('button');
+                    let buttonNames = [];
+                    buttons.forEach(function(btn) {
+                        const name = btn.getAttribute('data-name') || btn.title || btn.className;
+                        buttonNames.push(name);
+                    });
+
+                    buttonList.innerHTML = '<strong>Toolbar Buttons (' + buttons.length + ' total):</strong><br>' +
+                        buttonNames.join(', ');
+
+                    // Check specifically for image button
+                    const imageBtn = toolbar.querySelector('[data-name="image"]');
+                    if (imageBtn) {
+                        buttonList.innerHTML += '<br><br><strong class="success">✅ Image button found!</strong>';
+                    } else {
+                        buttonList.innerHTML += '<br><br><strong class="error">❌ Image button NOT found</strong>';
+                    }
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

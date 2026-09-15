@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Department;
 use App\Models\JanjiTemu;
 use App\Models\User;
-use App\Models\Department;
 use App\Services\WhatsAppService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class JanjiTemuController extends BaseApiController
 {
@@ -49,13 +49,13 @@ class JanjiTemuController extends BaseApiController
                 ->where('dept_id', $request->dept_id)
                 ->first();
 
-            if (!$pegawai) {
+            if (! $pegawai) {
                 return $this->error('Pegawai tujuan tidak ditemukan di unit kerja tersebut', 422);
             }
         }
 
         // Format waktu
-        $waktu = Carbon::parse($request->tanggal . ' ' . $request->jam);
+        $waktu = Carbon::parse($request->tanggal.' '.$request->jam);
 
         DB::beginTransaction();
         try {
@@ -89,7 +89,8 @@ class JanjiTemuController extends BaseApiController
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create janji temu', ['error' => $e->getMessage()]);
-            return $this->error('Gagal membuat janji temu: ' . $e->getMessage(), 500);
+
+            return $this->error('Gagal membuat janji temu: '.$e->getMessage(), 500);
         }
     }
 
@@ -151,11 +152,11 @@ class JanjiTemuController extends BaseApiController
             'unitTujuan:id,nama',
             'staffPenangan:id,name',
         ])
-        ->where('id', $id)
-        ->where('nomor_induk', $user->nomor_induk)
-        ->first();
+            ->where('id', $id)
+            ->where('nomor_induk', $user->nomor_induk)
+            ->first();
 
-        if (!$janjiTemu) {
+        if (! $janjiTemu) {
             return $this->notFound('Janji temu tidak ditemukan');
         }
 
@@ -202,11 +203,11 @@ class JanjiTemuController extends BaseApiController
             ->where('nomor_induk', $user->nomor_induk)
             ->first();
 
-        if (!$janjiTemu) {
+        if (! $janjiTemu) {
             return $this->notFound('Janji temu tidak ditemukan');
         }
 
-        if (!$janjiTemu->canCancel()) {
+        if (! $janjiTemu->canCancel()) {
             return $this->error('Janji temu tidak dapat dibatalkan', 400);
         }
 
@@ -253,7 +254,7 @@ class JanjiTemuController extends BaseApiController
         ]);
 
         // If not admin, filter to show only relevant appointments
-        if (!$isAdmin) {
+        if (! $isAdmin) {
             $query->where(function ($q) use ($user) {
                 // Appointments directed to this user (tipe asn, nip_tujuan = user's nomor_induk)
                 $q->where(function ($sub) use ($user) {
@@ -261,10 +262,10 @@ class JanjiTemuController extends BaseApiController
                         ->where('nip_tujuan', $user->nomor_induk);
                 })
                 // Or appointments directed to user's department (tipe satker, nip_tujuan = user's dept_id)
-                ->orWhere(function ($sub) use ($user) {
-                    $sub->where('tipe', 'satker')
-                        ->where('nip_tujuan', $user->dept_id);
-                });
+                    ->orWhere(function ($sub) use ($user) {
+                        $sub->where('tipe', 'satker')
+                            ->where('nip_tujuan', $user->dept_id);
+                    });
             });
         }
 
@@ -275,8 +276,8 @@ class JanjiTemuController extends BaseApiController
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama', 'LIKE', "%{$search}%")
-                  ->orWhere('nomor_induk', 'LIKE', "%{$search}%")
-                  ->orWhere('tujuan', 'LIKE', "%{$search}%");
+                    ->orWhere('nomor_induk', 'LIKE', "%{$search}%")
+                    ->orWhere('tujuan', 'LIKE', "%{$search}%");
             });
         }
 
@@ -322,7 +323,7 @@ class JanjiTemuController extends BaseApiController
             'unitTujuan:id,nama',
             'staffPenangan:id,name',
         ])
-        ->findOrFail($id);
+            ->findOrFail($id);
 
         return $this->success([
             'id' => $janjiTemu->id,
@@ -368,7 +369,7 @@ class JanjiTemuController extends BaseApiController
 
         $janjiTemu = JanjiTemu::findOrFail($id);
 
-        if (!$janjiTemu->canProcess()) {
+        if (! $janjiTemu->canProcess()) {
             return $this->error('Janji temu tidak dapat diproses', 400);
         }
 
@@ -403,7 +404,7 @@ class JanjiTemuController extends BaseApiController
 
         $janjiTemu = JanjiTemu::findOrFail($id);
 
-        if (!$janjiTemu->canProcess()) {
+        if (! $janjiTemu->canProcess()) {
             return $this->error('Janji temu tidak dapat diproses', 400);
         }
 
@@ -436,7 +437,7 @@ class JanjiTemuController extends BaseApiController
 
         $janjiTemu = JanjiTemu::findOrFail($id);
 
-        if (!$janjiTemu->canProcess()) {
+        if (! $janjiTemu->canProcess()) {
             return $this->error('Janji temu tidak dapat diproses', 400);
         }
 
@@ -493,8 +494,8 @@ class JanjiTemuController extends BaseApiController
 
         // Separate head and regular employees (include all variations)
         $headPositions = ['kepala', 'kasubag', 'kasubbag', 'kasi'];
-        $headUsers = $users->filter(fn($user) => in_array(strtolower($user->kat_jabatan ?? ''), $headPositions));
-        $regularUsers = $users->filter(fn($user) => !in_array(strtolower($user->kat_jabatan ?? ''), $headPositions));
+        $headUsers = $users->filter(fn ($user) => in_array(strtolower($user->kat_jabatan ?? ''), $headPositions));
+        $regularUsers = $users->filter(fn ($user) => ! in_array(strtolower($user->kat_jabatan ?? ''), $headPositions));
 
         // Sort regular employees by name
         $regularUsers = $regularUsers->sortBy('name')->values();
@@ -507,7 +508,7 @@ class JanjiTemuController extends BaseApiController
                 'id' => $department->id,
                 'nama' => $department->nama,
             ],
-            'employees' => $sortedUsers->map(fn($e) => [
+            'employees' => $sortedUsers->map(fn ($e) => [
                 'id' => $e->id,
                 'name' => $e->name,
                 'nomor_induk' => $e->nomor_induk,
@@ -575,7 +576,7 @@ class JanjiTemuController extends BaseApiController
                "📅 *Waktu:* {$janjiTemu->waktu_formatted}\n".
                "📝 *Keperluan:* {$janjiTemu->tujuan}\n\n".
                "Silakan cek aplikasi SILATAR untuk detail dan konfirmasi.\n\n".
-               "Terima kasih 🙏";
+               'Terima kasih 🙏';
     }
 
     /**
@@ -592,7 +593,7 @@ class JanjiTemuController extends BaseApiController
                "📝 *Keperluan:* {$janjiTemu->tujuan}\n\n".
                "⚠️ *Status:* Menunggu Penugasan\n\n".
                "Silakan buka aplikasi SILATAR untuk menugaskan petugas.\n\n".
-               "Terima kasih 🙏";
+               'Terima kasih 🙏';
     }
 
     /**
@@ -603,7 +604,7 @@ class JanjiTemuController extends BaseApiController
         try {
             $user = User::where('nomor_induk', $janjiTemu->nomor_induk)->first();
 
-            if (!$user || !$user->telp) {
+            if (! $user || ! $user->telp) {
                 return;
             }
 
@@ -616,7 +617,7 @@ class JanjiTemuController extends BaseApiController
                           "📅 *Waktu:* {$janjiTemu->waktu_formatted}\n".
                           "💬 *Keterangan:* {$janjiTemu->komen}\n\n".
                           "Silakan datang sesuai jadwal.\n\n".
-                          "Terima kasih 🙏";
+                          'Terima kasih 🙏';
             } else {
                 $message = "❌ *JANJI TEMU DITOLAK* ❌\n\n".
                           "Halo, {$user->name}!\n\n".
@@ -624,7 +625,7 @@ class JanjiTemuController extends BaseApiController
                           "📅 *Waktu:* {$janjiTemu->waktu_formatted}\n".
                           "💬 *Alasan:* {$janjiTemu->komen}\n\n".
                           "Silakan hubungi kami untuk informasi lebih lanjut.\n\n".
-                          "Terima kasih 🙏";
+                          'Terima kasih 🙏';
             }
 
             $this->waService->sendMessage($phone, $message);
@@ -645,7 +646,7 @@ class JanjiTemuController extends BaseApiController
         try {
             $staff = User::find($janjiTemu->onStaff);
 
-            if (!$staff || !$staff->telp) {
+            if (! $staff || ! $staff->telp) {
                 return;
             }
 
@@ -656,7 +657,7 @@ class JanjiTemuController extends BaseApiController
                        "📅 *Waktu:* {$janjiTemu->waktu_formatted}\n".
                        "💬 *Alasan:* {$janjiTemu->komen}\n\n".
                        "Anda tidak perlu memproses janji temu ini.\n\n".
-                       "Terima kasih 🙏";
+                       'Terima kasih 🙏';
 
             $this->waService->sendMessage($phone, $message);
 
@@ -674,7 +675,7 @@ class JanjiTemuController extends BaseApiController
     private function sendAssignmentNotification(JanjiTemu $janjiTemu, User $staff): void
     {
         try {
-            if (!$staff->telp) {
+            if (! $staff->telp) {
                 return;
             }
 
@@ -687,7 +688,7 @@ class JanjiTemuController extends BaseApiController
                        "📅 *Waktu:* {$janjiTemu->waktu_formatted}\n".
                        "📝 *Keperluan:* {$janjiTemu->tujuan}\n\n".
                        "Silakan cek aplikasi SILATAR untuk detail lengkap.\n\n".
-                       "Terima kasih 🙏";
+                       'Terima kasih 🙏';
 
             $this->waService->sendMessage($phone, $message);
 

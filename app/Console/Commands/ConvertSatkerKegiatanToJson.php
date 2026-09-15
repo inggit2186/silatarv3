@@ -54,6 +54,7 @@ class ConvertSatkerKegiatanToJson extends Command
 
         if ($totalGroups === 0) {
             $this->info('No data needs conversion (all records already have data_json or empty kegiatan).');
+
             return Command::SUCCESS;
         }
 
@@ -85,7 +86,9 @@ class ConvertSatkerKegiatanToJson extends Command
         foreach ($previewQuery->cursor() as $group) {
             $rows[] = [$group->user_id, $group->tanggal, $group->row_count, $group->keep_id];
             $count++;
-            if ($count >= 5) break;
+            if ($count >= 5) {
+                break;
+            }
         }
 
         $this->table($headers, $rows);
@@ -99,11 +102,13 @@ class ConvertSatkerKegiatanToJson extends Command
         if ($dryRun) {
             $this->newLine();
             $this->info('DRY RUN COMPLETE - No changes were made.');
+
             return Command::SUCCESS;
         }
 
-        if (!$this->confirm("Proceed with conversion? This will merge rows and delete {$totalRowsToDelete} duplicate records.")) {
+        if (! $this->confirm("Proceed with conversion? This will merge rows and delete {$totalRowsToDelete} duplicate records.")) {
             $this->info('Conversion cancelled.');
+
             return Command::SUCCESS;
         }
 
@@ -150,6 +155,7 @@ class ConvertSatkerKegiatanToJson extends Command
 
                 if ($kegiatanRows->isEmpty()) {
                     $bar->advance();
+
                     continue;
                 }
 
@@ -172,6 +178,7 @@ class ConvertSatkerKegiatanToJson extends Command
 
                 if (empty($items)) {
                     $bar->advance();
+
                     continue;
                 }
 
@@ -236,7 +243,7 @@ class ConvertSatkerKegiatanToJson extends Command
 
         if ($remaining > 0) {
             $this->warn("Warning: {$remaining} records still need conversion.");
-            $this->info("Run again with --start-id option to continue.");
+            $this->info('Run again with --start-id option to continue.');
         } else {
             $this->info('All records have been converted to JSON format!');
         }

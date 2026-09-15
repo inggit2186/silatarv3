@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\SatkerPemberkasan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -37,13 +36,14 @@ class AutoRekapCKH extends Command
         $targetMonth = $this->option('bulan');
 
         // Default ke bulan lalu jika tidak指定
-        if (!$targetMonth) {
+        if (! $targetMonth) {
             $targetMonth = Carbon::now()->subMonth()->format('Y-m');
         }
 
         // Validate format YYYY-MM
-        if (!preg_match('/^\d{4}-\d{2}$/', $targetMonth)) {
+        if (! preg_match('/^\d{4}-\d{2}$/', $targetMonth)) {
             $this->error('Format bulan tidak valid. Gunakan format YYYY-MM, contoh: 2026-07');
+
             return Command::FAILURE;
         }
 
@@ -77,6 +77,7 @@ class AutoRekapCKH extends Command
 
         if ($totalUsers === 0) {
             $this->warn('Tidak ada pegawai yang diproses.');
+
             return Command::SUCCESS;
         }
 
@@ -103,15 +104,16 @@ class AutoRekapCKH extends Command
 
             if ($totalUsers > 20) {
                 $this->newLine();
-                $this->info("... dan " . ($totalUsers - 20) . " pegawai lainnya.");
+                $this->info('... dan '.($totalUsers - 20).' pegawai lainnya.');
             }
 
             return Command::SUCCESS;
         }
 
         // Konfirmasi
-        if (!$this->confirm("Generate PDF untuk {$totalUsers} pegawai?")) {
+        if (! $this->confirm("Generate PDF untuk {$totalUsers} pegawai?")) {
             $this->info('Dibatalkan.');
+
             return Command::FAILURE;
         }
 
@@ -131,15 +133,15 @@ class AutoRekapCKH extends Command
             switch ($result['status']) {
                 case 'success':
                     $successCount++;
-                    $bar->setMessage("<fg=green>OK</>");
+                    $bar->setMessage('<fg=green>OK</>');
                     break;
                 case 'skipped':
                     $skippedCount++;
-                    $bar->setMessage("<fg=yellow>SKIP</>");
+                    $bar->setMessage('<fg=yellow>SKIP</>');
                     break;
                 case 'failed':
                     $failedCount++;
-                    $bar->setMessage("<fg=red>FAIL</>");
+                    $bar->setMessage('<fg=red>FAIL</>');
                     $errors[] = "User #{$user->id} ({$user->name}): {$result['message']}";
                     break;
             }
@@ -165,14 +167,14 @@ class AutoRekapCKH extends Command
         );
 
         // Show errors
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             $this->newLine();
             $this->error('Error Details:');
             foreach (array_slice($errors, 0, 10) as $error) {
                 $this->line("  - {$error}");
             }
             if (count($errors) > 10) {
-                $this->line("  ... dan " . (count($errors) - 10) . " error lainnya");
+                $this->line('  ... dan '.(count($errors) - 10).' error lainnya');
             }
         }
 
@@ -218,11 +220,11 @@ class AutoRekapCKH extends Command
                         $itemsArr = $jsonData['items'] ?? [];
 
                         // Handle legacy format
-                        if (empty($itemsArr) && !empty($item->kegiatan)) {
+                        if (empty($itemsArr) && ! empty($item->kegiatan)) {
                             $itemsArr = [[
                                 'k' => $item->kegiatan,
                                 'v' => $item->volume ?? 0,
-                                's' => $item->satuan ?? 'Kegiatan'
+                                's' => $item->satuan ?? 'Kegiatan',
                             ]];
                         }
 
@@ -234,7 +236,7 @@ class AutoRekapCKH extends Command
                                 'kegiatan' => trim((string) ($it['k'] ?? ($it['kegiatan'] ?? ''))),
                                 'volume' => $volume,
                                 'satuan' => $unit,
-                                'meta' => $volume > 0 ? trim($volume . ' ' . $unit) : $unit,
+                                'meta' => $volume > 0 ? trim($volume.' '.$unit) : $unit,
                             ];
                         }
                     }
@@ -269,7 +271,7 @@ class AutoRekapCKH extends Command
 
                 if ($kepalaKankemenag) {
                     $signatureName = $kepalaKankemenag->name;
-                    $signatureNip = $kepalaKankemenag->nomor_induk ? 'NIP. ' . $kepalaKankemenag->nomor_induk : '';
+                    $signatureNip = $kepalaKankemenag->nomor_induk ? 'NIP. '.$kepalaKankemenag->nomor_induk : '';
                     $signatureLabel = 'Mengetahui<br>Kepala Kankemenag Kab. Tanah Datar,';
                 }
             } elseif ($pltPlh) {
@@ -277,7 +279,7 @@ class AutoRekapCKH extends Command
                 if ($pltUser) {
                     $isPlh = true;
                     $signatureName = $pltUser->name;
-                    $signatureNip = $pltUser->nomor_induk ? 'NIP. ' . $pltUser->nomor_induk : '';
+                    $signatureNip = $pltUser->nomor_induk ? 'NIP. '.$pltUser->nomor_induk : '';
                     $signatureLabel = 'Mengetahui<br>PLT Kepala,';
                 }
             } else {
@@ -288,7 +290,7 @@ class AutoRekapCKH extends Command
 
                 if ($kepala) {
                     $signatureName = $kepala->name;
-                    $signatureNip = $kepala->nomor_induk ? 'NIP. ' . $kepala->nomor_induk : '';
+                    $signatureNip = $kepala->nomor_induk ? 'NIP. '.$kepala->nomor_induk : '';
                 }
 
                 $specialDeptIds = [998, 999];
@@ -334,16 +336,16 @@ class AutoRekapCKH extends Command
             $pdfBinary = $pdf->output();
 
             // Ensure directory exists
-            $fullDirPath = storage_path('app/public/satker_ckh/' . $user->id);
-            if (!is_dir($fullDirPath)) {
-                if (!mkdir($fullDirPath, 0755, true) && !is_dir($fullDirPath)) {
+            $fullDirPath = storage_path('app/public/satker_ckh/'.$user->id);
+            if (! is_dir($fullDirPath)) {
+                if (! mkdir($fullDirPath, 0755, true) && ! is_dir($fullDirPath)) {
                     return ['status' => 'failed', 'message' => 'Gagal membuat direktori'];
                 }
             }
 
             // Save PDF
             $saved = Storage::disk('public')->put($storagePath, $pdfBinary);
-            if (!$saved) {
+            if (! $saved) {
                 return ['status' => 'failed', 'message' => 'Storage::put gagal'];
             }
 
@@ -377,6 +379,7 @@ class AutoRekapCKH extends Command
                 'user_id' => $user->id,
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return ['status' => 'failed', 'message' => $e->getMessage()];
         }
     }
@@ -386,7 +389,7 @@ class AutoRekapCKH extends Command
      */
     protected function assetToDataUri(string $path): ?string
     {
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             return null;
         }
 
@@ -397,7 +400,7 @@ class AutoRekapCKH extends Command
             return null;
         }
 
-        return 'data:' . $mime . ';base64,' . base64_encode($data);
+        return 'data:'.$mime.';base64,'.base64_encode($data);
     }
 
     /**
@@ -412,7 +415,7 @@ class AutoRekapCKH extends Command
             10 => 'Oktober', 11 => 'November', 12 => 'Desember',
         ];
 
-        return $months[(int) $date->format('n')] . ' ' . $date->format('Y');
+        return $months[(int) $date->format('n')].' '.$date->format('Y');
     }
 
     /**
@@ -428,6 +431,6 @@ class AutoRekapCKH extends Command
             10 => 'Oktober', 11 => 'November', 12 => 'Desember',
         ];
 
-        return $days[(int) $date->format('w')] . ', ' . $date->format('j') . ' ' . $months[(int) $date->format('n')] . ' ' . $date->format('Y');
+        return $days[(int) $date->format('w')].', '.$date->format('j').' '.$months[(int) $date->format('n')].' '.$date->format('Y');
     }
 }

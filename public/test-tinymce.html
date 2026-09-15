@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TinyMCE Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 { color: #333; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>TinyMCE Editor Test</h1>
+
+    <div id="status"></div>
+
+    <h2>Editor:</h2>
+    <textarea id="test-editor" style="width:100%;height:400px;">
+        <h2>Selamat Datang di TinyMCE</h2>
+        <p>Ini adalah test editor untuk PPID.</p>
+        <ul>
+            <li>Font Poppins</li>
+            <li>Font Size 16px</li>
+            <li>Bold Text</li>
+        </ul>
+    </textarea>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const status = document.getElementById('status');
+
+            // Check if TinyMCE is loaded
+            if (typeof tinymce === 'undefined') {
+                status.innerHTML = '<p class="error">❌ TinyMCE not loaded! Check console for errors.</p>';
+                console.error('TinyMCE not loaded');
+                return;
+            }
+
+            status.innerHTML = '<p class="success">✅ TinyMCE loaded! Version: ' + tinymce.majorVersion + '.' + tinymce.minorVersion + '</p>';
+            console.log('TinyMCE version:', tinymce.majorVersion + '.' + tinymce.minorVersion);
+
+            // Initialize TinyMCE
+            tinymce.init({
+                selector: '#test-editor',
+                height: 400,
+                menubar: 'file edit view insert format tools table help',
+                plugins: [
+                    'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                    'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                    'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                ],
+                toolbar: 'undo redo | blocks | bold italic underline strikethrough | forecolor backcolor | fontfamily fontsize | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | removeformat | help',
+
+                font_family_formats: 'Arial=arial,helvetica,sans-serif;Courier New=courier new,courier;Georgia=georgia,palatino;Times New Roman=times new roman,times;Verdana=verdana,geneva;Tahoma=tahoma,geneva;Poppins=Poppins,sans-serif;Inter=Inter,sans-serif;Roboto=Roboto,sans-serif;Open Sans=Open Sans,sans-serif;Lato=Lato,sans-serif;Montserrat=Montserrat,sans-serif;',
+
+                font_size_formats: '8px 10px 12px 14px 16px 18px 20px 24px 28px 32px 36px 48px 56px 72px',
+
+                content_style: 'body { font-family: Inter, sans-serif; font-size: 14px; line-height: 1.6; padding: 1rem; } img { max-width: 100%; height: auto; }',
+
+                branding: false,
+                promotion: false,
+
+                setup: function(editor) {
+                    editor.on('init', function() {
+                        status.innerHTML = '<p class="success">✅ Editor initialized successfully!</p>';
+                        console.log('Editor initialized');
+                    });
+                    editor.on('change', function() {
+                        editor.save();
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

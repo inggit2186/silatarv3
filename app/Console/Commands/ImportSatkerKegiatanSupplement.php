@@ -24,12 +24,13 @@ class ImportSatkerKegiatanSupplement extends Command
 
         $this->info('================================================');
         $this->info('  Import Supplement Data Kegiatan');
-        $this->info('  File: ' . basename($file));
+        $this->info('  File: '.basename($file));
         $this->info('================================================');
         $this->newLine();
 
-        if (!file_exists($file)) {
+        if (! file_exists($file)) {
             $this->error("File tidak ditemukan: {$file}");
+
             return Command::FAILURE;
         }
 
@@ -41,7 +42,7 @@ class ImportSatkerKegiatanSupplement extends Command
         // Step 1: Get valid user_ids
         $this->info('Step 1: Load user_id valid...');
         $validUserIds = DB::table('users')->pluck('id')->flip()->toArray();
-        $this->line("   Valid user_id: " . count($validUserIds));
+        $this->line('   Valid user_id: '.count($validUserIds));
         $this->newLine();
 
         // Step 2: Get existing dates (chunked to avoid memory issues)
@@ -55,7 +56,7 @@ class ImportSatkerKegiatanSupplement extends Command
             ->orderBy('tanggal')
             ->chunk(1000, function ($rows) use (&$existingDates, &$existingCount) {
                 foreach ($rows as $row) {
-                    $key = $row->user_id . '-' . $row->tanggal;
+                    $key = $row->user_id.'-'.$row->tanggal;
                     $existingDates[$key] = true;
                     $existingCount++;
                 }
@@ -63,22 +64,23 @@ class ImportSatkerKegiatanSupplement extends Command
                 $this->line("   Loaded {$existingCount} existing dates...");
             });
 
-        $this->line("   Tanggal existing: " . count($existingDates));
+        $this->line('   Tanggal existing: '.count($existingDates));
         $this->newLine();
 
         // Step 3: Stream parse file and count
         $this->info('Step 3: Parse file SQL (streaming)...');
         $stats = $this->streamParseAndCount($file, $validUserIds, $existingDates);
 
-        $this->line("   Total record di SQL: " . $stats['total']);
-        $this->line("   Record dengan user_id valid: " . $stats['valid']);
-        $this->line("   Grup (user_id + tanggal): " . $stats['groups']);
-        $this->line("   Grup dengan tanggal KOSONG: " . $stats['to_import']);
-        $this->line("   Grup dengan tanggal SUDAH ada: " . ($stats['groups'] - $stats['to_import']));
+        $this->line('   Total record di SQL: '.$stats['total']);
+        $this->line('   Record dengan user_id valid: '.$stats['valid']);
+        $this->line('   Grup (user_id + tanggal): '.$stats['groups']);
+        $this->line('   Grup dengan tanggal KOSONG: '.$stats['to_import']);
+        $this->line('   Grup dengan tanggal SUDAH ada: '.($stats['groups'] - $stats['to_import']));
         $this->newLine();
 
         if ($stats['to_import'] === 0) {
             $this->warn('Semua tanggal sudah ada. Tidak ada yang perlu diimport.');
+
             return Command::SUCCESS;
         }
 
@@ -92,12 +94,14 @@ class ImportSatkerKegiatanSupplement extends Command
 
         if ($dryRun) {
             $this->info('DRY RUN COMPLETE.');
+
             return Command::SUCCESS;
         }
 
         // Step 4: Confirm
-        if (!$this->confirm($stats['to_import'] . " grup data kegiatan akan diimport. Lanjutkan?")) {
+        if (! $this->confirm($stats['to_import'].' grup data kegiatan akan diimport. Lanjutkan?')) {
             $this->info('Import dibatalkan.');
+
             return Command::SUCCESS;
         }
 
@@ -136,7 +140,7 @@ class ImportSatkerKegiatanSupplement extends Command
         ];
 
         $handle = fopen($file, 'r');
-        if (!$handle) {
+        if (! $handle) {
             return $stats;
         }
 
@@ -150,11 +154,12 @@ class ImportSatkerKegiatanSupplement extends Command
             if (preg_match('/INSERT INTO\s+`?satker_kegiatan`?/i', $line)) {
                 $inInsert = true;
                 $buffer = $line;
+
                 continue;
             }
 
             if ($inInsert) {
-                $buffer .= ' ' . $line;
+                $buffer .= ' '.$line;
 
                 // End of INSERT statement
                 if (str_ends_with($line, ';')) {
@@ -162,10 +167,10 @@ class ImportSatkerKegiatanSupplement extends Command
 
                     foreach ($records as $record) {
                         $stats['total']++;
-                        $key = $record['user_id'] . '-' . $record['tanggal'];
+                        $key = $record['user_id'].'-'.$record['tanggal'];
 
                         // Check user_id
-                        if (!isset($validUserIds[$record['user_id']])) {
+                        if (! isset($validUserIds[$record['user_id']])) {
                             continue;
                         }
                         $stats['valid']++;
@@ -176,7 +181,7 @@ class ImportSatkerKegiatanSupplement extends Command
                         }
 
                         // New group
-                        if (!isset($this->groupCounts[$key])) {
+                        if (! isset($this->groupCounts[$key])) {
                             $this->groupCounts[$key] = true;
                             $stats['groups']++;
                             $stats['to_import']++;
@@ -195,6 +200,7 @@ class ImportSatkerKegiatanSupplement extends Command
         }
 
         fclose($handle);
+
         return $stats;
     }
 
@@ -204,7 +210,7 @@ class ImportSatkerKegiatanSupplement extends Command
         $found = 0;
 
         $handle = fopen($file, 'r');
-        if (!$handle) {
+        if (! $handle) {
             return $preview;
         }
 
@@ -216,12 +222,12 @@ class ImportSatkerKegiatanSupplement extends Command
             $line = trim($line);
 
             if (preg_match('/INSERT INTO\s+`?satker_kegiatan`?/i', $line)) {
-                if ($inInsert && !empty($groupItems)) {
+                if ($inInsert && ! empty($groupItems)) {
                     // Process previous group
                     foreach ($groupItems as $key => $items) {
-                        if (!isset($existingDates[$key]) && $found < $limit) {
+                        if (! isset($existingDates[$key]) && $found < $limit) {
                             $parts = explode('-', $key);
-                            $preview[] = [(int)$parts[0], $parts[1], count($items)];
+                            $preview[] = [(int) $parts[0], $parts[1], count($items)];
                             $found++;
                         }
                     }
@@ -229,19 +235,20 @@ class ImportSatkerKegiatanSupplement extends Command
                 $inInsert = true;
                 $buffer = $line;
                 $groupItems = [];
+
                 continue;
             }
 
             if ($inInsert) {
-                $buffer .= ' ' . $line;
+                $buffer .= ' '.$line;
                 if (str_ends_with($line, ';')) {
                     $records = $this->extractRecordsFromInsert($buffer);
                     foreach ($records as $record) {
-                        if (!isset($validUserIds[$record['user_id']])) {
+                        if (! isset($validUserIds[$record['user_id']])) {
                             continue;
                         }
-                        $key = $record['user_id'] . '-' . $record['tanggal'];
-                        if (!isset($groupItems[$key])) {
+                        $key = $record['user_id'].'-'.$record['tanggal'];
+                        if (! isset($groupItems[$key])) {
                             $groupItems[$key] = [];
                         }
                         $groupItems[$key][] = $record;
@@ -253,17 +260,18 @@ class ImportSatkerKegiatanSupplement extends Command
         }
 
         // Process last batch
-        if (!empty($groupItems)) {
+        if (! empty($groupItems)) {
             foreach ($groupItems as $key => $items) {
-                if (!isset($existingDates[$key]) && $found < $limit) {
+                if (! isset($existingDates[$key]) && $found < $limit) {
                     $parts = explode('-', $key);
-                    $preview[] = [(int)$parts[0], $parts[1], count($items)];
+                    $preview[] = [(int) $parts[0], $parts[1], count($items)];
                     $found++;
                 }
             }
         }
 
         fclose($handle);
+
         return $preview;
     }
 
@@ -274,7 +282,7 @@ class ImportSatkerKegiatanSupplement extends Command
         $lastKey = null;
 
         $handle = fopen($file, 'r');
-        if (!$handle) {
+        if (! $handle) {
             return $result;
         }
 
@@ -290,21 +298,22 @@ class ImportSatkerKegiatanSupplement extends Command
             if (preg_match('/INSERT INTO\s+`?satker_kegiatan`?/i', $line)) {
                 $inInsert = true;
                 $buffer = $line;
+
                 continue;
             }
 
             if ($inInsert) {
-                $buffer .= ' ' . $line;
+                $buffer .= ' '.$line;
 
                 if (str_ends_with($line, ';')) {
                     $records = $this->extractRecordsFromInsert($buffer);
 
                     foreach ($records as $record) {
-                        if (!isset($validUserIds[$record['user_id']])) {
+                        if (! isset($validUserIds[$record['user_id']])) {
                             continue;
                         }
 
-                        $key = $record['user_id'] . '-' . $record['tanggal'];
+                        $key = $record['user_id'].'-'.$record['tanggal'];
 
                         // Skip if date already exists
                         if (isset($existingDates[$key])) {
@@ -318,7 +327,7 @@ class ImportSatkerKegiatanSupplement extends Command
                         }
 
                         // Add to current group
-                        if (!isset($groupItems[$key])) {
+                        if (! isset($groupItems[$key])) {
                             $groupItems[$key] = [];
                         }
                         $groupItems[$key][] = $record;
@@ -365,7 +374,7 @@ class ImportSatkerKegiatanSupplement extends Command
             // Parse key
             $parts = explode('-', $key);
             $userId = (int) $parts[0];
-            $tanggal = $parts[1] . '-' . $parts[2] . '-' . $parts[3]; // Reconstruct date
+            $tanggal = $parts[1].'-'.$parts[2].'-'.$parts[3]; // Reconstruct date
 
             DB::table('satker_kegiatan')->insert([
                 'user_id' => $userId,
@@ -389,12 +398,12 @@ class ImportSatkerKegiatanSupplement extends Command
         $records = [];
 
         // Extract column names
-        if (!preg_match('/INSERT INTO\s+`?satker_kegiatan`?\s*\(([^)]+)\)/i', $insertStatement, $colMatch)) {
+        if (! preg_match('/INSERT INTO\s+`?satker_kegiatan`?\s*\(([^)]+)\)/i', $insertStatement, $colMatch)) {
             return $records;
         }
 
         // Extract VALUES part
-        if (!preg_match('/VALUES\s*(.+?);?$/is', $insertStatement, $valMatch)) {
+        if (! preg_match('/VALUES\s*(.+?);?$/is', $insertStatement, $valMatch)) {
             return $records;
         }
 
@@ -424,7 +433,7 @@ class ImportSatkerKegiatanSupplement extends Command
 
         $tanggal = trim($fields[2], " '\"");
 
-        if (!$this->isValidDate($tanggal)) {
+        if (! $this->isValidDate($tanggal)) {
             return null;
         }
 
@@ -448,14 +457,14 @@ class ImportSatkerKegiatanSupplement extends Command
             $char = $row[$i];
 
             if (($char === "'" || $char === '"') && ($i === 0 || $row[$i - 1] !== '\\')) {
-                if (!$inQuote) {
+                if (! $inQuote) {
                     $inQuote = true;
                     $quoteChar = $char;
                 } elseif ($char === $quoteChar) {
                     $inQuote = false;
                 }
                 $current .= $char;
-            } elseif ($char === ',' && !$inQuote) {
+            } elseif ($char === ',' && ! $inQuote) {
                 $fields[] = $current;
                 $current = '';
             } else {
@@ -472,13 +481,14 @@ class ImportSatkerKegiatanSupplement extends Command
 
     protected function isValidDate(string $date): bool
     {
-        return !empty($date) && $date !== '0000-00-00' && (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', $date);
+        return ! empty($date) && $date !== '0000-00-00' && (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', $date);
     }
 
     protected function unescape(string $value): string
     {
         $value = trim($value, " '\"");
         $value = str_replace(["\\'", '\\"', '\\\\'], ["'", '"', '\\'], $value);
+
         return $value;
     }
 }

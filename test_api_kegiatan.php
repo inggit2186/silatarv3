@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Test Script for Kegiatan API
  * Run this to test if API is working correctly
@@ -12,12 +13,12 @@ echo "=== Testing Kegiatan API ===\n\n";
 
 // Test 1: Get Kegiatan Bulanan
 echo "Test 1: GET /api/laporan-kinerja?month=2024-08\n";
-$response = makeRequest("GET", "$baseUrl/laporan-kinerja?month=2024-08", $token);
+$response = makeRequest('GET', "$baseUrl/laporan-kinerja?month=2024-08", $token);
 printResponse($response);
 
 // Test 2: Get Rekap
 echo "\nTest 2: GET /api/laporan-kinerja/rekap?month=2024-08\n";
-$response = makeRequest("GET", "$baseUrl/laporan-kinerja/rekap?month=2024-08", $token);
+$response = makeRequest('GET', "$baseUrl/laporan-kinerja/rekap?month=2024-08", $token);
 printResponse($response);
 
 // Test 3: Store Kegiatan Baru
@@ -26,19 +27,20 @@ $data = [
     'tanggal' => date('Y-m-d'),
     'items' => [
         ['k' => 'Test Kegiatan API', 'v' => 1, 's' => 'Kegiatan'],
-    ]
+    ],
 ];
-$response = makeRequest("POST", "$baseUrl/laporan-kinerja/harian", $token, $data);
+$response = makeRequest('POST', "$baseUrl/laporan-kinerja/harian", $token, $data);
 printResponse($response);
 
 // Test 4: Get updated data
-echo "\nTest 4: GET /api/laporan-kinerja?month=" . date('Y-m') . "\n";
-$response = makeRequest("GET", "$baseUrl/laporan-kinerja?month=" . date('Y-m'), $token);
+echo "\nTest 4: GET /api/laporan-kinerja?month=".date('Y-m')."\n";
+$response = makeRequest('GET', "$baseUrl/laporan-kinerja?month=".date('Y-m'), $token);
 printResponse($response);
 
 echo "\n=== Tests Completed ===\n";
 
-function makeRequest($method, $url, $token, $data = null) {
+function makeRequest($method, $url, $token, $data = null)
+{
     $ch = curl_init();
 
     $headers = [
@@ -80,9 +82,11 @@ function makeRequest($method, $url, $token, $data = null) {
     ];
 }
 
-function printResponse($result) {
+function printResponse($result)
+{
     if (isset($result['error'])) {
         echo "ERROR: {$result['error']}\n";
+
         return;
     }
 
