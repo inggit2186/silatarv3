@@ -8396,6 +8396,34 @@ class PageController extends Controller
     }
 
     /**
+     * Riwayat presensi error user.
+     */
+    public function presensiHistory(Request $request)
+    {
+        $user = auth()->user();
+        $nip = $user->nomor_induk;
+
+        $month = $request->input('month', date('m'));
+        $year = $request->input('year', date('Y'));
+
+        $presensi = DB::table('ktd_presensi')
+            ->where('user_nip', $nip)
+            ->whereIn('status', ['SISTEM_ERROR', 'TUGAS_LUAR'])
+            ->whereMonth('tanggal', $month)
+            ->whereYear('tanggal', $year)
+            ->orderBy('tanggal', 'desc')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('presensi-history', [
+            'user' => $user,
+            'presensi' => $presensi,
+            'month' => $month,
+            'year' => $year,
+        ]);
+    }
+
+    /**
      * Submit presensi error (masuk/pulang)
      */
     public function presensiErrorSubmit(Request $request)

@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\MadrasahLaporanController;
 use App\Http\Controllers\Admin\NewsController;
 use App\Http\Controllers\Admin\PenilaianKinerjaController;
 use App\Http\Controllers\Admin\PpidController;
+use App\Http\Controllers\Admin\PresensiErrorController;
 use App\Http\Controllers\Admin\PublikasiController;
 use App\Http\Controllers\Admin\RekapPresensiController;
 use App\Http\Controllers\Admin\ServiceController;
@@ -192,6 +193,12 @@ Route::middleware(['auth', 'admin'])
 
         // Presensi Import Routes (Console only, tidak perlu web routes)
         // Presensi Export Routes (Console only, tidak perlu web routes)
+
+        // Presensi Error Management Routes
+        Route::prefix('presensi-error')->name('presensi-error.')->group(function () {
+            Route::get('/', [PresensiErrorController::class, 'index'])->name('index');
+            Route::delete('/{id}', [PresensiErrorController::class, 'destroy'])->name('destroy');
+        });
 
         // Rekap Presensi Routes
         Route::get('/rekap-presensi', [RekapPresensiController::class, 'index'])->name('rekap-presensi');

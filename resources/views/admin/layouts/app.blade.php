@@ -87,7 +87,7 @@ $canAccessDoc = $isAdmin || $isHumas || ($userRole === 'petugas' && $userDeptId 
             @endif
 
             @if($canAccessAdminPanel)
-            <div class="menu-group {{ request()->routeIs('admin.users.*', 'admin.services.*', 'admin.units.*', 'admin.requests.*', 'admin.tpg.*', 'admin.reports.*', 'admin.madrasah.laporan.*', 'admin.import-asn.*', 'admin.ppid.*') ? 'has-active' : '' }}" data-group="kelola" id="menuGroupKelola">
+            <div class="menu-group {{ request()->routeIs('admin.users.*', 'admin.services.*', 'admin.units.*', 'admin.requests.*', 'admin.import-asn.*', 'admin.ppid.*') ? 'has-active' : '' }}" data-group="kelola" id="menuGroupKelola">
                 <div class="menu-group-header" onclick="toggleMenuGroup('kelola')">
                     <div class="menu-group-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -96,7 +96,7 @@ $canAccessDoc = $isAdmin || $isHumas || ($userRole === 'petugas' && $userDeptId 
                         </svg>
                     </div>
                     <span class="menu-group-header-text">Kelola</span>
-                    <span class="menu-group-count">7</span>
+                    <span class="menu-group-count">5</span>
                     <svg class="menu-group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                     </svg>
@@ -162,6 +162,36 @@ $canAccessDoc = $isAdmin || $isHumas || ($userRole === 'petugas' && $userDeptId 
                     </a>
                     @endif
 
+                    @if($isAdmin)
+                    <a href="{{ route('admin.ppid.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.ppid.*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap orange">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                        </div>
+                        <span>PPID</span>
+                    </a>
+                    @endif
+                </div>
+            </div>
+            @endif
+
+            @if($canAccessAdminPanel)
+            <div class="menu-group {{ request()->routeIs('admin.tpg.*', 'admin.reports.*', 'admin.madrasah.laporan.*', 'admin.ckh.*', 'admin.rekap-presensi*', 'admin.presensi-error*') ? 'has-active' : '' }}" data-group="laporan" id="menuGroupLaporan">
+                <div class="menu-group-header" onclick="toggleMenuGroup('laporan')">
+                    <div class="menu-group-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <span class="menu-group-header-text">Laporan</span>
+                    <span class="menu-group-count">6</span>
+                    <svg class="menu-group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
+                <div class="menu-group-items">
                     <a href="{{ route('admin.tpg.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.tpg.*') ? 'active' : '' }}">
                         <div class="sidebar-nav-icon-wrap emerald">
                             <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -211,17 +241,14 @@ $canAccessDoc = $isAdmin || $isHumas || ($userRole === 'petugas' && $userDeptId 
                     </a>
                     @endif
 
-                    @if($isAdmin)
-                    <a href="{{ route('admin.ppid.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.ppid.*') ? 'active' : '' }}">
-                        <div class="sidebar-nav-icon-wrap orange">
+                    <a href="{{ route('admin.presensi-error.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.presensi-error*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap red">
                             <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>
                             </svg>
                         </div>
-                        <span>PPID</span>
+                        <span>Presensi Error</span>
                     </a>
-                    @endif
                 </div>
             </div>
             @endif
@@ -487,7 +514,7 @@ $canAccessDoc = $isAdmin || $isHumas || ($userRole === 'petugas' && $userDeptId 
 
         // Initialize menu groups on page load
         document.addEventListener('DOMContentLoaded', function() {
-            const groups = ['main', 'kelola', 'publikasi'];
+            const groups = ['main', 'kelola', 'laporan', 'publikasi'];
 
             groups.forEach(function(groupId) {
                 const group = document.getElementById('menuGroup' + groupId.charAt(0).toUpperCase() + groupId.slice(1));
