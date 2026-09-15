@@ -28,7 +28,16 @@ $isHumas = AdminAccess::isHumas($userId);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    @vite(['resources/css/app.css', 'resources/css/admin-new.css'])
+
+    {{-- Check if Vite manifest exists, otherwise use direct CSS paths --}}
+    @if(file_exists(public_path('build/manifest.json')))
+        @vite(['resources/css/app.css', 'resources/css/admin-new.css'])
+    @else
+        {{-- Direct CSS paths as fallback when Vite is not built --}}
+        <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/admin-new.css') }}">
+    @endif
+
     <style>[x-cloak] { display: none !important; }</style>
     @stack('styles')
 </head>
@@ -216,7 +225,7 @@ $isHumas = AdminAccess::isHumas($userId);
             </div>
             @endif
 
-            <div class="menu-group {{ request()->routeIs('admin.news.*', 'admin.janji-temu*', 'admin.acara*') ? 'has-active' : '' }}" data-group="publikasi" id="menuGroupPublikasi">
+            <div class="menu-group {{ request()->routeIs('admin.news.*', 'admin.publikasi.*', 'admin.janji-temu*', 'admin.acara*') ? 'has-active' : '' }}" data-group="publikasi" id="menuGroupPublikasi">
                 <div class="menu-group-header" onclick="toggleMenuGroup('publikasi')">
                     <div class="menu-group-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -224,7 +233,7 @@ $isHumas = AdminAccess::isHumas($userId);
                         </svg>
                     </div>
                     <span class="menu-group-header-text">Publikasi</span>
-                    <span class="menu-group-count">3</span>
+                    <span class="menu-group-count">4</span>
                     <svg class="menu-group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                     </svg>
@@ -238,6 +247,17 @@ $isHumas = AdminAccess::isHumas($userId);
                             </svg>
                         </div>
                         <span>Berita</span>
+                    </a>
+                    @endif
+
+                    @if($isAdmin)
+                    <a href="{{ route('admin.publikasi.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.publikasi.*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap emerald">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                        </div>
+                        <span>Dokumen</span>
                     </a>
                     @endif
 

@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PageController;
-use App\Http\Controllers\PpidController;
 use App\Http\Controllers\PenilaianKinerjaController;
+use App\Http\Controllers\PpidController;
 use App\Http\Controllers\RegisterController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,6 +11,8 @@ Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('/berita', [PageController::class, 'allNews'])->name('news.index');
 Route::get('/berita/{slug}', [PageController::class, 'newsShow'])->name('news.show');
 Route::get('/pelayanan', [PageController::class, 'pelayanan'])->name('pelayanan');
+Route::get('/publikasi', [PageController::class, 'publikasi'])->name('publikasi');
+Route::get('/publikasi/{slug}/download', [PageController::class, 'downloadPublikasi'])->name('publikasi.download');
 Route::get('/pelayanan/unit/{deptId}/employees', [PageController::class, 'unitEmployees'])->name('pelayanan.unit.employees');
 Route::get('/pelayanan/janji-temu/{deptId}', [PageController::class, 'janjiTemu'])->name('pelayanan.janji-temu')->whereNumber('deptId');
 Route::post('/pelayanan/janji-temu/{deptId}', [PageController::class, 'submitJanjiTemu'])->name('pelayanan.janji-temu.submit')->whereNumber('deptId');
@@ -95,7 +97,7 @@ Route::middleware('auth')->group(function () {
     // JANJI TEMU - User Side
     // ═══════════════════════════════════════════════════════════════════════
 
-    Route::get('/janji-temu/riwayat', fn() => redirect()->route('pengajuan-saya', ['tab' => 'janji-temu']))->name('janji-temu-history');
+    Route::get('/janji-temu/riwayat', fn () => redirect()->route('pengajuan-saya', ['tab' => 'janji-temu']))->name('janji-temu-history');
     Route::get('/janji-temu/{id}', [PageController::class, 'janjiTemuDetail'])->name('janji-temu-detail')->whereNumber('id');
     Route::post('/janji-temu/{id}/cancel', [PageController::class, 'janjiTemuCancel'])->name('janji-temu-cancel')->whereNumber('id');
 
@@ -146,16 +148,16 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 // Route::view('/register', 'auth.register')->name('register'); // Disabled for now
 
 // Laporan Kinerja API (verification by atasan)
-Route::post('/laporan-kinerja/verify', [App\Http\Controllers\PageController::class, 'verifyLaporanKinerja'])->middleware('auth')->name('laporan-kinerja.verify');
+Route::post('/laporan-kinerja/verify', [PageController::class, 'verifyLaporanKinerja'])->middleware('auth')->name('laporan-kinerja.verify');
 
 // User Signature Management
 Route::middleware('auth')->group(function () {
-    Route::get('/signature', [App\Http\Controllers\PageController::class, 'getSignature'])->name('signature.get');
-    Route::post('/signature', [App\Http\Controllers\PageController::class, 'saveSignature'])->name('signature.save');
+    Route::get('/signature', [PageController::class, 'getSignature'])->name('signature.get');
+    Route::post('/signature', [PageController::class, 'saveSignature'])->name('signature.save');
 });
 
 // Impersonate (Stop) - accessible from anywhere when logged in
-Route::post('/impersonate/stop', [App\Http\Controllers\Admin\UserController::class, 'stopImpersonate'])->middleware('auth')->name('impersonate.stop');
+Route::post('/impersonate/stop', [UserController::class, 'stopImpersonate'])->middleware('auth')->name('impersonate.stop');
 
 // PPID Routes
 Route::prefix('ppid')->group(function () {
@@ -197,6 +199,7 @@ Route::prefix('ppid')->group(function () {
 });
 
 // WhatsApp Webhook Routes
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\WebhookController;
 
 Route::prefix('webhook')->group(function () {

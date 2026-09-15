@@ -2,18 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Models\SatkerPemberkasan;
 use App\Services\WhatsAppService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PageController extends Controller
 {
@@ -85,7 +89,7 @@ class PageController extends Controller
             ->orWhere('id', $slug)
             ->first();
 
-        if (!$news || $news->status !== 'published') {
+        if (! $news || $news->status !== 'published') {
             abort(404);
         }
 
@@ -146,6 +150,65 @@ class PageController extends Controller
                 'viewed_at' => $viewedAt,
             ]);
         }
+    }
+
+    public function publikasi(Request $request)
+    {
+        $query = DB::table('publikasi')
+            ->where('status', 'published')
+            ->where(function ($q) {
+                $q->whereNull('published_at')
+                    ->orWhere('published_at', '<=', now());
+            })
+            ->orderByDesc(DB::raw('COALESCE(published_at, created_at)'));
+
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('original_filename', 'like', "%{$search}%");
+            });
+        }
+
+        $publikasi = $query->paginate(12)->withQueryString();
+        $categories = DB::table('publikasi')
+            ->where('status', 'published')
+            ->whereNotNull('category')
+            ->select('category')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
+
+        return view('publikasi', [
+            'publikasi' => $publikasi,
+            'categories' => $categories,
+            'selectedCategory' => $request->category,
+            'search' => $request->search,
+        ]);
+    }
+
+    public function downloadPublikasi(string $slug)
+    {
+        $publikasi = DB::table('publikasi')
+            ->where('slug', $slug)
+            ->where('status', 'published')
+            ->where(function ($q) {
+                $q->whereNull('published_at')
+                    ->orWhere('published_at', '<=', now());
+            })
+            ->first();
+
+        abort_unless($publikasi, 404);
+        abort_unless(Storage::disk('public')->exists($publikasi->file_path), 404);
+
+        DB::table('publikasi')->where('id', $publikasi->id)->increment('download_count');
+
+        return Storage::disk('public')->download($publikasi->file_path, $publikasi->original_filename);
     }
 
     public function pelayanan()
@@ -221,7 +284,7 @@ class PageController extends Controller
         }
 
         $data = $validator->validated();
-        $waktu = $data['tanggal'] . ' ' . $data['jam'] . ':00';
+        $waktu = $data['tanggal'].' '.$data['jam'].':00';
 
         $userNip = $user->nomor_induk ?? null;
         $userName = $user->name ?? '-';
@@ -229,9 +292,9 @@ class PageController extends Controller
         $tipe = $request->input('tipe', 'asn');
         $tujuan = $data['keterangan'];
 
-        if($tipe === 'direct') {
+        if ($tipe === 'direct') {
             $tipex = 'satker';
-        }else{
+        } else {
             $tipex = 'asn';
         }
 
@@ -281,7 +344,7 @@ class PageController extends Controller
         string $keterangan
     ): void {
         try {
-            $waService = new WhatsAppService();
+            $waService = new WhatsAppService;
             $waktuFormatted = Carbon::parse($waktu)->format('d M Y, H:i');
 
             if ($tipe === 'asn' && $nipTujuan) {
@@ -301,7 +364,7 @@ class PageController extends Controller
                                "📅 *Waktu:* {$waktuFormatted}\n".
                                "📝 *Keperluan:* {$keterangan}\n\n".
                                "Silakan cek aplikasi SILATAR untuk detail dan konfirmasi.\n\n".
-                               "Terima kasih 🙏";
+                               'Terima kasih 🙏';
 
                     $waService->sendMessage($phone, $message);
                 }
@@ -330,7 +393,7 @@ class PageController extends Controller
                                    "📝 *Keperluan:* {$keterangan}\n\n".
                                    "⚠️ *Status:* Menunggu Penugasan\n\n".
                                    "Silakan buka aplikasi SILATAR untuk menugaskan petugas.\n\n".
-                                   "Terima kasih 🙏";
+                                   'Terima kasih 🙏';
 
                         $waService->sendMessage($phone, $message);
                     }
@@ -443,7 +506,7 @@ class PageController extends Controller
         abort_unless($janjiTemu, 404);
 
         // Check if can cancel
-        if (!in_array($janjiTemu->status, ['APPOINTMENT', 'PENDING'])) {
+        if (! in_array($janjiTemu->status, ['APPOINTMENT', 'PENDING'])) {
             return back()->with('error', 'Janji temu tidak dapat dibatalkan');
         }
 
@@ -477,11 +540,11 @@ class PageController extends Controller
                 ->where('telp', '!=', null)
                 ->first();
 
-            if (!$staff) {
+            if (! $staff) {
                 return;
             }
 
-            $waService = new WhatsAppService();
+            $waService = new WhatsAppService;
             $phone = WhatsAppService::normalizePhoneNumber($staff->telp);
             $waktuFormatted = Carbon::parse($janjiTemu->waktu)->format('d M Y, H:i');
 
@@ -491,7 +554,7 @@ class PageController extends Controller
                        "📅 *Waktu:* {$waktuFormatted}\n".
                        "💬 *Alasan:* {$alasan}\n\n".
                        "Anda tidak perlu memproses janji temu ini.\n\n".
-                       "Terima kasih 🙏";
+                       'Terima kasih 🙏';
 
             $waService->sendMessage($phone, $message);
         } catch (\Exception $e) {
@@ -516,10 +579,10 @@ class PageController extends Controller
         $query = DB::table('ktd_bukutamu');
 
         // Filter by department if not admin
-        if (!$isAdmin) {
+        if (! $isAdmin) {
             $query->where(function ($q) use ($user) {
                 $q->where('nip_tujuan', $user->dept_id)
-                  ->orWhere('onStaff', $user->id);
+                    ->orWhere('onStaff', $user->id);
             });
         }
 
@@ -605,7 +668,7 @@ class PageController extends Controller
 
         abort_unless($janjiTemu, 404);
 
-        if (!in_array($janjiTemu->status, ['APPOINTMENT', 'PENDING'])) {
+        if (! in_array($janjiTemu->status, ['APPOINTMENT', 'PENDING'])) {
             return back()->with('error', 'Janji temu tidak dapat diproses');
         }
 
@@ -649,7 +712,7 @@ class PageController extends Controller
 
         abort_unless($janjiTemu, 404);
 
-        if (!in_array($janjiTemu->status, ['APPOINTMENT', 'PENDING'])) {
+        if (! in_array($janjiTemu->status, ['APPOINTMENT', 'PENDING'])) {
             return back()->with('error', 'Janji temu tidak dapat diproses');
         }
 
@@ -680,11 +743,11 @@ class PageController extends Controller
                 ->where('telp', '!=', null)
                 ->first();
 
-            if (!$pengaju) {
+            if (! $pengaju) {
                 return;
             }
 
-            $waService = new WhatsAppService();
+            $waService = new WhatsAppService;
             $phone = WhatsAppService::normalizePhoneNumber($pengaju->telp);
             $waktuFormatted = Carbon::parse($janjiTemu->waktu)->format('d M Y, H:i');
 
@@ -695,7 +758,7 @@ class PageController extends Controller
                           "📅 *Waktu:* {$waktuFormatted}\n".
                           "💬 *Keterangan:* {$komen}\n\n".
                           "Silakan datang sesuai jadwal.\n\n".
-                          "Terima kasih 🙏";
+                          'Terima kasih 🙏';
             } else {
                 $message = "❌ *JANJI TEMU DITOLAK* ❌\n\n".
                           "Halo, {$pengaju->name}!\n\n".
@@ -703,7 +766,7 @@ class PageController extends Controller
                           "📅 *Waktu:* {$waktuFormatted}\n".
                           "💬 *Alasan:* {$komen}\n\n".
                           "Silakan hubungi kami untuk informasi lebih lanjut.\n\n".
-                          "Terima kasih 🙏";
+                          'Terima kasih 🙏';
             }
 
             $waService->sendMessage($phone, $message);
@@ -715,6 +778,7 @@ class PageController extends Controller
     public function whistleblowing()
     {
         $user = auth()->user();
+
         return view('whistleblowing', [
             'user' => $user,
         ]);
@@ -738,7 +802,7 @@ class PageController extends Controller
         $data = $validator->validated();
 
         // Generate kode
-        $kode = 'PENGADUAN' . date('Ymd') . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
+        $kode = 'PENGADUAN'.date('Ymd').str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
 
         $insertData = [
             'kode' => $kode,
@@ -795,6 +859,7 @@ class PageController extends Controller
             ->get()
             ->map(function ($item) {
                 $isKaur = strtolower($item->kat_jabatan ?? '') === 'kaur';
+
                 return [
                     'id' => $item->id,
                     'name' => $item->name,
@@ -815,7 +880,7 @@ class PageController extends Controller
         ]);
     }
 
-    public function requestService(int $serviceId, Request $request = null)
+    public function requestService(int $serviceId, ?Request $request = null)
     {
         $service = $this->serviceDetail($serviceId);
         $requester = auth()->user();
@@ -1073,7 +1138,7 @@ class PageController extends Controller
         ]));
     }
 
-    public function deleteRequest(int $requestId): \Illuminate\Http\RedirectResponse
+    public function deleteRequest(int $requestId): RedirectResponse
     {
         $user = auth()->user();
         abort_unless($user, 403);
@@ -1175,19 +1240,19 @@ class PageController extends Controller
 
         $fileEntry = collect($filesData)->firstWhere('syarat_id', $syaratId);
 
-        abort_unless($fileEntry && !empty($fileEntry['filename']) && $fileEntry['filename'] !== 'NONE', 404);
+        abort_unless($fileEntry && ! empty($fileEntry['filename']) && $fileEntry['filename'] !== 'NONE', 404);
 
         $filename = $fileEntry['filename'];
         $nomorInduk = $user->nomor_induk;
 
         // Check new location first
-        $newPath = \App\Helpers\FileHelper::getPemberkasanPath($nomorInduk, $filename);
+        $newPath = FileHelper::getPemberkasanPath($nomorInduk, $filename);
         if (Storage::disk('public')->exists($newPath)) {
             return Storage::disk('public')->response($newPath);
         }
 
         // Fallback to legacy location
-        $legacyPath = \App\Helpers\FileHelper::getLegacyPath($nomorInduk, $filename);
+        $legacyPath = FileHelper::getLegacyPath($nomorInduk, $filename);
         if (Storage::disk('users_berkas')->exists($legacyPath)) {
             return Storage::disk('users_berkas')->response($legacyPath);
         }
@@ -1195,7 +1260,7 @@ class PageController extends Controller
         abort(404);
     }
 
-    public function editTpgRequest(int $pemberkasanId, Request $request = null)
+    public function editTpgRequest(int $pemberkasanId, ?Request $request = null)
     {
         $user = auth()->user();
         abort_unless($user, 403);
@@ -1236,7 +1301,7 @@ class PageController extends Controller
         $existingFiles = [];
         foreach ($filesData as $file) {
             $syaratId = $file['syarat_id'] ?? 0;
-            if (!empty($file['filename']) && $file['filename'] !== 'NONE') {
+            if (! empty($file['filename']) && $file['filename'] !== 'NONE') {
                 $existingFiles[$syaratId] = [
                     'filename' => $file['filename'],
                     'filetype' => $file['filetype'] ?? null,
@@ -1262,7 +1327,7 @@ class PageController extends Controller
         ));
     }
 
-    public function updateTpgRequest(Request $request, int $pemberkasanId): \Illuminate\Http\RedirectResponse
+    public function updateTpgRequest(Request $request, int $pemberkasanId): RedirectResponse
     {
         $user = auth()->user();
         abort_unless($user, 403);
@@ -1326,7 +1391,7 @@ class PageController extends Controller
         $deletedFilesInput = $request->input('deleted_files', []);
         if (is_array($deletedFilesInput)) {
             $deletedFileIds = array_map('intval', $deletedFilesInput);
-        } elseif (is_string($deletedFilesInput) && !empty($deletedFilesInput)) {
+        } elseif (is_string($deletedFilesInput) && ! empty($deletedFilesInput)) {
             $deletedFileIds = array_map('intval', explode(',', $deletedFilesInput));
         } else {
             $deletedFileIds = [];
@@ -1395,7 +1460,7 @@ class PageController extends Controller
             ->with('success', $message);
     }
 
-    public function deleteTpgRequest(int $pemberkasanId): \Illuminate\Http\RedirectResponse
+    public function deleteTpgRequest(int $pemberkasanId): RedirectResponse
     {
         $user = auth()->user();
         abort_unless($user, 403);
@@ -1420,11 +1485,11 @@ class PageController extends Controller
         if (is_string($filesData)) {
             $filesData = json_decode($filesData, true);
         }
-        if (!is_array($filesData)) {
+        if (! is_array($filesData)) {
             $filesData = [];
         }
         foreach ($filesData as $file) {
-            if (!empty($file['filename']) && $file['filename'] !== 'NONE') {
+            if (! empty($file['filename']) && $file['filename'] !== 'NONE') {
                 $path = "{$user->nomor_induk}/{$file['filename']}";
                 Storage::disk('users_berkas')->delete($path);
             }
@@ -1476,19 +1541,19 @@ class PageController extends Controller
 
         $fileEntry = collect($filesData)->firstWhere('syarat_id', $syaratId);
 
-        abort_unless($fileEntry && !empty($fileEntry['filename']) && $fileEntry['filename'] !== 'NONE', 404);
+        abort_unless($fileEntry && ! empty($fileEntry['filename']) && $fileEntry['filename'] !== 'NONE', 404);
 
         $filename = $fileEntry['filename'];
         $nomorInduk = $user->nomor_induk;
 
         // Check new location first
-        $newPath = \App\Helpers\FileHelper::getPemberkasanPath($nomorInduk, $filename);
+        $newPath = FileHelper::getPemberkasanPath($nomorInduk, $filename);
         if (Storage::disk('public')->exists($newPath)) {
             return Storage::disk('public')->response($newPath);
         }
 
         // Fallback to legacy location
-        $legacyPath = \App\Helpers\FileHelper::getLegacyPath($nomorInduk, $filename);
+        $legacyPath = FileHelper::getLegacyPath($nomorInduk, $filename);
         if (Storage::disk('users_berkas')->exists($legacyPath)) {
             return Storage::disk('users_berkas')->response($legacyPath);
         }
@@ -1500,7 +1565,7 @@ class PageController extends Controller
      * Handle TPG Bulanan submission
      * Unified for PAIS-TPG-BULANAN (1038) and PENMAD-TPG-BULANAN (1081)
      */
-    public function submitTpgBulananRequest(Request $request, int $serviceId): \Illuminate\Http\RedirectResponse
+    public function submitTpgBulananRequest(Request $request, int $serviceId): RedirectResponse
     {
         $service = $this->serviceDetail($serviceId);
         $requirements = $service['requirements'];
@@ -1592,8 +1657,8 @@ class PageController extends Controller
             : "Pengajuan {$service['title']} sudah diterima.";
 
         // Add warning if there are missing required files
-        if (!empty($missingFiles)) {
-            $message .= " Perhatian: Bahan wajib belum lengkap - " . implode(', ', $missingFiles) . ". Silakan lengkapi sebelum mengirim final.";
+        if (! empty($missingFiles)) {
+            $message .= ' Perhatian: Bahan wajib belum lengkap - '.implode(', ', $missingFiles).'. Silakan lengkapi sebelum mengirim final.';
         }
 
         if (! $isDraft) {
@@ -1620,7 +1685,7 @@ class PageController extends Controller
      * Edit TPG Bulanan request
      * Unified for PAIS-TPG-BULANAN and PENMAD-TPG-BULANAN
      */
-    public function editTpgBulananRequest(int $pemberkasanId, Request $request = null)
+    public function editTpgBulananRequest(int $pemberkasanId, ?Request $request = null)
     {
         $user = auth()->user();
         abort_unless($user, 403);
@@ -1661,7 +1726,7 @@ class PageController extends Controller
         $existingFiles = [];
         foreach ($filesData as $file) {
             $syaratId = $file['syarat_id'] ?? 0;
-            if (!empty($file['filename']) && $file['filename'] !== 'NONE') {
+            if (! empty($file['filename']) && $file['filename'] !== 'NONE') {
                 $existingFiles[$syaratId] = [
                     'filename' => $file['filename'],
                     'filetype' => $file['filetype'] ?? null,
@@ -1692,7 +1757,7 @@ class PageController extends Controller
      * Update TPG Bulanan request
      * Unified for PAIS-TPG-BULANAN and PENMAD-TPG-BULANAN
      */
-    public function updateTpgBulananRequest(Request $request, int $pemberkasanId): \Illuminate\Http\RedirectResponse
+    public function updateTpgBulananRequest(Request $request, int $pemberkasanId): RedirectResponse
     {
         $user = auth()->user();
         abort_unless($user, 403);
@@ -1755,7 +1820,7 @@ class PageController extends Controller
         $deletedFilesInput = $request->input('deleted_files', []);
         if (is_array($deletedFilesInput)) {
             $deletedFileIds = array_map('intval', $deletedFilesInput);
-        } elseif (is_string($deletedFilesInput) && !empty($deletedFilesInput)) {
+        } elseif (is_string($deletedFilesInput) && ! empty($deletedFilesInput)) {
             $deletedFileIds = array_map('intval', explode(',', $deletedFilesInput));
         } else {
             $deletedFileIds = [];
@@ -1829,7 +1894,7 @@ class PageController extends Controller
      * Delete TPG Bulanan request
      * Unified for PAIS-TPG-BULANAN and PENMAD-TPG-BULANAN
      */
-    public function deleteTpgBulananRequest(int $pemberkasanId): \Illuminate\Http\RedirectResponse
+    public function deleteTpgBulananRequest(int $pemberkasanId): RedirectResponse
     {
         $user = auth()->user();
         abort_unless($user, 403);
@@ -1854,11 +1919,11 @@ class PageController extends Controller
         if (is_string($filesData)) {
             $filesData = json_decode($filesData, true);
         }
-        if (!is_array($filesData)) {
+        if (! is_array($filesData)) {
             $filesData = [];
         }
         foreach ($filesData as $file) {
-            if (!empty($file['filename']) && $file['filename'] !== 'NONE') {
+            if (! empty($file['filename']) && $file['filename'] !== 'NONE') {
                 $path = "{$user->nomor_induk}/{$file['filename']}";
                 Storage::disk('users_berkas')->delete($path);
             }
@@ -1891,7 +1956,7 @@ class PageController extends Controller
     /**
      * @deprecated Use submitTpgBulananRequest()
      */
-    public function submitPenmadTpgBulananRequest(Request $request, int $serviceId): \Illuminate\Http\RedirectResponse
+    public function submitPenmadTpgBulananRequest(Request $request, int $serviceId): RedirectResponse
     {
         return $this->submitTpgBulananRequest($request, $serviceId);
     }
@@ -1899,7 +1964,7 @@ class PageController extends Controller
     /**
      * @deprecated Use editTpgBulananRequest()
      */
-    public function editPenmadTpgBulananRequest(int $pemberkasanId, Request $request = null)
+    public function editPenmadTpgBulananRequest(int $pemberkasanId, ?Request $request = null)
     {
         return $this->editTpgBulananRequest($pemberkasanId, $request);
     }
@@ -1907,7 +1972,7 @@ class PageController extends Controller
     /**
      * @deprecated Use updateTpgBulananRequest()
      */
-    public function updatePenmadTpgBulananRequest(Request $request, int $pemberkasanId): \Illuminate\Http\RedirectResponse
+    public function updatePenmadTpgBulananRequest(Request $request, int $pemberkasanId): RedirectResponse
     {
         return $this->updateTpgBulananRequest($request, $pemberkasanId);
     }
@@ -1915,7 +1980,7 @@ class PageController extends Controller
     /**
      * @deprecated Use deleteTpgBulananRequest()
      */
-    public function deletePenmadTpgBulananRequest(int $pemberkasanId): \Illuminate\Http\RedirectResponse
+    public function deletePenmadTpgBulananRequest(int $pemberkasanId): RedirectResponse
     {
         return $this->deleteTpgBulananRequest($pemberkasanId);
     }
@@ -1948,7 +2013,7 @@ class PageController extends Controller
     /**
      * @deprecated Use submitTpgBulananRequest()
      */
-    public function submitPenmadPengawasBulananRequest(Request $request, int $serviceId): \Illuminate\Http\RedirectResponse
+    public function submitPenmadPengawasBulananRequest(Request $request, int $serviceId): RedirectResponse
     {
         return $this->submitTpgBulananRequest($request, $serviceId);
     }
@@ -1956,7 +2021,7 @@ class PageController extends Controller
     /**
      * @deprecated Use editTpgBulananRequest()
      */
-    public function editPenmadPengawasBulananRequest(int $pemberkasanId, Request $request = null)
+    public function editPenmadPengawasBulananRequest(int $pemberkasanId, ?Request $request = null)
     {
         return $this->editTpgBulananRequest($pemberkasanId, $request);
     }
@@ -1964,7 +2029,7 @@ class PageController extends Controller
     /**
      * @deprecated Use updateTpgBulananRequest()
      */
-    public function updatePenmadPengawasBulananRequest(Request $request, int $pemberkasanId): \Illuminate\Http\RedirectResponse
+    public function updatePenmadPengawasBulananRequest(Request $request, int $pemberkasanId): RedirectResponse
     {
         return $this->updateTpgBulananRequest($request, $pemberkasanId);
     }
@@ -1972,7 +2037,7 @@ class PageController extends Controller
     /**
      * @deprecated Use deleteTpgBulananRequest()
      */
-    public function deletePenmadPengawasBulananRequest(int $pemberkasanId): \Illuminate\Http\RedirectResponse
+    public function deletePenmadPengawasBulananRequest(int $pemberkasanId): RedirectResponse
     {
         return $this->deleteTpgBulananRequest($pemberkasanId);
     }
@@ -2137,14 +2202,14 @@ class PageController extends Controller
 
         // Post-process: count files for TPG requests and extract period info
         foreach ($allRequests as $request) {
-            if (!empty($request->tipe) && in_array($request->tipe, $tpgTypes)) {
+            if (! empty($request->tipe) && in_array($request->tipe, $tpgTypes)) {
                 // Count files
-                if (!empty($request->files_data)) {
+                if (! empty($request->files_data)) {
                     $files = json_decode($request->files_data, true);
                     if (is_string($files)) {
                         $files = json_decode($files, true);
                     }
-                    $request->file_count = is_array($files) ? count(array_filter($files, fn($f) => !empty($f['filename']) && $f['filename'] !== 'NONE')) : 0;
+                    $request->file_count = is_array($files) ? count(array_filter($files, fn ($f) => ! empty($f['filename']) && $f['filename'] !== 'NONE')) : 0;
                 }
 
                 // Extract period info from metadata
@@ -2156,17 +2221,17 @@ class PageController extends Controller
 
                 // Handle semester type (PAIS-TPG-SEMESTER)
                 if ($request->tipe === 'PAIS-TPG-SEMESTER') {
-                    if (!empty($metadata['tahun_ajaran']) && !empty($metadata['semester'])) {
+                    if (! empty($metadata['tahun_ajaran']) && ! empty($metadata['semester'])) {
                         $semesterLabel = ucfirst($metadata['semester']);
-                        $request->periode = $metadata['tahun_ajaran'] . ' - Semester ' . $semesterLabel;
+                        $request->periode = $metadata['tahun_ajaran'].' - Semester '.$semesterLabel;
                     }
                 }
                 // Handle bulanan types (PAIS-TPG-BULANAN, PENMAD-TPG-BULANAN, PENMAD-PENGAWAS-BULANAN)
                 else {
-                    if (!empty($metadata['bulan']) && !empty($metadata['tahun'])) {
-                        $request->periode = $metadata['bulan'] . ' ' . $metadata['tahun'];
-                    } elseif (!empty($metadata['bulan']) && !empty($metadata['tahun_ajaran'])) {
-                        $request->periode = $metadata['bulan'] . ' ' . $metadata['tahun_ajaran'];
+                    if (! empty($metadata['bulan']) && ! empty($metadata['tahun'])) {
+                        $request->periode = $metadata['bulan'].' '.$metadata['tahun'];
+                    } elseif (! empty($metadata['bulan']) && ! empty($metadata['tahun_ajaran'])) {
+                        $request->periode = $metadata['bulan'].' '.$metadata['tahun_ajaran'];
                     }
                 }
             }
@@ -2206,12 +2271,12 @@ class PageController extends Controller
 
         if ($activeTab === 'bulanan') {
             // For bulanan tab, use year parameter
-            if (!$selectedYear || !preg_match('/^\d{4}$/', $selectedYear)) {
+            if (! $selectedYear || ! preg_match('/^\d{4}$/', $selectedYear)) {
                 $selectedYear = now()->format('Y');
             }
             $selectedYear = (int) $selectedYear;
             // Convert year to month format for display (use January as default)
-            $selectedMonth = $selectedYear . '-01';
+            $selectedMonth = $selectedYear.'-01';
         } else {
             // For harian and humas tabs, use month parameter
             if (! preg_match('/^\d{4}-\d{2}$/', $selectedMonth)) {
@@ -2262,12 +2327,12 @@ class PageController extends Controller
             $items = $jsonData['items'] ?? [];
 
             // Handle legacy format (direct columns instead of JSON)
-            if (empty($items) && !empty($row->kegiatan)) {
+            if (empty($items) && ! empty($row->kegiatan)) {
                 $items = [[
                     'id' => $row->id,
                     'k' => $row->kegiatan,
                     'v' => $row->volume ?? 0,
-                    's' => $row->satuan ?? 'Kegiatan'
+                    's' => $row->satuan ?? 'Kegiatan',
                 ]];
             }
 
@@ -2275,6 +2340,7 @@ class PageController extends Controller
             if ($search !== '') {
                 $items = array_filter($items, function ($item) use ($search) {
                     $kegiatan = $item['k'] ?? ($item['kegiatan'] ?? '');
+
                     return stripos($kegiatan, $search) !== false;
                 });
             }
@@ -2292,7 +2358,7 @@ class PageController extends Controller
                     'kegiatan' => trim((string) ($item['k'] ?? '')),
                     'volume' => $volume,
                     'satuan' => $satuan,
-                    'meta' => $volume > 0 ? trim($volume . ' ' . $satuan) : $satuan,
+                    'meta' => $volume > 0 ? trim($volume.' '.$satuan) : $satuan,
                     'tanggal' => $row->tanggal,
                 ];
             }, array_values($items));
@@ -2302,13 +2368,13 @@ class PageController extends Controller
             $totalEntries += $dayEntries;
             $totalVolume += $dayVolume;
 
-            if ($row->updated_at && (!$latestUpdate || $row->updated_at > $latestUpdate)) {
+            if ($row->updated_at && (! $latestUpdate || $row->updated_at > $latestUpdate)) {
                 $latestUpdate = $row->updated_at;
             }
 
             $dateCarbon = Carbon::parse($date);
 
-            if (!isset($dailyGroups[$date])) {
+            if (! isset($dailyGroups[$date])) {
                 $dailyGroups[$date] = [
                     'date' => $dateCarbon->toDateString(),
                     'label' => $this->indonesianDateLabel($dateCarbon),
@@ -2401,8 +2467,8 @@ class PageController extends Controller
         // Rekap Bulanan dari satker_ckh - data laporan kinerja bulanan user
         // For bulanan tab, show only current user's data for the selected year
         if ($activeTab === 'bulanan') {
-            $yearStart = Carbon::createFromFormat('Y-m-d', $selectedYear . '-01-01')->startOfYear();
-            $yearEnd = Carbon::createFromFormat('Y-m-d', $selectedYear . '-12-31')->endOfYear();
+            $yearStart = Carbon::createFromFormat('Y-m-d', $selectedYear.'-01-01')->startOfYear();
+            $yearEnd = Carbon::createFromFormat('Y-m-d', $selectedYear.'-12-31')->endOfYear();
         } else {
             $yearStart = $selectedMonthStart;
             $yearEnd = $selectedMonthEnd;
@@ -2468,7 +2534,7 @@ class PageController extends Controller
         $humasYearFilter = null;
         if ($activeTab === 'humas') {
             $humasYearFilter = $request->input('humas_year');
-            if (!$humasYearFilter || !preg_match('/^\d{4}$/', $humasYearFilter)) {
+            if (! $humasYearFilter || ! preg_match('/^\d{4}$/', $humasYearFilter)) {
                 $humasYearFilter = (int) date('Y');
             }
         }
@@ -2478,7 +2544,7 @@ class PageController extends Controller
             ->where('lh.user_id', $user->id)
             ->when($humasYearFilter, function ($query) use ($humasYearFilter) {
                 // Filter by year if humas_year is provided
-                return $query->whereRaw("LEFT(lh.bulan, 4) = ?", [$humasYearFilter]);
+                return $query->whereRaw('LEFT(lh.bulan, 4) = ?', [$humasYearFilter]);
             })
             ->orderByDesc('lh.bulan')
             ->get()
@@ -2606,11 +2672,11 @@ class PageController extends Controller
         $allowedRoles = ['kepala', 'kasubbag', 'kasi'];
         $userRole = strtolower(trim((string) ($user->kat_jabatan ?? '')));
 
-        if (!in_array($userRole, $allowedRoles)) {
+        if (! in_array($userRole, $allowedRoles)) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
-        if (!$user->dept_id) {
+        if (! $user->dept_id) {
             return view('laporan-kinerja-bawahan', [
                 'error' => 'Unit kerja Anda belum ditetapkan. Hubungi administrator.',
                 'reports' => collect([]),
@@ -2627,7 +2693,7 @@ class PageController extends Controller
         }
 
         $selectedMonth = $request->string('month')->toString();
-        if (!preg_match('/^\d{4}-\d{2}$/', $selectedMonth)) {
+        if (! preg_match('/^\d{4}-\d{2}$/', $selectedMonth)) {
             $selectedMonth = now()->subMonth()->format('Y-m');
         }
 
@@ -2772,7 +2838,7 @@ class PageController extends Controller
         // Paginate the results (12 per page)
         $perPage = 12;
         $currentPage = (int) $request->query('page', 1);
-        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+        $paginator = new LengthAwarePaginator(
             $allReports->forPage($currentPage, $perPage),
             $allReports->count(),
             $perPage,
@@ -2973,10 +3039,11 @@ class PageController extends Controller
         $user = auth()->user();
 
         // Verify old password
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Password lama salah.'], 400);
             }
+
             return back()->withErrors(['current_password' => 'Password lama salah.'])->withInput();
         }
 
@@ -3045,11 +3112,11 @@ class PageController extends Controller
                     $itemsArr = $jsonData['items'] ?? [];
 
                     // Handle legacy format (direct columns)
-                    if (empty($itemsArr) && !empty($item->kegiatan)) {
+                    if (empty($itemsArr) && ! empty($item->kegiatan)) {
                         $itemsArr = [[
                             'k' => $item->kegiatan,
                             'v' => $item->volume ?? 0,
-                            's' => $item->satuan ?? 'Kegiatan'
+                            's' => $item->satuan ?? 'Kegiatan',
                         ]];
                     }
 
@@ -3061,7 +3128,7 @@ class PageController extends Controller
                             'kegiatan' => trim((string) ($it['k'] ?? ($it['kegiatan'] ?? ''))),
                             'volume' => $volume,
                             'satuan' => $unit,
-                            'meta' => $volume > 0 ? trim($volume . ' ' . $unit) : $unit,
+                            'meta' => $volume > 0 ? trim($volume.' '.$unit) : $unit,
                         ];
                     }
                 }
@@ -3090,7 +3157,7 @@ class PageController extends Controller
         $isUserAtasan = in_array($user->kat_jabatan, $atasanJabatan);
 
         // Cek custom supervisor dulu (priority tertinggi)
-        if (!empty($user->custom_supervisor_id)) {
+        if (! empty($user->custom_supervisor_id)) {
             $customSupervisor = DB::table('users')
                 ->where('id', $user->custom_supervisor_id)
                 ->first();
@@ -3099,7 +3166,7 @@ class PageController extends Controller
                 $isCustomSupervisor = true;
                 $signatureName = $customSupervisor->name;
                 $signatureNip = $customSupervisor->nomor_induk
-                    ? 'NIP. ' . $customSupervisor->nomor_induk
+                    ? 'NIP. '.$customSupervisor->nomor_induk
                     : '';
             }
         }
@@ -3115,7 +3182,7 @@ class PageController extends Controller
 
             if ($kepalaKankemenag) {
                 $signatureName = $kepalaKankemenag->name;
-                $signatureNip = $kepalaKankemenag->nomor_induk ? 'NIP. ' . $kepalaKankemenag->nomor_induk : '';
+                $signatureNip = $kepalaKankemenag->nomor_induk ? 'NIP. '.$kepalaKankemenag->nomor_induk : '';
             }
         } elseif ($pltPlh) {
             // PLT exist - gunakan user PLT
@@ -3123,7 +3190,7 @@ class PageController extends Controller
             if ($pltUser) {
                 $isPlh = true;
                 $signatureName = $pltUser->name;
-                $signatureNip = $pltUser->nomor_induk ? 'NIP. ' . $pltUser->nomor_induk : '';
+                $signatureNip = $pltUser->nomor_induk ? 'NIP. '.$pltUser->nomor_induk : '';
             }
         } else {
             // Cari kepala/kasi/kasubbag berdasarkan dept_id
@@ -3134,7 +3201,7 @@ class PageController extends Controller
 
             if ($kepala) {
                 $signatureName = $kepala->name;
-                $signatureNip = $kepala->nomor_induk ? 'NIP. ' . $kepala->nomor_induk : '';
+                $signatureNip = $kepala->nomor_induk ? 'NIP. '.$kepala->nomor_induk : '';
             }
         }
 
@@ -3209,7 +3276,7 @@ class PageController extends Controller
         $pdfBinary = $pdf->output();
 
         // Ensure directory exists before saving
-        $fullDirPath = storage_path('app/public/satker_ckh/' . $user->id);
+        $fullDirPath = storage_path('app/public/satker_ckh/'.$user->id);
         if (! is_dir($fullDirPath)) {
             if (! mkdir($fullDirPath, 0755, true) && ! is_dir($fullDirPath)) {
                 Log::error('Gagal membuat direktori untuk PDF CKH', [
@@ -3221,7 +3288,7 @@ class PageController extends Controller
 
         // Try to save PDF with multiple fallback methods
         $saved = false;
-        $fullFilePath = $fullDirPath . '/' . $filename;
+        $fullFilePath = $fullDirPath.'/'.$filename;
         $savedPath = $storagePath;
 
         // Method 1: Try Storage facade (public disk)
@@ -3256,11 +3323,11 @@ class PageController extends Controller
         // Method 3: Try save ke storage/app (non-public) sebagai fallback
         if (! $saved) {
             try {
-                $altDirPath = storage_path('app/satker_ckh/' . $user->id);
+                $altDirPath = storage_path('app/satker_ckh/'.$user->id);
                 if (! is_dir($altDirPath)) {
                     mkdir($altDirPath, 0755, true);
                 }
-                $altFilePath = $altDirPath . '/' . $filename;
+                $altFilePath = $altDirPath.'/'.$filename;
                 $result = file_put_contents($altFilePath, $pdfBinary);
                 if ($result !== false) {
                     $saved = true;
@@ -3317,7 +3384,7 @@ class PageController extends Controller
 
         return response($pdfBinary, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
         ]);
     }
 
@@ -3388,7 +3455,7 @@ class PageController extends Controller
                             'kegiatan' => trim((string) ($it['k'] ?? ($it['kegiatan'] ?? ''))),
                             'volume' => $volume,
                             'satuan' => $unit,
-                            'meta' => $volume > 0 ? trim($volume . ' ' . $unit) : $unit,
+                            'meta' => $volume > 0 ? trim($volume.' '.$unit) : $unit,
                         ];
                     }
                 }
@@ -3408,14 +3475,14 @@ class PageController extends Controller
 
         $isPlh = false;
         $signatureName = $data['supervisor_name'];
-        $signatureNip = 'NIP. ' . $data['supervisor_nip'];
+        $signatureNip = 'NIP. '.$data['supervisor_nip'];
 
         if ($pltPlh) {
             $pltUser = DB::table('users')->where('id', $pltPlh->user_id)->first();
             if ($pltUser) {
                 $isPlh = true;
                 $signatureName = $pltUser->name;
-                $signatureNip = $pltUser->nomor_induk ? 'NIP. ' . $pltUser->nomor_induk : '';
+                $signatureNip = $pltUser->nomor_induk ? 'NIP. '.$pltUser->nomor_induk : '';
             }
         }
 
@@ -3448,7 +3515,7 @@ class PageController extends Controller
         $pdfBinary = $pdf->output();
 
         // Ensure directory exists before saving
-        $fullDirPath = storage_path('app/public/satker_ckh/' . $user->id);
+        $fullDirPath = storage_path('app/public/satker_ckh/'.$user->id);
         if (! is_dir($fullDirPath)) {
             if (! mkdir($fullDirPath, 0755, true) && ! is_dir($fullDirPath)) {
                 Log::error('Gagal membuat direktori untuk PDF CKH', [
@@ -3496,7 +3563,7 @@ class PageController extends Controller
 
         return response($pdfBinary, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
         ]);
     }
 
@@ -3541,25 +3608,25 @@ class PageController extends Controller
         if (Storage::disk('public')->exists($storagePath)) {
             return Storage::disk('public')->response($storagePath, $filename, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                'Content-Disposition' => 'inline; filename="'.$filename.'"',
             ]);
         }
 
         // Method 2: Coba akses dari storage/app (fallback untuk PHP-FPM permission issue)
-        $altStoragePath = storage_path('app/satker_ckh/' . $report->user_id . '/' . $filename);
+        $altStoragePath = storage_path('app/satker_ckh/'.$report->user_id.'/'.$filename);
         if (file_exists($altStoragePath)) {
             return response()->file($altStoragePath, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                'Content-Disposition' => 'inline; filename="'.$filename.'"',
             ]);
         }
 
         // Method 3: Coba akses dari public/storage (symlink)
-        $publicPath = public_path('storage/satker_ckh/' . $report->user_id . '/' . $filename);
+        $publicPath = public_path('storage/satker_ckh/'.$report->user_id.'/'.$filename);
         if (file_exists($publicPath)) {
             return response()->file($publicPath, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                'Content-Disposition' => 'inline; filename="'.$filename.'"',
             ]);
         }
 
@@ -3590,7 +3657,7 @@ class PageController extends Controller
         abort_unless($report, 404);
 
         // Check if status allows replacement (only DIKIRIM or DITOLAK)
-        if (!in_array($report->status, ['DIKIRIM', 'DITOLAK'])) {
+        if (! in_array($report->status, ['DIKIRIM', 'DITOLAK'])) {
             return back()->with('error', 'File hanya bisa diganti jika status laporan DIKIRIM atau DITOLAK.');
         }
 
@@ -3610,7 +3677,7 @@ class PageController extends Controller
         $storagePath = "satker_ckh/{$user->id}/{$filename}";
 
         // Ensure directory exists before saving
-        $fullDirPath = storage_path('app/public/satker_ckh/' . $user->id);
+        $fullDirPath = storage_path('app/public/satker_ckh/'.$user->id);
         if (! is_dir($fullDirPath)) {
             if (! mkdir($fullDirPath, 0755, true) && ! is_dir($fullDirPath)) {
                 Log::error('Gagal membuat direktori untuk PDF CKH', [
@@ -3629,6 +3696,7 @@ class PageController extends Controller
                 'report_id' => $reportId,
                 'storage_path' => $storagePath,
             ]);
+
             return back()->with('error', 'Gagal menyimpan file. Silakan coba lagi.');
         }
 
@@ -3700,7 +3768,7 @@ class PageController extends Controller
         $storagePath = "satker_ckh/{$user->id}/{$filename}";
 
         // Ensure directory exists before saving
-        $fullDirPath = storage_path('app/public/satker_ckh/' . $user->id);
+        $fullDirPath = storage_path('app/public/satker_ckh/'.$user->id);
         if (! is_dir($fullDirPath)) {
             if (! mkdir($fullDirPath, 0755, true) && ! is_dir($fullDirPath)) {
                 Log::error('Gagal membuat direktori untuk PDF CKH', [
@@ -3719,6 +3787,7 @@ class PageController extends Controller
                 'bulan' => $data['bulan'],
                 'storage_path' => $storagePath,
             ]);
+
             return back()->with('error', 'Gagal menyimpan file. Silakan coba lagi.');
         }
 
@@ -3856,6 +3925,7 @@ class PageController extends Controller
             // Re-assign IDs starting from 1
             $jsonItems = array_map(function ($item, $index) {
                 $item['id'] = $index + 1;
+
                 return $item;
             }, $jsonItems, array_keys($jsonItems));
 
@@ -3895,7 +3965,7 @@ class PageController extends Controller
             $duplicateItems = array_map(function ($item, $index) use ($prefix) {
                 return [
                     'id' => $index + 1,
-                    'k' => $prefix . ' ' . $item['kegiatan'],
+                    'k' => $prefix.' '.$item['kegiatan'],
                     'v' => (int) ($item['volume'] ?? 0),
                     's' => $item['satuan'],
                 ];
@@ -3938,7 +4008,7 @@ class PageController extends Controller
                         'updated_at' => $submittedAt,
                     ]);
             } else {
-                $firstItem = !empty($itemsArray) ? $itemsArray[0] : null;
+                $firstItem = ! empty($itemsArray) ? $itemsArray[0] : null;
                 DB::table('satker_kegiatan')->insert([
                     'user_id' => $targetUserId,
                     'tanggal' => $tanggal,
@@ -4027,7 +4097,7 @@ class PageController extends Controller
         // Check if record already exists for this month
         $existing = DB::table('laporan_humas')
             ->where('user_id', $user->id)
-            ->where('bulan', $validated['bulan'] . '-01')
+            ->where('bulan', $validated['bulan'].'-01')
             ->first();
 
         if ($existing) {
@@ -4044,7 +4114,7 @@ class PageController extends Controller
             DB::table('laporan_humas')->insert([
                 'user_id' => $user->id,
                 'dept_id' => $user->dept_id ?? null,
-                'bulan' => $validated['bulan'] . '-01',
+                'bulan' => $validated['bulan'].'-01',
                 'data' => json_encode($platformData),
                 'user_komen' => $validated['comment'] ?? '',
                 'status' => 'tersimpan',
@@ -4325,14 +4395,14 @@ class PageController extends Controller
             ->first();
 
         $isCustomSupervisorOfUser = false;
-        if ($reportOwner && !empty($reportOwner->custom_supervisor_id)) {
+        if ($reportOwner && ! empty($reportOwner->custom_supervisor_id)) {
             $isCustomSupervisorOfUser = ($reportOwner->custom_supervisor_id == $user->id);
         }
 
         // Izinkan verifikasi jika:
         // 1. User adalah atasan berdasarkan hierarki (kepala/kasi/kasubbag)
         // 2. ATAU user adalah custom supervisor dari pembuat laporan
-        if (!$atasanRole && !$isCustomSupervisorOfUser) {
+        if (! $atasanRole && ! $isCustomSupervisorOfUser) {
             return response()->json([
                 'success' => false,
                 'message' => 'Anda tidak memiliki hak untuk memverifikasi laporan.',
@@ -4348,7 +4418,7 @@ class PageController extends Controller
             ->where('bulan', $bulanDate)
             ->first();
 
-        if (!$report) {
+        if (! $report) {
             return response()->json([
                 'success' => false,
                 'message' => 'Laporan tidak ditemukan.',
@@ -4389,7 +4459,7 @@ class PageController extends Controller
                 DB::table('activities')->insert([
                     'user_id' => $user->id,
                     'activity_type' => 'verifikasi_laporan',
-                    'description' => "Laporan kinerja {$data['bulan']} " . ($data['action'] === 'approve' ? 'disetujui' : 'ditolak') . " oleh atasan",
+                    'description' => "Laporan kinerja {$data['bulan']} ".($data['action'] === 'approve' ? 'disetujui' : 'ditolak').' oleh atasan',
                     'ref_id' => $report->id,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -4400,7 +4470,7 @@ class PageController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal update status: ' . $e->getMessage(),
+                'message' => 'Gagal update status: '.$e->getMessage(),
             ], 500);
         }
 
@@ -4431,13 +4501,13 @@ class PageController extends Controller
         if ($signature) {
             // Use saved values, fallback to user defaults if empty
             $signature->signature_name = $signature->signature_name ?: $defaultName;
-            $signature->nip = $signature->nip ?: ($defaultNip ? 'NIP. ' . $defaultNip : '');
+            $signature->nip = $signature->nip ?: ($defaultNip ? 'NIP. '.$defaultNip : '');
         } else {
             // No signature exists, use user defaults
             $signature = (object) [
                 'signature_name' => $defaultName,
                 'signature_image' => '',
-                'nip' => $defaultNip ? 'NIP. ' . $defaultNip : '',
+                'nip' => $defaultNip ? 'NIP. '.$defaultNip : '',
                 'is_active' => false,
             ];
         }
@@ -4470,20 +4540,20 @@ class PageController extends Controller
         $data['is_active'] = ($isActiveRaw === '1') ? true : false;
 
         // Format NIP with "NIP. " prefix if not empty and doesn't have it
-        if (!empty($data['nip']) && !str_starts_with($data['nip'], 'NIP. ')) {
-            $data['nip'] = 'NIP. ' . $data['nip'];
+        if (! empty($data['nip']) && ! str_starts_with($data['nip'], 'NIP. ')) {
+            $data['nip'] = 'NIP. '.$data['nip'];
         }
 
         // If signature_image is base64 data, save to file
-        if (!empty($request->input('signature_image')) && str_starts_with($request->input('signature_image'), 'data:image')) {
+        if (! empty($request->input('signature_image')) && str_starts_with($request->input('signature_image'), 'data:image')) {
             $imageData = $request->input('signature_image');
             $image = str_replace('data:image/png;base64,', '', $imageData);
             $image = str_replace(' ', '+', $image);
             $decoded = base64_decode($image);
 
-            $filename = 'signatures/' . $user->id . '_' . time() . '.png';
+            $filename = 'signatures/'.$user->id.'_'.time().'.png';
             Storage::disk('public')->put($filename, $decoded);
-            $data['signature_image'] = '/storage/' . $filename;
+            $data['signature_image'] = '/storage/'.$filename;
         }
 
         // Update or insert signature
@@ -4520,13 +4590,13 @@ class PageController extends Controller
         $file = $request->file('signature_image');
         $path = $file->storeAs(
             'signatures',
-            $user->id . '_' . time() . '.' . $file->getClientOriginalExtension(),
+            $user->id.'_'.time().'.'.$file->getClientOriginalExtension(),
             'public'
         );
 
         return response()->json([
             'success' => true,
-            'path' => '/storage/' . $path,
+            'path' => '/storage/'.$path,
         ]);
     }
 
@@ -4588,7 +4658,7 @@ class PageController extends Controller
                             'kegiatan' => trim((string) ($it['k'] ?? ($it['kegiatan'] ?? ''))),
                             'volume' => $volume,
                             'satuan' => $unit,
-                            'meta' => $volume > 0 ? trim($volume . ' ' . $unit) : $unit,
+                            'meta' => $volume > 0 ? trim($volume.' '.$unit) : $unit,
                         ];
                     }
                 }
@@ -4604,11 +4674,11 @@ class PageController extends Controller
 
         // Determine signature data - use signature data if exists, otherwise use atasan data
         $signatureName = $signature->signature_name ?? $atasan->name;
-        $signatureNip = $signature->nip ?? ($atasan->nomor_induk ? 'NIP. ' . $atasan->nomor_induk : '');
+        $signatureNip = $signature->nip ?? ($atasan->nomor_induk ? 'NIP. '.$atasan->nomor_induk : '');
 
         // Process signature image - convert storage path to proper URL/path for DomPDF
         $signatureImage = null;
-        if (!empty($signature->signature_image)) {
+        if (! empty($signature->signature_image)) {
             $imagePath = $signature->signature_image;
             // If it's a storage path, convert to absolute path
             if (str_starts_with($imagePath, '/storage/')) {
@@ -4632,7 +4702,7 @@ class PageController extends Controller
             $pltUser = DB::table('users')->where('id', $pltPlh->user_id)->first();
             if ($pltUser) {
                 $signatureName = $signature->signature_name ?? $pltUser->name;
-                $signatureNip = $signature->nip ?? ($pltUser->nomor_induk ? 'NIP. ' . $pltUser->nomor_induk : '');
+                $signatureNip = $signature->nip ?? ($pltUser->nomor_induk ? 'NIP. '.$pltUser->nomor_induk : '');
             }
         }
 
@@ -4681,7 +4751,7 @@ class PageController extends Controller
      * Handle TPG/Pemberkasan specific submission (Service 1037)
      * Uses JSON snapshot in satker_pemberkasan
      */
-    public function submitTpgRequest(Request $request, int $serviceId): \Illuminate\Http\RedirectResponse
+    public function submitTpgRequest(Request $request, int $serviceId): RedirectResponse
     {
         $service = $this->serviceDetail($serviceId);
         $requirements = $service['requirements'];
@@ -4777,8 +4847,8 @@ class PageController extends Controller
             : "Pengajuan {$service['title']} sudah diterima.";
 
         // Add warning if there are missing required files
-        if (!empty($missingFiles)) {
-            $message .= " Perhatian: Bahan wajib belum lengkap - " . implode(', ', $missingFiles) . ". Silakan lengkapi sebelum mengirim final.";
+        if (! empty($missingFiles)) {
+            $message .= ' Perhatian: Bahan wajib belum lengkap - '.implode(', ', $missingFiles).'. Silakan lengkapi sebelum mengirim final.';
         }
 
         if (! $isDraft) {
@@ -4803,7 +4873,8 @@ class PageController extends Controller
 
     /**
      * Build files snapshot JSON for storage
-     * @param array $existingFiles Optional existing files from database to preserve
+     *
+     * @param  array  $existingFiles  Optional existing files from database to preserve
      */
     private function buildFilesSnapshot($requester, int $serviceId, string $noreq, array $requirements, Request $request, array $existingFiles = [], array $deletedFileIds = []): array
     {
@@ -4820,7 +4891,7 @@ class PageController extends Controller
 
             // Check for existing file (only if not deleted)
             $existingEntry = null;
-            if (!$isDeleted) {
+            if (! $isDeleted) {
                 $existingEntry = collect($existingFiles)->firstWhere('syarat_id', $syaratId);
             }
 
@@ -4848,7 +4919,7 @@ class PageController extends Controller
                 $directory = dirname($fullPath);
 
                 // Ensure directory exists
-                if (!is_dir($directory)) {
+                if (! is_dir($directory)) {
                     mkdir($directory, 0755, true);
                 }
 
@@ -4890,7 +4961,7 @@ class PageController extends Controller
         $formattedYear = $bulanDate->translatedFormat('Y');
 
         return match ($layananId) {
-            1037 => "[{$kategoriUpper}] Semester {$semester} {$formattedYear}/" . $bulanDate->copy()->addYear()->translatedFormat('Y'),
+            1037 => "[{$kategoriUpper}] Semester {$semester} {$formattedYear}/".$bulanDate->copy()->addYear()->translatedFormat('Y'),
             default => "[{$kategoriUpper}] {$formattedMonth}",
         };
     }
@@ -4958,7 +5029,7 @@ class PageController extends Controller
             ])
             ->first();
 
-        if (!$kinerjaFile || $kinerjaFile->filename === 'NONE' || $kinerjaFile->status !== 'DISETUJUI') {
+        if (! $kinerjaFile || $kinerjaFile->filename === 'NONE' || $kinerjaFile->status !== 'DISETUJUI') {
             return 'NONE';
         }
 
@@ -4968,6 +5039,7 @@ class PageController extends Controller
         if (Storage::disk('users_berkas')->exists($path1)) {
             Storage::disk('users_berkas')->delete($path2);
             Storage::disk('users_berkas')->copy($path1, $path2);
+
             return $kinerjaFile->filename;
         }
 
@@ -5125,7 +5197,7 @@ class PageController extends Controller
 
                         $extension = $uploadedFile->getClientOriginalExtension() ?: $uploadedFile->extension();
                         $safeName = Str::slug($requirement['title'], '');
-                        $filename = "{$requestNumber}.{$userId}.{$safeName}." . strtolower($extension);
+                        $filename = "{$requestNumber}.{$userId}.{$safeName}.".strtolower($extension);
                         $path = $uploadedFile->storeAs($uploadRoot, $filename, 'public');
                         $filetype = strtolower($extension);
                         $size = (string) $uploadedFile->getSize();
@@ -5493,41 +5565,41 @@ class PageController extends Controller
                 return;
             }
 
-            $phone = '62' . WhatsAppService::normalizePhoneNumber($petugas->telp);
-            $waService = new WhatsAppService();
+            $phone = '62'.WhatsAppService::normalizePhoneNumber($petugas->telp);
+            $waService = new WhatsAppService;
 
             $lines = [
-                "📣 *Notifikasi Pengajuan Layanan*",
-                "━━━━━━━━━━━━━━━━━━━━━━",
-                "",
+                '📣 *Notifikasi Pengajuan Layanan*',
+                '━━━━━━━━━━━━━━━━━━━━━━',
+                '',
                 "👤 *Pemohon:* {$pemohon}",
                 "🏢 *Layanan:* {$namaLayanan}",
                 "🔖 *No. Request:* {$noReq}",
             ];
 
             if ($deskripsi) {
-                $lines[] = "📝 *Deskripsi:* " . Str::limit(strip_tags($deskripsi), 100);
+                $lines[] = '📝 *Deskripsi:* '.Str::limit(strip_tags($deskripsi), 100);
             }
 
             if ($keterangan) {
-                $lines[] = "💬 *Keterangan:* " . Str::limit(strip_tags($keterangan), 100);
+                $lines[] = '💬 *Keterangan:* '.Str::limit(strip_tags($keterangan), 100);
             }
 
             if ($periode) {
                 $lines[] = "📅 *Periode:* {$periode}";
             }
 
-            $lines[] = "";
-            $lines[] = "🕐 *Waktu:* " . now()->format('d M Y, H:i');
-            $lines[] = "";
-            $lines[] = "━━━━━━━━━━━━━━━━━━━━━━";
-            $lines[] = "Yth. *Bpk/Ibu Staff*,";
-            $lines[] = "Mohon Ditindaklanjuti melalui link berikut:";
-            $lines[] = "";
-            $lines[] = "🔗 https://kemenagtanahdatar.id/admin/dashboard";
-            $lines[] = "";
-            $lines[] = "🙏 *Terima Kasih*";
-            $lines[] = "━━━━━━━━━━━━━━━━━━━━━━";
+            $lines[] = '';
+            $lines[] = '🕐 *Waktu:* '.now()->format('d M Y, H:i');
+            $lines[] = '';
+            $lines[] = '━━━━━━━━━━━━━━━━━━━━━━';
+            $lines[] = 'Yth. *Bpk/Ibu Staff*,';
+            $lines[] = 'Mohon Ditindaklanjuti melalui link berikut:';
+            $lines[] = '';
+            $lines[] = '🔗 https://kemenagtanahdatar.id/admin/dashboard';
+            $lines[] = '';
+            $lines[] = '🙏 *Terima Kasih*';
+            $lines[] = '━━━━━━━━━━━━━━━━━━━━━━';
 
             $message = implode("\n", $lines);
 
@@ -5548,8 +5620,8 @@ class PageController extends Controller
                 return;
             }
 
-            $phone = '62' . WhatsAppService::normalizePhoneNumber($user->telp);
-            $waService = new WhatsAppService();
+            $phone = '62'.WhatsAppService::normalizePhoneNumber($user->telp);
+            $waService = new WhatsAppService;
 
             $statusIcons = [
                 'SUBMITTED' => '📤',
@@ -5576,8 +5648,8 @@ class PageController extends Controller
 
             $lines = [
                 "{$icon} *Update Status Pengajuan Layanan*",
-                "━━━━━━━━━━━━━━━━━━━━━━",
-                "",
+                '━━━━━━━━━━━━━━━━━━━━━━',
+                '',
                 "👤 *Pemohon:* {$user->name}",
                 "🏢 *Layanan:* {$namaLayanan}",
                 "🔖 *No. Request:* {$noReq}",
@@ -5585,21 +5657,21 @@ class PageController extends Controller
             ];
 
             if ($keterangan && $status === 'DITOLAK') {
-                $lines[] = "";
-                $lines[] = "📝 *Keterangan:* " . Str::limit(strip_tags($keterangan), 200);
+                $lines[] = '';
+                $lines[] = '📝 *Keterangan:* '.Str::limit(strip_tags($keterangan), 200);
             }
 
-            $lines[] = "";
-            $lines[] = "🕐 *Waktu:* " . now()->translatedFormat('d M Y, H:i');
-            $lines[] = "";
-            $lines[] = "━━━━━━━━━━━━━━━━━━━━━━";
+            $lines[] = '';
+            $lines[] = '🕐 *Waktu:* '.now()->translatedFormat('d M Y, H:i');
+            $lines[] = '';
+            $lines[] = '━━━━━━━━━━━━━━━━━━━━━━';
             $lines[] = "Yth. *{$user->name}*,";
-            $lines[] = "Silakan cek status pengajuan Anda melalui link berikut:";
-            $lines[] = "";
-            $lines[] = "🔗 https://kemenagtanahdatar.id/pengajuan-saya";
-            $lines[] = "";
-            $lines[] = "🙏 *Terima Kasih*";
-            $lines[] = "━━━━━━━━━━━━━━━━━━━━━━";
+            $lines[] = 'Silakan cek status pengajuan Anda melalui link berikut:';
+            $lines[] = '';
+            $lines[] = '🔗 https://kemenagtanahdatar.id/pengajuan-saya';
+            $lines[] = '';
+            $lines[] = '🙏 *Terima Kasih*';
+            $lines[] = '━━━━━━━━━━━━━━━━━━━━━━';
 
             $message = implode("\n", $lines);
 
@@ -5706,12 +5778,12 @@ class PageController extends Controller
         $missing = [];
 
         foreach ($requirements as $requirement) {
-            if (!$requirement['is_required']) {
+            if (! $requirement['is_required']) {
                 continue;
             }
 
             $type = $requirement['type_normalized'];
-            if (!in_array($type, ['file', 'image'])) {
+            if (! in_array($type, ['file', 'image'])) {
                 continue;
             }
 
@@ -5723,10 +5795,10 @@ class PageController extends Controller
 
             // Check if existing file is already saved
             $hasExistingFile = isset($existingFiles[$syaratId])
-                && !empty($existingFiles[$syaratId]['filename'])
+                && ! empty($existingFiles[$syaratId]['filename'])
                 && $existingFiles[$syaratId]['filename'] !== 'NONE';
 
-            if (!$hasNewUpload && !$hasExistingFile) {
+            if (! $hasNewUpload && ! $hasExistingFile) {
                 $missing[] = $requirement['title'];
             }
         }
@@ -5811,7 +5883,7 @@ class PageController extends Controller
 
     private function indonesianDateTimeFormat(?string $dateTime): string
     {
-        if (!$dateTime) {
+        if (! $dateTime) {
             return '-';
         }
 
@@ -5841,7 +5913,7 @@ class PageController extends Controller
 
         $mime = mime_content_type($path) ?: 'image/png';
 
-        return 'data:' . $mime . ';base64,' . base64_encode((string) file_get_contents($path));
+        return 'data:'.$mime.';base64,'.base64_encode((string) file_get_contents($path));
     }
 
     private function requirementFieldKey(string $type, int $requirementId): string
@@ -5908,7 +5980,7 @@ class PageController extends Controller
             return 'Gratis';
         }
 
-        return 'Rp ' . number_format($biaya, 0, ',', '.');
+        return 'Rp '.number_format($biaya, 0, ',', '.');
     }
 
     private function serviceStatusLabel(?int $status): string
@@ -5922,7 +5994,7 @@ class PageController extends Controller
 
     private function departmentCards(string $kategori, int $status)
     {
-        $pageName = 'page_' . str_replace('-', '_', strtolower($kategori));
+        $pageName = 'page_'.str_replace('-', '_', strtolower($kategori));
 
         $paginator = DB::table('ktd_department')
             ->whereRaw('LOWER(kategori) = ?', [strtolower($kategori)])
@@ -5934,37 +6006,37 @@ class PageController extends Controller
         $paginator->appends(['tab' => $kategori]);
 
         $paginator->setCollection($paginator->getCollection()->map(function ($item) use ($kategori) {
-                $head = $this->departmentHead($item->id, $kategori, $item->nama);
-                $pltHead = $head ? null : $this->departmentPltHead($item->id);
-                $activeHead = $head ?? $pltHead;
-                $employeeCount = DB::table('users')
-                    ->where('dept_id', $item->id)
-                    ->count();
+            $head = $this->departmentHead($item->id, $kategori, $item->nama);
+            $pltHead = $head ? null : $this->departmentPltHead($item->id);
+            $activeHead = $head ?? $pltHead;
+            $employeeCount = DB::table('users')
+                ->where('dept_id', $item->id)
+                ->count();
 
-                // Build head photo path
-                $headPhotoPath = null;
-                if ($activeHead && ! empty($activeHead->pp) && ! empty($activeHead->nomor_induk)) {
-                    $headPhotoPath = asset("storage/users_berkas/{$activeHead->nomor_induk}/{$activeHead->pp}");
-                }
+            // Build head photo path
+            $headPhotoPath = null;
+            if ($activeHead && ! empty($activeHead->pp) && ! empty($activeHead->nomor_induk)) {
+                $headPhotoPath = asset("storage/users_berkas/{$activeHead->nomor_induk}/{$activeHead->pp}");
+            }
 
-                return [
-                    'id' => $item->id,
-                    'title' => $item->nama,
-                    'subtitle' => $item->deskripsi ?: $item->kode,
-                    'meta_label' => 'Nama Unit',
-                    'meta_value' => $item->nama,
-                    'extra_label' => 'Pegawai',
-                    'extra_value' => $employeeCount,
-                    'head_label' => $this->departmentHeadLabel($kategori, $item->nama, (bool) $pltHead),
-                    'head_value' => $activeHead?->name,
-                    'head_photo' => $headPhotoPath,
-                    'head_initials' => $activeHead ? Str::upper(Str::substr($activeHead->name, 0, 2)) : Str::upper(Str::substr($item->nama, 0, 2)),
-                    'cover' => Str::upper(Str::substr($item->nama, 0, 2)),
-                    'cover_path' => asset("assets/img/seksi/{$item->id}.webp"),
-                    'href' => route('unit-kerja.detail', $item->id),
-                    'type' => $kategori,
-                ];
-            }));
+            return [
+                'id' => $item->id,
+                'title' => $item->nama,
+                'subtitle' => $item->deskripsi ?: $item->kode,
+                'meta_label' => 'Nama Unit',
+                'meta_value' => $item->nama,
+                'extra_label' => 'Pegawai',
+                'extra_value' => $employeeCount,
+                'head_label' => $this->departmentHeadLabel($kategori, $item->nama, (bool) $pltHead),
+                'head_value' => $activeHead?->name,
+                'head_photo' => $headPhotoPath,
+                'head_initials' => $activeHead ? Str::upper(Str::substr($activeHead->name, 0, 2)) : Str::upper(Str::substr($item->nama, 0, 2)),
+                'cover' => Str::upper(Str::substr($item->nama, 0, 2)),
+                'cover_path' => asset("assets/img/seksi/{$item->id}.webp"),
+                'href' => route('unit-kerja.detail', $item->id),
+                'type' => $kategori,
+            ];
+        }));
 
         return $paginator;
     }
@@ -5979,7 +6051,7 @@ class PageController extends Controller
 
     private function userCards(int $deptId)
     {
-        $pageName = 'page_user_' . $deptId;
+        $pageName = 'page_user_'.$deptId;
 
         $paginator = DB::table('users')
             ->where('dept_id', $deptId)
@@ -6020,7 +6092,7 @@ class PageController extends Controller
 
     private function departmentPeople(int $deptId, ?int $excludeUserId = null)
     {
-        $pageName = 'page_people_' . $deptId;
+        $pageName = 'page_people_'.$deptId;
         $query = DB::table('users')
             ->where('dept_id', $deptId)
             ->whereNotIn('role', ['other', 'pensiun', 'pindah'])
@@ -6030,8 +6102,9 @@ class PageController extends Controller
         $paginator = $query->paginate(8, ['*'], $pageName);
         $paginator->withPath(route('unit-kerja.detail', $deptId));
 
-        $paginator->setCollection($paginator->getCollection()->map(function ($item) use ($deptId) {
+        $paginator->setCollection($paginator->getCollection()->map(function ($item) {
             $isKaur = strtolower($item->kat_jabatan ?? '') === 'kaur';
+
             return $this->personCard($item, $this->personLabel($item), false, $isKaur);
         }));
 
@@ -6255,7 +6328,7 @@ class PageController extends Controller
         $kategoriLower = strtolower($dept->kategori ?? '');
         $isMadrasahCategory = in_array($kategoriLower, ['mi', 'mts', 'ma', 'man', 'mtsn', 'min', 'ra']);
         $isSwastaDept = in_array($user->dept_id, [999, 998]); // Dept untuk madrasah swasta
-        $shouldAutoCreate = ($isMadrasahCategory || $isSwastaDept) && !$user->madrasah_id;
+        $shouldAutoCreate = ($isMadrasahCategory || $isSwastaDept) && ! $user->madrasah_id;
 
         // Auto-create madrasah for users without madrasah_id but with madrasah category dept or swasta dept
         if ($shouldAutoCreate) {
@@ -6313,7 +6386,7 @@ class PageController extends Controller
             $formData['jarak_kanwil_kemenag'] = $madrasah->jarak_kanwil_kemenag ?? '';
 
             // Handle alamat field (might contain multiple parts)
-            if (!empty($madrasah->alamat)) {
+            if (! empty($madrasah->alamat)) {
                 $alamatParts = explode(',', $madrasah->alamat);
                 $formData['jalan'] = trim($alamatParts[0] ?? '');
                 $formData['jorong'] = trim($alamatParts[1] ?? '');
@@ -6328,92 +6401,92 @@ class PageController extends Controller
             }
 
             // Map other fields if available
-            if (!empty($madrasah->telepon)) {
+            if (! empty($madrasah->telepon)) {
                 $formData['telepon'] = $madrasah->telepon;
             }
-            if (!empty($madrasah->email)) {
+            if (! empty($madrasah->email)) {
                 $formData['email'] = $madrasah->email;
             }
-            if (!empty($madrasah->website)) {
+            if (! empty($madrasah->website)) {
                 $formData['website'] = $madrasah->website;
             }
-            if (!empty($madrasah->koordinat)) {
+            if (! empty($madrasah->koordinat)) {
                 $formData['koordinat'] = $madrasah->koordinat;
             }
-            if (!empty($madrasah->akreditasi)) {
+            if (! empty($madrasah->akreditasi)) {
                 $formData['akreditasi'] = $madrasah->akreditasi;
             }
-            if (!empty($madrasah->waktu_belajar)) {
+            if (! empty($madrasah->waktu_belajar)) {
                 $formData['waktu_belajar'] = $madrasah->waktu_belajar;
             }
-            if (!empty($madrasah->nsm)) {
+            if (! empty($madrasah->nsm)) {
                 $formData['nsm'] = $madrasah->nsm;
             }
-            if (!empty($madrasah->npsm)) {
+            if (! empty($madrasah->npsm)) {
                 $formData['npsm'] = $madrasah->npsm;
             }
 
             // Map missing fields
-            if (!empty($madrasah->tanggal_akreditasi)) {
+            if (! empty($madrasah->tanggal_akreditasi)) {
                 $formData['tanggal_akreditasi'] = $madrasah->tanggal_akreditasi;
             }
-            if (!empty($madrasah->status_kkm)) {
+            if (! empty($madrasah->status_kkm)) {
                 $formData['status_kkm'] = $madrasah->status_kkm;
             }
-            if (!empty($madrasah->tanggal_sk)) {
+            if (! empty($madrasah->tanggal_sk)) {
                 $formData['tanggal_sk'] = $madrasah->tanggal_sk;
             }
-            if (!empty($madrasah->komite_lembaga)) {
+            if (! empty($madrasah->komite_lembaga)) {
                 $formData['komite_lembaga'] = $madrasah->komite_lembaga;
             }
-            if (!empty($madrasah->visi)) {
+            if (! empty($madrasah->visi)) {
                 $formData['visi'] = $madrasah->visi;
             }
 
             // Map jarak fields
-            if (!empty($madrasah->jarak_pusat_provinsi)) {
+            if (! empty($madrasah->jarak_pusat_provinsi)) {
                 $formData['jarak_pusat_provinsi'] = $madrasah->jarak_pusat_provinsi;
             }
-            if (!empty($madrasah->jarak_pusat_kabupaten)) {
+            if (! empty($madrasah->jarak_pusat_kabupaten)) {
                 $formData['jarak_pusat_kabupaten'] = $madrasah->jarak_pusat_kabupaten;
             }
-            if (!empty($madrasah->jarak_kecamatan)) {
+            if (! empty($madrasah->jarak_kecamatan)) {
                 $formData['jarak_kecamatan'] = $madrasah->jarak_kecamatan;
             }
-            if (!empty($madrasah->jarak_kanwil_kemenag)) {
+            if (! empty($madrasah->jarak_kanwil_kemenag)) {
                 $formData['jarak_kanwil_kemenag'] = $madrasah->jarak_kanwil_kemenag;
             }
-            if (!empty($madrasah->jarak_kemenag_kab)) {
+            if (! empty($madrasah->jarak_kemenag_kab)) {
                 $formData['jarak_kemenag_kab'] = $madrasah->jarak_kemenag_kab;
             }
-            if (!empty($madrasah->jarak_kua)) {
+            if (! empty($madrasah->jarak_kua)) {
                 $formData['jarak_kua'] = $madrasah->jarak_kua;
             }
-            if (!empty($madrasah->jarak_ra_terdekat)) {
+            if (! empty($madrasah->jarak_ra_terdekat)) {
                 $formData['jarak_ra_terdekat'] = $madrasah->jarak_ra_terdekat;
             }
-            if (!empty($madrasah->jarak_mi_terdekat)) {
+            if (! empty($madrasah->jarak_mi_terdekat)) {
                 $formData['jarak_mi_terdekat'] = $madrasah->jarak_mi_terdekat;
             }
-            if (!empty($madrasah->jarak_mts_terdekat)) {
+            if (! empty($madrasah->jarak_mts_terdekat)) {
                 $formData['jarak_mts_terdekat'] = $madrasah->jarak_mts_terdekat;
             }
-            if (!empty($madrasah->jarak_ma_terdekat)) {
+            if (! empty($madrasah->jarak_ma_terdekat)) {
                 $formData['jarak_ma_terdekat'] = $madrasah->jarak_ma_terdekat;
             }
-            if (!empty($madrasah->jarak_pontren_terdekat)) {
+            if (! empty($madrasah->jarak_pontren_terdekat)) {
                 $formData['jarak_pontren_terdekat'] = $madrasah->jarak_pontren_terdekat;
             }
-            if (!empty($madrasah->jarak_tk_terdekat)) {
+            if (! empty($madrasah->jarak_tk_terdekat)) {
                 $formData['jarak_tk_terdekat'] = $madrasah->jarak_tk_terdekat;
             }
-            if (!empty($madrasah->jarak_sd_terdekat)) {
+            if (! empty($madrasah->jarak_sd_terdekat)) {
                 $formData['jarak_sd_terdekat'] = $madrasah->jarak_sd_terdekat;
             }
-            if (!empty($madrasah->jarak_smp_terdekat)) {
+            if (! empty($madrasah->jarak_smp_terdekat)) {
                 $formData['jarak_smp_terdekat'] = $madrasah->jarak_smp_terdekat;
             }
-            if (!empty($madrasah->jarak_sma_terdekat)) {
+            if (! empty($madrasah->jarak_sma_terdekat)) {
                 $formData['jarak_sma_terdekat'] = $madrasah->jarak_sma_terdekat;
             }
 
@@ -6441,7 +6514,7 @@ class PageController extends Controller
         $madrasahId = $user->madrasah_id ?? null;
         $deptId = $user->dept_id ?? null;
 
-        if (!$madrasahId && !$deptId) {
+        if (! $madrasahId && ! $deptId) {
             return redirect()->back()->with('error', 'Unit kerja tidak ditemukan');
         }
 
@@ -6519,7 +6592,7 @@ class PageController extends Controller
         ];
 
         // Filter out null values
-        $data = array_filter($data, fn($v) => $v !== null);
+        $data = array_filter($data, fn ($v) => $v !== null);
 
         // Update madrasah table (preferred) or department table (fallback)
         if ($madrasahId) {
@@ -6555,13 +6628,13 @@ class PageController extends Controller
         $isMadrasahType = false;
 
         // Auto-create madrasah if needed (same logic as profilMadrasah)
-        if (!$madrasahId && $deptId) {
+        if (! $madrasahId && $deptId) {
             $dept = DB::table('ktd_department')->where('id', $deptId)->first();
             $kategoriLower = strtolower($dept->kategori ?? '');
             $isMadrasahCategory = in_array($kategoriLower, ['mi', 'mts', 'ma', 'man', 'mtsn', 'min', 'ra']);
             $isSwastaDept = in_array($deptId, [999, 998]);
 
-            if (($isMadrasahCategory || $isSwastaDept) && !$user->madrasah_id) {
+            if (($isMadrasahCategory || $isSwastaDept) && ! $user->madrasah_id) {
                 $defaultNama = $user->satker ?? $dept->nama ?? 'Madrasah Baru';
                 $madrasahId = DB::table('ktd_madrasah')->insertGetId([
                     'dept_id' => $deptId,
@@ -6612,7 +6685,7 @@ class PageController extends Controller
             if ($item->user_id) {
                 $userData = DB::table('users')->where('id', $item->user_id)->first();
                 if ($userData && $userData->pp && $userData->nomor_induk) {
-                    $item->photo_url = asset('storage/users_berkas/' . $userData->nomor_induk . '/' . $userData->pp);
+                    $item->photo_url = asset('storage/users_berkas/'.$userData->nomor_induk.'/'.$userData->pp);
                 } else {
                     $item->photo_url = null;
                 }
@@ -6620,6 +6693,7 @@ class PageController extends Controller
                 $item->photo_url = null;
             }
             $item->initials = $item->nama ? strtoupper(substr($item->nama, 0, 2)) : 'NA';
+
             return $item;
         });
 
@@ -6631,6 +6705,7 @@ class PageController extends Controller
             } else {
                 $query->where('dept_id', $deptId);
             }
+
             return $query;
         };
 
@@ -6663,13 +6738,13 @@ class PageController extends Controller
         $deptName = 'Madrasah';
 
         // Auto-create madrasah if needed (same logic as profilMadrasah)
-        if (!$madrasahId && $deptId) {
+        if (! $madrasahId && $deptId) {
             $dept = DB::table('ktd_department')->where('id', $deptId)->first();
             $kategoriLower = strtolower($dept->kategori ?? '');
             $isMadrasahCategory = in_array($kategoriLower, ['mi', 'mts', 'ma', 'man', 'mtsn', 'min', 'ra']);
             $isSwastaDept = in_array($deptId, [999, 998]);
 
-            if (($isMadrasahCategory || $isSwastaDept) && !$user->madrasah_id) {
+            if (($isMadrasahCategory || $isSwastaDept) && ! $user->madrasah_id) {
                 $defaultNama = $user->satker ?? $dept->nama ?? 'Madrasah Baru';
                 $madrasahId = DB::table('ktd_madrasah')->insertGetId([
                     'dept_id' => $deptId,
@@ -6718,7 +6793,7 @@ class PageController extends Controller
             if ($item->user_id) {
                 $userData = DB::table('users')->where('id', $item->user_id)->first();
                 if ($userData && $userData->pp && $userData->nomor_induk) {
-                    $item->photo_url = asset('storage/users_berkas/' . $userData->nomor_induk . '/' . $userData->pp);
+                    $item->photo_url = asset('storage/users_berkas/'.$userData->nomor_induk.'/'.$userData->pp);
                 } else {
                     $item->photo_url = null;
                 }
@@ -6726,6 +6801,7 @@ class PageController extends Controller
                 $item->photo_url = null;
             }
             $item->initials = $item->nama ? strtoupper(substr($item->nama, 0, 2)) : 'NA';
+
             return $item;
         });
 
@@ -6736,6 +6812,7 @@ class PageController extends Controller
             } else {
                 $query->where('dept_id', $deptId);
             }
+
             return $query;
         };
 
@@ -6767,10 +6844,11 @@ class PageController extends Controller
         $madrasahId = $user->madrasah_id ?? null;
         $deptId = $user->dept_id ?? null;
 
-        if (!$madrasahId && !$deptId) {
+        if (! $madrasahId && ! $deptId) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan'], 400);
             }
+
             return redirect()->back()->with('error', 'Unit kerja tidak ditemukan');
         }
 
@@ -6841,7 +6919,7 @@ class PageController extends Controller
         ];
 
         // Filter out null values
-        $data = array_filter($data, fn($v) => $v !== null);
+        $data = array_filter($data, fn ($v) => $v !== null);
 
         DB::table('tenaga_ktd')->insert($data);
 
@@ -6860,10 +6938,11 @@ class PageController extends Controller
         $user = auth()->user();
         $deptId = $user->dept_id ?? null;
 
-        if (!$deptId) {
+        if (! $deptId) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan'], 400);
             }
+
             return redirect()->back()->with('error', 'Unit kerja tidak ditemukan');
         }
 
@@ -6897,10 +6976,11 @@ class PageController extends Controller
 
         // Check if record exists and has no user_id
         $existing = DB::table('tenaga_ktd')->where('id', $id)->first();
-        if (!$existing) {
+        if (! $existing) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
             }
+
             return redirect()->back()->with('error', 'Data tidak ditemukan');
         }
 
@@ -6908,6 +6988,7 @@ class PageController extends Controller
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Tidak dapat mengedit data yang sudah terhubung dengan user'], 403);
             }
+
             return redirect()->back()->with('error', 'Tidak dapat mengedit data yang sudah terhubung dengan user');
         }
 
@@ -6943,7 +7024,7 @@ class PageController extends Controller
             'updated_at' => now(),
         ];
 
-        $data = array_filter($data, fn($v) => $v !== null);
+        $data = array_filter($data, fn ($v) => $v !== null);
 
         DB::table('tenaga_ktd')->where('id', $id)->update($data);
 
@@ -6965,15 +7046,15 @@ class PageController extends Controller
             $validated = $request->validate([
                 'id' => 'required|integer',
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => 'Validasi gagal: ' . collect($e->errors())->flatten()->first()], 422);
+        } catch (ValidationException $e) {
+            return response()->json(['success' => false, 'message' => 'Validasi gagal: '.collect($e->errors())->flatten()->first()], 422);
         }
 
         $id = $validated['id'];
 
         // Check if record exists
         $existing = DB::table('tenaga_ktd')->where('id', $id)->first();
-        if (!$existing) {
+        if (! $existing) {
             return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
         }
 
@@ -6997,10 +7078,11 @@ class PageController extends Controller
         $madrasahId = $user->madrasah_id ?? null;
         $deptId = $user->dept_id ?? null;
 
-        if (!$madrasahId && !$deptId) {
+        if (! $madrasahId && ! $deptId) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan'], 400);
             }
+
             return redirect()->back()->with('error', 'Unit kerja tidak ditemukan');
         }
 
@@ -7074,7 +7156,7 @@ class PageController extends Controller
         ];
 
         // Filter out null values
-        $data = array_filter($data, fn($v) => $v !== null);
+        $data = array_filter($data, fn ($v) => $v !== null);
 
         DB::table('tenaga_ktd')->insert($data);
 
@@ -7128,10 +7210,11 @@ class PageController extends Controller
 
         // Check if record exists
         $existing = DB::table('tenaga_ktd')->where('id', $id)->first();
-        if (!$existing) {
+        if (! $existing) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
             }
+
             return redirect()->back()->with('error', 'Data tidak ditemukan');
         }
 
@@ -7139,6 +7222,7 @@ class PageController extends Controller
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Tidak dapat mengedit data yang sudah terhubung dengan user'], 403);
             }
+
             return redirect()->back()->with('error', 'Tidak dapat mengedit data yang sudah terhubung dengan user');
         }
 
@@ -7174,7 +7258,7 @@ class PageController extends Controller
             'updated_at' => now(),
         ];
 
-        $data = array_filter($data, fn($v) => $v !== null);
+        $data = array_filter($data, fn ($v) => $v !== null);
 
         DB::table('tenaga_ktd')->where('id', $id)->update($data);
 
@@ -7194,14 +7278,14 @@ class PageController extends Controller
             $validated = $request->validate([
                 'id' => 'required|integer',
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => 'Validasi gagal: ' . collect($e->errors())->flatten()->first()], 422);
+        } catch (ValidationException $e) {
+            return response()->json(['success' => false, 'message' => 'Validasi gagal: '.collect($e->errors())->flatten()->first()], 422);
         }
 
         $id = $validated['id'];
 
         $existing = DB::table('tenaga_ktd')->where('id', $id)->first();
-        if (!$existing) {
+        if (! $existing) {
             return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
         }
 
@@ -7228,13 +7312,13 @@ class PageController extends Controller
         $deptName = 'Madrasah';
 
         // Auto-create madrasah if needed (same logic as profilMadrasah)
-        if (!$madrasahId && $deptId) {
+        if (! $madrasahId && $deptId) {
             $dept = DB::table('ktd_department')->where('id', $deptId)->first();
             $kategoriLower = strtolower($dept->kategori ?? '');
             $isMadrasahCategory = in_array($kategoriLower, ['mi', 'mts', 'ma', 'man', 'mtsn', 'min', 'ra']);
             $isSwastaDept = in_array($deptId, [999, 998]);
 
-            if (($isMadrasahCategory || $isSwastaDept) && !$user->madrasah_id) {
+            if (($isMadrasahCategory || $isSwastaDept) && ! $user->madrasah_id) {
                 $defaultNama = $user->satker ?? $dept->nama ?? 'Madrasah Baru';
                 $madrasahId = DB::table('ktd_madrasah')->insertGetId([
                     'dept_id' => $deptId,
@@ -7280,6 +7364,7 @@ class PageController extends Controller
                 } else {
                     $query->where('dept_id', $deptId);
                 }
+
                 return $query;
             };
 
@@ -7291,7 +7376,7 @@ class PageController extends Controller
             )->first();
 
             // If no exact match, get the latest data from same madrasah (for template)
-            if (!$existingReport) {
+            if (! $existingReport) {
                 $latestReport = $buildReportQuery(
                     DB::table('ktd_laporan_semester_madrasah')
                 )->orderBy('created_at', 'desc')->first();
@@ -7300,7 +7385,7 @@ class PageController extends Controller
 
         // Determine which data to use: exact match first, then latest as template
         $sourceReport = $existingReport ?? $latestReport;
-        $hasTemplateFromLatest = !$existingReport && $latestReport !== null;
+        $hasTemplateFromLatest = ! $existingReport && $latestReport !== null;
 
         // Generate academic year options
         $academicYearOptions = $this->generateAcademicYearOptions();
@@ -7325,7 +7410,7 @@ class PageController extends Controller
         $submittedAt = $existingReport?->submitted_at;
         $catatanAdmin = $existingReport?->catatan_admin;
         $templateInfo = $hasTemplateFromLatest ? "Data template dari {$latestReport->semester} TA {$latestReport->tahun_ajaran}" : null;
-        $formattedSubmittedAt = $submittedAt ? \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Jakarta')->format('d M Y, H:i') : null;
+        $formattedSubmittedAt = $submittedAt ? Carbon::parse($submittedAt)->timezone('Asia/Jakarta')->format('d M Y, H:i') : null;
 
         return view('madrasah.laporansemester', [
             'deptName' => $deptName,
@@ -7352,7 +7437,8 @@ class PageController extends Controller
         $currentMonth = now()->month;
         $currentYear = now()->year;
         $startYear = $currentMonth >= 7 ? $currentYear : $currentYear - 1;
-        return $startYear . '/' . ($startYear + 1);
+
+        return $startYear.'/'.($startYear + 1);
     }
 
     /**
@@ -7366,7 +7452,7 @@ class PageController extends Controller
         $options = [];
 
         for ($year = $startYear - 2; $year <= $startYear + 2; $year++) {
-            $options[] = ($year) . '/' . ($year + 1);
+            $options[] = ($year).'/'.($year + 1);
         }
 
         return $options;
@@ -7381,10 +7467,10 @@ class PageController extends Controller
             'Ruang Kelas', 'Ruang Kamad', 'Ruang Guru', 'Ruang TU',
             'Ruang Lab. IPA', 'Ruang Lab. Komputer', 'Ruang Perpustakaan',
             'Ruang Keterampilan', 'Ruang Seni', 'Ruang UKS', 'Aula',
-            'Musholla / Ibadah', 'WC', 'Kamar Mandi', 'Kantin'
+            'Musholla / Ibadah', 'WC', 'Kamar Mandi', 'Kantin',
         ];
 
-        return array_map(fn($label) => [
+        return array_map(fn ($label) => [
             'label' => $label,
             'baik' => '',
             'ringan' => '',
@@ -7403,10 +7489,10 @@ class PageController extends Controller
             'Bangku Uk. 1 Siswa', 'Bangku Uk. 2 Siswa', 'Kursi Siswa',
             'Lemari', 'Rak Buku', 'Papan Tulis', 'Komputer Kantor',
             'Komputer Siswa', 'Alat Peraga', 'PKn', 'Bahasa Indonesia',
-            'Matematika', 'IPA', 'IPS', 'Atlas', 'Globe'
+            'Matematika', 'IPA', 'IPS', 'Atlas', 'Globe',
         ];
 
-        return array_map(fn($label) => [
+        return array_map(fn ($label) => [
             'label' => $label,
             'baik' => '',
             'ringan' => '',
@@ -7421,7 +7507,7 @@ class PageController extends Controller
      */
     private function getDefaultBantuanPemerintah(): array
     {
-        return array_map(fn($label) => [
+        return array_map(fn ($label) => [
             'label' => $label,
             'diterima' => '',
             'terserap' => '',
@@ -7434,7 +7520,7 @@ class PageController extends Controller
      */
     private function getDefaultBantuanNonPemerintah(): array
     {
-        return array_map(fn($label) => [
+        return array_map(fn ($label) => [
             'label' => $label,
             'diterima' => '',
             'terserap' => '',
@@ -7450,10 +7536,10 @@ class PageController extends Controller
         $labels = [
             'Kepala Madrasah', 'Wakil Kepala Madrasah', 'Guru Mapel Umum',
             'Guru Penjaskes', 'Guru Agama', 'Guru BK', 'Guru B. Inggris',
-            'Ka TU', 'Staf TU', 'Bendahara', 'Personel Lainnya'
+            'Ka TU', 'Staf TU', 'Bendahara', 'Personel Lainnya',
         ];
 
-        return array_map(fn($label) => [
+        return array_map(fn ($label) => [
             'label' => $label,
             'l' => '',
             'p' => '',
@@ -7468,7 +7554,7 @@ class PageController extends Controller
     {
         $labels = ['< SLTA', 'Diploma I (D1)', 'Diploma II (D2)', 'Diploma III (D3)', 'Strata I (S1)', 'Strata II (S2)', 'Strata III (S3)'];
 
-        return array_map(fn($label) => [
+        return array_map(fn ($label) => [
             'label' => $label,
             'l' => '',
             'p' => '',
@@ -7483,7 +7569,7 @@ class PageController extends Controller
     {
         $labels = ['PNS Kemenag', 'PNS Diknas', 'GTT / GTY', 'PPPK', 'PPPK Paruh Waktu', 'Belum Sertifikasi'];
 
-        return array_map(fn($label) => [
+        return array_map(fn ($label) => [
             'label' => $label,
             'l' => '',
             'p' => '',
@@ -7498,7 +7584,7 @@ class PageController extends Controller
     {
         $labels = ['Sakit', 'Ijin', 'Alpa / Tanpa Keterangan'];
 
-        return array_map(fn($label) => [
+        return array_map(fn ($label) => [
             'label' => $label,
             'l' => '',
             'p' => '',
@@ -7546,7 +7632,7 @@ class PageController extends Controller
         $madrasahId = $user->madrasah_id ?? null;
         $deptId = $user->dept_id ?? $request->input('dept_id');
 
-        if (!$madrasahId && !$deptId) {
+        if (! $madrasahId && ! $deptId) {
             return redirect()->back()->with('error', 'Unit kerja tidak ditemukan');
         }
 
@@ -7592,6 +7678,7 @@ class PageController extends Controller
             } else {
                 $query->where('dept_id', $deptId);
             }
+
             return $query;
         };
 
@@ -7632,13 +7719,13 @@ class PageController extends Controller
         $kategori = 'min';
 
         // Auto-create madrasah if needed (same logic as profilMadrasah)
-        if (!$madrasahId && $deptId) {
+        if (! $madrasahId && $deptId) {
             $dept = DB::table('ktd_department')->where('id', $deptId)->first();
             $kategoriLower = strtolower($dept->kategori ?? '');
             $isMadrasahCategory = in_array($kategoriLower, ['mi', 'mts', 'ma', 'man', 'mtsn', 'min', 'ra']);
             $isSwastaDept = in_array($deptId, [999, 998]);
 
-            if (($isMadrasahCategory || $isSwastaDept) && !$user->madrasah_id) {
+            if (($isMadrasahCategory || $isSwastaDept) && ! $user->madrasah_id) {
                 $defaultNama = $user->satker ?? $dept->nama ?? 'Madrasah Baru';
                 $madrasahId = DB::table('ktd_madrasah')->insertGetId([
                     'dept_id' => $deptId,
@@ -7672,9 +7759,9 @@ class PageController extends Controller
 
         // Get form parameters
         $bulanIndonesia = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-        $currentMonthIndex = (int)now()->format('n') - 1;
+        $currentMonthIndex = (int) now()->format('n') - 1;
         $bulanLaporan = $request->input('bulan', $bulanIndonesia[$currentMonthIndex]);
-        $tahunLaporan = $request->input('tahun', (string)now()->year);
+        $tahunLaporan = $request->input('tahun', (string) now()->year);
         $tahunAjaran = $request->input('tahun_ajaran', $this->getDefaultAcademicYear());
         $semester = $request->input('semester', now()->month >= 7 ? 'Ganjil' : 'Genap');
 
@@ -7688,6 +7775,7 @@ class PageController extends Controller
             } else {
                 $query->where('dept_id', $deptId);
             }
+
             return $query;
         };
 
@@ -7712,7 +7800,7 @@ class PageController extends Controller
         $adminNote = null;
         $templateInfo = null;
 
-        if (!$existingReport && $isUserSelection && ($madrasahId || $deptId)) {
+        if (! $existingReport && $isUserSelection && ($madrasahId || $deptId)) {
             // Get the latest report for student counts (ignore mutation rows)
             $latestReport = $buildReportQuery(
                 DB::table('ktd_laporan_bulanan_madrasah')
@@ -7740,7 +7828,7 @@ class PageController extends Controller
             'draft' => 'Draft',
             'submitted' => 'Sudah Dikirim',
             'revisi' => 'Perlu Revisi',
-            'approved' => 'Disetujui'
+            'approved' => 'Disetujui',
         ];
 
         // Madrasah type label
@@ -7750,7 +7838,7 @@ class PageController extends Controller
             'man' => 'MAN (Madrasah Aliyah)',
             'sma' => 'SMA',
             'smk' => 'SMK',
-            'other' => 'Madrasah'
+            'other' => 'Madrasah',
         ];
         $madrasahTypeLabel = $typeLabels[$kategori] ?? 'Madrasah';
 
@@ -7781,7 +7869,7 @@ class PageController extends Controller
             'hasExistingData' => $hasExistingData,
             'currentStatus' => $reportStatus,
             'currentStatusLabel' => $hasExistingData ? ($statusLabels[$reportStatus] ?? 'Draft') : null,
-            'formattedSubmittedAt' => $submittedAt ? \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Jakarta')->format('d M Y, H:i') : 'Belum dikirim',
+            'formattedSubmittedAt' => $submittedAt ? Carbon::parse($submittedAt)->timezone('Asia/Jakarta')->format('d M Y, H:i') : 'Belum dikirim',
             'currentAdminNote' => $adminNote ?? 'Belum ada catatan admin',
             'templateInfo' => $templateInfo,
         ]);
@@ -7792,64 +7880,64 @@ class PageController extends Controller
      */
     private function getMadrasahClassLevels(string $kategori, array $existingCounts = []): array
     {
-        $levels = match($kategori) {
+        $levels = match ($kategori) {
             'min' => [
                 ['name' => 'I (Satu)', 'prefix' => 'I', 'classes' => [
-                    ['code' => 'I.A'], ['code' => 'I.B'], ['code' => 'I.C']
+                    ['code' => 'I.A'], ['code' => 'I.B'], ['code' => 'I.C'],
                 ]],
                 ['name' => 'II (Dua)', 'prefix' => 'II', 'classes' => [
-                    ['code' => 'II.A'], ['code' => 'II.B'], ['code' => 'II.C']
+                    ['code' => 'II.A'], ['code' => 'II.B'], ['code' => 'II.C'],
                 ]],
                 ['name' => 'III (Tiga)', 'prefix' => 'III', 'classes' => [
-                    ['code' => 'III.A'], ['code' => 'III.B'], ['code' => 'III.C']
+                    ['code' => 'III.A'], ['code' => 'III.B'], ['code' => 'III.C'],
                 ]],
                 ['name' => 'IV (Empat)', 'prefix' => 'IV', 'classes' => [
-                    ['code' => 'IV.A'], ['code' => 'IV.B']
+                    ['code' => 'IV.A'], ['code' => 'IV.B'],
                 ]],
                 ['name' => 'V (Lima)', 'prefix' => 'V', 'classes' => [
-                    ['code' => 'V.A'], ['code' => 'V.B']
+                    ['code' => 'V.A'], ['code' => 'V.B'],
                 ]],
                 ['name' => 'VI (Enam)', 'prefix' => 'VI', 'classes' => [
-                    ['code' => 'VI.A'], ['code' => 'VI.B']
+                    ['code' => 'VI.A'], ['code' => 'VI.B'],
                 ]],
             ],
             'mtsn' => [
                 ['name' => 'VII (Tujuh)', 'prefix' => 'VII', 'classes' => [
-                    ['code' => 'VII.A'], ['code' => 'VII.B'], ['code' => 'VII.C']
+                    ['code' => 'VII.A'], ['code' => 'VII.B'], ['code' => 'VII.C'],
                 ]],
                 ['name' => 'VIII (Delapan)', 'prefix' => 'VIII', 'classes' => [
-                    ['code' => 'VIII.A'], ['code' => 'VIII.B'], ['code' => 'VIII.C']
+                    ['code' => 'VIII.A'], ['code' => 'VIII.B'], ['code' => 'VIII.C'],
                 ]],
                 ['name' => 'IX (Sembilan)', 'prefix' => 'IX', 'classes' => [
-                    ['code' => 'IX.A'], ['code' => 'IX.B'], ['code' => 'IX.C']
+                    ['code' => 'IX.A'], ['code' => 'IX.B'], ['code' => 'IX.C'],
                 ]],
             ],
             'man' => [
                 ['name' => 'X (Sepuluh)', 'prefix' => 'X', 'classes' => [
-                    ['code' => 'X.A'], ['code' => 'X.B'], ['code' => 'X.C']
+                    ['code' => 'X.A'], ['code' => 'X.B'], ['code' => 'X.C'],
                 ]],
                 ['name' => 'XI (Sebelas)', 'prefix' => 'XI', 'classes' => [
-                    ['code' => 'XI.A'], ['code' => 'XI.B'], ['code' => 'XI.C']
+                    ['code' => 'XI.A'], ['code' => 'XI.B'], ['code' => 'XI.C'],
                 ]],
                 ['name' => 'XII (Dua Belas)', 'prefix' => 'XII', 'classes' => [
-                    ['code' => 'XII.A'], ['code' => 'XII.B'], ['code' => 'XII.C']
+                    ['code' => 'XII.A'], ['code' => 'XII.B'], ['code' => 'XII.C'],
                 ]],
             ],
             default => [
                 ['name' => 'Kelas I', 'prefix' => 'I', 'classes' => [
-                    ['code' => 'I.A'], ['code' => 'I.B'], ['code' => 'I.C']
+                    ['code' => 'I.A'], ['code' => 'I.B'], ['code' => 'I.C'],
                 ]],
                 ['name' => 'Kelas II', 'prefix' => 'II', 'classes' => [
-                    ['code' => 'II.A'], ['code' => 'II.B'], ['code' => 'II.C']
+                    ['code' => 'II.A'], ['code' => 'II.B'], ['code' => 'II.C'],
                 ]],
                 ['name' => 'Kelas III', 'prefix' => 'III', 'classes' => [
-                    ['code' => 'III.A'], ['code' => 'III.B'], ['code' => 'III.C']
+                    ['code' => 'III.A'], ['code' => 'III.B'], ['code' => 'III.C'],
                 ]],
             ],
         };
 
         // Merge with existing counts to preserve any custom rombel
-        if (!empty($existingCounts)) {
+        if (! empty($existingCounts)) {
             foreach ($levels as &$level) {
                 foreach ($level['classes'] as &$class) {
                     $code = $class['code'];
@@ -7874,7 +7962,7 @@ class PageController extends Controller
         $madrasahId = $user->madrasah_id ?? null;
         $deptId = $user->dept_id ?? $request->input('dept_id');
 
-        if (!$madrasahId && !$deptId) {
+        if (! $madrasahId && ! $deptId) {
             return redirect()->back()->with('error', 'Dept ID atau Madrasah ID diperlukan');
         }
 
@@ -7925,6 +8013,7 @@ class PageController extends Controller
             } else {
                 $query->where('dept_id', $deptId);
             }
+
             return $query;
         };
 
@@ -7973,12 +8062,12 @@ class PageController extends Controller
         abort_unless($acara, 404);
 
         // Build OG tags data for social media preview
-        $ogTitle = $acara->judul . ' - Presensi Acara';
-        $ogDescription = $acara->lokasi . ' | ' .
-                         \Carbon\Carbon::parse($acara->tanggal)->format('d M Y') . ', ' .
-                         $acara->jam_mulai . ' - ' . $acara->jam_selesei . ' WIB';
-        $ogImage = $acara->filename ? asset('storage/acara/' . $acara->filename) : asset('favicon.webp');
-        $ogUrl = url('/presensi-acara/' . $id);
+        $ogTitle = $acara->judul.' - Presensi Acara';
+        $ogDescription = $acara->lokasi.' | '.
+                         Carbon::parse($acara->tanggal)->format('d M Y').', '.
+                         $acara->jam_mulai.' - '.$acara->jam_selesei.' WIB';
+        $ogImage = $acara->filename ? asset('storage/acara/'.$acara->filename) : asset('favicon.webp');
+        $ogUrl = url('/presensi-acara/'.$id);
 
         return view('presensi-acara-nip', [
             'acara' => $acara,
@@ -8005,7 +8094,7 @@ class PageController extends Controller
             ->where('nomor_induk', $nomorInduk)
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return back()->with('error', 'NIP tidak ditemukan dalam sistem');
         }
 
@@ -8022,7 +8111,7 @@ class PageController extends Controller
     public function presensiAcara(int $id)
     {
         $nomorInduk = session('nomor_induk');
-        if (!$nomorInduk) {
+        if (! $nomorInduk) {
             return redirect()->route('presensi-acara.input', $id);
         }
 
@@ -8053,12 +8142,12 @@ class PageController extends Controller
         $keterangan = $attendance ? $attendance->keterangan : null;
 
         // Build OG tags data for social media preview
-        $ogTitle = $acara->judul . ' - Presensi Acara';
-        $ogDescription = $userName . ' | ' .
-                         \Carbon\Carbon::parse($acara->tanggal)->format('d M Y') . ', ' .
-                         $acara->jam_mulai . ' - ' . $acara->jam_selesei . ' WIB';
-        $ogImage = $acara->filename ? asset('storage/acara/' . $acara->filename) : asset('favicon.webp');
-        $ogUrl = url('/presensi-acara/' . $id . '/show');
+        $ogTitle = $acara->judul.' - Presensi Acara';
+        $ogDescription = $userName.' | '.
+                         Carbon::parse($acara->tanggal)->format('d M Y').', '.
+                         $acara->jam_mulai.' - '.$acara->jam_selesei.' WIB';
+        $ogImage = $acara->filename ? asset('storage/acara/'.$acara->filename) : asset('favicon.webp');
+        $ogUrl = url('/presensi-acara/'.$id.'/show');
 
         return view('presensi-acara', [
             'acara' => $acara,
@@ -8207,14 +8296,15 @@ class PageController extends Controller
             }
 
             $imageData = base64_decode($base64Photo);
-            $filename = 'presensi_acara_' . $acaraId . '_' . $userNip . '_' . time() . '.jpg';
-            $path = 'presensi_acara/' . $filename;
+            $filename = 'presensi_acara_'.$acaraId.'_'.$userNip.'_'.time().'.jpg';
+            $path = 'presensi_acara/'.$filename;
 
             Storage::disk('public')->put($path, $imageData);
 
             return $path;
         } catch (\Exception $e) {
             Log::error('Failed to save acara photo', ['error' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -8253,7 +8343,7 @@ class PageController extends Controller
 
         // Ambil data department
         $dept = DB::table('ktd_department')->where('id', $deptId)->first();
-        if (!$dept) {
+        if (! $dept) {
             return null;
         }
 
@@ -8342,7 +8432,7 @@ class PageController extends Controller
 
         // Simpan foto
         $fotoPath = $this->saveErrorPresensiPhoto($request->foto, $user->nomor_induk);
-        if (!$fotoPath) {
+        if (! $fotoPath) {
             return back()->with('error', 'Gagal menyimpan foto. Silakan coba lagi.');
         }
 
@@ -8427,12 +8517,14 @@ class PageController extends Controller
 
             // Redirect ke halaman presensi error dengan sukses + buka surat di tab baru
             $suratUrl = route('presensi-error.surat', ['id' => $presensiId, 'jenis' => $jenis]);
+
             return redirect()->route('presensi-error')
                 ->with('success', "Presensi {$jenis} berhasil dilaporkan!")
                 ->with('suratUrl', $suratUrl);
         } catch (\Exception $e) {
             \Log::error('Failed to save error presensi', ['error' => $e->getMessage()]);
-            return back()->with('error', 'Gagal menyimpan data presensi: ' . $e->getMessage());
+
+            return back()->with('error', 'Gagal menyimpan data presensi: '.$e->getMessage());
         }
     }
 
@@ -8447,14 +8539,15 @@ class PageController extends Controller
             }
 
             $imageData = base64_decode($base64Photo);
-            $filename = 'presensi_error_' . $userNip . '_' . time() . '.jpg';
-            $path = 'presensi_error/' . $filename;
+            $filename = 'presensi_error_'.$userNip.'_'.time().'.jpg';
+            $path = 'presensi_error/'.$filename;
 
             Storage::disk('public')->put($path, $imageData);
 
             return $path;
         } catch (\Exception $e) {
             \Log::error('Failed to save error presensi photo', ['error' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -8515,7 +8608,7 @@ class PageController extends Controller
 
                 // Ambil foto tanda tangan
                 if ($kepalaKankemenag->pp) {
-                    $kepalaCheck = storage_path('app/public/users_berkas/' . $kepalaKankemenag->nomor_induk . '/' . $kepalaKankemenag->pp);
+                    $kepalaCheck = storage_path('app/public/users_berkas/'.$kepalaKankemenag->nomor_induk.'/'.$kepalaKankemenag->pp);
                     if (file_exists($kepalaCheck)) {
                         $kepalaSignaturePath = $kepalaCheck;
                     }
@@ -8536,7 +8629,7 @@ class PageController extends Controller
                     $kepalaNip = $pltUser->nomor_induk ?? '';
 
                     if ($pltUser->pp) {
-                        $kepalaCheck = storage_path('app/public/users_berkas/' . $pltUser->nomor_induk . '/' . $pltUser->pp);
+                        $kepalaCheck = storage_path('app/public/users_berkas/'.$pltUser->nomor_induk.'/'.$pltUser->pp);
                         if (file_exists($kepalaCheck)) {
                             $kepalaSignaturePath = $kepalaCheck;
                         }
@@ -8554,7 +8647,7 @@ class PageController extends Controller
                     $kepalaNip = $kepala->nomor_induk ?? '';
 
                     if ($kepala->pp) {
-                        $kepalaCheck = storage_path('app/public/users_berkas/' . $kepala->nomor_induk . '/' . $kepala->pp);
+                        $kepalaCheck = storage_path('app/public/users_berkas/'.$kepala->nomor_induk.'/'.$kepala->pp);
                         if (file_exists($kepalaCheck)) {
                             $kepalaSignaturePath = $kepalaCheck;
                         }
@@ -8601,23 +8694,23 @@ class PageController extends Controller
             if ($distanceInMeters >= 1000) {
                 $km = floor($distanceInMeters / 1000);
                 $remainingMeters = $distanceInMeters % 1000;
-                $distanceFormatted = $km . ' km ' . $remainingMeters . ' meter';
+                $distanceFormatted = $km.' km '.$remainingMeters.' meter';
             } else {
-                $distanceFormatted = $distanceInMeters . ' meter';
+                $distanceFormatted = $distanceInMeters.' meter';
             }
         }
 
         // Format lokasi
         $lokasi = '-';
         if ($latitude && $longitude && $latitude != '-' && $longitude != '-') {
-            $lokasi = $latitude . ', ' . $longitude;
+            $lokasi = $latitude.', '.$longitude;
         }
 
         // Path foto
         $fotoFullPath = null;
         if ($fotoPath) {
-            $fotoFullPath = storage_path('app/public/' . $fotoPath);
-            if (!file_exists($fotoFullPath)) {
+            $fotoFullPath = storage_path('app/public/'.$fotoPath);
+            if (! file_exists($fotoFullPath)) {
                 $fotoFullPath = null;
             }
         }
@@ -8629,7 +8722,7 @@ class PageController extends Controller
         // Tanda tangan user
         $userSignaturePath = null;
         if ($userData->pp) {
-            $userSignatureCheck = storage_path('app/public/users_berkas/' . $userData->nomor_induk . '/' . $userData->pp);
+            $userSignatureCheck = storage_path('app/public/users_berkas/'.$userData->nomor_induk.'/'.$userData->pp);
             if (file_exists($userSignatureCheck)) {
                 $userSignaturePath = $userSignatureCheck;
             }
@@ -8637,7 +8730,7 @@ class PageController extends Controller
 
         // Generate nomor surat unik/random
         $randomNumber = strtoupper(substr(uniqid(), -6));
-        $nomorSurat = 'SK-PE/' . $randomNumber . '/' . now()->format('m/Y');
+        $nomorSurat = 'SK-PE/'.$randomNumber.'/'.now()->format('m/Y');
 
         $pdfData = [
             'nomorSurat' => $nomorSurat,
@@ -8668,6 +8761,6 @@ class PageController extends Controller
             ->setOption('isRemoteEnabled', true)
             ->setOption('isHtml5ParserEnabled', true);
 
-        return $pdf->stream('surat-keterangan-presensi-error-' . $presensi->user_nip . '.pdf');
+        return $pdf->stream('surat-keterangan-presensi-error-'.$presensi->user_nip.'.pdf');
     }
 }

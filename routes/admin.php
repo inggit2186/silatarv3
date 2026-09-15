@@ -1,21 +1,22 @@
 <?php
 
+use App\Http\Controllers\Admin\AcaraController;
+use App\Http\Controllers\Admin\AsnImportController;
+use App\Http\Controllers\Admin\CkhController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\ServiceController;
-use App\Http\Controllers\Admin\UnitController;
-use App\Http\Controllers\Admin\TpgController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\NewsController;
-use App\Http\Controllers\Admin\PenilaianKinerjaController;
+use App\Http\Controllers\Admin\JanjiTemuController;
 use App\Http\Controllers\Admin\MadrasahController;
 use App\Http\Controllers\Admin\MadrasahLaporanController;
-use App\Http\Controllers\Admin\JanjiTemuController;
-use App\Http\Controllers\Admin\AcaraController;
-use App\Http\Controllers\Admin\CkhController;
-use App\Http\Controllers\Admin\RekapPresensiController;
-use App\Http\Controllers\Admin\AsnImportController;
-use App\Http\Controllers\Admin\SuratManualController;
+use App\Http\Controllers\Admin\NewsController;
+use App\Http\Controllers\Admin\PenilaianKinerjaController;
 use App\Http\Controllers\Admin\PpidController;
+use App\Http\Controllers\Admin\PublikasiController;
+use App\Http\Controllers\Admin\RekapPresensiController;
+use App\Http\Controllers\Admin\ServiceController;
+use App\Http\Controllers\Admin\SuratManualController;
+use App\Http\Controllers\Admin\TpgController;
+use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -56,6 +57,16 @@ Route::middleware(['auth', 'admin'])
         Route::put('/news/{id}', [NewsController::class, 'update'])->name('news.update');
         Route::delete('/news/{id}', [NewsController::class, 'destroy'])->name('news.destroy');
         Route::post('/news/upload-image', [NewsController::class, 'uploadImage'])->name('news.upload-image');
+
+        // Publikasi Management
+        Route::prefix('publikasi')->name('publikasi.')->group(function () {
+            Route::get('/', [PublikasiController::class, 'index'])->name('index');
+            Route::get('/create', [PublikasiController::class, 'create'])->name('create');
+            Route::post('/', [PublikasiController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [PublikasiController::class, 'edit'])->name('edit')->whereNumber('id');
+            Route::put('/{id}', [PublikasiController::class, 'update'])->name('update')->whereNumber('id');
+            Route::delete('/{id}', [PublikasiController::class, 'destroy'])->name('destroy')->whereNumber('id');
+        });
 
         // Services Management
         Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
@@ -221,9 +232,11 @@ Route::middleware(['auth', 'admin'])
             Route::get('/', [PpidController::class, 'index'])->name('index');
             Route::get('/{slug}', [PpidController::class, 'edit'])->name('edit');
             Route::put('/{slug}', [PpidController::class, 'update'])->name('update');
+            Route::get('/{slug}/edit-section/{sectionId}', [PpidController::class, 'editSection'])->name('edit-section');
             Route::post('/{slug}/sections', [PpidController::class, 'storeSection'])->name('sections.store');
             Route::put('/sections/{id}', [PpidController::class, 'updateSection'])->name('sections.update');
             Route::delete('/sections/{id}', [PpidController::class, 'destroySection'])->name('sections.destroy');
+            Route::post('/sections/{id}/toggle-visibility', [PpidController::class, 'toggleVisibility'])->name('sections.toggle-visibility');
             Route::post('/sections/reorder', [PpidController::class, 'reorder'])->name('sections.reorder');
             Route::post('/upload-image', [PpidController::class, 'uploadImage'])->name('upload-image');
 
