@@ -218,8 +218,18 @@ class PublikasiController extends Controller
 
     private function authorizeAccess(Request $request): void
     {
-        $role = strtolower($request->user()->role ?? '');
-        abort_unless(in_array($role, ['admin', 'superadmin', 'petugas']), 403);
+        $user = $request->user();
+        $role = strtolower($user->role ?? '');
+
+        if (in_array($role, ['admin', 'superadmin', 'kepala'])) {
+            return;
+        }
+
+        if ($role === 'petugas' && (int) ($user->dept_id ?? 0) === 4) {
+            return;
+        }
+
+        abort(403);
     }
 
     private function uniqueSlug(string $title): string

@@ -15,6 +15,7 @@ $canAccessAdminPanel = in_array($userRole, ['petugas', 'kasi', 'kasubbag', 'admi
 
 // Check if user has humas access
 $isHumas = AdminAccess::isHumas($userId);
+$canAccessDoc = $isAdmin || $isHumas || ($userRole === 'petugas' && $userDeptId == 4);
 ?>
 
 <!DOCTYPE html>
@@ -250,7 +251,7 @@ $isHumas = AdminAccess::isHumas($userId);
                     </a>
                     @endif
 
-                    @if($isAdmin)
+                    @if($canAccessDoc)
                     <a href="{{ route('admin.publikasi.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.publikasi.*') ? 'active' : '' }}">
                         <div class="sidebar-nav-icon-wrap emerald">
                             <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
