@@ -8588,7 +8588,8 @@ class PageController extends Controller
         abort_unless($presensi, 404);
 
         $user = auth()->user();
-        abort_unless($user->nomor_induk === $presensi->user_nip, 403);
+        $isAdmin = in_array($user->role, ['admin', 'superadmin', 'kepala']);
+        abort_unless($user->nomor_induk === $presensi->user_nip || $isAdmin, 403);
 
         // Ambil data user dari tabel users
         $userData = DB::table('users')->where('nomor_induk', $presensi->user_nip)->first();
