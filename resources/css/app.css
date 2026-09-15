@@ -2424,6 +2424,315 @@ body {
     border-color: var(--ink-soft) !important;
 }
 
+/* ========================================
+   MOBILE RESPONSIVE - Laporan Kinerja
+   ======================================== */
+
+/* --- Hero Section --- */
+.neo-mirai .hero-page {
+    padding: 2rem 2rem 4rem;
+    min-height: 280px;
+}
+.neo-mirai .hero-inner {
+    max-width: 36rem;
+    margin: 0 auto;
+    text-align: center;
+    padding-top: 80px;
+}
+@media (max-width: 640px) {
+    .neo-mirai .hero-page {
+        padding: 1.25rem 1rem 2.5rem;
+        min-height: 180px;
+    }
+    .neo-mirai .hero-inner {
+        padding-top: 55px;
+    }
+    .neo-mirai .hero-inner h1 {
+        font-size: clamp(1.4rem, 5vw, 2rem) !important;
+        gap: 0.5rem !important;
+    }
+    .neo-mirai .hero-inner h1 svg {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    .neo-mirai .hero-inner p {
+        font-size: 0.85rem !important;
+    }
+}
+
+/* --- Tab Buttons --- */
+@media (max-width: 640px) {
+    .neo-mirai .silatar-report-tab-list {
+        grid-template-columns: 1fr;
+        gap: 0.5rem !important;
+    }
+    .neo-mirai .silatar-report-tab {
+        padding: 0.75rem 1rem !important;
+        font-size: 0.85rem !important;
+    }
+    .neo-mirai .silatar-report-tab svg {
+        width: 1rem !important;
+        height: 1rem !important;
+    }
+}
+
+/* --- Stat Cards Grid --- */
+@media (max-width: 640px) {
+    .neo-grid-4 {
+        gap: 0.375rem !important;
+    }
+    .neo-grid-4 > .neo-stat-card {
+        flex: 1 1 calc(33.333% - 0.25rem);
+        min-width: 0;
+        padding: 0.5rem !important;
+        text-align: center;
+    }
+    .neo-grid-4 > .neo-stat-card .neo-stat-value {
+        font-size: 1rem !important;
+        line-height: 1.2 !important;
+    }
+    .neo-grid-4 > .neo-stat-card .neo-stat-label {
+        font-size: 0.55rem !important;
+    }
+    .neo-grid-4 > .neo-stat-card .neo-stat-icon {
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        margin: 0 auto 0.25rem !important;
+    }
+    .neo-grid-4 > .neo-stat-card .neo-stat-icon svg {
+        width: 0.875rem !important;
+        height: 0.875rem !important;
+    }
+}
+
+/* --- Summary Card --- */
+@media (max-width: 640px) {
+    .neo-mirai .silatar-report-summary {
+        padding: 1.25rem !important;
+    }
+    .neo-mirai .silatar-report-summary-header {
+        flex-direction: column;
+    }
+    .neo-mirai .silatar-report-summary-header > div:first-child {
+        gap: 0.75rem !important;
+    }
+    .neo-mirai .silatar-report-summary-icon {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+    }
+    .neo-mirai .silatar-report-summary-icon svg {
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+    }
+}
+
+/* --- Shell Header --- */
+@media (max-width: 640px) {
+    .neo-mirai .silatar-report-shell-header {
+        padding: 1rem !important;
+    }
+    .neo-mirai .silatar-report-title {
+        font-size: 1.1rem !important;
+    }
+}
+
+/* --- Actions Bar (Search + Tambah) --- */
+@media (max-width: 640px) {
+    .neo-mirai .silatar-report-actions {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    .neo-mirai .silatar-report-add-button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* --- Daily Table → Card Layout on Mobile --- */
+/* Scoped to #daftar-kegiatan to only affect the harian tab table */
+@media (max-width: 640px) {
+    #daftar-kegiatan .silatar-report-table thead {
+        display: none !important;
+    }
+    #daftar-kegiatan .silatar-report-table tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.75rem;
+    }
+    #daftar-kegiatan .silatar-report-table tbody tr {
+        display: flex;
+        flex-direction: column;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 0.75rem;
+        overflow: hidden;
+    }
+    #daftar-kegiatan .silatar-report-table tbody tr:hover td {
+        background: var(--paper) !important;
+    }
+    #daftar-kegiatan .silatar-report-table td {
+        display: block;
+        width: 100% !important;
+        padding: 0.75rem 1rem !important;
+        border-bottom: 1px solid var(--line) !important;
+    }
+    #daftar-kegiatan .silatar-report-table td:last-child {
+        border-bottom: none !important;
+    }
+    /* Tanggal cell becomes a header card */
+    #daftar-kegiatan .silatar-report-table td.silatar-report-td.text-center {
+        background: var(--paper-soft) !important;
+        text-align: left !important;
+    }
+    #daftar-kegiatan .silatar-report-table td.silatar-report-td.text-center .silatar-report-date {
+        text-align: left !important;
+    }
+    #daftar-kegiatan .silatar-report-table td.silatar-report-td.text-center .flex {
+        justify-content: flex-start !important;
+    }
+    /* Activity items in card */
+    .neo-mirai .silatar-report-activity-item {
+        padding: 0.75rem !important;
+    }
+    .neo-mirai .silatar-report-activity-row > div {
+        text-align: left !important;
+    }
+}
+
+/* --- Bulanan Table: hide less important columns on mobile --- */
+/* Scoped to #rekap-bulanan to only affect the bulanan tab table */
+@media (max-width: 640px) {
+    #rekap-bulanan .silatar-report-table th:nth-child(5),
+    #rekap-bulanan .silatar-report-table th:nth-child(6),
+    #rekap-bulanan .silatar-report-table td:nth-child(5),
+    #rekap-bulanan .silatar-report-table td:nth-child(6) {
+        display: none !important;
+    }
+    #rekap-bulanan .silatar-report-table th,
+    #rekap-bulanan .silatar-report-table td {
+        padding: 0.6rem 0.5rem !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+/* --- Humas Table: hide Update column on mobile --- */
+@media (max-width: 640px) {
+    #laporan-humas .silatar-report-table th:last-child,
+    #laporan-humas .silatar-report-table td:last-child {
+        display: none !important;
+    }
+}
+
+/* --- Create/Edit Modal --- */
+@media (max-width: 640px) {
+    .neo-mirai .silatar-report-create-modal {
+        max-width: 100% !important;
+        border-radius: 1rem 1rem 0 0 !important;
+        max-height: calc(90vh - 60px - env(safe-area-inset-bottom, 0px)) !important;
+        overflow: hidden !important;
+    }
+    .neo-mirai .silatar-report-create-header {
+        padding: 0.75rem 1rem !important;
+        flex-shrink: 0;
+    }
+    .neo-mirai .silatar-report-create-title {
+        font-size: 1rem !important;
+        margin-top: 0.25rem !important;
+    }
+    /* The form wraps body + footer — must be flex column so body can scroll */
+    .neo-mirai .silatar-report-create-modal > form {
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 0 !important;
+        flex: 1 1 0% !important;
+        overflow: hidden !important;
+    }
+    .neo-mirai .silatar-report-create-body {
+        padding: 0.75rem 1rem !important;
+        overflow-y: auto !important;
+        min-height: 0 !important;
+        flex: 1 1 0% !important;
+    }
+    .neo-mirai .silatar-report-create-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem !important;
+        padding: 0.625rem !important;
+    }
+    .neo-mirai .silatar-report-create-footer {
+        padding: 0.75rem 1rem !important;
+        flex-shrink: 0 !important;
+    }
+}
+
+/* --- Modal Overlay on mobile --- */
+/* Raise modal above bottom nav (z-index: 100) */
+.z-\[110\] {
+    z-index: 110 !important;
+}
+@media (max-width: 640px) {
+    .silatar-report-create-overlay {
+        padding: 0.5rem !important;
+        padding-bottom: calc(0.5rem + 60px + env(safe-area-inset-bottom, 0px)) !important;
+        align-items: flex-end !important;
+    }
+    .neo-modal {
+        max-width: 100% !important;
+        border-radius: 1rem 1rem 0 0 !important;
+        max-height: calc(90vh - 60px - env(safe-area-inset-bottom, 0px)) !important;
+        overflow: hidden !important;
+    }
+    .neo-modal .neo-modal-body,
+    .neo-modal form {
+        overflow-y: auto !important;
+        min-height: 0 !important;
+        flex: 1 1 0% !important;
+    }
+    .neo-modal-footer {
+        flex-shrink: 0 !important;
+        padding: 0.75rem 1rem !important;
+    }
+}
+
+/* --- Empty State on mobile --- */
+@media (max-width: 640px) {
+    .neo-mirai .silatar-report-empty {
+        padding: 2rem 1rem !important;
+    }
+    .neo-mirai .neo-empty {
+        padding: 2rem 1rem !important;
+    }
+}
+
+/* --- Tab content padding --- */
+@media (max-width: 640px) {
+    .neo-mirai .page-content .p-5 {
+        padding: 1rem !important;
+    }
+}
+
+/* --- Upload button responsive --- */
+@media (max-width: 640px) {
+    .neo-mirai .silatar-report-summary .mt-4.flex {
+        justify-content: stretch !important;
+    }
+    .neo-mirai .silatar-report-summary .mt-4.flex .neo-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* --- Bawahan table: hide No + Keterangan on mobile --- */
+@media (max-width: 640px) {
+    #rekap-bawahan .report-table-cell-index {
+        display: none !important;
+    }
+    #rekap-bawahan .silatar-report-table th:nth-child(6),
+    #rekap-bawahan .silatar-report-table td.bulanan-cell:nth-child(6) {
+        display: none !important;
+    }
+}
+
 /* Import Penilaian Kinerja Styles */
 @import './penilaian-kinerja-neo.css';
 

@@ -309,8 +309,8 @@
         <x-layouts.site-header />
 
         <!-- Hero Section -->
-        <section class="hero-page bg-cover bg-center" style="background-image: url('/assets/img/template/ckh-bg.webp'); padding: 2rem 2rem 4rem; min-height: 280px;">
-            <div class="news-article-container article-hero" style="padding-top: 80px;">
+        <section class="hero-page bg-cover bg-center" style="background-image: url('/assets/img/template/ckh-bg.webp');">
+            <div class="hero-inner news-article-container article-hero">
                 <p class="section-label-gold section-label-sm">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     Laporan Bawahan
@@ -501,7 +501,7 @@
                         </div>
                     </div>
 
-                    <div class="silatar-report-table-shell" id="rekap-bulanan">
+                    <div class="silatar-report-table-shell" id="rekap-bawahan">
                         @if ($reports->isEmpty())
                             <div class="silatar-report-empty report-empty-state">
                                 <svg class="mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -617,7 +617,7 @@
             <div
                 x-show="pdfPreviewOpen"
                 x-cloak
-                class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                class="fixed inset-0 z-[110] flex items-center justify-center p-4"
                 style="background: rgba(45, 40, 36, 0.8); backdrop-filter: blur(8px);"
                 @keydown.escape.window="closePdfPreview()"
                 @click.self="closePdfPreview()"

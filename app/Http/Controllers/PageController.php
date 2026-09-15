@@ -2390,8 +2390,8 @@ class PageController extends Controller
             $dailyGroups[$date]['volume'] += $dayVolume;
         }
 
-        // Sort by date and re-index
-        $dailyGroups = collect($dailyGroups)->sortBy('date')->values();
+        // Sort by date descending (newest first) and re-index
+        $dailyGroups = collect($dailyGroups)->sortByDesc('date')->values();
 
         $dailySummary = [
             'entries' => $totalEntries,

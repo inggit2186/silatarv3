@@ -106,8 +106,8 @@
         <x-layouts.site-header />
 
         <!-- Hero Section -->
-        <section class="hero-page" style="background-image: url('/assets/img/template/ckh-bg.webp'); background-size: cover; background-position: center center; padding: 2rem 2rem 4rem; min-height: 280px;">
-            <div style="max-width: 36rem; margin: 0 auto; text-align: center; padding-top: 80px;">
+        <section class="hero-page" style="background-image: url('/assets/img/template/ckh-bg.webp'); background-size: cover; background-position: center center;">
+            <div class="hero-inner">
                 <p style="color: var(--gold); font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; margin: 0 0 0.5rem; display: inline-flex; align-items: center; gap: 0.5rem;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     Sistem Laporan
@@ -596,7 +596,7 @@
                         </div>
 
 
-                                        <div class="silatar-report-table-shell">
+                                        <div id="laporan-humas" class="silatar-report-table-shell">
                         @if ($humasData->isEmpty())
                             <div class="neo-empty">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -668,7 +668,7 @@
                 </div>
 
                 {{-- Platform Detail Modal --}}
-                <div x-show="platformDetailOpen" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="background:rgba(0,0,0,0.9); backdrop-filter:blur(4px);">
+                <div x-show="platformDetailOpen" x-cloak class="fixed inset-0 z-[110] flex items-center justify-center p-4" style="background:rgba(0,0,0,0.9); backdrop-filter:blur(4px);">
                     <div class="w-full max-w-lg rounded-2xl border border-cyan-500/40 bg-gradient-to-b from-slate-900 to-slate-950 shadow-[0_0_80px_rgba(0,212,255,0.4)]">
                         {{-- Header with Platform Logo --}}
                         <div class="relative rounded-t-2xl overflow-hidden">
@@ -795,7 +795,7 @@
                 </div>
 
                 {{-- Hummas Modal --}}
-                <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(45, 40, 36, 0.85); background: oklch(20% 0.015 80 / 0.85); backdrop-filter: blur(4px);">
+                <div x-show="modalOpen" x-cloak class="fixed inset-0 z-[110] flex items-center justify-center p-4 silatar-report-create-overlay" style="background: rgba(45, 40, 36, 0.85); background: oklch(20% 0.015 80 / 0.85); backdrop-filter: blur(4px);">
                     <div class="neo-modal humas-modal">
                         <div class="neo-modal-header">
                             <div>
@@ -911,7 +911,7 @@
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        class="fixed inset-0 z-[110] flex items-center justify-center p-4 silatar-report-create-overlay"
         style="background: rgba(42, 37, 32, 0.9); backdrop-filter: blur(8px);"
         @click.self="closeAddModal()"
     >
@@ -1071,7 +1071,7 @@
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        class="fixed inset-0 z-[110] flex items-center justify-center p-4 silatar-report-create-overlay"
         style="background: rgba(42, 37, 32, 0.9); backdrop-filter: blur(8px);"
         @click.self="closeEditModal()"
     >
@@ -1239,7 +1239,7 @@
     <div
         x-show="pdfPreviewOpen"
         x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        class="fixed inset-0 z-[110] flex items-center justify-center p-4"
         style="background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);"
         @keydown.escape.window="closePdfPreview()"
     >
@@ -1292,7 +1292,7 @@
     <div
         x-show="replaceModalOpen"
         x-cloak
-        class="fixed inset-0 z-[90] flex items-center justify-center p-4"
+        class="fixed inset-0 z-[110] flex items-center justify-center p-4"
         style="background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);"
         @keydown.escape.window="closeReplaceModal()"
     >
@@ -1430,7 +1430,7 @@
     <div
         x-show="uploadModalOpen"
         x-cloak
-        class="fixed inset-0 z-[90] flex items-center justify-center p-4"
+        class="fixed inset-0 z-[110] flex items-center justify-center p-4"
         style="background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);"
         @keydown.escape.window="closeUploadModal()"
     >
