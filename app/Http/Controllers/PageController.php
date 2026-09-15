@@ -8508,7 +8508,6 @@ class PageController extends Controller
             } else {
                 $dataInsert = array_merge($dataUpdate, [
                     'user_nip' => $user->nomor_induk,
-                    'dept_id' => $user->dept_id,
                     'tanggal' => $today,
                     'created_at' => now(),
                 ]);
