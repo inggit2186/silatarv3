@@ -969,6 +969,7 @@
                         name="tanggal"
                         label="Tanggal"
                         :value="old('tanggal', $defaultActivityDate)"
+                        defaultDate="{{ old('tanggal', $defaultActivityDate) }}"
                         :required="true"
                     />
 

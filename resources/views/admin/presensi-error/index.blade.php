@@ -89,6 +89,7 @@
                         <option value="">Semua Status</option>
                         <option value="SISTEM_ERROR" {{ ($filters['status'] ?? '') == 'SISTEM_ERROR' ? 'selected' : '' }}>Sistem Error</option>
                         <option value="TUGAS_LUAR" {{ ($filters['status'] ?? '') == 'TUGAS_LUAR' ? 'selected' : '' }}>Tugas Luar</option>
+                        <option value="LUPA_PRESNSI_PUSAKA" {{ ($filters['status'] ?? '') == 'LUPA_PRESNSI_PUSAKA' ? 'selected' : '' }}>Lupa Presensi</option>
                     </select>
                 </div>
 
@@ -202,9 +203,13 @@
                             </td>
                             <td>{{ $item->dept_name ?? '-' }}</td>
                             <td>
-                                <span class="badge {{ $item->status === 'SISTEM_ERROR' ? 'badge-danger' : 'badge-warning' }}">
-                                    {{ $item->status === 'SISTEM_ERROR' ? 'Sistem Error' : 'Tugas Luar' }}
-                                </span>
+                                @if($item->status === 'SISTEM_ERROR')
+                                    <span class="badge badge-danger">Sistem Error</span>
+                                @elseif($item->status === 'TUGAS_LUAR')
+                                    <span class="badge badge-warning">Tugas Luar</span>
+                                @else
+                                    <span class="badge badge-info">Lupa Presensi</span>
+                                @endif
                             </td>
                             <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}</td>
                             <td>

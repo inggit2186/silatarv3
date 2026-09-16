@@ -86,10 +86,13 @@
                                 <!-- Data & Informasi (tengah) -->
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 mb-1.5">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
-                                            {{ $item->status === 'SISTEM_ERROR' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700' }}">
-                                            {{ $item->status === 'SISTEM_ERROR' ? 'Sistem Error' : 'Tugas Luar' }}
-                                        </span>
+                                        @if($item->status === 'SISTEM_ERROR')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">Sistem Error</span>
+                                        @elseif($item->status === 'TUGAS_LUAR')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Tugas Luar</span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">Lupa Presensi</span>
+                                        @endif
                                         <span class="text-sm font-medium text-[var(--ink)]">{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</span>
                                     </div>
 

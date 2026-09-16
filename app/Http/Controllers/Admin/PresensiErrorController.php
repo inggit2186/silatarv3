@@ -17,7 +17,7 @@ class PresensiErrorController extends Controller
         $query = DB::table('ktd_presensi as p')
             ->leftJoin('users as u', 'u.nomor_induk', '=', 'p.user_nip')
             ->leftJoin('ktd_department as d', 'd.id', '=', 'u.dept_id')
-            ->whereIn('p.status', ['SISTEM_ERROR', 'TUGAS_LUAR'])
+            ->whereIn('p.status', ['SISTEM_ERROR', 'TUGAS_LUAR', 'LUPA_PRESNSI_PUSAKA'])
             ->select([
                 'p.id',
                 'p.user_nip',

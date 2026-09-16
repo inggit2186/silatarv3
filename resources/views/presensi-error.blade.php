@@ -91,15 +91,16 @@
                                             </svg>
                                             <span class="text-sm font-semibold text-emerald-700">Presensi Masuk</span>
                                         </div>
-                                        <span class="text-sm text-emerald-700">sudah diambil ({{ $presensi->error_masuk_taken_at ?? $presensi->m_absen }})</span>
+                                        <span class="text-sm text-emerald-700">diambil ({{ $presensi->error_masuk_taken_at ?? $presensi->m_absen }})</span>
                                     </div>
-                                    <div class="mt-2 ml-7">
+                                    <div class="mt-2 ml-7 flex items-center gap-3">
                                         <a href="{{ route('presensi-error.surat', ['id' => $presensi->id, 'jenis' => 'masuk']) }}" target="_blank" class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-800">
                                             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                                             </svg>
-                                            Lihat Surat Keterangan
+                                            Lihat Surat
                                         </a>
+                                        <span class="text-xs text-[var(--ink-soft)]">Bisa diambil ulang</span>
                                     </div>
                                 </div>
                             @else
@@ -122,15 +123,16 @@
                                             </svg>
                                             <span class="text-sm font-semibold text-blue-700">Presensi Pulang</span>
                                         </div>
-                                        <span class="text-sm text-blue-700">sudah diambil ({{ $presensi->error_pulang_taken_at ?? $presensi->p_absen }})</span>
+                                        <span class="text-sm text-blue-700">diambil ({{ $presensi->error_pulang_taken_at ?? $presensi->p_absen }})</span>
                                     </div>
-                                    <div class="mt-2 ml-7">
+                                    <div class="mt-2 ml-7 flex items-center gap-3">
                                         <a href="{{ route('presensi-error.surat', ['id' => $presensi->id, 'jenis' => 'pulang']) }}" target="_blank" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800">
                                             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                                             </svg>
-                                            Lihat Surat Keterangan
+                                            Lihat Surat
                                         </a>
+                                        <span class="text-xs text-[var(--ink-soft)]">Bisa diambil ulang</span>
                                     </div>
                                 </div>
                             @else
@@ -153,19 +155,8 @@
                     $sudahPulang = $presensi && $presensi->p_absen;
                 @endphp
 
-                @if($sudahMasuk && $sudahPulang)
-                    <div class="neo-card p-6 text-center">
-                        <div class="w-16 h-16 mx-auto mb-4 bg-emerald-100 rounded-full flex items-center justify-center">
-                            <svg class="w-8 h-8 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-lg font-bold text-[var(--ink)] mb-2">Presensi Hari Ini Sudah Lengkap</h3>
-                        <p class="text-sm text-[var(--ink-soft)]">Anda sudah melakukan presensi masuk dan pulang hari ini</p>
-                    </div>
-                @else
-                    <form action="{{ route('presensi-error.submit') }}" method="POST" id="presensiErrorForm" onsubmit="return validateForm()">
-                        @csrf
+                <form action="{{ route('presensi-error.submit') }}" method="POST" id="presensiErrorForm" onsubmit="return validateForm()">
+                    @csrf
 
                         {{-- Jenis Presensi --}}
                         <div class="neo-card p-6 mb-4">
@@ -182,49 +173,45 @@
                             </div>
 
                             <div class="space-y-3">
-                                @if(!$sudahMasuk)
-                                    <label class="flex items-center gap-4 p-4 border-2 border-[var(--line)] rounded-xl cursor-pointer hover:border-[var(--gold)] hover:bg-[var(--gold)]/5 transition-all" id="labelMasuk">
-                                        <input type="radio" name="jenis" value="masuk" class="w-5 h-5 text-[var(--gold)] focus:ring-[var(--gold)]" onchange="updateSelectedJenis()">
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-2">
-                                                <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <span class="text-sm font-bold text-[var(--ink)]">Presensi Masuk</span>
-                                                    <p class="text-xs text-[var(--ink-soft)]">Laporkan jam kehadiran</p>
-                                                </div>
+                                <label class="flex items-center gap-4 p-4 border-2 border-[var(--line)] rounded-xl cursor-pointer hover:border-[var(--gold)] hover:bg-[var(--gold)]/5 transition-all" id="labelMasuk">
+                                    <input type="radio" name="jenis" value="masuk" class="w-5 h-5 text-[var(--gold)] focus:ring-[var(--gold)]" onchange="updateSelectedJenis()">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                <svg class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <span class="text-sm font-bold text-[var(--ink)]">Presensi Masuk{{ $sudahMasuk ? ' (Ulangi)' : '' }}</span>
+                                                <p class="text-xs text-[var(--ink-soft)]">{{ $sudahMasuk ? 'Ambil ulang presensi masuk' : 'Laporkan jam kehadiran' }}</p>
                                             </div>
                                         </div>
-                                        <svg class="w-5 h-5 text-[var(--ink-soft)] check-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                    </label>
-                                @endif
+                                    </div>
+                                    <svg class="w-5 h-5 text-[var(--ink-soft)] check-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </label>
 
-                                @if(!$sudahPulang)
-                                    <label class="flex items-center gap-4 p-4 border-2 border-[var(--line)] rounded-xl cursor-pointer hover:border-[var(--gold)] hover:bg-[var(--gold)]/5 transition-all" id="labelPulang">
-                                        <input type="radio" name="jenis" value="pulang" class="w-5 h-5 text-[var(--gold)] focus:ring-[var(--gold)]" onchange="updateSelectedJenis()">
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-2">
-                                                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <span class="text-sm font-bold text-[var(--ink)]">Presensi Pulang</span>
-                                                    <p class="text-xs text-[var(--ink-soft)]">Laporkan jam pulang</p>
-                                                </div>
+                                <label class="flex items-center gap-4 p-4 border-2 border-[var(--line)] rounded-xl cursor-pointer hover:border-[var(--gold)] hover:bg-[var(--gold)]/5 transition-all" id="labelPulang">
+                                    <input type="radio" name="jenis" value="pulang" class="w-5 h-5 text-[var(--gold)] focus:ring-[var(--gold)]" onchange="updateSelectedJenis()">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                <svg class="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <span class="text-sm font-bold text-[var(--ink)]">Presensi Pulang{{ $sudahPulang ? ' (Ulangi)' : '' }}</span>
+                                                <p class="text-xs text-[var(--ink-soft)]">{{ $sudahPulang ? 'Ambil ulang presensi pulang' : 'Laporkan jam pulang' }}</p>
                                             </div>
                                         </div>
-                                        <svg class="w-5 h-5 text-[var(--ink-soft)] check-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    </div>
+                                    <svg class="w-5 h-5 text-[var(--ink-soft)] check-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                                         </svg>
                                     </label>
-                                @endif
                             </div>
                         </div>
 
@@ -284,12 +271,38 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                                     </svg>
                                 </label>
+
+                                <label class="flex items-center gap-4 p-4 border-2 border-[var(--line)] rounded-xl cursor-pointer hover:border-[var(--gold)] hover:bg-[var(--gold)]/5 transition-all" id="labelLupaPresensi">
+                                    <input type="radio" name="alasan" value="LUPA_PRESNSI_PUSAKA" class="w-5 h-5 text-[var(--gold)] focus:ring-[var(--gold)]" onchange="updateSelectedAlasan()">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                                <svg class="w-4 h-4 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <span class="text-sm font-bold text-[var(--ink)]">Lupa Presensi Pusaka</span>
+                                                <p class="text-xs text-[var(--ink-soft)]">Lupa melakukan presensi di hari tertentu</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <svg class="w-5 h-5 text-[var(--ink-soft)] check-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </label>
                             </div>
 
                             {{-- Keterangan Tugas Luar --}}
                             <div id="keteranganTugasLuar" class="hidden mt-4">
                                 <label class="block text-sm font-semibold text-[var(--ink)] mb-2">Keterangan Tugas Luar <span class="text-red-500">*</span></label>
                                 <textarea id="inputKeterangan" name="keterangan_tugas_luar" rows="3" placeholder="Contoh: Dinas ke KUA Banuhampu untuk pengajuan TPG" class="w-full px-4 py-3 bg-[var(--paper-soft)] border border-[var(--line)] rounded-xl text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] resize-none"></textarea>
+                            </div>
+
+                            {{-- Tanggal Lupa Presensi --}}
+                            <div id="tanggalLupaPresensi" class="hidden mt-4">
+                                <x-ui.datepicker name="tanggal_lupa" label="Tanggal Lupa Presensi" placeholder="Pilih tanggal lupa presensi" value="{{ date('Y-m-d') }}" defaultDate="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}" :required="true" />
+                                <p class="text-xs text-[var(--ink-soft)] mt-1">Pilih tanggal saat Anda lupa melakukan presensi</p>
                             </div>
                         </div>
 
@@ -376,7 +389,6 @@
                             </span>
                         </button>
                     </form>
-                @endif
             </div>
         </section>
 
@@ -572,6 +584,7 @@
         function updateSelectedAlasan() {
             var radios = document.querySelectorAll('input[name="alasan"]');
             var keteranganField = document.getElementById('keteranganTugasLuar');
+            var tanggalField = document.getElementById('tanggalLupaPresensi');
 
             radios.forEach(function(radio) {
                 var label = radio.closest('label');
@@ -587,13 +600,27 @@
                 }
             });
 
-            // Tampilkan/sembunyikan field keterangan
+            // Tampilkan/sembunyikan field keterangan & tanggal
             var selectedAlasan = document.querySelector('input[name="alasan"]:checked');
             if (selectedAlasan && selectedAlasan.value === 'TUGAS_LUAR') {
                 keteranganField.classList.remove('hidden');
+                tanggalField.classList.add('hidden');
+            } else if (selectedAlasan && selectedAlasan.value === 'LUPA_PRESNSI_PUSAKA') {
+                tanggalField.classList.remove('hidden');
+                keteranganField.classList.add('hidden');
+                // Reset datepicker month to current month
+                var datepickerEl = tanggalField.querySelector('[x-data]');
+                if (datepickerEl && typeof Alpine !== 'undefined') {
+                    var dpData = Alpine.$data(datepickerEl);
+                    if (dpData) {
+                        var now = new Date();
+                        dpData.monthCursor = new Date(now.getFullYear(), now.getMonth(), 1);
+                        dpData.value = '{{ date("Y-m-d") }}';
+                    }
+                }
             } else {
                 keteranganField.classList.add('hidden');
-                document.getElementById('inputKeterangan').value = '';
+                tanggalField.classList.add('hidden');
             }
         }
 
@@ -606,7 +633,7 @@
 
             var alasan = document.querySelector('input[name="alasan"]:checked');
             if (!alasan) {
-                alert('Harap pilih alasan presensi error (Sistem Error atau Tugas Luar)');
+                alert('Harap pilih alasan presensi error');
                 return false;
             }
 
@@ -614,6 +641,14 @@
                 var keterangan = document.getElementById('inputKeterangan').value.trim();
                 if (!keterangan) {
                     alert('Harap isi keterangan tugas luar');
+                    return false;
+                }
+            }
+
+            if (alasan.value === 'LUPA_PRESNSI_PUSAKA') {
+                var tanggalLupa = document.getElementById('inputTanggalLupa').value;
+                if (!tanggalLupa) {
+                    alert('Harap pilih tanggal lupa presensi');
                     return false;
                 }
             }

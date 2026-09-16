@@ -213,7 +213,13 @@
     {{-- Title --}}
     <div class="title-section">
         <h1 class="surat-title">Surat Keterangan</h1>
-        <p class="surat-subtitle">Pelaporan Pengaduan Presensi</p>
+        <p class="surat-subtitle">
+            @if($alasan === 'LUPA_PRESNSI_PUSAKA')
+                Pelaporan Lupa Presensi
+            @else
+                Pelaporan Pengaduan Presensi
+            @endif
+        </p>
         <p class="surat-number">Nomor: {{ $nomorSurat }}</p>
     </div>
 
@@ -260,7 +266,15 @@
             </tr>
             <tr>
                 <td class="label">Alasan</td>
-                <td class="value">{{ $alasan === 'TUGAS_LUAR' ? 'Tugas Luar' : 'Sistem Error' }}</td>
+                <td class="value">
+                    @if($alasan === 'TUGAS_LUAR')
+                        Tugas Luar
+                    @elseif($alasan === 'LUPA_PRESNSI_PUSAKA')
+                        Lupa Presensi Pusaka
+                    @else
+                        Sistem Error
+                    @endif
+                </td>
             </tr>
             <tr>
                 <td class="label">Waktu Pengambilan</td>
@@ -290,8 +304,13 @@
         <div class="statement">
             <p style="margin: 0;">
                 Demikian surat keterangan ini dibuat dengan sebenar-benarnya dan dapat dipertanggungjawabkan.
-                Surat ini diterbitkan karena terjadi gangguan pada sistem presensi utama, sehingga presensi
-                dilakukan melalui halaman alternatif <strong>Pengaduan Presensi</strong>.
+                @if($alasan === 'LUPA_PRESNSI_PUSAKA')
+                    Surat ini diterbitkan karena pegawai yang bersangkutan lupa melakukan presensi kehadiran kerja
+                    pada tanggal yang tertera di atas, sehingga dilaporkan melalui halaman alternatif <strong>Pengaduan Presensi</strong>.
+                @else
+                    Surat ini diterbitkan karena terjadi gangguan pada sistem presensi utama, sehingga presensi
+                    dilakukan melalui halaman alternatif <strong>Pengaduan Presensi</strong>.
+                @endif
             </p>
         </div>
 

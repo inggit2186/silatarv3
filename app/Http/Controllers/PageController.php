@@ -8408,7 +8408,7 @@ class PageController extends Controller
 
         $presensi = DB::table('ktd_presensi')
             ->where('user_nip', $nip)
-            ->whereIn('status', ['SISTEM_ERROR', 'TUGAS_LUAR'])
+            ->whereIn('status', ['SISTEM_ERROR', 'TUGAS_LUAR', 'LUPA_PRESNSI_PUSAKA'])
             ->whereMonth('tanggal', $month)
             ->whereYear('tanggal', $year)
             ->orderBy('tanggal', 'desc')
@@ -8430,8 +8430,9 @@ class PageController extends Controller
     {
         $request->validate([
             'jenis' => 'required|in:masuk,pulang',
-            'alasan' => 'required|in:SISTEM_ERROR,TUGAS_LUAR',
+            'alasan' => 'required|in:SISTEM_ERROR,TUGAS_LUAR,LUPA_PRESNSI_PUSAKA',
             'keterangan_tugas_luar' => 'required_if:alasan,TUGAS_LUAR|nullable|string',
+            'tanggal_lupa' => 'required_if:alasan,LUPA_PRESNSI_PUSAKA|nullable|date|before_or_equal:today',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'jarak_meter' => 'nullable|numeric',
@@ -8443,20 +8444,28 @@ class PageController extends Controller
         $jenis = $request->input('jenis');
         $alasan = $request->input('alasan');
         $now = Carbon::now('Asia/Jakarta');
-        $today = $now->toDateString();
         $jamActual = $now->format('H:i:s');
 
         // Waktu tetap untuk presensi error
         $jamMasuk = '05:59:00';
         $jamPulang = '19:59:00';
 
+        // Tentukan tanggal: lupa presensi pakai tanggal dari form, lainnya pakai hari ini
+        $today = $alasan === 'LUPA_PRESNSI_PUSAKA'
+            ? $request->input('tanggal_lupa')
+            : $now->toDateString();
+
         // Tentukan status berdasarkan alasan
-        $status = $alasan === 'SISTEM_ERROR' ? 'SISTEM_ERROR' : 'TUGAS_LUAR';
+        $status = $alasan;
 
         // Tentukan keterangan
-        $keterangan = $alasan === 'TUGAS_LUAR'
-            ? $request->input('keterangan_tugas_luar', 'Tugas Luar')
-            : 'Dilaporkan melalui halaman Presensi Error (Sistem Error)';
+        if ($alasan === 'TUGAS_LUAR') {
+            $keterangan = $request->input('keterangan_tugas_luar', 'Tugas Luar');
+        } elseif ($alasan === 'LUPA_PRESNSI_PUSAKA') {
+            $keterangan = 'Dilaporkan melalui halaman Presensi Error (Lupa Presensi Pusaka)';
+        } else {
+            $keterangan = 'Dilaporkan melalui halaman Presensi Error (Sistem Error)';
+        }
 
         // Simpan foto
         $fotoPath = $this->saveErrorPresensiPhoto($request->foto, $user->nomor_induk);
@@ -8485,11 +8494,6 @@ class PageController extends Controller
         }
 
         if ($jenis === 'masuk') {
-            // Validasi belum presensi masuk
-            if ($presensi && $presensi->m_absen) {
-                return back()->with('error', 'Presensi masuk hari ini sudah dilakukan');
-            }
-
             $dataUpdate['m_absen'] = $jamMasuk;
             $dataUpdate['m_latitude'] = $request->input('latitude', 0);
             $dataUpdate['m_longitude'] = $request->input('longitude', 0);
@@ -8505,11 +8509,6 @@ class PageController extends Controller
             );
             $dataUpdate['m_distance'] = $distance ?? $request->input('jarak_meter', 0);
         } else {
-            // Validasi belum presensi pulang
-            if ($presensi && $presensi->p_absen) {
-                return back()->with('error', 'Presensi pulang hari ini sudah dilakukan');
-            }
-
             $dataUpdate['p_absen'] = $jamPulang;
             $dataUpdate['p_latitude'] = $request->input('latitude', 0);
             $dataUpdate['p_longitude'] = $request->input('longitude', 0);
