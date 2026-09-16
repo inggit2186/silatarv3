@@ -1,14 +1,21 @@
 <x-layouts.app title="Laporan Presensi - SILATAR">
 
     <main class="neo-mirai min-h-screen bg-[var(--paper)]">
+        <!-- Hero Section -->
+        <section class="hero-page bg-cover bg-center" style="background-image: url('/assets/img/template/bg2.webp'); padding: 100px 2rem 3rem; min-height: 250px;">
+            <div class="news-article-container article-hero">
+                <p class="section-label-gold section-label-sm">Presensi</p>
+                <h1 class="article-hero-title">Laporan Presensi</h1>
+                <p class="article-hero-subtitle">Riwayat pelaporan presensi error Anda. Ambil ulang presensi jika diperlukan.</p>
+                <div class="hero-actions">
+                    <a href="{{ route('presensi-error') }}" class="neo-hero-cta neo-hero-cta-primary">Ambil Presensi Error</a>
+                    <a href="{{ url('/') }}" class="neo-hero-cta">Kembali ke beranda</a>
+                </div>
+            </div>
+        </section>
+
         <section class="page-content px-4 py-6 lg:px-6">
             <div class="max-w-4xl mx-auto">
-
-                <!-- Header -->
-                <div class="mb-8">
-                    <h1 class="text-2xl font-bold text-[var(--ink)]">Laporan Presensi</h1>
-                    <p class="text-[var(--ink-soft)] mt-1">Riwayat pelaporan presensi error Anda</p>
-                </div>
 
                 <!-- Filter -->
                 <div class="neo-card p-4 mb-6">
@@ -163,6 +170,19 @@
 
             </div>
         </section>
+
+        <!-- Footer -->
+        <footer class="border-t border-[var(--line)] bg-[var(--paper-soft)] py-8 px-4 mt-8">
+            <div class="max-w-4xl mx-auto text-center">
+                <div class="flex items-center justify-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-[var(--gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    <span class="text-sm font-semibold text-[var(--ink)]">Kantor Kementerian Agama Kabupaten Tanah Datar</span>
+                </div>
+                <p class="text-xs text-[var(--ink-soft)]">SILATAR V2 &mdash; Sistem Informasi Layanan Terpadu</p>
+            </div>
+        </footer>
     </main>
 
 </x-layouts.app>
