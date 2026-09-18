@@ -66,6 +66,33 @@
                     </div>
                 </div>
 
+                {{-- Tutorial Banner --}}
+                <a href="{{ route('tutorial-pengaduan') }}" target="_blank" class="group block mb-6 relative overflow-hidden rounded-2xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 hover:from-amber-100 hover:via-yellow-100 hover:to-orange-100 transition-all duration-300 hover:shadow-lg hover:shadow-amber-200/50 hover:-translate-y-0.5">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-amber-200/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                    <div class="absolute bottom-0 left-0 w-20 h-20 bg-yellow-200/20 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+                    <div class="relative flex items-center gap-4 p-4">
+                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-md shadow-amber-300/40 group-hover:scale-110 transition-transform duration-300">
+                            <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <h4 class="text-sm font-bold text-amber-800">Belum paham cara pengaduan?</h4>
+                                <span class="inline-flex items-center px-2 py-0.5 bg-amber-400 text-white text-[10px] font-bold rounded-full uppercase tracking-wide animate-pulse">Baru</span>
+                            </div>
+                            <p class="text-xs text-amber-700/80 mt-0.5">Lihat tutorial langkah demi langkah untuk pengaduan presensi</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="w-9 h-9 bg-amber-100 rounded-full flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                                <svg class="w-4 h-4 text-amber-600 group-hover:translate-x-0.5 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+
                 {{-- Status Presensi Hari Ini --}}
                 @if($presensi && ($presensi->m_absen || $presensi->p_absen))
                     <div class="neo-card mb-6 p-5">
