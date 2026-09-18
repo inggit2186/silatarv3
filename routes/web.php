@@ -135,6 +135,11 @@ Route::get('/profil-kantor', [PageController::class, 'profilKantor'])->name('pro
 Route::get('/sejarah', [PageController::class, 'sejarah'])->name('sejarah');
 Route::get('/struktur-organisasi', [PageController::class, 'strukturOrganisasi'])->name('struktur-organisasi');
 
+// Tutorial Pages
+Route::get('/tutorial-pengaduan', function () {
+    return view('tutorial-pengaduan');
+})->name('tutorial-pengaduan');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
