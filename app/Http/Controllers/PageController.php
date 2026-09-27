@@ -18,6 +18,9 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Encoders\PngEncoder;
+use Intervention\Image\ImageManager;
 
 class PageController extends Controller
 {
@@ -2938,9 +2941,20 @@ class PageController extends Controller
             $satuanKerja = '-';
         }
 
+        // Ambil data tenaga_ktd untuk NIK, KK, jabatan fallback
+        $tenagaKtd = DB::table('tenaga_ktd')
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+                if (! empty($user->nomor_induk)) {
+                    $q->orWhere('nomor_induk', $user->nomor_induk);
+                }
+            })
+            ->first();
+
         return view('profil-edit', [
             'user' => $user,
             'satuanKerja' => $satuanKerja,
+            'tenagaKtd' => $tenagaKtd,
         ]);
     }
 
@@ -2951,15 +2965,23 @@ class PageController extends Controller
         abort_unless($user, 403);
 
         $validator = Validator::make($request->all(), [
+            // Data wajib (untuk force completion)
+            'nik' => ['nullable', 'string', 'digits:16'],
+            'no_kk' => ['nullable', 'string', 'digits:16'],
+            'jabatan' => ['nullable', 'string', 'max:255'],
+            'pp' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+
+            // Data existing
             'nip' => ['nullable', 'string', 'max:50'],
             'tempat_lahir' => ['nullable', 'string', 'max:100'],
             'tanggal_lahir' => ['nullable', 'date'],
             'jenis_kelamin' => ['nullable', 'string', 'in:laki-laki,perempuan'],
             'alamat' => ['nullable', 'string', 'max:500'],
-            'no_hp' => ['nullable', 'string', 'max:20'],
+            'hp' => ['nullable', 'string', 'max:20'],
             'email' => ['nullable', 'email'],
             'npwp' => ['nullable', 'string', 'max:30'],
-            'rekening' => ['nullable', 'string', 'max:30'],
+            'no_rekening' => ['nullable', 'string', 'max:30'],
+            'bank' => ['nullable', 'string', 'max:100'],
             'bio' => ['nullable', 'string', 'max:1000'],
             'facebook' => ['nullable', 'string', 'max:255'],
             'twitter' => ['nullable', 'string', 'max:255'],
@@ -2970,6 +2992,12 @@ class PageController extends Controller
             'pjob' => ['nullable', 'string', 'max:255'],
             'jml_anak' => ['nullable', 'integer', 'min:0'],
             'req_tunjangan' => ['nullable', 'in:0,1'],
+        ], [
+            'nik.digits' => 'NIK harus tepat 16 digit angka.',
+            'no_kk.digits' => 'Nomor KK harus tepat 16 digit angka.',
+            'pp.image' => 'File foto harus berupa gambar.',
+            'pp.mimes' => 'Format foto harus JPG, JPEG, PNG, atau WEBP.',
+            'pp.max' => 'Ukuran foto maksimal 2MB.',
         ]);
 
         if ($validator->fails()) {
@@ -2977,6 +3005,56 @@ class PageController extends Controller
         }
 
         $data = $validator->validated();
+
+        // Simpan foto profil pada disk public agar konsisten dengan URL storage/... di seluruh aplikasi.
+        // Path diberikan sebagai path relatif dengan forward slash; Flysystem akan membuat folder parent
+        // tanpa perlu DIRECTORY_SEPARATOR atau mkdir manual (terutama penting pada Windows).
+        $ppFilename = $user->pp;
+        if ($request->hasFile('pp')) {
+            $file = $request->file('pp');
+            $identifier = (string) ($user->nomor_induk ?? $user->id);
+            $relativeDir = 'users_berkas/'.$identifier;
+            $ppFilename = $identifier.'.pp.png';
+            $relativePath = $relativeDir.'/'.$ppFilename;
+
+            try {
+                // Client melakukan crop/optimasi untuk mengurangi payload. Intervention tetap menjadi
+                // kompresi final di server karena Sharp npm adalah modul Node, bukan browser global.
+                $manager = new ImageManager(new Driver);
+                // Intervention Image v4 menggunakan decodePath/decodeFile, bukan read().
+                $img = $manager->decodePath($file->getRealPath());
+                $img->scaleDown(width: 512, height: 512);
+                $encoded = $img->encode(new PngEncoder(indexed: true));
+
+                if (! Storage::disk('public')->put($relativePath, (string) $encoded)) {
+                    throw new \RuntimeException('Storage::put mengembalikan false.');
+                }
+
+                // Hapus file lama hanya setelah file baru berhasil ditulis. Jangan hapus jika path sama
+                // karena put() sudah melakukan overwrite aman pada target yang sama.
+                if (! empty($user->pp)) {
+                    $oldRelativePath = $relativeDir.'/'.$user->pp;
+                    if ($oldRelativePath !== $relativePath) {
+                        Storage::disk('public')->delete($oldRelativePath);
+                    }
+                }
+
+                Log::info('Foto profil berhasil dikompresi dan disimpan.', [
+                    'user_id' => $user->id,
+                    'path' => $relativePath,
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('Gagal memproses foto profil.', [
+                    'user_id' => $user->id,
+                    'path' => $relativePath,
+                    'exception' => $e,
+                ]);
+
+                return back()
+                    ->withErrors(['pp' => 'Gagal memproses foto profil. Silakan coba lagi atau hubungi administrator.'])
+                    ->withInput();
+            }
+        }
 
         // Map jk values to jenis_kelamin for compatibility
         $jkMap = [
@@ -2990,30 +3068,116 @@ class PageController extends Controller
             $jenisKelamin = $jkMap[$jenisKelamin];
         }
 
+        // Cari record pegawai sebelum update agar semua data non-akun tetap
+        // disimpan pada tenaga_ktd, bukan dikirim ke tabel users.
+        $existingTenaga = DB::table('tenaga_ktd')
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+                if (! empty($user->nomor_induk)) {
+                    $q->orWhere('nomor_induk', $user->nomor_induk);
+                }
+            })
+            ->first();
+
+        // NIK: prioritas dari input 'nik', fallback ke 'nip'.
+        $nikValue = $data['nik'] ?? $data['nip'] ?? $user->nip;
+        $jabatanValue = $data['jabatan'] ?? $user->pekerjaan ?? ($existingTenaga->pekerjaan ?? null);
+        $telpValue = $data['hp'] ?? $user->telp;
+
+        // Hanya kolom yang merupakan identitas/akun users. Data pegawai,
+        // keluarga, sosial, NPWP, rekening, dan bank disimpan di tenaga_ktd.
         DB::table('users')->where('id', $user->id)->update([
-            'nip' => $data['nip'] ?? null,
-            'tempat_lahir' => $data['tempat_lahir'] ?? null,
-            'tanggal_lahir' => $data['tanggal_lahir'] ?? null,
-            'jk' => $jenisKelamin,
-            'alamat' => $data['alamat'] ?? null,
-            'telp' => $data['no_hp'] ?? null,
-            'email' => $data['email'] ?? null,
-            'npwp' => $data['npwp'] ?? null,
-            'rekening' => $data['rekening'] ?? null,
-            'bio' => $data['bio'] ?? null,
-            'facebook' => $data['facebook'] ?? null,
-            'twitter' => $data['twitter'] ?? null,
-            'linkedin' => $data['linkedin'] ?? null,
-            'instagram' => $data['instagram'] ?? null,
-            'nikah' => $data['nikah'] ?? null,
-            'jenis_pjob' => $data['jenis_pjob'] ?? null,
-            'pjob' => $data['pjob'] ?? null,
-            'jml_anak' => $data['jml_anak'] ?? null,
-            'req_tunjangan' => $data['req_tunjangan'] ?? null,
+            'pp' => $ppFilename,
+            'nip' => $nikValue,
+            'pekerjaan' => $jabatanValue,
+            'jabatan' => $data['jabatan'] ?? $user->jabatan,
+            'tempat_lahir' => $data['tempat_lahir'] ?? $user->tempat_lahir,
+            'tanggal_lahir' => $data['tanggal_lahir'] ?? $user->tanggal_lahir,
+            'jk' => $jenisKelamin ?? $user->jk,
+            'alamat' => $data['alamat'] ?? $user->alamat,
+            'telp' => $telpValue,
+            'email' => $data['email'] ?? $user->email,
             'updated_at' => now(),
         ]);
 
-        return redirect()->route('profil')->with('success', 'Profil berhasil diperbarui.');
+        // Sinkronkan seluruh data pegawai ke tenaga_ktd.
+        $tenagaData = [
+            'nama' => $user->name,
+            'nik' => $data['nik'] ?? ($existingTenaga->nik ?? null),
+            'kk' => $data['no_kk'] ?? ($existingTenaga->kk ?? null),
+            'npwp' => $data['npwp'] ?? ($existingTenaga->npwp ?? null),
+            'pekerjaan' => $jabatanValue,
+            'tempat_lahir' => $data['tempat_lahir'] ?? ($existingTenaga->tempat_lahir ?? null),
+            'tanggal_lahir' => $data['tanggal_lahir'] ?? ($existingTenaga->tanggal_lahir ?? null),
+            'jenis_kelamin' => $jenisKelamin ?? ($existingTenaga->jenis_kelamin ?? null),
+            'alamat' => $data['alamat'] ?? ($existingTenaga->alamat ?? null),
+            'telp' => $telpValue ?? ($existingTenaga->telp ?? null),
+            'email' => $data['email'] ?? ($existingTenaga->email ?? null),
+            'rekening' => $data['no_rekening'] ?? ($existingTenaga->rekening ?? null),
+            'bank' => $data['bank'] ?? ($existingTenaga->bank ?? null),
+            'bio' => $data['bio'] ?? ($existingTenaga->bio ?? null),
+            'facebook' => $data['facebook'] ?? ($existingTenaga->facebook ?? null),
+            'twitter' => $data['twitter'] ?? ($existingTenaga->twitter ?? null),
+            'linkedin' => $data['linkedin'] ?? ($existingTenaga->linkedin ?? null),
+            'instagram' => $data['instagram'] ?? ($existingTenaga->instagram ?? null),
+            'nikah' => $data['nikah'] ?? ($existingTenaga->nikah ?? null),
+            'jenis_pjob' => $data['jenis_pjob'] ?? ($existingTenaga->jenis_pjob ?? null),
+            'pjob' => $data['pjob'] ?? ($existingTenaga->pjob ?? null),
+            'jml_anak' => $data['jml_anak'] ?? ($existingTenaga->jml_anak ?? null),
+            'req_tunjangan' => $data['req_tunjangan'] ?? ($existingTenaga->req_tunjangan ?? null),
+            'updated_at' => now(),
+        ];
+
+        if ($existingTenaga) {
+            DB::table('tenaga_ktd')->where('id', $existingTenaga->id)->update($tenagaData);
+        } else {
+            DB::table('tenaga_ktd')->insert(array_merge($tenagaData, [
+                'user_id' => $user->id,
+                'nomor_induk' => $user->nomor_induk,
+                'dept_id' => $user->dept_id ?? null,
+                'created_at' => now(),
+            ]));
+        }
+
+        // Cek apakah data sudah lengkap. Jika ya, redirect ke intended URL / home.
+        // Jika belum, tetap di halaman edit dengan pesan.
+        $freshUser = DB::table('users')->where('id', $user->id)->first();
+        $freshTenaga = DB::table('tenaga_ktd')
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+                if (! empty($user->nomor_induk)) {
+                    $q->orWhere('nomor_induk', $user->nomor_induk);
+                }
+            })
+            ->first();
+
+        $missing = [];
+        if (empty($freshUser->pp)) {
+            $missing[] = 'Foto Profil';
+        }
+        $nikUser = (string) ($freshUser->nip ?? '');
+        $nikTenaga = (string) ($freshTenaga->nik ?? '');
+        if (! preg_match('/^\d{16}$/', $nikUser) && ! preg_match('/^\d{16}$/', $nikTenaga)) {
+            $missing[] = 'NIK (16 digit)';
+        }
+        $kk = (string) ($freshTenaga->kk ?? '');
+        if (! preg_match('/^\d{16}$/', $kk)) {
+            $missing[] = 'Nomor KK (16 digit)';
+        }
+        $pekerjaanUser = trim((string) ($freshUser->pekerjaan ?? ''));
+        $pekerjaanTenaga = trim((string) ($freshTenaga->pekerjaan ?? ''));
+        if ($pekerjaanUser === '' && $pekerjaanTenaga === '') {
+            $missing[] = 'Jabatan Saat Ini';
+        }
+
+        if (! empty($missing)) {
+            return redirect()->route('profil.edit')
+                ->with('profile_incomplete', $missing)
+                ->with('warning', 'Data belum lengkap: '.implode(', ', $missing));
+        }
+
+        return redirect()->intended(route('home'))
+            ->with('success', 'Profil berhasil diperbarui. Terima kasih telah melengkapi data.');
     }
 
     public function ubahPassword(Request $request)
