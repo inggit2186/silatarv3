@@ -70,6 +70,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/laporan-kinerja/humas/{id}', [PageController::class, 'destroyHumas'])->name('laporan-humas.destroy');
     Route::post('/laporan-kinerja/harian', [PageController::class, 'storeLaporanKinerja'])->name('laporan-kinerja.store');
     Route::get('/laporan-kinerja/rekap', [PageController::class, 'rekapLaporanKinerja'])->name('laporan-kinerja.rekap');
+    Route::get('/laporan-kinerja/rekap-wfh', [PageController::class, 'rekapLaporanKinerjaWfh'])->name('laporan-kinerja.rekap-wfh');
     Route::post('/laporan-kinerja/rekap/supervisor', [PageController::class, 'submitSupervisor'])->name('laporan-kinerja.rekap.supervisor');
     Route::get('/laporan-kinerja/bulanan/{reportId}/pdf', [PageController::class, 'downloadLaporanKinerjaPdf'])->whereNumber('reportId')->name('laporan-kinerja.pdf');
     Route::post('/laporan-kinerja/bulanan/{reportId}/replace', [PageController::class, 'replaceLaporanKinerjaFile'])->whereNumber('reportId')->name('laporan-kinerja.replace');

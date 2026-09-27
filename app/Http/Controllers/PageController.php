@@ -3552,6 +3552,307 @@ class PageController extends Controller
         ]);
     }
 
+    public function rekapLaporanKinerjaWfh(Request $request)
+    {
+        $user = $request->user();
+
+        abort_unless($user, 403);
+
+        $selectedMonth = $request->string('month')->toString();
+        if (! preg_match('/^\d{4}-\d{2}$/', $selectedMonth)) {
+            $selectedMonth = now()->format('Y-m');
+        }
+
+        $selectedMonthStart = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
+        $selectedMonthEnd = $selectedMonthStart->copy()->endOfMonth();
+        $periodLabel = $this->indonesianMonthLabel($selectedMonthStart);
+
+        $unitName = DB::table('ktd_department')
+            ->where('id', $user->dept_id)
+            ->value('nama');
+
+        // Cek apakah dept_id memerlukan input manual atasan
+        $specialDeptIds = [998, 999];
+        $deptId = (int) $user->dept_id;
+
+        if (in_array($deptId, $specialDeptIds)) {
+            // Tampilkan form input atasan
+            return view('pdf.supervisor-input', [
+                'deptId' => $deptId,
+                'month' => $selectedMonth,
+                'tab' => $request->input('tab', 'harian'),
+                'unitName' => $unitName ?: '-',
+                'periodLabel' => $periodLabel,
+            ]);
+        }
+
+        $dailyEntries = DB::table('satker_kegiatan')
+            ->where('user_id', $user->id)
+            ->whereBetween('tanggal', [$selectedMonthStart->toDateString(), $selectedMonthEnd->toDateString()])
+            // WFH: hanya ambil kegiatan pada hari Jumat
+            ->whereRaw('DAYOFWEEK(tanggal) = 6')
+            ->orderBy('tanggal')
+            ->orderBy('created_at')
+            ->get();
+
+        $dailyGroups = $dailyEntries
+            ->groupBy(fn ($row) => Carbon::parse($row->tanggal)->toDateString())
+            ->map(function ($items, $date) {
+                $dateCarbon = Carbon::parse($date);
+
+                $allItems = [];
+                foreach ($items as $item) {
+                    // Try JSON format first
+                    $jsonData = json_decode((string) ($item->data_json ?? '{"items":[]}'), true) ?: ['items' => []];
+                    $itemsArr = $jsonData['items'] ?? [];
+
+                    // Handle legacy format (direct columns)
+                    if (empty($itemsArr) && ! empty($item->kegiatan)) {
+                        $itemsArr = [[
+                            'k' => $item->kegiatan,
+                            'v' => $item->volume ?? 0,
+                            's' => $item->satuan ?? 'Kegiatan',
+                        ]];
+                    }
+
+                    foreach ($itemsArr as $it) {
+                        $volume = (int) ($it['v'] ?? ($it['volume'] ?? 0));
+                        $unit = trim((string) ($it['s'] ?? ($it['satuan'] ?? 'Kegiatan')));
+
+                        $allItems[] = [
+                            'kegiatan' => trim((string) ($it['k'] ?? ($it['kegiatan'] ?? ''))),
+                            'volume' => $volume,
+                            'satuan' => $unit,
+                            'meta' => $volume > 0 ? trim($volume.' '.$unit) : $unit,
+                        ];
+                    }
+                }
+
+                return [
+                    'date' => $dateCarbon->toDateString(),
+                    'label' => $this->indonesianDateLabel($dateCarbon),
+                    'items' => $allItems,
+                ];
+            })
+            ->values()
+            ->all();
+
+        // Cek PLT/PJH di tabel plt_plh
+        $pltPlh = DB::table('plt_plh')
+            ->where('dept_id_plh', $user->dept_id)
+            ->first();
+
+        $isPlh = false;
+        $isCustomSupervisor = false;
+        $signatureName = '..................................';
+        $signatureNip = '';
+
+        // Cek apakah user adalah atasan (kepala, kasi, kasubbag)
+        $atasanJabatan = ['kepala', 'kasi', 'kasubbag'];
+        $isUserAtasan = in_array($user->kat_jabatan, $atasanJabatan);
+
+        // Cek custom supervisor dulu (priority tertinggi)
+        if (! empty($user->custom_supervisor_id)) {
+            $customSupervisor = DB::table('users')
+                ->where('id', $user->custom_supervisor_id)
+                ->first();
+
+            if ($customSupervisor) {
+                $isCustomSupervisor = true;
+                $signatureName = $customSupervisor->name;
+                $signatureNip = $customSupervisor->nomor_induk
+                    ? 'NIP. '.$customSupervisor->nomor_induk
+                    : '';
+            }
+        }
+
+        if ($isCustomSupervisor) {
+            // Custom supervisor sudah di-set di atas, skip logic lain
+            // Signature name dan nip sudah di-set
+        } elseif ($isUserAtasan) {
+            // Jika user adalah atasan, penandatangan adalah Kepala Kankemenag
+            $kepalaKankemenag = DB::table('users')
+                ->where('role', 'kepala')
+                ->first();
+
+            if ($kepalaKankemenag) {
+                $signatureName = $kepalaKankemenag->name;
+                $signatureNip = $kepalaKankemenag->nomor_induk ? 'NIP. '.$kepalaKankemenag->nomor_induk : '';
+            }
+        } elseif ($pltPlh) {
+            // PLT exist - gunakan user PLT
+            $pltUser = DB::table('users')->where('id', $pltPlh->user_id)->first();
+            if ($pltUser) {
+                $isPlh = true;
+                $signatureName = $pltUser->name;
+                $signatureNip = $pltUser->nomor_induk ? 'NIP. '.$pltUser->nomor_induk : '';
+            }
+        } else {
+            // Cari kepala/kasi/kasubbag berdasarkan dept_id
+            $kepala = DB::table('users')
+                ->where('dept_id', $user->dept_id)
+                ->whereIn('kat_jabatan', $atasanJabatan)
+                ->first();
+
+            if ($kepala) {
+                $signatureName = $kepala->name;
+                $signatureNip = $kepala->nomor_induk ? 'NIP. '.$kepala->nomor_induk : '';
+            }
+        }
+
+        // Determine signature label based on user role and dept_id
+        $kepalaLabel = in_array((int) $user->dept_id, $specialDeptIds)
+            ? ($user->satker ?? $unitName)
+            : ($unitName ?: '-');
+
+        if ($isCustomSupervisor) {
+            // Custom supervisor - tentukan label berdasarkan role dan kat_jabatan supervisor
+            $customSupervisorRole = $customSupervisor->role ?? '';
+            $customSupervisorJabatan = $customSupervisor->kat_jabatan ?? '';
+
+            // Ambil nama unit kerja supervisor
+            $supervisorDept = DB::table('ktd_department')
+                ->where('id', $customSupervisor->dept_id)
+                ->first();
+            $supervisorDeptName = $supervisorDept->nama ?? '-';
+
+            // Jika role = kepala, tampilkan "Kepala Kankemenag Kab. Tanah Datar"
+            if ($customSupervisorRole === 'kepala') {
+                $signatureLabel = 'Mengetahui<br>Kepala Kankemenag Kab. Tanah Datar,';
+            }
+            // Jika kat_jabatan = kepala (tapi role bukan kepala), tampilkan "Kepala {unit_kerja}"
+            elseif ($customSupervisorJabatan === 'kepala') {
+                $signatureLabel = "Mengetahui<br>Kepala {$supervisorDeptName},";
+            }
+            // Jika kat_jabatan = kasi
+            elseif ($customSupervisorJabatan === 'kasi') {
+                $signatureLabel = "Mengetahui<br>Kasi {$supervisorDeptName},";
+            }
+            // Jika kat_jabatan = kasubbag
+            elseif ($customSupervisorJabatan === 'kasubbag') {
+                $signatureLabel = "Mengetahui<br>Kasubbag {$supervisorDeptName},";
+            }
+            // Default
+            else {
+                $signatureLabel = "Mengetahui<br>Kepala {$supervisorDeptName},";
+            }
+        } elseif ($isUserAtasan) {
+            $signatureLabel = 'Mengetahui<br>Kepala Kankemenag Kab. Tanah Datar,';
+        } elseif ($isPlh) {
+            $signatureLabel = 'Mengetahui<br>PLT Kepala,';
+        } else {
+            $signatureLabel = "Mengetahui<br>Kepala {$kepalaLabel},";
+        }
+
+        $pdfData = [
+            'userName' => $user->name,
+            'userNip' => $user->nomor_induk ?: '-',
+            'unitName' => $unitName ?: '-',
+            'positionName' => trim((string) ($user->pekerjaan ?: '-')) ?: '-',
+            'periodLabel' => $periodLabel,
+            'dailyGroups' => $dailyGroups,
+            'headerImage' => $this->assetToDataUri(public_path('assets/img/template/header.png')),
+            'generatedAt' => now()->translatedFormat('d F Y H:i'),
+            'signatureName' => $signatureName,
+            'signatureNip' => $signatureNip,
+            'signatureImage' => null,
+            'signatureLabel' => $signatureLabel,
+            'watermarkText' => 'Kankemenag Kab.Tanah Datar',
+            'reportTitle' => 'Laporan Kinerja Work From Home (WFH)',
+        ];
+
+        $pdf = Pdf::loadView('pdf.laporan-kinerja-harian', $pdfData)
+            ->setPaper('a4', 'portrait')
+            ->setOption('isRemoteEnabled', true)
+            ->setOption('isHtml5ParserEnabled', true);
+
+        $filename = sprintf('%s.wfh-%s.pdf', $user->id, $selectedMonthStart->format('m-Y'));
+        $storagePath = "satker_ckh/{$user->id}/{$filename}";
+        $pdfBinary = $pdf->output();
+
+        // Ensure directory exists before saving
+        $fullDirPath = storage_path('app/public/satker_ckh/'.$user->id);
+        if (! is_dir($fullDirPath)) {
+            if (! mkdir($fullDirPath, 0755, true) && ! is_dir($fullDirPath)) {
+                Log::error('Gagal membuat direktori untuk PDF CKH WFH', [
+                    'user_id' => $user->id,
+                    'path' => $fullDirPath,
+                ]);
+            }
+        }
+
+        // Try to save PDF with multiple fallback methods
+        $saved = false;
+        $fullFilePath = $fullDirPath.'/'.$filename;
+
+        // Method 1: Try Storage facade (public disk)
+        try {
+            $saved = Storage::disk('public')->put($storagePath, $pdfBinary);
+        } catch (\Exception $e) {
+            Log::warning('Storage facade gagal (WFH), mencoba method lain', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Method 2: Try direct file_put_contents (public path)
+        if (! $saved) {
+            try {
+                if (! is_dir($fullDirPath)) {
+                    mkdir($fullDirPath, 0755, true);
+                }
+                $result = file_put_contents($fullFilePath, $pdfBinary);
+                if ($result !== false) {
+                    $saved = true;
+                    chmod($fullFilePath, 0644);
+                }
+            } catch (\Exception $e) {
+                Log::warning('file_put_contents gagal (WFH)', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Method 3: Try save ke storage/app (non-public) sebagai fallback
+        if (! $saved) {
+            try {
+                $altDirPath = storage_path('app/satker_ckh/'.$user->id);
+                if (! is_dir($altDirPath)) {
+                    mkdir($altDirPath, 0755, true);
+                }
+                $altFilePath = $altDirPath.'/'.$filename;
+                $result = file_put_contents($altFilePath, $pdfBinary);
+                if ($result !== false) {
+                    $saved = true;
+                    chmod($altFilePath, 0644);
+                    Log::info('PDF WFH disimpan di storage/app (fallback)', [
+                        'user_id' => $user->id,
+                        'path' => $altFilePath,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::warning('file_put_contents ke storage/app gagal (WFH)', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if (! $saved) {
+            Log::error('Gagal menyimpan PDF WFH ke storage (semua method gagal)', [
+                'user_id' => $user->id,
+                'storage_path' => $storagePath,
+                'full_path' => $fullDirPath,
+            ]);
+        }
+
+        return response($pdfBinary, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+        ]);
+    }
+
     public function submitSupervisor(Request $request)
     {
         $user = $request->user();

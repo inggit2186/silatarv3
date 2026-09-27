@@ -194,6 +194,20 @@
                                 </svg>
                                 Rekap
                             </a>
+                            <a
+                                href="{{ route('laporan-kinerja.rekap-wfh', ['tab' => $activeTab, 'month' => $selectedMonth]) }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                data-loading-variant="print"
+                                data-loading-title="Menyiapkan PDF WFH"
+                                data-loading-message="Menyusun rekap kinerja hari Jumat (WFH)."
+                                class="silatar-report-rekap-button"
+                            >
+                                <svg class="mr-2 h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5l3-3.5h8l3 3.5M3 7.5v8A1.5 1.5 0 0 0 4.5 17h11A1.5 1.5 0 0 0 17 15.5v-8M3 7.5h14M10 11v3m-1.5-1.5h3" />
+                                </svg>
+                                Rekap WFH
+                            </a>
                         @endif
                     </div>
                 </form>

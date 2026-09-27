@@ -420,7 +420,7 @@
 
         <div class="title-section">
             <div class="title-chip">* Digital Report</div>
-            <h1 class="report-title">Laporan Capaian Kinerja Harian</h1>
+            <h1 class="report-title">{{ $reportTitle ?? 'Laporan Capaian Kinerja Harian' }}</h1>
             <p class="report-subtitle">Periode {{ $periodLabel }}</p>
         </div>
 
