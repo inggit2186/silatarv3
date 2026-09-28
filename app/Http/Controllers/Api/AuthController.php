@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends BaseApiController
 {
@@ -230,6 +231,15 @@ class AuthController extends BaseApiController
         $email = $tenaga->email ?? $user->email;
         $nomorInduk = $tenaga->nomor_induk ?? $user->nomor_induk;
 
+        // Build full photo URL using Storage facade (auto-generates URL from filesystem config)
+        $ppUrl = null;
+        if ($user->pp) {
+            // Get NIP from tenaga_ktd or extract from filename
+            $nomorIndukForPath = $nomorInduk ?? pathinfo($user->pp, PATHINFO_FILENAME);
+            $path = 'users_berkas/' . $nomorIndukForPath . '/' . $nomorIndukForPath . '.pp.webp';
+            $ppUrl = Storage::disk('public')->url($path);
+        }
+
         $data = [
             'id' => $user->id,
             'name' => $nama,
@@ -242,8 +252,8 @@ class AuthController extends BaseApiController
             'tempat_lahir' => $tempatLahir,
             'tanggal_lahir' => $tanggalLahir,
             'jenis_kelamin' => $jk,
-            'foto' => $user->pp,
-            'pp' => $user->pp,
+            'foto' => $ppUrl,
+            'pp' => $ppUrl,
             'bio' => $bio,
             'status' => $user->status,
             'unit_id' => $user->dept_id,
