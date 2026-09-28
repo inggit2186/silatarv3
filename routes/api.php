@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\AcaraController;
+use App\Http\Controllers\Api\AppPatchController;
+use App\Http\Controllers\Api\AppVersionController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\JanjiTemuController;
 use App\Http\Controllers\Api\KegiatanController;
@@ -30,6 +32,16 @@ Route::prefix('auth')->group(function () {
 // Layanan - Public (bisa dilihat tanpa login)
 Route::get('/layanan', [LayananController::class, 'index']);
 Route::get('/layanan/{id}', [LayananController::class, 'show']);
+
+// App Patch & Version (Public - untuk auto-update)
+Route::prefix('patch')->group(function () {
+    Route::get('/check', [AppPatchController::class, 'checkUpdate']);
+    Route::get('/info', [AppPatchController::class, 'getInfo']);
+    Route::get('/download/{id}', [AppPatchController::class, 'download']);
+});
+
+// App Version (Legacy - untuk compatibility)
+Route::get('/app-version', [AppVersionController::class, 'index']);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PROTECTED ROUTES (Auth Required)
@@ -141,5 +153,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [SimpegController::class, 'adminIndex']);
         Route::get('/{id}', [SimpegController::class, 'adminShow']);
         Route::put('/{id}/verify', [SimpegController::class, 'verify']);
+    });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ADMIN ROUTES (Auth + Admin Middleware)
+// ═══════════════════════════════════════════════════════════════════════════
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    // App Patches Management
+    Route::prefix('patches')->group(function () {
+        Route::get('/', [AppPatchController::class, 'index']);
+        Route::post('/', [AppPatchController::class, 'store']);
+        Route::get('/{id}', [AppPatchController::class, 'show']);
+        Route::put('/{id}', [AppPatchController::class, 'update']);
+        Route::delete('/{id}', [AppPatchController::class, 'destroy']);
     });
 });

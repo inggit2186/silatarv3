@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AcaraController;
+use App\Http\Controllers\Admin\AdminPatchController;
 use App\Http\Controllers\Admin\AsnImportController;
 use App\Http\Controllers\Admin\CkhController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -88,18 +89,25 @@ Route::middleware(['auth', 'admin'])
         Route::post('/janji-temu/{id}/reject', [JanjiTemuController::class, 'reject'])->name('janji-temu.reject');
 
         Route::get('/units', [UnitController::class, 'index'])->name('units.index');
-
         Route::get('/units/create', [UnitController::class, 'create'])->name('units.create');
-
         Route::post('/units', [UnitController::class, 'store'])->name('units.store');
-
         Route::get('/units/{id}/edit', [UnitController::class, 'edit'])->name('units.edit');
-
         Route::put('/units/{id}', [UnitController::class, 'update'])->name('units.update');
-
         Route::delete('/units/{id}', [UnitController::class, 'destroy'])->name('units.destroy');
-
         Route::get('/units/{id}', [UnitController::class, 'show'])->name('units.show');
+
+        // App Patch Management
+        Route::prefix('patches')->name('patches.')->group(function () {
+            Route::get('/', [AdminPatchController::class, 'index'])->name('index');
+            Route::get('/create', [AdminPatchController::class, 'create'])->name('create');
+            Route::post('/', [AdminPatchController::class, 'store'])->name('store');
+            Route::get('/{id}', [AdminPatchController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [AdminPatchController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [AdminPatchController::class, 'update'])->name('update');
+            Route::delete('/{id}', [AdminPatchController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/toggle', [AdminPatchController::class, 'toggleActive'])->name('toggle');
+            Route::get('/{id}/download', [AdminPatchController::class, 'download'])->name('download');
+        });
 
         // Acara / Kegiatan Kankemenag
         Route::get('/acara', [AcaraController::class, 'index'])->name('acara');
@@ -190,9 +198,6 @@ Route::middleware(['auth', 'admin'])
             Route::post('/{type}/{id}/reject', [MadrasahLaporanController::class, 'reject'])->name('reject');
             Route::post('/{type}/{id}/note', [MadrasahLaporanController::class, 'addNote'])->name('note');
         });
-
-        // Presensi Import Routes (Console only, tidak perlu web routes)
-        // Presensi Export Routes (Console only, tidak perlu web routes)
 
         // Presensi Error Management Routes
         Route::prefix('presensi-error')->name('presensi-error.')->group(function () {
