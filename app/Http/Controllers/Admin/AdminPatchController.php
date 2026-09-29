@@ -78,8 +78,8 @@ class AdminPatchController extends Controller
         ]);
 
         $validated = $request->validate([
-            'version' => 'required|string|max:20|unique:app_patches,version',
-            'version_code' => 'required|integer|min:1',
+            'version' => 'required|string|max:20',
+            'version_code' => 'required|integer|min:1|unique:app_patches,version_code',
             'file' => 'nullable|file|mimes:zip,patch,bz2,tar,tar.gz,tgz,apk|max:204800', // max 200MB
             'apk_file' => 'nullable|file|mimes:apk,zip|max:204800', // max 200MB
             'apk_url' => 'nullable|url|max:500',
@@ -211,8 +211,8 @@ class AdminPatchController extends Controller
         $patch = AppPatch::findOrFail($id);
 
         $validated = $request->validate([
-            'version' => 'sometimes|string|max:20|unique:app_patches,version,' . $id,
-            'version_code' => 'sometimes|integer|min:1',
+            'version' => 'sometimes|string|max:20',
+            'version_code' => 'sometimes|integer|min:1|unique:app_patches,version_code,' . $id,
             'file' => 'nullable|file|mimes:zip,patch,bz2,tar,tar.gz,tgz|max:102400',
             'changelog' => 'nullable|string|max:5000',
             'is_mandatory' => 'boolean',
