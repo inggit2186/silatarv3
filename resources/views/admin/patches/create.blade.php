@@ -36,208 +36,211 @@
     <form action="{{ route('admin.patches.store') }}" method="POST" enctype="multipart/form-data" id="patchForm">
         @csrf
 
-        <!-- Tipe Update -->
-        <div class="card mb-6">
-            <div class="card-header">
-                <div class="flex items-center gap-3">
-                    <div class="stat-icon amber" style="width: 36px; height: 36px;">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="card-title">Tipe Update</h3>
-                        <p class="text-sm text-muted">Pilih jenis update yang akan dirilis</p>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="radio-group">
-                    <label class="radio-item selected" id="radioPatch">
-                        <input type="radio" name="update_type" value="patch" id="inputPatch" checked>
-                        <div class="radio-icon amber">
-                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
-                        </div>
-                        <div class="radio-content">
-                            <span class="radio-title">Patch Update</span>
-                            <span class="radio-desc">Hot Code Push (~100KB-2MB)</span>
-                        </div>
-                        <div class="radio-check">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                            </svg>
-                        </div>
-                    </label>
-                    <label class="radio-item" id="radioApk">
-                        <input type="radio" name="update_type" value="apk" id="inputApk">
-                        <div class="radio-icon blue">
-                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                            </svg>
-                        </div>
-                        <div class="radio-content">
-                            <span class="radio-title">Full APK</span>
-                            <span class="radio-desc">Update Seluruh Aplikasi (~20MB-50MB+)</span>
-                        </div>
-                        <div class="radio-check">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                            </svg>
-                        </div>
-                    </label>
-                </div>
-            </div>
-        </div>
+        <!-- Grid Layout: 2 Columns -->
+        <div class="grid gap-6 lg:grid-cols-3">
 
-        <!-- Version Info -->
-        <div class="card mb-6">
-            <div class="card-header">
-                <div class="flex items-center gap-3">
-                    <div class="stat-icon cyan" style="width: 36px; height: 36px;">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
+            <!-- Left Column: Tipe Update, Info, File -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Tipe Update -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="flex items-center gap-3">
+                            <div class="stat-icon amber" style="width: 36px; height: 36px;">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Tipe Update</h3>
+                                <p class="text-sm text-muted">Pilih jenis update yang akan dirilis</p>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="card-title">Informasi Update</h3>
-                        <p class="text-sm text-muted">Versi dan detail update</p>
+                    <div class="card-body">
+                        <div class="radio-group">
+                            <label class="radio-item selected" id="radioPatch">
+                                <input type="radio" name="update_type" value="patch" id="inputPatch" checked>
+                                <div class="radio-icon amber">
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                </div>
+                                <div class="radio-content">
+                                    <span class="radio-title">Patch Update</span>
+                                    <span class="radio-desc">Hot Code Push (~100KB-2MB)</span>
+                                </div>
+                                <div class="radio-check">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                            </label>
+                            <label class="radio-item" id="radioApk">
+                                <input type="radio" name="update_type" value="apk" id="inputApk">
+                                <div class="radio-icon blue">
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                    </svg>
+                                </div>
+                                <div class="radio-content">
+                                    <span class="radio-title">Full APK</span>
+                                    <span class="radio-desc">Update Seluruh Aplikasi (~20MB-50MB+)</span>
+                                </div>
+                                <div class="radio-check">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                            </label>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="card-body">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="form-group">
-                        <label class="form-label">Versi <span class="text-danger">*</span></label>
-                        <input type="text" name="version" class="form-input" placeholder="Contoh: 2.0.1" value="{{ old('version') }}" required>
-                        <p class="text-xs text-muted mt-1">Format: major.minor.patch</p>
+
+                <!-- Informasi Update -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="flex items-center gap-3">
+                            <div class="stat-icon cyan" style="width: 36px; height: 36px;">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Informasi Update</h3>
+                                <p class="text-sm text-muted">Versi dan detail update</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Version Code <span class="text-danger">*</span></label>
-                        <input type="number" name="version_code" class="form-input" placeholder="1" value="{{ old('version_code', $nextVersionCode) }}" required min="1">
-                        <p class="text-xs text-muted mt-1">Angka unik untuk perbandingan</p>
-                    </div>
-                </div>
-                <div class="form-group mb-0">
-                    <label class="form-label">Changelog</label>
-                    <textarea name="changelog" class="form-textarea" rows="3" placeholder="Contoh:
+                    <div class="card-body">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label class="form-label">Versi <span class="text-danger">*</span></label>
+                                <input type="text" name="version" class="form-input" placeholder="Contoh: 2.0.1" value="{{ old('version') }}" required>
+                                <p class="text-xs text-muted mt-1">Format: major.minor.patch</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Version Code <span class="text-danger">*</span></label>
+                                <input type="number" name="version_code" class="form-input" placeholder="1" value="{{ old('version_code', $nextVersionCode) }}" required min="1">
+                                <p class="text-xs text-muted mt-1">Angka unik untuk perbandingan</p>
+                            </div>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label class="form-label">Changelog</label>
+                            <textarea name="changelog" class="form-textarea" rows="3" placeholder="Contoh:
 - Perbaikan bug login
 - Tambah fitur notifikasi">{{ old('changelog') }}</textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- File Upload Patch -->
-        <div class="card mb-6" id="patchFileSection">
-            <div class="card-header">
-                <div class="flex items-center gap-3">
-                    <div class="stat-icon amber" style="width: 36px; height: 36px;">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="card-title">File Patch</h3>
-                        <p class="text-sm text-muted">Upload file dari flutter_patcher</p>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <!-- Custom File Upload -->
-                <div class="file-upload-wrapper" id="patchDropZone">
-                    <input type="file" name="file" id="patchFileInput" accept=".zip,.patch,.apk,.bz2,.tar,.tar.gz,.tgz">
-                    <label for="patchFileInput" class="file-upload-label">
-                        <div class="file-upload-icon">
-                            <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
                         </div>
-                        <span class="file-upload-text">Klik atau drag file ke sini</span>
-                        <span class="file-upload-hint">.zip, .patch, .apk, .bz2, .tar</span>
-                    </label>
-                </div>
-                <!-- File Preview -->
-                <div class="file-info-box" id="patchFilePreview">
-                    <svg class="w-5 h-5" style="color: var(--success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <div class="file-info-content">
-                        <span class="file-info-name" id="patchFileName"></span>
-                        <span class="file-info-size" id="patchFileSize"></span>
                     </div>
-                    <button type="button" class="file-info-remove" id="patchFileRemove">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
                 </div>
-            </div>
-        </div>
 
-        <!-- File Upload APK -->
-        <div class="card mb-6 hidden" id="apkFileSection">
-            <div class="card-header">
-                <div class="flex items-center gap-3">
-                    <div class="stat-icon blue" style="width: 36px; height: 36px;">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="card-title">File APK</h3>
-                        <p class="text-sm text-muted">Upload file .apk atau masukkan URL</p>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <!-- Custom File Upload -->
-                <div class="file-upload-wrapper" id="apkDropZone">
-                    <input type="file" name="apk_file" id="apkFileInput" accept=".apk,.zip">
-                    <label for="apkFileInput" class="file-upload-label">
-                        <div class="file-upload-icon">
-                            <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                            </svg>
+                <!-- File Patch -->
+                <div class="card" id="patchFileSection">
+                    <div class="card-header">
+                        <div class="flex items-center gap-3">
+                            <div class="stat-icon amber" style="width: 36px; height: 36px;">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">File Patch</h3>
+                                <p class="text-sm text-muted">Upload file dari flutter_patcher</p>
+                            </div>
                         </div>
-                        <span class="file-upload-text">Klik atau drag file ke sini</span>
-                        <span class="file-upload-hint">.apk, .zip</span>
-                    </label>
-                </div>
-                <!-- File Preview -->
-                <div class="file-info-box" id="apkFilePreview">
-                    <svg class="w-5 h-5" style="color: var(--success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <div class="file-info-content">
-                        <span class="file-info-name" id="apkFileName"></span>
-                        <span class="file-info-size" id="apkFileSize"></span>
                     </div>
-                    <button type="button" class="file-info-remove" id="apkFileRemove">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
+                    <div class="card-body">
+                        <div class="file-upload-wrapper" id="patchDropZone">
+                            <input type="file" name="file" id="patchFileInput" accept=".zip,.patch,.apk,.bz2,.tar,.tar.gz,.tgz">
+                            <label for="patchFileInput" class="file-upload-label">
+                                <div class="file-upload-icon">
+                                    <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                </div>
+                                <span class="file-upload-text">Klik atau drag file ke sini</span>
+                                <span class="file-upload-hint">.zip, .patch, .apk, .bz2, .tar</span>
+                            </label>
+                        </div>
+                        <div class="file-info-box" id="patchFilePreview">
+                            <svg class="w-5 h-5" style="color: var(--success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div class="file-info-content">
+                                <span class="file-info-name" id="patchFileName"></span>
+                                <span class="file-info-size" id="patchFileSize"></span>
+                            </div>
+                            <button type="button" class="file-info-remove" id="patchFileRemove">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="flex items-center gap-3 my-4">
-                    <div class="flex-1 border-t border-dashed" style="border-color: var(--border)"></div>
-                    <span class="text-sm text-muted px-2">atau</span>
-                    <div class="flex-1 border-t border-dashed" style="border-color: var(--border)"></div>
-                </div>
+                <!-- File APK -->
+                <div class="card hidden" id="apkFileSection">
+                    <div class="card-header">
+                        <div class="flex items-center gap-3">
+                            <div class="stat-icon blue" style="width: 36px; height: 36px;">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">File APK</h3>
+                                <p class="text-sm text-muted">Upload file .apk atau masukkan URL</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="file-upload-wrapper" id="apkDropZone">
+                            <input type="file" name="apk_file" id="apkFileInput" accept=".apk,.zip">
+                            <label for="apkFileInput" class="file-upload-label">
+                                <div class="file-upload-icon">
+                                    <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                    </svg>
+                                </div>
+                                <span class="file-upload-text">Klik atau drag file ke sini</span>
+                                <span class="file-upload-hint">.apk, .zip</span>
+                            </label>
+                        </div>
+                        <div class="file-info-box" id="apkFilePreview">
+                            <svg class="w-5 h-5" style="color: var(--success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div class="file-info-content">
+                                <span class="file-info-name" id="apkFileName"></span>
+                                <span class="file-info-size" id="apkFileSize"></span>
+                            </div>
+                            <button type="button" class="file-info-remove" id="apkFileRemove">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
 
-                <div class="form-group mb-0">
-                    <label class="form-label">URL APK Eksternal</label>
-                    <input type="url" name="apk_url" id="apkUrlInput" class="form-input" placeholder="https://cdn.example.com/silatar-v2.1.0.apk" value="{{ old('apk_url') }}">
+                        <div class="flex items-center gap-3 my-4">
+                            <div class="flex-1 border-t border-dashed" style="border-color: var(--border)"></div>
+                            <span class="text-sm text-muted px-2">atau</span>
+                            <div class="flex-1 border-t border-dashed" style="border-color: var(--border)"></div>
+                        </div>
+
+                        <div class="form-group mb-0">
+                            <label class="form-label">URL APK Eksternal</label>
+                            <input type="url" name="apk_url" id="apkUrlInput" class="form-input" placeholder="https://cdn.example.com/silatar-v2.1.0.apk" value="{{ old('apk_url') }}">
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Settings & Submit -->
-        <div class="grid gap-6 lg:grid-cols-3">
-            <div class="lg:col-span-2">
-                <!-- Settings -->
-                <div class="card mb-6">
+            <!-- Right Column: Settings, Version, Buttons, Tips -->
+            <div class="lg:col-span-1 space-y-6">
+
+                <!-- Pengaturan -->
+                <div class="card">
                     <div class="card-header">
                         <div class="flex items-center gap-3">
                             <div class="stat-icon violet" style="width: 36px; height: 36px;">
@@ -251,30 +254,26 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label class="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" name="is_active" value="1" checked class="form-checkbox">
-                                <div>
-                                    <span class="text-sm font-medium text-primary">Aktifkan Update</span>
-                                    <p class="text-xs text-muted">Update akan tersedia untuk user</p>
-                                </div>
-                            </label>
-                        </div>
-                        <div class="form-group mb-0">
-                            <label class="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" name="is_mandatory" value="1" class="form-checkbox">
-                                <div>
-                                    <span class="text-sm font-medium text-primary">Mandatory Update</span>
-                                    <p class="text-xs text-muted">User harus update sebelum pakai app</p>
-                                </div>
-                            </label>
-                        </div>
+                    <div class="card-body space-y-3">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" name="is_active" value="1" checked class="form-checkbox mt-1">
+                            <div>
+                                <span class="text-sm font-medium text-primary">Aktifkan Update</span>
+                                <p class="text-xs text-muted mt-1">Update akan tersedia untuk user</p>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" name="is_mandatory" value="1" class="form-checkbox mt-1">
+                            <div>
+                                <span class="text-sm font-medium text-primary">Mandatory Update</span>
+                                <p class="text-xs text-muted mt-1">User harus update sebelum pakai app</p>
+                            </div>
+                        </label>
                     </div>
                 </div>
 
-                <!-- Version Constraints -->
-                <div class="card mb-6">
+                <!-- Batasan Versi -->
+                <div class="card">
                     <div class="card-header">
                         <div class="flex items-center gap-3">
                             <div class="stat-icon rose" style="width: 36px; height: 36px;">
@@ -287,40 +286,20 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="form-group">
-                                <label class="form-label">Min App Version</label>
-                                <input type="text" name="min_app_version" class="form-input" placeholder="Contoh: 2.0.0" value="{{ old('min_app_version') }}">
-                                <p class="text-xs text-muted mt-1">Patch hanya untuk app >= versi ini</p>
-                            </div>
-                            <div class="form-group mb-0">
-                                <label class="form-label">Max App Version</label>
-                                <input type="text" name="max_app_version" class="form-input" placeholder="Kosongkan = tidak terbatas" value="{{ old('max_app_version') }}">
-                                <p class="text-xs text-muted mt-1">Patch hanya untuk app <= versi ini</p>
-                            </div>
+                    <div class="card-body space-y-4">
+                        <div class="form-group">
+                            <label class="form-label">Min App Version</label>
+                            <input type="text" name="min_app_version" class="form-input" placeholder="Contoh: 2.0.0" value="{{ old('min_app_version') }}">
+                            <p class="text-xs text-muted mt-1">Patch hanya untuk app >= versi ini</p>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label class="form-label">Max App Version</label>
+                            <input type="text" name="max_app_version" class="form-input" placeholder="Kosongkan = tidak terbatas" value="{{ old('max_app_version') }}">
+                            <p class="text-xs text-muted mt-1">Patch hanya untuk app <= versi ini</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Submit -->
-                <div class="flex items-center gap-3">
-                    <button type="submit" class="btn btn-primary">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                        </svg>
-                        Upload Update
-                    </button>
-                    <a href="{{ route('admin.patches.index') }}" class="btn btn-secondary">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                        </svg>
-                        Batal
-                    </a>
-                </div>
-            </div>
-
-            <div class="lg:col-span-1">
                 <!-- Tips -->
                 <div class="tips-box">
                     <div class="tips-box-header">
@@ -334,6 +313,22 @@
                         <li>Gunakan <strong>APK</strong> untuk native changes</li>
                         <li>Version code harus > dari sebelumnya</li>
                     </ul>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex flex-col gap-3">
+                    <button type="submit" class="btn btn-primary w-full">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                        Upload Update
+                    </button>
+                    <a href="{{ route('admin.patches.index') }}" class="btn btn-secondary w-full">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        Batal
+                    </a>
                 </div>
             </div>
         </div>
