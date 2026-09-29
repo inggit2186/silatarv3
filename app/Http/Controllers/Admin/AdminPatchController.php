@@ -80,26 +80,39 @@ class AdminPatchController extends Controller
         $validated = $request->validate([
             'version' => 'required|string|max:20|unique:app_patches,version',
             'version_code' => 'required|integer|min:1',
-            'file' => 'required|file|mimes:zip,patch,bz2,tar,tar.gz,tgz|max:102400', // max 100MB
+            'file' => 'nullable|file|mimes:zip,patch,bz2,tar,tar.gz,tgz,apk|max:204800', // max 200MB
+            'apk_file' => 'nullable|file|mimes:apk,zip|max:204800', // max 200MB
+            'apk_url' => 'nullable|url|max:500',
+            'update_type' => 'nullable|in:patch,apk',
             'changelog' => 'nullable|string|max:5000',
             'is_mandatory' => 'boolean',
             'is_active' => 'boolean',
             'min_app_version' => 'nullable|string|max:20',
             'max_app_version' => 'nullable|string|max:20',
         ], [
-            'file.mimes' => 'Format file tidak valid. Gunakan: zip, patch, bz2, tar, tar.gz, tgz',
-            'file.max' => 'Ukuran file terlalu besar. Maksimal 100MB',
+            'file.mimes' => 'Format file tidak valid. Gunakan: zip, patch, bz2, tar, tar.gz, tgz, apk',
+            'file.max' => 'Ukuran file terlalu besar. Maksimal 200MB',
+            'apk_file.mimes' => 'Format file tidak valid. Gunakan: apk, zip',
+            'apk_file.max' => 'Ukuran file terlalu besar. Maksimal 200MB',
         ]);
 
         DB::beginTransaction();
 
         try {
-            // Handle file upload
-            $file = $request->file('file');
-            $fileName = $file->getClientOriginalName();
-            $fileSize = $file->getSize();
+            // Determine which file input was used (patch or full APK)
+            $uploadedFile = $request->file('apk_file') ?? $request->file('file');
 
-            // Create patches directory in storage/app (not private, since local disk root is app/private)
+            if (!$uploadedFile) {
+                throw new \Exception('File upload diperlukan');
+            }
+
+            $fileName = $uploadedFile->getClientOriginalName();
+            $fileSize = $uploadedFile->getSize();
+
+            // Determine update type
+            $updateType = $request->input('update_type', 'patch');
+
+            // Create patches directory in storage/app
             $patchesDir = storage_path('app/patches');
             if (!File::isDirectory($patchesDir)) {
                 File::makeDirectory($patchesDir, 0755, true);
@@ -110,7 +123,7 @@ class AdminPatchController extends Controller
             $fullPath = $patchesDir . '/' . $uniqueName;
 
             // Move uploaded file to storage
-            $file->move($patchesDir, $uniqueName);
+            $uploadedFile->move($patchesDir, $uniqueName);
 
             // Calculate MD5
             $md5 = hash_file('md5', $fullPath);
@@ -128,6 +141,8 @@ class AdminPatchController extends Controller
                 'is_active' => $request->boolean('is_active', true),
                 'min_app_version' => $validated['min_app_version'] ?? null,
                 'max_app_version' => $validated['max_app_version'] ?? null,
+                'update_type' => $updateType,
+                'apk_url' => $validated['apk_url'] ?? null,
             ]);
 
             DB::commit();
