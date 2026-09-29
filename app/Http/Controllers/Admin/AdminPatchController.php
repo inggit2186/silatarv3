@@ -69,6 +69,14 @@ class AdminPatchController extends Controller
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
+        // Log request info for debugging
+        \Log::info('Patch upload request', [
+            'has_file' => $request->hasFile('file'),
+            'file_size' => $request->hasFile('file') ? $request->file('file')->getSize() : 0,
+            'version' => $request->input('version'),
+            'version_code' => $request->input('version_code'),
+        ]);
+
         $validated = $request->validate([
             'version' => 'required|string|max:20|unique:app_patches,version',
             'version_code' => 'required|integer|min:1',
@@ -78,6 +86,9 @@ class AdminPatchController extends Controller
             'is_active' => 'boolean',
             'min_app_version' => 'nullable|string|max:20',
             'max_app_version' => 'nullable|string|max:20',
+        ], [
+            'file.mimes' => 'Format file tidak valid. Gunakan: zip, patch, bz2, tar, tar.gz, tgz',
+            'file.max' => 'Ukuran file terlalu besar. Maksimal 100MB',
         ]);
 
         DB::beginTransaction();
@@ -88,25 +99,28 @@ class AdminPatchController extends Controller
             $fileName = $file->getClientOriginalName();
             $fileSize = $file->getSize();
 
-            // Create patches directory if not exists
+            // Create patches directory in storage/app (not private, since local disk root is app/private)
             $patchesDir = storage_path('app/patches');
             if (!File::isDirectory($patchesDir)) {
                 File::makeDirectory($patchesDir, 0755, true);
             }
 
-            // Store file with unique name to avoid conflicts
+            // Store file with unique name
             $uniqueName = time() . '_' . $fileName;
-            $filePath = $file->storeAs('patches', $uniqueName);
+            $fullPath = $patchesDir . '/' . $uniqueName;
+
+            // Move uploaded file to storage
+            $file->move($patchesDir, $uniqueName);
 
             // Calculate MD5
-            $md5 = hash_file('md5', storage_path('app/' . $filePath));
+            $md5 = hash_file('md5', $fullPath);
 
             // Create patch record
             $patch = AppPatch::create([
                 'version' => $validated['version'],
                 'version_code' => $validated['version_code'],
                 'file_name' => $uniqueName,
-                'file_path' => $filePath,
+                'file_path' => 'patches/' . $uniqueName,
                 'file_size' => $fileSize,
                 'md5' => $md5,
                 'changelog' => $validated['changelog'] ?? null,
@@ -123,6 +137,8 @@ class AdminPatchController extends Controller
                 ->with('success', "Patch v{$patch->version} berhasil diupload!");
         } catch (\Exception $e) {
             DB::rollBack();
+
+            \Log::error('Patch upload failed', ['error' => $e->getMessage()]);
 
             return redirect()
                 ->back()

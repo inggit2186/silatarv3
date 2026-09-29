@@ -106,7 +106,7 @@ class AppPatchController extends Controller
             abort(404, 'Patch not found or inactive');
         }
 
-        $filePath = storage_path('app/patches/' . $patch->file_name);
+        $filePath = storage_path('app/' . $patch->file_path);
 
         if (!file_exists($filePath)) {
             abort(404, 'Patch file not found');
