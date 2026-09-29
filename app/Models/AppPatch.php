@@ -21,6 +21,9 @@ class AppPatch extends Model
         'changelog',
         'is_mandatory',
         'is_active',
+        'update_type',
+        'apk_url',
+        'size_hint',
         'min_app_version',
         'max_app_version',
     ];
@@ -31,6 +34,56 @@ class AppPatch extends Model
         'file_size' => 'integer',
         'version_code' => 'integer',
     ];
+
+    /**
+     * Scope for patch type updates (Dart only)
+     */
+    public function scopePatchType($query)
+    {
+        return $query->where('update_type', 'patch');
+    }
+
+    /**
+     * Scope for APK type updates (full APK)
+     */
+    public function scopeApkType($query)
+    {
+        return $query->where('update_type', 'apk');
+    }
+
+    /**
+     * Get download URL based on update type
+     */
+    public function getDownloadUrl(): string
+    {
+        if ($this->update_type === 'apk' && $this->apk_url) {
+            return $this->apk_url;
+        }
+
+        return url('/api/patch/download/' . $this->id);
+    }
+
+    /**
+     * Get formatted file size
+     */
+    public function getSizeHintAttribute($value)
+    {
+        if ($value) {
+            return $value;
+        }
+
+        if ($this->file_size) {
+            if ($this->file_size < 1024) {
+                return $this->file_size . ' B';
+            }
+            if ($this->file_size < 1024 * 1024) {
+                return round($this->file_size / 1024, 1) . ' KB';
+            }
+            return round($this->file_size / 1024 / 1024, 1) . ' MB';
+        }
+
+        return '0 B';
+    }
 
     /**
      * Get latest active patch

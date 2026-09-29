@@ -24,19 +24,18 @@ class AppPatchController extends Controller
         $currentVersion = $request->input('version', '1.0.0');
         $currentVersionCode = (int) $request->input('version_code', 1);
 
-        // Get latest active patch
+        // Get latest active patch (prioritize patch type, then apk)
         $latestPatch = AppPatch::where('is_active', true)
             ->where('version_code', '>', $currentVersionCode)
             ->where(function ($query) use ($currentVersion) {
-                // Check min app version constraint
                 $query->whereNull('min_app_version')
                     ->orWhere('min_app_version', '<=', $currentVersion);
             })
             ->where(function ($query) use ($currentVersion) {
-                // Check max app version constraint
                 $query->whereNull('max_app_version')
                     ->orWhere('max_app_version', '>=', $currentVersion);
             })
+            ->orderByRaw("FIELD(update_type, 'apk', 'patch')")
             ->orderBy('version_code', 'desc')
             ->first();
 
@@ -44,14 +43,20 @@ class AppPatchController extends Controller
             return response()->json([
                 'hasUpdate' => true,
                 'needUpdate' => true,
+                'updateType' => $latestPatch->update_type,
                 'latestVersion' => $latestPatch->version,
                 'version_code' => $latestPatch->version_code,
-                'downloadUrl' => url('/api/patch/download/' . $latestPatch->id),
-                'patchUrl' => url('/api/patch/download/' . $latestPatch->id),
+                'downloadUrl' => $latestPatch->getDownloadUrl(),
+                'patchUrl' => $latestPatch->update_type === 'patch'
+                    ? url('/api/patch/download/' . $latestPatch->id)
+                    : null,
                 'md5' => $latestPatch->md5,
                 'fileSize' => $latestPatch->file_size,
+                'sizeHint' => $latestPatch->size_hint,
                 'changelog' => $latestPatch->changelog,
                 'isMandatory' => $latestPatch->is_mandatory,
+                'isPatch' => $latestPatch->update_type === 'patch',
+                'isApk' => $latestPatch->update_type === 'apk',
                 'minAppVersion' => $latestPatch->min_app_version,
                 'maxAppVersion' => $latestPatch->max_app_version,
             ]);
@@ -79,23 +84,31 @@ class AppPatchController extends Controller
             return response()->json([
                 'version' => $latestPatch->version,
                 'version_code' => $latestPatch->version_code,
-                'download_url' => url('/api/patch/download/' . $latestPatch->id),
+                'updateType' => $latestPatch->update_type,
+                'download_url' => $latestPatch->getDownloadUrl(),
+                'size_hint' => $latestPatch->size_hint,
                 'changelog' => $latestPatch->changelog,
                 'is_mandatory' => $latestPatch->is_mandatory,
+                'isPatch' => $latestPatch->update_type === 'patch',
+                'isApk' => $latestPatch->update_type === 'apk',
             ]);
         }
 
         return response()->json([
             'version' => '1.0.0',
             'version_code' => 1,
+            'updateType' => 'patch',
             'download_url' => null,
+            'size_hint' => null,
             'changelog' => '',
             'is_mandatory' => false,
+            'isPatch' => true,
+            'isApk' => false,
         ]);
     }
 
     /**
-     * Download patch file
+     * Download patch/APK file
      * GET /api/patch/download/{id}
      */
     public function download(int $id)
@@ -103,17 +116,38 @@ class AppPatchController extends Controller
         $patch = AppPatch::find($id);
 
         if (!$patch || !$patch->is_active) {
-            abort(404, 'Patch not found or inactive');
+            abort(404, 'Update not found or inactive');
         }
 
-        $filePath = storage_path('app/' . $patch->file_path);
+        $filePath = null;
 
-        if (!file_exists($filePath)) {
-            abort(404, 'Patch file not found');
+        if ($patch->update_type === 'apk') {
+            // For APK type, use the stored path or URL
+            if ($patch->apk_url && !str_starts_with($patch->apk_url, 'http')) {
+                $filePath = storage_path('app/' . $patch->apk_url);
+            } elseif ($patch->apk_url) {
+                // External URL - redirect
+                return redirect($patch->apk_url);
+            } elseif ($patch->file_path) {
+                $filePath = storage_path('app/' . $patch->file_path);
+            }
+        } else {
+            // For patch type
+            $filePath = storage_path('app/' . $patch->file_path);
         }
 
-        return response()->download($filePath, $patch->file_name, [
-            'Content-Type' => 'application/octet-stream',
+        if (!$filePath || !file_exists($filePath)) {
+            abort(404, 'File not found');
+        }
+
+        $downloadName = $patch->update_type === 'apk'
+            ? 'silatar-' . $patch->version . '.apk'
+            : 'patch.zip';
+
+        return response()->download($filePath, $downloadName, [
+            'Content-Type' => $patch->update_type === 'apk'
+                ? 'application/vnd.android.package-archive'
+                : 'application/octet-stream',
         ]);
     }
 
@@ -149,7 +183,10 @@ class AppPatchController extends Controller
         $validated = $request->validate([
             'version' => 'required|string|max:20|unique:app_patches,version',
             'version_code' => 'required|integer|min:1',
-            'file' => 'required|file|mimes:zip,patch,bz2|max:51200', // max 50MB
+            'update_type' => 'sometimes|in:patch,apk',
+            'file' => 'required_unless:update_type,apk|file|mimes:zip,patch,bz2|max:51200', // max 50MB for patch
+            'apk_file' => 'required_if:update_type,apk|file|mimes:apk,zip|max:204800', // max 200MB for APK
+            'apk_url' => 'nullable|string|url|max:500',
             'changelog' => 'nullable|string',
             'is_mandatory' => 'boolean',
             'is_active' => 'boolean',
@@ -157,31 +194,48 @@ class AppPatchController extends Controller
             'max_app_version' => 'nullable|string|max:20',
         ]);
 
-        // Handle file upload
-        $file = $request->file('file');
-        $fileName = $file->getClientOriginalName();
-        $fileSize = $file->getSize();
+        $updateType = $validated['update_type'] ?? 'patch';
+        $fileName = null;
+        $filePath = null;
+        $fileSize = 0;
+        $md5 = null;
+        $sizeHint = null;
 
-        // Create patches directory if not exists
-        $patchesDir = storage_path('app/patches');
-        if (!File::isDirectory($patchesDir)) {
-            File::makeDirectory($patchesDir, 0755, true);
+        if ($updateType === 'patch') {
+            // Handle patch file upload
+            $file = $request->file('file');
+            $fileName = $file->getClientOriginalName();
+            $fileSize = $file->getSize();
+            $filePath = $file->storeAs('patches', $fileName);
+            $md5 = hash_file('md5', storage_path('app/' . $filePath));
+            $sizeHint = $this->_formatFileSize($fileSize);
+        } else {
+            // Handle APK file or use provided URL
+            if ($request->hasFile('apk_file')) {
+                $file = $request->file('apk_file');
+                $fileName = $file->getClientOriginalName();
+                $fileSize = $file->getSize();
+                $filePath = $file->storeAs('patches/apk', $fileName);
+                $md5 = hash_file('md5', storage_path('app/' . $filePath));
+                $sizeHint = $this->_formatFileSize($fileSize);
+            } else {
+                $filePath = $validated['apk_url'] ?? null;
+                $fileName = 'external_apk';
+                $sizeHint = 'Unknown';
+            }
         }
-
-        // Store file
-        $filePath = $file->storeAs('patches', $fileName);
-
-        // Calculate MD5
-        $md5 = hash_file('md5', storage_path('app/' . $filePath));
 
         // Create patch record
         $patch = AppPatch::create([
             'version' => $validated['version'],
             'version_code' => $validated['version_code'],
+            'update_type' => $updateType,
             'file_name' => $fileName,
             'file_path' => $filePath,
             'file_size' => $fileSize,
             'md5' => $md5,
+            'apk_url' => $updateType === 'apk' ? ($validated['apk_url'] ?? $filePath) : null,
+            'size_hint' => $sizeHint,
             'changelog' => $validated['changelog'] ?? null,
             'is_mandatory' => $validated['is_mandatory'] ?? false,
             'is_active' => $validated['is_active'] ?? true,
@@ -190,9 +244,23 @@ class AppPatchController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Patch created successfully',
+            'message' => 'Update created successfully',
             'patch' => $patch,
         ], 201);
+    }
+
+    /**
+     * Helper to format file size
+     */
+    private function _formatFileSize(int $bytes): string
+    {
+        if ($bytes < 1024) {
+            return $bytes . ' B';
+        }
+        if ($bytes < 1024 * 1024) {
+            return round($bytes / 1024, 1) . ' KB';
+        }
+        return round($bytes / 1024 / 1024, 1) . ' MB';
     }
 
     /**
@@ -206,7 +274,10 @@ class AppPatchController extends Controller
         $validated = $request->validate([
             'version' => 'sometimes|string|max:20|unique:app_patches,version,' . $id,
             'version_code' => 'sometimes|integer|min:1',
+            'update_type' => 'sometimes|in:patch,apk',
             'file' => 'nullable|file|mimes:zip,patch,bz2|max:51200',
+            'apk_file' => 'nullable|file|mimes:apk,zip|max:204800',
+            'apk_url' => 'nullable|string|url|max:500',
             'changelog' => 'nullable|string',
             'is_mandatory' => 'boolean',
             'is_active' => 'boolean',
@@ -214,7 +285,7 @@ class AppPatchController extends Controller
             'max_app_version' => 'nullable|string|max:20',
         ]);
 
-        // Handle new file upload if provided
+        // Handle patch file upload if provided
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $fileName = $file->getClientOriginalName();
@@ -222,7 +293,7 @@ class AppPatchController extends Controller
 
             // Delete old file
             $oldFilePath = storage_path('app/' . $patch->file_path);
-            if (file_exists($oldFilePath)) {
+            if (file_exists($oldFilePath) && $patch->file_path !== 'patches/apk') {
                 unlink($oldFilePath);
             }
 
@@ -233,12 +304,42 @@ class AppPatchController extends Controller
             $validated['file_path'] = $filePath;
             $validated['file_size'] = $fileSize;
             $validated['md5'] = hash_file('md5', storage_path('app/' . $filePath));
+            $validated['size_hint'] = $this->_formatFileSize($fileSize);
+            $validated['update_type'] = $validated['update_type'] ?? 'patch';
+        }
+
+        // Handle APK file upload if provided
+        if ($request->hasFile('apk_file')) {
+            $file = $request->file('apk_file');
+            $fileName = $file->getClientOriginalName();
+            $fileSize = $file->getSize();
+
+            // Create apk directory if not exists
+            $apkDir = storage_path('app/patches/apk');
+            if (!File::isDirectory($apkDir)) {
+                File::makeDirectory($apkDir, 0755, true);
+            }
+
+            $filePath = $file->storeAs('patches/apk', $fileName);
+
+            $validated['file_name'] = $fileName;
+            $validated['file_path'] = $filePath;
+            $validated['file_size'] = $fileSize;
+            $validated['md5'] = hash_file('md5', storage_path('app/' . $filePath));
+            $validated['size_hint'] = $this->_formatFileSize($fileSize);
+            $validated['update_type'] = 'apk';
+            $validated['apk_url'] = storage_path('app/' . $filePath);
+        }
+
+        // Handle external APK URL
+        if (isset($validated['apk_url']) && !$request->hasFile('apk_file')) {
+            $validated['apk_url'] = $validated['apk_url'];
         }
 
         $patch->update($validated);
 
         return response()->json([
-            'message' => 'Patch updated successfully',
+            'message' => 'Update updated successfully',
             'patch' => $patch->fresh(),
         ]);
     }
@@ -278,8 +379,12 @@ class AppPatchController extends Controller
             return response()->json([
                 'version' => $latestPatch->version,
                 'version_code' => $latestPatch->version_code,
+                'updateType' => $latestPatch->update_type,
+                'size_hint' => $latestPatch->size_hint,
                 'changelog' => $latestPatch->changelog,
                 'is_mandatory' => $latestPatch->is_mandatory,
+                'isPatch' => $latestPatch->update_type === 'patch',
+                'isApk' => $latestPatch->update_type === 'apk',
                 'updated_at' => $latestPatch->updated_at,
             ]);
         }
@@ -287,8 +392,12 @@ class AppPatchController extends Controller
         return response()->json([
             'version' => '1.0.0',
             'version_code' => 1,
+            'updateType' => 'patch',
+            'size_hint' => null,
             'changelog' => null,
             'is_mandatory' => false,
+            'isPatch' => true,
+            'isApk' => false,
             'updated_at' => null,
         ]);
     }

@@ -161,9 +161,25 @@
                                 </div>
                             </td>
                             <td>
-                                <div class="text-sm">
-                                    <span class="text-ink">{{ $patch->file_name }}</span>
-                                    <span class="text-xs text-muted block">{{ number_format($patch->file_size / 1024, 1) }} KB</span>
+                                <div class="flex items-center gap-3">
+                                    @if($patch->update_type === 'patch')
+                                        <span class="badge badge-primary flex items-center gap-1">
+                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                            </svg>
+                                            Patch
+                                        </span>
+                                    @else
+                                        <span class="badge badge-info flex items-center gap-1">
+                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                            </svg>
+                                            APK
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="text-xs text-muted mt-1">
+                                    {{ $patch->size_hint ?? number_format($patch->file_size / 1024, 1) . ' KB' }}
                                 </div>
                             </td>
                             <td>
