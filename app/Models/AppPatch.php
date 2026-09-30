@@ -14,6 +14,7 @@ class AppPatch extends Model
     protected $fillable = [
         'version',
         'version_code',
+        'build_number',
         'patch_count',
         'file_name',
         'file_path',
@@ -35,6 +36,7 @@ class AppPatch extends Model
         'file_size' => 'integer',
         'version_code' => 'integer',
         'patch_count' => 'integer',
+        'build_number' => 'integer',
     ];
 
     /**
@@ -127,7 +129,26 @@ class AppPatch extends Model
     }
 
     /**
-     * Get available APK update for given version
+     * Get available APK update for given build number
+     */
+    public static function getAvailableApkUpdateByBuildNumber(int $buildNumber): ?self
+    {
+        return static::where('is_active', true)
+            ->where('update_type', 'apk')
+            ->where(function ($query) use ($buildNumber) {
+                $query->where('build_number', '>', $buildNumber)
+                    ->orWhere(function ($q) use ($buildNumber) {
+                        // Fallback to version_code if build_number not set
+                        $q->whereNull('build_number')
+                          ->where('version_code', '>', $buildNumber);
+                    });
+            })
+            ->orderByRaw("COALESCE(build_number, version_code) DESC")
+            ->first();
+    }
+
+    /**
+     * Get available APK update for given version (legacy, deprecated)
      */
     public static function getAvailableApkUpdate(int $versionCode): ?self
     {

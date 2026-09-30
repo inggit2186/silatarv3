@@ -19,19 +19,20 @@ class AppPatchController extends Controller
      * - version: Current full version string (e.g., "2.0.0.1")
      * - patch_count: Current patch count (numeric)
      * - app_version_code: Current app version code (numeric)
+     * - build_number: Current build number (numeric) - for APK update detection
      *
-     * New Hybrid Versioning Flow:
-     * 1. First check for patch updates (if app_version_code matches)
-     * 2. Then check for APK updates (if app_version_code differs)
+     * Logic:
+     * 1. First check for PATCH updates (if app_version_code matches)
+     * 2. Then check for APK updates (by build_number)
      */
     public function checkUpdate(Request $request): JsonResponse
     {
         $currentVersion = $request->input('version', '2.0.0');
         $currentPatchCount = (int) $request->input('patch_count', 0);
         $currentVersionCode = (int) $request->input('app_version_code', 1);
+        $currentBuildNumber = (int) $request->input('build_number', 1);
 
-        // Log for debugging
-        \Log::info("[PatchCheck] version=$currentVersion, patch_count=$currentPatchCount, app_version_code=$currentVersionCode");
+        \Log::info("[PatchCheck] version=$currentVersion, patch_count=$currentPatchCount, app_version_code=$currentVersionCode, build_number=$currentBuildNumber");
 
         // Step 1: Check for PATCH updates
         // Only offer patch if app_version_code matches
@@ -41,12 +42,11 @@ class AppPatchController extends Controller
             return $this->buildPatchResponse($latestPatch, $currentVersionCode, $currentPatchCount);
         }
 
-        // Step 2: Check for APK updates
-        // If app_version_code differs, user needs to install new APK
-        $latestApk = AppPatch::getAvailableApkUpdate($currentVersionCode);
+        // Step 2: Check for APK updates by build_number
+        $latestApk = AppPatch::getAvailableApkUpdateByBuildNumber($currentBuildNumber);
 
         if ($latestApk) {
-            return $this->buildApkResponse($latestApk, $currentVersionCode);
+            return $this->buildApkResponse($latestApk);
         }
 
         // No updates available
@@ -56,6 +56,7 @@ class AppPatchController extends Controller
             'latestVersion' => $currentVersion,
             'version_code' => $currentVersionCode,
             'patch_count' => $currentPatchCount,
+            'build_number' => $currentBuildNumber,
         ]);
     }
 
@@ -107,7 +108,7 @@ class AppPatchController extends Controller
     /**
      * Build response for APK update
      */
-    private function buildApkResponse(AppPatch $apk, int $currentVersionCode): JsonResponse
+    private function buildApkResponse(AppPatch $apk): JsonResponse
     {
         return response()->json([
             'hasUpdate' => true,
@@ -115,6 +116,7 @@ class AppPatchController extends Controller
             'updateType' => 'apk',
             'latestVersion' => $apk->version,
             'version_code' => $apk->version_code,
+            'build_number' => $apk->build_number ?? $apk->version_code,
             'patch_count' => 0, // Reset patch count on APK update
             'downloadUrl' => $apk->getDownloadUrl(),
             'md5' => $apk->md5,
