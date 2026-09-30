@@ -14,6 +14,8 @@ class AppPatch extends Model
     protected $fillable = [
         'version',
         'version_code',
+        'patch_count',
+        'build_number',
         'file_name',
         'file_path',
         'file_size',
@@ -33,6 +35,8 @@ class AppPatch extends Model
         'is_active' => 'boolean',
         'file_size' => 'integer',
         'version_code' => 'integer',
+        'patch_count' => 'integer',
+        'build_number' => 'integer',
     ];
 
     /**
@@ -96,21 +100,62 @@ class AppPatch extends Model
     }
 
     /**
-     * Get available patch for given version
+     * Get latest APK (not patch)
      */
-    public static function getAvailableForVersion(string $version, int $versionCode): ?self
+    public static function getLatestApk(): ?self
     {
         return static::where('is_active', true)
-            ->where('version_code', '>', $versionCode)
-            ->where(function ($query) use ($version) {
-                $query->whereNull('min_app_version')
-                    ->orWhere('min_app_version', '<=', $version);
-            })
-            ->where(function ($query) use ($version) {
-                $query->whereNull('max_app_version')
-                    ->orWhere('max_app_version', '>=', $version);
-            })
+            ->where('update_type', 'apk')
             ->orderBy('version_code', 'desc')
             ->first();
+    }
+
+    /**
+     * Get latest patch for specific version_code and patch_count
+     */
+    public static function getLatestPatchForVersion(int $versionCode, ?int $currentPatchCount = null): ?self
+    {
+        $query = static::where('is_active', true)
+            ->where('update_type', 'patch')
+            ->where('version_code', $versionCode);
+
+        if ($currentPatchCount !== null) {
+            $query->where('patch_count', '>', $currentPatchCount);
+        }
+
+        return $query->orderBy('patch_count', 'desc')->first();
+    }
+
+    /**
+     * Get available APK update for given version
+     */
+    public static function getAvailableApkUpdate(int $versionCode): ?self
+    {
+        return static::where('is_active', true)
+            ->where('update_type', 'apk')
+            ->where('version_code', '>', $versionCode)
+            ->orderBy('version_code', 'desc')
+            ->first();
+    }
+
+    /**
+     * Get next build number (static method)
+     */
+    public static function getNextBuildNumber(): int
+    {
+        $latest = static::max('build_number');
+        return ($latest ?? 0) + 1;
+    }
+
+    /**
+     * Get full version string (with patch count if applicable)
+     * Format: "2.0.0" for APK, "2.0.0.1" for patch
+     */
+    public function getFullVersionAttribute(): string
+    {
+        if ($this->update_type === 'patch' && $this->patch_count > 0) {
+            return $this->version . '.' . $this->patch_count;
+        }
+        return $this->version;
     }
 }

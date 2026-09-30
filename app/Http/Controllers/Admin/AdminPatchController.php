@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\AppPatch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 
 class AdminPatchController extends Controller
@@ -23,7 +22,8 @@ class AdminPatchController extends Controller
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
-        $query = AppPatch::query()->orderBy('version_code', 'desc');
+        $query = AppPatch::query()->orderBy('version_code', 'desc')
+            ->orderBy('patch_count', 'desc');
 
         if ($request->has('search')) {
             $search = $request->input('search');
@@ -33,10 +33,19 @@ class AdminPatchController extends Controller
             });
         }
 
-        $patches = $query->paginate(10);
-        $latestPatch = AppPatch::where('is_active', true)->orderBy('version_code', 'desc')->first();
+        if ($request->has('type')) {
+            $query->where('update_type', $request->input('type'));
+        }
 
-        return view('admin.patches.index', compact('patches', 'latestPatch', 'isAdmin'));
+        $patches = $query->paginate(10);
+        $latestApk = AppPatch::getLatestApk();
+        $latestPatch = AppPatch::where('is_active', true)
+            ->where('update_type', 'patch')
+            ->orderBy('version_code', 'desc')
+            ->orderBy('patch_count', 'desc')
+            ->first();
+
+        return view('admin.patches.index', compact('patches', 'latestApk', 'latestPatch', 'isAdmin'));
     }
 
     /**
@@ -51,14 +60,19 @@ class AdminPatchController extends Controller
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
-        $latestPatch = AppPatch::where('is_active', true)->orderBy('version_code', 'desc')->first();
-        $nextVersionCode = $latestPatch ? $latestPatch->version_code + 1 : 1;
+        $latestApk = AppPatch::getLatestApk();
+        $nextVersionCode = $latestApk ? $latestApk->version_code + 1 : 1;
+        $nextBuildNumber = AppPatch::getNextBuildNumber();
 
-        return view('admin.patches.create', compact('latestPatch', 'nextVersionCode', 'isAdmin'));
+        return view('admin.patches.create', compact('latestApk', 'nextVersionCode', 'nextBuildNumber', 'isAdmin'));
     }
 
     /**
      * Store new patch
+     *
+     * New Hybrid Versioning:
+     * - For APK: patch_count = 0, build_number auto-increment
+     * - For Patch: patch_count required (> 0), build_number not used
      */
     public function store(Request $request)
     {
@@ -69,29 +83,33 @@ class AdminPatchController extends Controller
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
-        // Log request info for debugging
-        \Log::info('Patch upload request', [
-            'has_file' => $request->hasFile('file'),
-            'file_size' => $request->hasFile('file') ? $request->file('file')->getSize() : 0,
-            'version' => $request->input('version'),
-            'version_code' => $request->input('version_code'),
-        ]);
+        $updateType = $request->input('update_type', 'patch');
 
-        $validated = $request->validate([
+        // Validation based on update type
+        $rules = [
             'version' => 'required|string|max:20',
-            'version_code' => 'required|integer|min:1|unique:app_patches,version_code',
-            'file' => 'nullable|file|mimes:zip,patch,bz2,tar,tar.gz,tgz,apk|max:204800', // max 200MB
-            'apk_file' => 'nullable|file|mimes:apk,zip|max:204800', // max 200MB
-            'apk_url' => 'nullable|url|max:500',
+            'version_code' => 'required|integer|min:1',
             'update_type' => 'nullable|in:patch,apk',
+            'apk_file' => 'nullable|file|mimes:apk,zip|max:204800',
+            'apk_url' => 'nullable|url|max:500',
             'changelog' => 'nullable|string|max:5000',
             'is_mandatory' => 'boolean',
             'is_active' => 'boolean',
             'min_app_version' => 'nullable|string|max:20',
             'max_app_version' => 'nullable|string|max:20',
-        ], [
-            'file.mimes' => 'Format file tidak valid. Gunakan: zip, patch, bz2, tar, tar.gz, tgz, apk',
-            'file.max' => 'Ukuran file terlalu besar. Maksimal 200MB',
+        ];
+
+        if ($updateType === 'patch') {
+            $rules['file'] = 'required|file|mimes:zip,patch,bz2,tar,tar.gz,tgz|max:51200'; // 50MB for patch
+            $rules['patch_count'] = 'required|integer|min:1';
+        } else {
+            $rules['file'] = 'nullable|file|mimes:apk,zip|max:204800'; // 200MB for APK
+            $rules['apk_file'] = 'nullable|file|mimes:apk,zip|max:204800';
+        }
+
+        $validated = $request->validate($rules, [
+            'file.mimes' => 'Format file tidak valid.',
+            'file.max' => 'Ukuran file terlalu besar.',
             'apk_file.mimes' => 'Format file tidak valid. Gunakan: apk, zip',
             'apk_file.max' => 'Ukuran file terlalu besar. Maksimal 200MB',
         ]);
@@ -99,41 +117,76 @@ class AdminPatchController extends Controller
         DB::beginTransaction();
 
         try {
-            // Determine which file input was used (patch or full APK)
             $uploadedFile = $request->file('apk_file') ?? $request->file('file');
 
-            if (!$uploadedFile) {
-                throw new \Exception('File upload diperlukan');
+            $fileName = null;
+            $fileSize = 0;
+            $filePath = null;
+            $md5 = null;
+            $sizeHint = null;
+            $patchCount = 0;
+            $buildNumber = null;
+
+            if ($uploadedFile) {
+                $fileName = $uploadedFile->getClientOriginalName();
+                $fileSize = $uploadedFile->getSize();
+
+                $patchesDir = storage_path('app/patches');
+                if (!File::isDirectory($patchesDir)) {
+                    File::makeDirectory($patchesDir, 0755, true);
+                }
+
+                $uniqueName = time() . '_' . $fileName;
+                $fullPath = $patchesDir . '/' . $uniqueName;
+                $uploadedFile->move($patchesDir, $uniqueName);
+
+                $filePath = 'patches/' . $uniqueName;
+                $md5 = hash_file('md5', $fullPath);
+                $sizeHint = $this->_formatFileSize($fileSize);
             }
 
-            $fileName = $uploadedFile->getClientOriginalName();
-            $fileSize = $uploadedFile->getSize();
+            if ($updateType === 'patch') {
+                $patchCount = (int) $validated['patch_count'];
 
-            // Determine update type
-            $updateType = $request->input('update_type', 'patch');
+                // Check if patch already exists for this version_code + patch_count
+                $existingPatch = AppPatch::where('version_code', $validated['version_code'])
+                    ->where('patch_count', $patchCount)
+                    ->where('update_type', 'patch')
+                    ->first();
 
-            // Create patches directory in storage/app
-            $patchesDir = storage_path('app/patches');
-            if (!File::isDirectory($patchesDir)) {
-                File::makeDirectory($patchesDir, 0755, true);
+                if ($existingPatch) {
+                    DB::rollBack();
+                    return redirect()
+                        ->back()
+                        ->withInput()
+                        ->with('error', "Patch dengan version_code {$validated['version_code']} dan patch_count {$patchCount} sudah ada!");
+                }
+            } else {
+                // APK - auto-increment build_number
+                $buildNumber = AppPatch::getNextBuildNumber();
+
+                // Check if APK version already exists
+                $existingApk = AppPatch::where('version_code', $validated['version_code'])
+                    ->where('update_type', 'apk')
+                    ->first();
+
+                if ($existingApk) {
+                    DB::rollBack();
+                    return redirect()
+                        ->back()
+                        ->withInput()
+                        ->with('error', "APK dengan version_code {$validated['version_code']} sudah ada!");
+                }
             }
 
-            // Store file with unique name
-            $uniqueName = time() . '_' . $fileName;
-            $fullPath = $patchesDir . '/' . $uniqueName;
-
-            // Move uploaded file to storage
-            $uploadedFile->move($patchesDir, $uniqueName);
-
-            // Calculate MD5
-            $md5 = hash_file('md5', $fullPath);
-
-            // Create patch record
             $patch = AppPatch::create([
                 'version' => $validated['version'],
                 'version_code' => $validated['version_code'],
-                'file_name' => $uniqueName,
-                'file_path' => 'patches/' . $uniqueName,
+                'patch_count' => $patchCount,
+                'build_number' => $buildNumber,
+                'update_type' => $updateType,
+                'file_name' => $fileName,
+                'file_path' => $filePath,
                 'file_size' => $fileSize,
                 'md5' => $md5,
                 'changelog' => $validated['changelog'] ?? null,
@@ -141,15 +194,16 @@ class AdminPatchController extends Controller
                 'is_active' => $request->boolean('is_active', true),
                 'min_app_version' => $validated['min_app_version'] ?? null,
                 'max_app_version' => $validated['max_app_version'] ?? null,
-                'update_type' => $updateType,
-                'apk_url' => $validated['apk_url'] ?? null,
+                'apk_url' => $updateType === 'apk' ? ($validated['apk_url'] ?? $filePath) : null,
+                'size_hint' => $sizeHint,
             ]);
 
             DB::commit();
 
+            $typeLabel = $updateType === 'apk' ? 'APK' : 'Patch';
             return redirect()
                 ->route('admin.patches.index')
-                ->with('success', "Patch v{$patch->version} berhasil diupload!");
+                ->with('success', "{$typeLabel} v{$patch->full_version} berhasil diupload!");
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -158,7 +212,7 @@ class AdminPatchController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Gagal upload patch: ' . $e->getMessage());
+                ->with('error', 'Gagal upload: ' . $e->getMessage());
         }
     }
 
@@ -212,7 +266,8 @@ class AdminPatchController extends Controller
 
         $validated = $request->validate([
             'version' => 'sometimes|string|max:20',
-            'version_code' => 'sometimes|integer|min:1|unique:app_patches,version_code,' . $id,
+            'version_code' => 'sometimes|integer|min:1',
+            'patch_count' => 'nullable|integer|min:0',
             'file' => 'nullable|file|mimes:zip,patch,bz2,tar,tar.gz,tgz|max:102400',
             'changelog' => 'nullable|string|max:5000',
             'is_mandatory' => 'boolean',
@@ -232,11 +287,19 @@ class AdminPatchController extends Controller
                 'max_app_version' => $validated['max_app_version'] ?? null,
             ];
 
-            // Handle new file upload if provided
+            if (isset($validated['version'])) {
+                $updateData['version'] = $validated['version'];
+            }
+            if (isset($validated['version_code'])) {
+                $updateData['version_code'] = $validated['version_code'];
+            }
+            if (isset($validated['patch_count'])) {
+                $updateData['patch_count'] = $validated['patch_count'];
+            }
+
             if ($request->hasFile('file')) {
-                // Delete old file
                 $oldFilePath = storage_path('app/' . $patch->file_path);
-                if (file_exists($oldFilePath)) {
+                if (file_exists($oldFilePath) && strpos($patch->file_path, 'patches/apk') === false) {
                     unlink($oldFilePath);
                 }
 
@@ -244,21 +307,20 @@ class AdminPatchController extends Controller
                 $fileName = $file->getClientOriginalName();
                 $fileSize = $file->getSize();
 
+                $patchesDir = storage_path('app/patches');
+                if (!File::isDirectory($patchesDir)) {
+                    File::makeDirectory($patchesDir, 0755, true);
+                }
+
                 $uniqueName = time() . '_' . $fileName;
-                $filePath = $file->storeAs('patches', $uniqueName);
+                $fullPath = $patchesDir . '/' . $uniqueName;
+                $file->move($patchesDir, $uniqueName);
 
                 $updateData['file_name'] = $uniqueName;
-                $updateData['file_path'] = $filePath;
+                $updateData['file_path'] = 'patches/' . $uniqueName;
                 $updateData['file_size'] = $fileSize;
-                $updateData['md5'] = hash_file('md5', storage_path('app/' . $filePath));
-            }
-
-            // Update version if changed
-            if (isset($validated['version'])) {
-                $updateData['version'] = $validated['version'];
-            }
-            if (isset($validated['version_code'])) {
-                $updateData['version_code'] = $validated['version_code'];
+                $updateData['md5'] = hash_file('md5', $fullPath);
+                $updateData['size_hint'] = $this->_formatFileSize($fileSize);
             }
 
             $patch->update($updateData);
@@ -295,9 +357,8 @@ class AdminPatchController extends Controller
         DB::beginTransaction();
 
         try {
-            // Delete file
             $filePath = storage_path('app/' . $patch->file_path);
-            if (file_exists($filePath)) {
+            if (file_exists($filePath) && strpos($patch->file_path, 'patches/apk') === false) {
                 unlink($filePath);
             }
 
@@ -358,8 +419,28 @@ class AdminPatchController extends Controller
                 ->with('error', 'File patch tidak ditemukan!');
         }
 
-        return response()->download($filePath, $patch->file_name, [
-            'Content-Type' => 'application/octet-stream',
+        $downloadName = $patch->update_type === 'apk'
+            ? 'silatar_v2_v' . $patch->version . '_build' . $patch->version_code . '.apk'
+            : 'silatar_v2_patch_' . $patch->full_version . '.zip';
+
+        return response()->download($filePath, $downloadName, [
+            'Content-Type' => $patch->update_type === 'apk'
+                ? 'application/vnd.android.package-archive'
+                : 'application/octet-stream',
         ]);
+    }
+
+    /**
+     * Format file size helper
+     */
+    private function _formatFileSize(int $bytes): string
+    {
+        if ($bytes < 1024) {
+            return $bytes . ' B';
+        }
+        if ($bytes < 1024 * 1024) {
+            return round($bytes / 1024, 1) . ' KB';
+        }
+        return round($bytes / 1024 / 1024, 1) . ' MB';
     }
 }

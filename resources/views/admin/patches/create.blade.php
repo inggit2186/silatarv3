@@ -125,6 +125,18 @@
                                 <p class="text-xs text-muted mt-1">Angka unik untuk perbandingan</p>
                             </div>
                         </div>
+                        <div class="grid grid-cols-2 gap-4" id="patchCountSection">
+                            <div class="form-group">
+                                <label class="form-label">Patch Count <span class="text-danger">*</span></label>
+                                <input type="number" name="patch_count" class="form-input" placeholder="1" value="{{ old('patch_count', 1) }}" required min="1">
+                                <p class="text-xs text-muted mt-1">Patch ke berapa (reset per APK)</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Build Number</label>
+                                <input type="number" class="form-input" value="{{ $nextBuildNumber }}" disabled>
+                                <p class="text-xs text-muted mt-1">Auto-increment untuk APK</p>
+                            </div>
+                        </div>
                         <div class="form-group mb-0">
                             <label class="form-label">Changelog</label>
                             <textarea name="changelog" class="form-textarea" rows="3" placeholder="Contoh:
@@ -599,19 +611,37 @@
             var patchFileSection = document.getElementById('patchFileSection');
             var apkFileSection = document.getElementById('apkFileSection');
 
-            function selectPatch() {
-                radioPatch.classList.add('selected');
-                radioApk.classList.remove('selected');
-                patchFileSection.classList.remove('hidden');
-                apkFileSection.classList.add('hidden');
-            }
+	            function selectPatch() {
+	                radioPatch.classList.add('selected');
+	                radioApk.classList.remove('selected');
+	                patchFileSection.classList.remove('hidden');
+	                apkFileSection.classList.add('hidden');
+	                // Show patch count field for patch type
+	                var patchCountSection = document.getElementById('patchCountSection');
+	                if (patchCountSection) {
+	                    patchCountSection.style.display = 'grid';
+	                }
+	                var patchCountInput = document.querySelector('input[name="patch_count"]');
+	                if (patchCountInput) {
+	                    patchCountInput.required = true;
+	                }
+	            }
 
-            function selectApk() {
-                radioApk.classList.add('selected');
-                radioPatch.classList.remove('selected');
-                patchFileSection.classList.add('hidden');
-                apkFileSection.classList.remove('hidden');
-            }
+	            function selectApk() {
+	                radioApk.classList.add('selected');
+	                radioPatch.classList.remove('selected');
+	                patchFileSection.classList.add('hidden');
+	                apkFileSection.classList.remove('hidden');
+	                // Hide patch count field for APK type
+	                var patchCountSection = document.getElementById('patchCountSection');
+	                if (patchCountSection) {
+	                    patchCountSection.style.display = 'none';
+	                }
+	                var patchCountInput = document.querySelector('input[name="patch_count"]');
+	                if (patchCountInput) {
+	                    patchCountInput.required = false;
+	                }
+	            }
 
             radioPatch.addEventListener('click', function() {
                 document.getElementById('inputPatch').checked = true;

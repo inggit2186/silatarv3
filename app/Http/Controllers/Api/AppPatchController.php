@@ -12,98 +12,118 @@ use Illuminate\Support\Facades\Storage;
 class AppPatchController extends Controller
 {
     /**
-     * Check for available patch/update
+     * Check for available patch update
      * GET /api/patch/check
      *
      * Query params:
-     * - version: Current app version string
-     * - version_code: Current app version code (numeric)
+     * - version: Current full version string (e.g., "2.0.0.1")
+     * - patch_count: Current patch count (numeric)
+     * - app_version_code: Current app version code (numeric)
+     *
+     * New Hybrid Versioning Flow:
+     * 1. First check for patch updates (if app_version_code matches)
+     * 2. Then check for APK updates (if app_version_code differs)
      */
     public function checkUpdate(Request $request): JsonResponse
     {
-        $currentVersion = $request->input('version', '1.0.0');
-        $currentVersionCode = (int) $request->input('version_code', 1);
+        $currentVersion = $request->input('version', '2.0.0');
+        $currentPatchCount = (int) $request->input('patch_count', 0);
+        $currentVersionCode = (int) $request->input('app_version_code', 1);
 
-        // Get latest active patch (prioritize patch type, then apk)
-        $latestPatch = AppPatch::where('is_active', true)
-            ->where('version_code', '>', $currentVersionCode)
-            ->where(function ($query) use ($currentVersion) {
-                $query->whereNull('min_app_version')
-                    ->orWhere('min_app_version', '<=', $currentVersion);
-            })
-            ->where(function ($query) use ($currentVersion) {
-                $query->whereNull('max_app_version')
-                    ->orWhere('max_app_version', '>=', $currentVersion);
-            })
-            ->orderByRaw("FIELD(update_type, 'apk', 'patch')")
-            ->orderBy('version_code', 'desc')
-            ->first();
+        // Log for debugging
+        \Log::info("[PatchCheck] version=$currentVersion, patch_count=$currentPatchCount, app_version_code=$currentVersionCode");
+
+        // Step 1: Check for PATCH updates
+        // Only offer patch if app_version_code matches
+        $latestPatch = $this->getAvailablePatch($currentVersionCode, $currentPatchCount);
 
         if ($latestPatch) {
-            return response()->json([
-                'hasUpdate' => true,
-                'needUpdate' => true,
-                'updateType' => $latestPatch->update_type,
-                'latestVersion' => $latestPatch->version,
-                'version_code' => $latestPatch->version_code,
-                'downloadUrl' => $latestPatch->getDownloadUrl(),
-                'patchUrl' => $latestPatch->update_type === 'patch'
-                    ? url('/api/patch/download/' . $latestPatch->id)
-                    : null,
-                'md5' => $latestPatch->md5,
-                'fileSize' => $latestPatch->file_size,
-                'sizeHint' => $latestPatch->size_hint,
-                'changelog' => $latestPatch->changelog,
-                'isMandatory' => $latestPatch->is_mandatory,
-                'isPatch' => $latestPatch->update_type === 'patch',
-                'isApk' => $latestPatch->update_type === 'apk',
-                'minAppVersion' => $latestPatch->min_app_version,
-                'maxAppVersion' => $latestPatch->max_app_version,
-            ]);
+            return $this->buildPatchResponse($latestPatch, $currentVersionCode, $currentPatchCount);
         }
 
+        // Step 2: Check for APK updates
+        // If app_version_code differs, user needs to install new APK
+        $latestApk = AppPatch::getAvailableApkUpdate($currentVersionCode);
+
+        if ($latestApk) {
+            return $this->buildApkResponse($latestApk, $currentVersionCode);
+        }
+
+        // No updates available
         return response()->json([
             'hasUpdate' => false,
             'needUpdate' => false,
             'latestVersion' => $currentVersion,
             'version_code' => $currentVersionCode,
+            'patch_count' => $currentPatchCount,
         ]);
     }
 
     /**
-     * Get latest app version info (for full APK updates)
-     * GET /api/app-version
+     * Get available patch for current app version
      */
-    public function getLatestVersion(Request $request): JsonResponse
+    private function getAvailablePatch(int $versionCode, int $currentPatchCount): ?AppPatch
     {
-        $latestPatch = AppPatch::where('is_active', true)
-            ->orderBy('version_code', 'desc')
+        return AppPatch::where('is_active', true)
+            ->where('update_type', 'patch')
+            ->where('version_code', $versionCode)
+            ->where('patch_count', '>', $currentPatchCount)
+            ->where(function ($query) {
+                $query->whereNull('min_app_version')
+                    ->orWhereRaw("COALESCE(min_app_version, '') = ''");
+            })
+            ->where(function ($query) {
+                $query->whereNull('max_app_version')
+                    ->orWhereRaw("COALESCE(max_app_version, '') = ''");
+            })
+            ->orderBy('patch_count', 'desc')
             ->first();
+    }
 
-        if ($latestPatch) {
-            return response()->json([
-                'version' => $latestPatch->version,
-                'version_code' => $latestPatch->version_code,
-                'updateType' => $latestPatch->update_type,
-                'download_url' => $latestPatch->getDownloadUrl(),
-                'size_hint' => $latestPatch->size_hint,
-                'changelog' => $latestPatch->changelog,
-                'is_mandatory' => $latestPatch->is_mandatory,
-                'isPatch' => $latestPatch->update_type === 'patch',
-                'isApk' => $latestPatch->update_type === 'apk',
-            ]);
-        }
-
+    /**
+     * Build response for patch update
+     */
+    private function buildPatchResponse(AppPatch $patch, int $currentVersionCode, int $currentPatchCount): JsonResponse
+    {
         return response()->json([
-            'version' => '1.0.0',
-            'version_code' => 1,
+            'hasUpdate' => true,
+            'needUpdate' => true,
             'updateType' => 'patch',
-            'download_url' => null,
-            'size_hint' => null,
-            'changelog' => '',
-            'is_mandatory' => false,
+            'latestVersion' => $patch->full_version,
+            'version_code' => $patch->version_code,
+            'patch_count' => $patch->patch_count,
+            'downloadUrl' => $patch->getDownloadUrl(),
+            'patchUrl' => url('/api/patch/download/' . $patch->id),
+            'md5' => $patch->md5,
+            'fileSize' => $patch->file_size,
+            'sizeHint' => $patch->size_hint,
+            'changelog' => $patch->changelog,
+            'isMandatory' => $patch->is_mandatory,
             'isPatch' => true,
             'isApk' => false,
+        ]);
+    }
+
+    /**
+     * Build response for APK update
+     */
+    private function buildApkResponse(AppPatch $apk, int $currentVersionCode): JsonResponse
+    {
+        return response()->json([
+            'hasUpdate' => true,
+            'needUpdate' => true,
+            'updateType' => 'apk',
+            'latestVersion' => $apk->version,
+            'version_code' => $apk->version_code,
+            'patch_count' => 0, // Reset patch count on APK update
+            'downloadUrl' => $apk->getDownloadUrl(),
+            'md5' => $apk->md5,
+            'fileSize' => $apk->file_size,
+            'sizeHint' => $apk->size_hint,
+            'changelog' => $apk->changelog,
+            'isMandatory' => $apk->is_mandatory,
+            'isPatch' => false,
+            'isApk' => true,
         ]);
     }
 
@@ -122,17 +142,14 @@ class AppPatchController extends Controller
         $filePath = null;
 
         if ($patch->update_type === 'apk') {
-            // For APK type, use the stored path or URL
             if ($patch->apk_url && !str_starts_with($patch->apk_url, 'http')) {
                 $filePath = storage_path('app/' . $patch->apk_url);
             } elseif ($patch->apk_url) {
-                // External URL - redirect
                 return redirect($patch->apk_url);
             } elseif ($patch->file_path) {
                 $filePath = storage_path('app/' . $patch->file_path);
             }
         } else {
-            // For patch type
             $filePath = storage_path('app/' . $patch->file_path);
         }
 
@@ -141,8 +158,8 @@ class AppPatchController extends Controller
         }
 
         $downloadName = $patch->update_type === 'apk'
-            ? 'silatar-' . $patch->version . '.apk'
-            : 'patch.zip';
+            ? 'silatar_v2_v' . $patch->version . '_build' . $patch->version_code . '.apk'
+            : 'silatar_v2_patch_' . $patch->full_version . '.zip';
 
         return response()->download($filePath, $downloadName, [
             'Content-Type' => $patch->update_type === 'apk'
@@ -157,8 +174,23 @@ class AppPatchController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $patches = AppPatch::orderBy('version_code', 'desc')
-            ->paginate($request->input('per_page', 20));
+        $query = AppPatch::query();
+
+        // Filter by update type
+        if ($request->has('type')) {
+            $query->where('update_type', $request->input('type'));
+        }
+
+        // Filter by active status
+        if ($request->has('active')) {
+            $query->where('is_active', $request->boolean('active'));
+        }
+
+        // Order by version_code desc, then patch_count desc
+        $query->orderBy('version_code', 'desc')
+            ->orderBy('patch_count', 'desc');
+
+        $patches = $query->paginate($request->input('per_page', 20));
 
         return response()->json($patches);
     }
@@ -177,15 +209,20 @@ class AppPatchController extends Controller
     /**
      * Create new patch (Admin)
      * POST /api/admin/patches
+     *
+     * New fields:
+     * - patch_count: required for patch type, auto for APK (set to 0)
+     * - build_number: auto-incremented for APK, not used for patch
      */
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'version' => 'required|string|max:20|unique:app_patches,version',
+            'version' => 'required|string|max:20',
             'version_code' => 'required|integer|min:1',
+            'patch_count' => 'nullable|integer|min:0',
             'update_type' => 'sometimes|in:patch,apk',
-            'file' => 'required_unless:update_type,apk|file|mimes:zip,patch,bz2|max:51200', // max 50MB for patch
-            'apk_file' => 'required_if:update_type,apk|file|mimes:apk,zip|max:204800', // max 200MB for APK
+            'file' => 'required_unless:update_type,apk|file|mimes:zip,patch,bz2|max:51200',
+            'apk_file' => 'required_if:update_type,apk|file|mimes:apk,zip|max:204800',
             'apk_url' => 'nullable|string|url|max:500',
             'changelog' => 'nullable|string',
             'is_mandatory' => 'boolean',
@@ -195,14 +232,22 @@ class AppPatchController extends Controller
         ]);
 
         $updateType = $validated['update_type'] ?? 'patch';
+        $patchCount = $validated['patch_count'] ?? 0;
         $fileName = null;
         $filePath = null;
         $fileSize = 0;
         $md5 = null;
         $sizeHint = null;
+        $buildNumber = null;
 
         if ($updateType === 'patch') {
-            // Handle patch file upload
+            // Patch requires patch_count
+            if ($patchCount <= 0) {
+                return response()->json([
+                    'error' => 'patch_count is required for patch type and must be > 0',
+                ], 422);
+            }
+
             $file = $request->file('file');
             $fileName = $file->getClientOriginalName();
             $fileSize = $file->getSize();
@@ -210,7 +255,10 @@ class AppPatchController extends Controller
             $md5 = hash_file('md5', storage_path('app/' . $filePath));
             $sizeHint = $this->_formatFileSize($fileSize);
         } else {
-            // Handle APK file or use provided URL
+            // APK - build_number auto-increment, patch_count = 0
+            $buildNumber = AppPatch::getNextBuildNumber();
+            $patchCount = 0;
+
             if ($request->hasFile('apk_file')) {
                 $file = $request->file('apk_file');
                 $fileName = $file->getClientOriginalName();
@@ -221,14 +269,15 @@ class AppPatchController extends Controller
             } else {
                 $filePath = $validated['apk_url'] ?? null;
                 $fileName = 'external_apk';
-                $sizeHint = 'Unknown';
+                $sizeHint = 'External APK';
             }
         }
 
-        // Create patch record
         $patch = AppPatch::create([
             'version' => $validated['version'],
             'version_code' => $validated['version_code'],
+            'patch_count' => $patchCount,
+            'build_number' => $buildNumber,
             'update_type' => $updateType,
             'file_name' => $fileName,
             'file_path' => $filePath,
@@ -250,20 +299,6 @@ class AppPatchController extends Controller
     }
 
     /**
-     * Helper to format file size
-     */
-    private function _formatFileSize(int $bytes): string
-    {
-        if ($bytes < 1024) {
-            return $bytes . ' B';
-        }
-        if ($bytes < 1024 * 1024) {
-            return round($bytes / 1024, 1) . ' KB';
-        }
-        return round($bytes / 1024 / 1024, 1) . ' MB';
-    }
-
-    /**
      * Update patch (Admin)
      * PUT /api/admin/patches/{id}
      */
@@ -272,8 +307,9 @@ class AppPatchController extends Controller
         $patch = AppPatch::findOrFail($id);
 
         $validated = $request->validate([
-            'version' => 'sometimes|string|max:20|unique:app_patches,version,' . $id,
+            'version' => 'sometimes|string|max:20',
             'version_code' => 'sometimes|integer|min:1',
+            'patch_count' => 'nullable|integer|min:0',
             'update_type' => 'sometimes|in:patch,apk',
             'file' => 'nullable|file|mimes:zip,patch,bz2|max:51200',
             'apk_file' => 'nullable|file|mimes:apk,zip|max:204800',
@@ -285,19 +321,17 @@ class AppPatchController extends Controller
             'max_app_version' => 'nullable|string|max:20',
         ]);
 
-        // Handle patch file upload if provided
+        // Handle patch file upload
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $fileName = $file->getClientOriginalName();
             $fileSize = $file->getSize();
 
-            // Delete old file
             $oldFilePath = storage_path('app/' . $patch->file_path);
-            if (file_exists($oldFilePath) && $patch->file_path !== 'patches/apk') {
+            if (file_exists($oldFilePath) && strpos($patch->file_path, 'patches/apk') === false) {
                 unlink($oldFilePath);
             }
 
-            // Store new file
             $filePath = $file->storeAs('patches', $fileName);
 
             $validated['file_name'] = $fileName;
@@ -308,13 +342,12 @@ class AppPatchController extends Controller
             $validated['update_type'] = $validated['update_type'] ?? 'patch';
         }
 
-        // Handle APK file upload if provided
+        // Handle APK file upload
         if ($request->hasFile('apk_file')) {
             $file = $request->file('apk_file');
             $fileName = $file->getClientOriginalName();
             $fileSize = $file->getSize();
 
-            // Create apk directory if not exists
             $apkDir = storage_path('app/patches/apk');
             if (!File::isDirectory($apkDir)) {
                 File::makeDirectory($apkDir, 0755, true);
@@ -331,7 +364,6 @@ class AppPatchController extends Controller
             $validated['apk_url'] = storage_path('app/' . $filePath);
         }
 
-        // Handle external APK URL
         if (isset($validated['apk_url']) && !$request->hasFile('apk_file')) {
             $validated['apk_url'] = $validated['apk_url'];
         }
@@ -352,9 +384,8 @@ class AppPatchController extends Controller
     {
         $patch = AppPatch::findOrFail($id);
 
-        // Delete file
         $filePath = storage_path('app/' . $patch->file_path);
-        if (file_exists($filePath)) {
+        if (file_exists($filePath) && strpos($patch->file_path, 'patches/apk') === false) {
             unlink($filePath);
         }
 
@@ -371,27 +402,18 @@ class AppPatchController extends Controller
      */
     public function getInfo(): JsonResponse
     {
+        $latestApk = AppPatch::getLatestApk();
         $latestPatch = AppPatch::where('is_active', true)
+            ->where('update_type', 'patch')
             ->orderBy('version_code', 'desc')
+            ->orderBy('patch_count', 'desc')
             ->first();
 
-        if ($latestPatch) {
-            return response()->json([
-                'version' => $latestPatch->version,
-                'version_code' => $latestPatch->version_code,
-                'updateType' => $latestPatch->update_type,
-                'size_hint' => $latestPatch->size_hint,
-                'changelog' => $latestPatch->changelog,
-                'is_mandatory' => $latestPatch->is_mandatory,
-                'isPatch' => $latestPatch->update_type === 'patch',
-                'isApk' => $latestPatch->update_type === 'apk',
-                'updated_at' => $latestPatch->updated_at,
-            ]);
-        }
-
-        return response()->json([
-            'version' => '1.0.0',
+        $response = [
+            'version' => '2.0.0',
             'version_code' => 1,
+            'patch_count' => 0,
+            'build_number' => 0,
             'updateType' => 'patch',
             'size_hint' => null,
             'changelog' => null,
@@ -399,6 +421,42 @@ class AppPatchController extends Controller
             'isPatch' => true,
             'isApk' => false,
             'updated_at' => null,
-        ]);
+        ];
+
+        if ($latestApk) {
+            $response['version'] = $latestApk->version;
+            $response['version_code'] = $latestApk->version_code;
+            $response['build_number'] = $latestApk->build_number;
+            $response['updateType'] = 'apk';
+            $response['size_hint'] = $latestApk->size_hint;
+            $response['changelog'] = $latestApk->changelog;
+            $response['is_mandatory'] = $latestApk->is_mandatory;
+            $response['isApk'] = true;
+            $response['isPatch'] = false;
+            $response['updated_at'] = $latestApk->updated_at;
+        }
+
+        if ($latestPatch) {
+            $response['patch_count'] = $latestPatch->patch_count;
+            if (!$latestApk || $latestPatch->version_code >= $latestApk->version_code) {
+                $response['changelog'] = $latestPatch->changelog;
+            }
+        }
+
+        return response()->json($response);
+    }
+
+    /**
+     * Helper to format file size
+     */
+    private function _formatFileSize(int $bytes): string
+    {
+        if ($bytes < 1024) {
+            return $bytes . ' B';
+        }
+        if ($bytes < 1024 * 1024) {
+            return round($bytes / 1024, 1) . ' KB';
+        }
+        return round($bytes / 1024 / 1024, 1) . ' MB';
     }
 }
