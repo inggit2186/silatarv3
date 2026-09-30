@@ -64,7 +64,15 @@ class AdminPatchController extends Controller
         $nextVersionCode = $latestApk ? $latestApk->version_code + 1 : 1;
         $nextBuildNumber = AppPatch::getNextBuildNumber();
 
-        return view('admin.patches.create', compact('latestApk', 'nextVersionCode', 'nextBuildNumber', 'isAdmin'));
+        // Get next patch count for the latest version
+        $latestPatch = AppPatch::where('is_active', true)
+            ->where('update_type', 'patch')
+            ->where('version_code', $latestApk ? $latestApk->version_code : 1)
+            ->orderBy('patch_count', 'desc')
+            ->first();
+        $nextPatchCount = $latestPatch ? $latestPatch->patch_count + 1 : 1;
+
+        return view('admin.patches.create', compact('latestApk', 'nextVersionCode', 'nextBuildNumber', 'nextPatchCount', 'isAdmin'));
     }
 
     /**

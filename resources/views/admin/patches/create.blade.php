@@ -122,19 +122,35 @@
                             <div class="form-group">
                                 <label class="form-label">Version Code <span class="text-danger">*</span></label>
                                 <input type="number" name="version_code" class="form-input" placeholder="1" value="{{ old('version_code', $nextVersionCode) }}" required min="1">
-                                <p class="text-xs text-muted mt-1">Angka unik untuk perbandingan</p>
+                                <p class="text-xs text-muted mt-1">ID unik per APK release</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-4" id="patchCountSection">
+
+                        <!-- Patch Count - Only for PATCH type -->
+                        <div class="grid grid-cols-2 gap-4 hidden" id="patchCountSection">
                             <div class="form-group">
                                 <label class="form-label">Patch Count <span class="text-danger">*</span></label>
-                                <input type="number" name="patch_count" class="form-input" placeholder="1" value="{{ old('patch_count', 1) }}" required min="1">
-                                <p class="text-xs text-muted mt-1">Patch ke berapa (reset per APK)</p>
+                                <input type="number" name="patch_count" class="form-input" placeholder="1" value="{{ old('patch_count', $nextPatchCount ?? 1) }}" min="1">
+                                <p class="text-xs text-muted mt-1">Patch ke berapa untuk versi ini</p>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Build Number</label>
+                                <input type="text" class="form-input" value="Auto (untuk APK)" disabled>
+                                <p class="text-xs text-muted mt-1">Tidak digunakan untuk patch</p>
+                            </div>
+                        </div>
+
+                        <!-- Build Number - Only for APK type -->
+                        <div class="grid grid-cols-2 gap-4" id="buildNumberSection">
+                            <div class="form-group">
+                                <label class="form-label">Build Number</label>
                                 <input type="number" class="form-input" value="{{ $nextBuildNumber }}" disabled>
-                                <p class="text-xs text-muted mt-1">Auto-increment untuk APK</p>
+                                <p class="text-xs text-muted mt-1">Counter global (auto-increment)</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Patch Count</label>
+                                <input type="text" class="form-input" value="0 (untuk APK)" disabled>
+                                <p class="text-xs text-muted mt-1">Tidak digunakan untuk APK</p>
                             </div>
                         </div>
                         <div class="form-group mb-0">
@@ -616,11 +632,14 @@
 	                radioApk.classList.remove('selected');
 	                patchFileSection.classList.remove('hidden');
 	                apkFileSection.classList.add('hidden');
-	                // Show patch count field for patch type
+
+	                // Show Patch Count section, Hide Build Number section
 	                var patchCountSection = document.getElementById('patchCountSection');
-	                if (patchCountSection) {
-	                    patchCountSection.style.display = 'grid';
-	                }
+	                var buildNumberSection = document.getElementById('buildNumberSection');
+	                if (patchCountSection) patchCountSection.classList.remove('hidden');
+	                if (buildNumberSection) buildNumberSection.classList.add('hidden');
+
+	                // Make patch_count required
 	                var patchCountInput = document.querySelector('input[name="patch_count"]');
 	                if (patchCountInput) {
 	                    patchCountInput.required = true;
@@ -632,11 +651,14 @@
 	                radioPatch.classList.remove('selected');
 	                patchFileSection.classList.add('hidden');
 	                apkFileSection.classList.remove('hidden');
-	                // Hide patch count field for APK type
+
+	                // Hide Patch Count section, Show Build Number section
 	                var patchCountSection = document.getElementById('patchCountSection');
-	                if (patchCountSection) {
-	                    patchCountSection.style.display = 'none';
-	                }
+	                var buildNumberSection = document.getElementById('buildNumberSection');
+	                if (patchCountSection) patchCountSection.classList.add('hidden');
+	                if (buildNumberSection) buildNumberSection.classList.remove('hidden');
+
+	                // Make patch_count not required
 	                var patchCountInput = document.querySelector('input[name="patch_count"]');
 	                if (patchCountInput) {
 	                    patchCountInput.required = false;
