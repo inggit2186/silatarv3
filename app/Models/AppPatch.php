@@ -58,10 +58,12 @@ class AppPatch extends Model
      */
     public function getDownloadUrl(): string
     {
-        if ($this->update_type === 'apk' && $this->apk_url) {
+        // For APK with external URL (starts with http)
+        if ($this->update_type === 'apk' && $this->apk_url && str_starts_with($this->apk_url, 'http')) {
             return $this->apk_url;
         }
 
+        // Otherwise use the download endpoint
         return url('/api/patch/download/' . $this->id);
     }
 

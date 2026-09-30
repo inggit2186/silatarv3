@@ -283,7 +283,7 @@ class AppPatchController extends Controller
             'file_path' => $filePath,
             'file_size' => $fileSize,
             'md5' => $md5,
-            'apk_url' => $updateType === 'apk' ? ($validated['apk_url'] ?? $filePath) : null,
+            'apk_url' => $updateType === 'apk' && isset($validated['apk_url']) ? $validated['apk_url'] : null,
             'size_hint' => $sizeHint,
             'changelog' => $validated['changelog'] ?? null,
             'is_mandatory' => $validated['is_mandatory'] ?? false,
