@@ -35,8 +35,8 @@ class AppPatchController extends Controller
         \Log::info("[PatchCheck] version=$currentVersion, patch_count=$currentPatchCount, app_version_code=$currentVersionCode, build_number=$currentBuildNumber");
 
         // Step 1: Check for PATCH updates
-        // Only offer patch if app_version_code matches
-        $latestPatch = $this->getAvailablePatch($currentVersionCode, $currentPatchCount);
+        // Only offer patch if version AND app_version_code matches
+        $latestPatch = $this->getAvailablePatch($currentVersion, $currentVersionCode, $currentPatchCount);
 
         if ($latestPatch) {
             return $this->buildPatchResponse($latestPatch, $currentVersionCode, $currentPatchCount);
@@ -62,11 +62,13 @@ class AppPatchController extends Controller
 
     /**
      * Get available patch for current app version
+     * Checks: version + version_code + patch_count
      */
-    private function getAvailablePatch(int $versionCode, int $currentPatchCount): ?AppPatch
+    private function getAvailablePatch(string $version, int $versionCode, int $currentPatchCount): ?AppPatch
     {
         return AppPatch::where('is_active', true)
             ->where('update_type', 'patch')
+            ->where('version', $version)
             ->where('version_code', $versionCode)
             ->where('patch_count', '>', $currentPatchCount)
             ->where(function ($query) {
