@@ -91,6 +91,15 @@ class AdminPatchController extends Controller
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
+        \Log::info('[PatchUpload] Starting patch upload', [
+            'update_type' => $request->input('update_type'),
+            'version' => $request->input('version'),
+            'version_code' => $request->input('version_code'),
+            'patch_count' => $request->input('patch_count'),
+            'has_file' => $request->hasFile('file'),
+            'has_apk_file' => $request->hasFile('apk_file'),
+        ]);
+
         $updateType = $request->input('update_type', 'patch');
 
         // Validation based on update type
@@ -215,7 +224,10 @@ class AdminPatchController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            \Log::error('Patch upload failed', ['error' => $e->getMessage()]);
+            \Log::error('Patch upload failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             return redirect()
                 ->back()
