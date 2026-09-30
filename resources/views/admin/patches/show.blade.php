@@ -50,7 +50,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
                             <p class="text-xs text-muted uppercase tracking-wider mb-1">Versi</p>
                             <p class="font-medium text-ink">{{ $patch->version }}</p>
@@ -59,30 +59,37 @@
                             <p class="text-xs text-muted uppercase tracking-wider mb-1">Version Code</p>
                             <p class="font-medium text-ink">{{ $patch->version_code }}</p>
                         </div>
+                        @if($patch->update_type === 'apk')
                         <div>
-                            <p class="text-xs text-muted uppercase tracking-wider mb-1">Min App Version</p>
-                            <p class="font-medium text-ink">{{ $patch->min_app_version ?? '-' }}</p>
+                            <p class="text-xs text-muted uppercase tracking-wider mb-1">Build Number</p>
+                            <p class="font-medium text-ink">{{ $patch->build_number ?? '-' }}</p>
                         </div>
+                        @else
                         <div>
-                            <p class="text-xs text-muted uppercase tracking-wider mb-1">Max App Version</p>
-                            <p class="font-medium text-ink">{{ $patch->max_app_version ?? '-' }}</p>
+                            <p class="text-xs text-muted uppercase tracking-wider mb-1">Patch Number</p>
+                            <p class="font-medium text-ink">#{{ $patch->patch_count }}</p>
                         </div>
+                        @endif
                         <div>
-                            <p class="text-xs text-muted uppercase tracking-wider mb-1">Tipe Update</p>
+                            <p class="text-xs text-muted uppercase tracking-wider mb-1">Tipe</p>
                             @if($patch->update_type === 'patch')
-                                <span class="badge badge-primary flex items-center gap-1 w-fit">
-                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                    </svg>
-                                    Patch (Hot Code)
-                                </span>
+                                <span class="badge badge-primary">Patch</span>
                             @else
-                                <span class="badge badge-info flex items-center gap-1 w-fit">
-                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                                    </svg>
-                                    Full APK
-                                </span>
+                                <span class="badge badge-info">APK</span>
+                            @endif
+                        </div>
+                        <div>
+                            <p class="text-xs text-muted uppercase tracking-wider mb-1">Status</p>
+                            <span class="badge {{ $patch->is_active ? 'badge-success' : 'badge-secondary' }}">
+                                {{ $patch->is_active ? 'Aktif' : 'Nonaktif' }}
+                            </span>
+                        </div>
+                        <div>
+                            <p class="text-xs text-muted uppercase tracking-wider mb-1">Mandatory</p>
+                            @if($patch->is_mandatory)
+                                <span class="badge badge-danger">Ya</span>
+                            @else
+                                <span class="text-sm text-muted">Tidak</span>
                             @endif
                         </div>
                         <div>
@@ -90,6 +97,14 @@
                             <p class="font-medium text-ink">{{ $patch->size_hint ?? number_format($patch->file_size / 1024, 1) . ' KB' }}</p>
                         </div>
                         <div>
+                            <p class="text-xs text-muted uppercase tracking-wider mb-1">Min Version</p>
+                            <p class="font-medium text-ink">{{ $patch->min_app_version ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-muted uppercase tracking-wider mb-1">Max Version</p>
+                            <p class="font-medium text-ink">{{ $patch->max_app_version ?? '-' }}</p>
+                        </div>
+                        <div class="col-span-2 md:col-span-4">
                             <p class="text-xs text-muted uppercase tracking-wider mb-1">MD5</p>
                             <p class="font-mono text-xs text-ink bg-secondary px-2 py-1 rounded">{{ $patch->md5 ?? '-' }}</p>
                         </div>

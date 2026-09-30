@@ -144,21 +144,23 @@
                             <div class="form-group">
                                 <label class="form-label">Version Code <span class="text-danger">*</span></label>
                                 <input type="number" name="version_code" class="form-input" placeholder="1" value="{{ old('version_code', $nextVersionCode) }}" required min="1">
-                                <p class="text-xs text-muted mt-1">ID unik per APK release</p>
+                                <p class="text-xs text-muted mt-1">Reset per versi (2.0.0->2.0.1 = 1)</p>
                             </div>
+                        </div>
+
+                        <!-- Build Number - Only for APK type -->
+                        <div class="form-group hidden" id="buildNumberSection">
+                            <label class="form-label">Build Number <span class="text-danger">*</span></label>
+                            <input type="number" name="build_number" class="form-input" placeholder="{{ $nextBuildNumber ?? 1 }}" value="{{ old('build_number', $nextBuildNumber ?? 1) }}" min="0">
+                            <p class="text-xs text-muted mt-1">Global counter - ALWAYS INCREMENT. Untuk APK update detection</p>
                         </div>
 
                         <!-- Patch Count - Only for PATCH type -->
                         <div class="grid grid-cols-2 gap-4 hidden" id="patchCountSection">
                             <div class="form-group">
-                                <label class="form-label">Patch Count <span class="text-danger">*</span></label>
-                                <input type="number" name="patch_count" class="form-input" placeholder="1" value="{{ old('patch_count', $nextPatchCount ?? 1) }}" min="1">
+                                <label class="form-label">Patch Number <span class="text-danger">*</span></label>
+                                <input type="number" name="patch_count" class="form-input" placeholder="1" value="{{ old('patch_count', $nextPatchCount ?? 1) }}" min="1" required>
                                 <p class="text-xs text-muted mt-1">Patch ke berapa untuk versi ini</p>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Patch Count</label>
-                                <input type="text" class="form-input" value="0 (untuk APK)" disabled>
-                                <p class="text-xs text-muted mt-1">Tidak digunakan untuk Patch</p>
                             </div>
                         </div>
                         <div class="form-group mb-0">
@@ -342,12 +344,14 @@
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        Tips
+                        Panduan Versioning
                     </div>
                     <ul class="tips-box-list">
-                        <li>Gunakan <strong>Patch</strong> untuk update kecil</li>
-                        <li>Gunakan <strong>APK</strong> untuk native changes</li>
-                        <li>Version code harus > dari sebelumnya</li>
+                        <li><strong>Patch</strong>: version + version_code + patch_count</li>
+                        <li><strong>APK</strong>: version + version_code + build_number</li>
+                        <li><strong>version_code</strong>: Reset per versi (2.0.0->2.0.1 = 1)</li>
+                        <li><strong>build_number</strong>: SELALU INCREMENT (global)</li>
+                        <li><strong>patch_count</strong>: Counter patch per APK version</li>
                     </ul>
                 </div>
 
@@ -645,6 +649,10 @@
 	                var patchCountSection = document.getElementById('patchCountSection');
 	                if (patchCountSection) patchCountSection.classList.remove('hidden');
 
+	                // Hide Build Number section
+	                var buildNumberSection = document.getElementById('buildNumberSection');
+	                if (buildNumberSection) buildNumberSection.classList.add('hidden');
+
 	                // Make patch_count required
 	                var patchCountInput = document.querySelector('input[name="patch_count"]');
 	                if (patchCountInput) {
@@ -661,6 +669,10 @@
 	                // Hide Patch Count section
 	                var patchCountSection = document.getElementById('patchCountSection');
 	                if (patchCountSection) patchCountSection.classList.add('hidden');
+
+	                // Show Build Number section
+	                var buildNumberSection = document.getElementById('buildNumberSection');
+	                if (buildNumberSection) buildNumberSection.classList.remove('hidden');
 
 	                // Make patch_count not required
 	                var patchCountInput = document.querySelector('input[name="patch_count"]');

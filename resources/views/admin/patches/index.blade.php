@@ -127,7 +127,8 @@
                 <thead>
                     <tr>
                         <th>Versi</th>
-                        <th>Info</th>
+                        <th>Version Code</th>
+                        <th>Patch / Build#</th>
                         <th>File</th>
                         <th>Status</th>
                         <th>Tanggal</th>
@@ -140,47 +141,42 @@
                             <td>
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-sm">
-                                        v{{ $patch->version_code }}
+                                        {{ strtoupper($patch->update_type === 'apk' ? 'APK' : 'PAT') }}
                                     </div>
                                     <div>
                                         <span class="font-medium text-ink">{{ $patch->version }}</span>
-                                        <span class="text-xs text-muted block">Code: {{ $patch->version_code }}</span>
+                                        @if($patch->update_type === 'patch')
+                                            <span class="text-xs text-muted block">Patch #{{ $patch->patch_count }}</span>
+                                        @endif
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <div class="text-sm">
-                                    @if($patch->min_app_version || $patch->max_app_version)
-                                        <span class="text-muted">
-                                            Min: {{ $patch->min_app_version ?? '*' }} |
-                                            Max: {{ $patch->max_app_version ?? '*' }}
-                                        </span>
-                                    @else
-                                        <span class="text-muted">Semua versi</span>
-                                    @endif
-                                </div>
+                                <span class="font-mono text-sm">vc={{ $patch->version_code }}</span>
+                                @if($patch->update_type === 'apk' && $patch->build_number)
+                                    <span class="text-xs text-muted block">build={{ $patch->build_number }}</span>
+                                @endif
                             </td>
                             <td>
-                                <div class="flex items-center gap-3">
-                                    @if($patch->update_type === 'patch')
-                                        <span class="badge badge-primary flex items-center gap-1">
-                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                            </svg>
-                                            Patch
-                                        </span>
-                                    @else
-                                        <span class="badge badge-info flex items-center gap-1">
-                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                                            </svg>
-                                            APK
-                                        </span>
-                                    @endif
-                                </div>
-                                <div class="text-xs text-muted mt-1">
+                                @if($patch->update_type === 'patch')
+                                    <span class="badge badge-primary">
+                                        #{{ $patch->patch_count }}
+                                    </span>
+                                @else
+                                    <span class="badge badge-info">
+                                        Build #{{ $patch->build_number ?? $patch->version_code }}
+                                    </span>
+                                @endif
+                            </td>
+                            <td>
+                                <div class="text-xs text-muted">
                                     {{ $patch->size_hint ?? number_format($patch->file_size / 1024, 1) . ' KB' }}
                                 </div>
+                                @if($patch->file_name)
+                                    <span class="text-xs text-muted truncate block max-w-[150px]">
+                                        {{ $patch->file_name }}
+                                    </span>
+                                @endif
                             </td>
                             <td>
                                 <div class="flex flex-col gap-1">

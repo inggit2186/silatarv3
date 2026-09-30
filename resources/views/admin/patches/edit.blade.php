@@ -50,24 +50,63 @@
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="card-title">Informasi Patch</h3>
-                                <p class="text-sm text-muted">Versi dan detail patch</p>
+                                <h3 class="card-title">Informasi Update</h3>
+                                <p class="text-sm text-muted">Versi dan detail update</p>
                             </div>
                         </div>
                     </div>
                     <div class="card-body space-y-4">
-                        <!-- Version -->
-                        <div class="form-group">
-                            <label class="form-label">Versi</label>
-                            <input type="text" name="version" class="form-input" value="{{ old('version', $patch->version) }}">
-                            <p class="text-xs text-muted mt-1">Format: major.minor.patch (contoh: 2.0.1)</p>
+                        <!-- Info Banner -->
+                        <div class="flex items-center gap-3 p-3 bg-info-bg rounded-lg border border-info/20">
+                            @if($patch->update_type === 'patch')
+                                <svg class="w-5 h-5 text-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                                <span class="text-sm text-info">Patch Update - Version Code tidak bisa diubah</span>
+                            @else
+                                <svg class="w-5 h-5 text-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                                <span class="text-sm text-info">Full APK - Version Code tidak bisa diubah</span>
+                            @endif
                         </div>
 
-                        <!-- Version Code -->
-                        <div class="form-group">
-                            <label class="form-label">Version Code</label>
-                            <input type="number" name="version_code" class="form-input" value="{{ old('version_code', $patch->version_code) }}" min="1">
-                            <p class="text-xs text-muted mt-1">Angka unik untuk perbandingan versi</p>
+                        <!-- Version Grid -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="form-group">
+                                <label class="form-label">Versi</label>
+                                <input type="text" name="version" class="form-input" value="{{ old('version', $patch->version) }}">
+                                <p class="text-xs text-muted mt-1">Format: major.minor.patch</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Version Code</label>
+                                <input type="number" name="version_code" class="form-input bg-secondary" value="{{ $patch->version_code }}" disabled>
+                                <p class="text-xs text-muted mt-1">Tidak bisa diubah</p>
+                            </div>
+
+                            @if($patch->update_type === 'apk')
+                            <div class="form-group">
+                                <label class="form-label">Build Number</label>
+                                <input type="number" name="build_number" class="form-input bg-secondary" value="{{ $patch->build_number ?? $patch->version_code }}" disabled>
+                                <p class="text-xs text-muted mt-1">Tidak bisa diubah</p>
+                            </div>
+                            @else
+                            <div class="form-group">
+                                <label class="form-label">Patch Number</label>
+                                <input type="number" name="patch_count" class="form-input bg-secondary" value="{{ $patch->patch_count }}" disabled>
+                                <p class="text-xs text-muted mt-1">Tidak bisa diubah</p>
+                            </div>
+                            @endif
+
+                            <div class="form-group">
+                                <label class="form-label">Tipe</label>
+                                @if($patch->update_type === 'patch')
+                                    <span class="badge badge-primary">Patch</span>
+                                @else
+                                    <span class="badge badge-info">APK</span>
+                                @endif
+                            </div>
                         </div>
 
                         <!-- Changelog -->

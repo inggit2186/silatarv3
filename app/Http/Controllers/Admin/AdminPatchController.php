@@ -62,16 +62,18 @@ class AdminPatchController extends Controller
 
         $latestApk = AppPatch::getLatestApk();
         $nextVersionCode = $latestApk ? $latestApk->version_code + 1 : 1;
+        $nextBuildNumber = $latestApk ? ($latestApk->build_number ?? $latestApk->version_code) + 1 : 1;
 
         // Get next patch count for the latest version
         $latestPatch = AppPatch::where('is_active', true)
             ->where('update_type', 'patch')
             ->where('version_code', $latestApk ? $latestApk->version_code : 1)
+            ->where('version', $latestApk ? $latestApk->version : '2.0.0')
             ->orderBy('patch_count', 'desc')
             ->first();
         $nextPatchCount = $latestPatch ? $latestPatch->patch_count + 1 : 1;
 
-        return view('admin.patches.create', compact('latestApk', 'nextVersionCode', 'nextPatchCount', 'isAdmin'));
+        return view('admin.patches.create', compact('latestApk', 'nextVersionCode', 'nextBuildNumber', 'nextPatchCount', 'isAdmin'));
     }
 
     /**
@@ -96,6 +98,7 @@ class AdminPatchController extends Controller
         $rules = [
             'version' => 'required|string|max:20',
             'version_code' => 'required|integer|min:1',
+            'build_number' => 'nullable|integer|min:0',
             'update_type' => 'nullable|in:patch,apk',
             'apk_file' => 'nullable|file|mimes:apk,zip|max:204800',
             'apk_url' => 'nullable|url|max:500',
@@ -155,7 +158,8 @@ class AdminPatchController extends Controller
                 $patchCount = (int) $validated['patch_count'];
 
                 // Check if patch already exists
-                $existingPatch = AppPatch::where('version_code', $validated['version_code'])
+                $existingPatch = AppPatch::where('version', $validated['version'])
+                    ->where('version_code', $validated['version_code'])
                     ->where('patch_count', $patchCount)
                     ->where('update_type', 'patch')
                     ->first();
@@ -165,11 +169,12 @@ class AdminPatchController extends Controller
                     return redirect()
                         ->back()
                         ->withInput()
-                        ->with('error', "Patch dengan version_code {$validated['version_code']} dan patch_count {$patchCount} sudah ada!");
+                        ->with('error', "Patch dengan version {$validated['version']}, version_code {$validated['version_code']}, patch_count {$patchCount} sudah ada!");
                 }
             } else {
-                // APK - check if version already exists
-                $existingApk = AppPatch::where('version_code', $validated['version_code'])
+                // APK - check if build_number already exists
+                $buildNumber = (int) ($validated['build_number'] ?? $validated['version_code']);
+                $existingApk = AppPatch::where('build_number', $buildNumber)
                     ->where('update_type', 'apk')
                     ->first();
 
@@ -178,13 +183,18 @@ class AdminPatchController extends Controller
                     return redirect()
                         ->back()
                         ->withInput()
-                        ->with('error', "APK dengan version_code {$validated['version_code']} sudah ada!");
+                        ->with('error', "APK dengan build_number {$buildNumber} sudah ada!");
                 }
             }
+
+            $buildNumberForDb = $updateType === 'apk'
+                ? (int) ($validated['build_number'] ?? $validated['version_code'])
+                : null;
 
             $patch = AppPatch::create([
                 'version' => $validated['version'],
                 'version_code' => $validated['version_code'],
+                'build_number' => $buildNumberForDb,
                 'patch_count' => $patchCount,
                 'update_type' => $updateType,
                 'file_name' => $fileName,
@@ -196,7 +206,7 @@ class AdminPatchController extends Controller
                 'is_active' => $request->boolean('is_active', true),
                 'min_app_version' => $validated['min_app_version'] ?? null,
                 'max_app_version' => $validated['max_app_version'] ?? null,
-                'apk_url' => $updateType === 'apk' ? ($validated['apk_url'] ?? $filePath) : null,
+                'apk_url' => $updateType === 'apk' && isset($validated['apk_url']) ? $validated['apk_url'] : null,
                 'size_hint' => $sizeHint,
             ]);
 
