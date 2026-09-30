@@ -15,7 +15,6 @@ class AppPatch extends Model
         'version',
         'version_code',
         'patch_count',
-        'build_number',
         'file_name',
         'file_path',
         'file_size',
@@ -36,7 +35,6 @@ class AppPatch extends Model
         'file_size' => 'integer',
         'version_code' => 'integer',
         'patch_count' => 'integer',
-        'build_number' => 'integer',
     ];
 
     /**
@@ -136,15 +134,6 @@ class AppPatch extends Model
             ->where('version_code', '>', $versionCode)
             ->orderBy('version_code', 'desc')
             ->first();
-    }
-
-    /**
-     * Get next build number (static method)
-     */
-    public static function getNextBuildNumber(): int
-    {
-        $latest = static::max('build_number');
-        return ($latest ?? 0) + 1;
     }
 
     /**

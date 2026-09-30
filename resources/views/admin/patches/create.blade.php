@@ -156,23 +156,9 @@
                                 <p class="text-xs text-muted mt-1">Patch ke berapa untuk versi ini</p>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Build Number</label>
-                                <input type="text" class="form-input" value="Auto (untuk APK)" disabled>
-                                <p class="text-xs text-muted mt-1">Tidak digunakan untuk patch</p>
-                            </div>
-                        </div>
-
-                        <!-- Build Number - Only for APK type -->
-                        <div class="grid grid-cols-2 gap-4" id="buildNumberSection">
-                            <div class="form-group">
-                                <label class="form-label">Build Number</label>
-                                <input type="number" class="form-input" value="{{ $nextBuildNumber }}" disabled>
-                                <p class="text-xs text-muted mt-1">Counter global (auto-increment)</p>
-                            </div>
-                            <div class="form-group">
                                 <label class="form-label">Patch Count</label>
                                 <input type="text" class="form-input" value="0 (untuk APK)" disabled>
-                                <p class="text-xs text-muted mt-1">Tidak digunakan untuk APK</p>
+                                <p class="text-xs text-muted mt-1">Tidak digunakan untuk Patch</p>
                             </div>
                         </div>
                         <div class="form-group mb-0">
@@ -655,11 +641,9 @@
 	                patchFileSection.classList.remove('hidden');
 	                apkFileSection.classList.add('hidden');
 
-	                // Show Patch Count section, Hide Build Number section
+	                // Show Patch Count section
 	                var patchCountSection = document.getElementById('patchCountSection');
-	                var buildNumberSection = document.getElementById('buildNumberSection');
 	                if (patchCountSection) patchCountSection.classList.remove('hidden');
-	                if (buildNumberSection) buildNumberSection.classList.add('hidden');
 
 	                // Make patch_count required
 	                var patchCountInput = document.querySelector('input[name="patch_count"]');
@@ -674,11 +658,9 @@
 	                patchFileSection.classList.add('hidden');
 	                apkFileSection.classList.remove('hidden');
 
-	                // Hide Patch Count section, Show Build Number section
+	                // Hide Patch Count section
 	                var patchCountSection = document.getElementById('patchCountSection');
-	                var buildNumberSection = document.getElementById('buildNumberSection');
 	                if (patchCountSection) patchCountSection.classList.add('hidden');
-	                if (buildNumberSection) buildNumberSection.classList.remove('hidden');
 
 	                // Make patch_count not required
 	                var patchCountInput = document.querySelector('input[name="patch_count"]');

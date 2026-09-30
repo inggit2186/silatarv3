@@ -62,7 +62,6 @@ class AdminPatchController extends Controller
 
         $latestApk = AppPatch::getLatestApk();
         $nextVersionCode = $latestApk ? $latestApk->version_code + 1 : 1;
-        $nextBuildNumber = AppPatch::getNextBuildNumber();
 
         // Get next patch count for the latest version
         $latestPatch = AppPatch::where('is_active', true)
@@ -72,15 +71,15 @@ class AdminPatchController extends Controller
             ->first();
         $nextPatchCount = $latestPatch ? $latestPatch->patch_count + 1 : 1;
 
-        return view('admin.patches.create', compact('latestApk', 'nextVersionCode', 'nextBuildNumber', 'nextPatchCount', 'isAdmin'));
+        return view('admin.patches.create', compact('latestApk', 'nextVersionCode', 'nextPatchCount', 'isAdmin'));
     }
 
     /**
      * Store new patch
      *
-     * New Hybrid Versioning:
-     * - For APK: patch_count = 0, build_number auto-increment
-     * - For Patch: patch_count required (> 0), build_number not used
+     * Versioning:
+     * - APK: patch_count = 0
+     * - Patch: patch_count required (> 0)
      */
     public function store(Request $request)
     {
@@ -90,15 +89,6 @@ class AdminPatchController extends Controller
         if (!$isAdmin) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
-
-        \Log::info('[PatchUpload] Starting patch upload', [
-            'update_type' => $request->input('update_type'),
-            'version' => $request->input('version'),
-            'version_code' => $request->input('version_code'),
-            'patch_count' => $request->input('patch_count'),
-            'has_file' => $request->hasFile('file'),
-            'has_apk_file' => $request->hasFile('apk_file'),
-        ]);
 
         $updateType = $request->input('update_type', 'patch');
 
@@ -117,10 +107,10 @@ class AdminPatchController extends Controller
         ];
 
         if ($updateType === 'patch') {
-            $rules['file'] = 'required|file|mimes:zip,patch,bz2,tar,tar.gz,tgz|max:51200'; // 50MB for patch
+            $rules['file'] = 'required|file|mimes:zip,patch,bz2,tar,tar.gz,tgz|max:51200';
             $rules['patch_count'] = 'required|integer|min:1';
         } else {
-            $rules['file'] = 'nullable|file|mimes:apk,zip|max:204800'; // 200MB for APK
+            $rules['file'] = 'nullable|file|mimes:apk,zip|max:204800';
             $rules['apk_file'] = 'nullable|file|mimes:apk,zip|max:204800';
         }
 
@@ -142,7 +132,6 @@ class AdminPatchController extends Controller
             $md5 = null;
             $sizeHint = null;
             $patchCount = 0;
-            $buildNumber = null;
 
             if ($uploadedFile) {
                 $fileName = $uploadedFile->getClientOriginalName();
@@ -164,9 +153,8 @@ class AdminPatchController extends Controller
 
             if ($updateType === 'patch') {
                 $patchCount = (int) $validated['patch_count'];
-                $buildNumber = 0; // Not used for patch
 
-                // Check if patch already exists for this version_code + patch_count
+                // Check if patch already exists
                 $existingPatch = AppPatch::where('version_code', $validated['version_code'])
                     ->where('patch_count', $patchCount)
                     ->where('update_type', 'patch')
@@ -180,10 +168,7 @@ class AdminPatchController extends Controller
                         ->with('error', "Patch dengan version_code {$validated['version_code']} dan patch_count {$patchCount} sudah ada!");
                 }
             } else {
-                // APK - auto-increment build_number
-                $buildNumber = AppPatch::getNextBuildNumber();
-
-                // Check if APK version already exists
+                // APK - check if version already exists
                 $existingApk = AppPatch::where('version_code', $validated['version_code'])
                     ->where('update_type', 'apk')
                     ->first();
@@ -201,7 +186,6 @@ class AdminPatchController extends Controller
                 'version' => $validated['version'],
                 'version_code' => $validated['version_code'],
                 'patch_count' => $patchCount,
-                'build_number' => $buildNumber,
                 'update_type' => $updateType,
                 'file_name' => $fileName,
                 'file_path' => $filePath,
@@ -441,7 +425,7 @@ class AdminPatchController extends Controller
         }
 
         $downloadName = $patch->update_type === 'apk'
-            ? 'silatar_v2_v' . $patch->version . '_build' . $patch->version_code . '.apk'
+            ? 'silatar_v2_v' . $patch->version . '.apk'
             : 'silatar_v2_patch_' . $patch->full_version . '.zip';
 
         return response()->download($filePath, $downloadName, [
