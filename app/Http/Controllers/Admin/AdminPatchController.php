@@ -164,6 +164,7 @@ class AdminPatchController extends Controller
 
             if ($updateType === 'patch') {
                 $patchCount = (int) $validated['patch_count'];
+                $buildNumber = 0; // Not used for patch
 
                 // Check if patch already exists for this version_code + patch_count
                 $existingPatch = AppPatch::where('version_code', $validated['version_code'])
