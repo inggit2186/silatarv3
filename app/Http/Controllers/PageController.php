@@ -5042,6 +5042,88 @@ class PageController extends Controller
     }
 
     /**
+     * Download SILATAR Android APK via WhatsApp.
+     */
+    public function downloadApk(Request $request)
+    {
+        $user = $request->user();
+
+        // Get user's WhatsApp number
+        $whatsapp = $user->whatsapp ?? $user->no_hp ?? null;
+
+        if (! $whatsapp) {
+            return redirect()->back()->with('error', 'Nomor WhatsApp belum terdaftar. Silakan update profil Anda terlebih dahulu.');
+        }
+
+        // Normalize phone number
+        $normalizedPhone = WhatsAppService::normalizePhoneNumber($whatsapp);
+
+        // Get APK file path from storage
+        $apkPath = 'apk/silatar.apk';
+        $apkFullPath = Storage::disk('public')->path($apkPath);
+
+        if (! Storage::disk('public')->exists($apkPath)) {
+            Log::error('APK file not found', ['path' => $apkPath]);
+            return redirect()->back()->with('error', 'File APK tidak ditemukan. Hubungi administrator.');
+        }
+
+        // Get APK URL for WhatsApp API
+        $apkUrl = url(Storage::url($apkPath));
+
+        // Get APK info
+        $fileSize = filesize($apkFullPath);
+        $fileSizeFormatted = number_format($fileSize / (1024 * 1024), 2); // MB
+
+        // Caption message
+        $caption = "*APLIKASI SILATAR ANDROID*\n\n".
+            "📱 *SILATAR V2*\n".
+            "Kantor Kementerian Agama Kabupaten Tanah Datar\n\n".
+            "📦 Ukuran: {$fileSizeFormatted} MB\n".
+            "📅 Tanggal: ".date('d/m/Y')."\n\n".
+            "Petunjuk Instalasi:\n".
+            "1. Download file APK\n".
+            "2. Aktifkan 'Sumber Tidak Dikenal' di Pengaturan\n".
+            "3. Install file APK\n\n".
+            "_Dokumen ini dikirim otomatis via SILATAR_";
+
+        try {
+            // Initialize WhatsApp service
+            $waService = new WhatsAppService();
+            $result = $waService->sendMedia(
+                number: $normalizedPhone,
+                url: $apkUrl,
+                caption: $caption,
+                mediaType: 'document',
+                footer: '© '.date('Y').' SILATAR - Kankemenag Tanah Datar'
+            );
+
+            if ($result && ($result['status'] ?? false)) {
+                Log::info('APK sent via WhatsApp', [
+                    'user_id' => $user->id,
+                    'phone' => $normalizedPhone,
+                ]);
+
+                return redirect()->back()->with('success', 'Link download APK berhasil dikirim ke WhatsApp Anda: '.$whatsapp);
+            }
+
+            Log::warning('WhatsApp APK sending failed', [
+                'user_id' => $user->id,
+                'result' => $result,
+            ]);
+
+            return redirect()->back()->with('error', 'Gagal mengirim APK via WhatsApp. Pastikan nomor WhatsApp valid dan aktif.');
+
+        } catch (\Exception $e) {
+            Log::error('WhatsApp APK sending error', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengirim APK. Silakan coba lagi nanti.');
+        }
+    }
+
+    /**
      * Upload signature image.
      */
     public function uploadSignatureImage(Request $request)

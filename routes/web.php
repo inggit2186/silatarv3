@@ -167,6 +167,9 @@ Route::middleware('auth')->group(function () {
 // Impersonate (Stop) - accessible from anywhere when logged in
 Route::post('/impersonate/stop', [UserController::class, 'stopImpersonate'])->middleware('auth')->name('impersonate.stop');
 
+// APK Download via WhatsApp
+Route::get('/apk', [PageController::class, 'downloadApk'])->middleware('auth')->name('apk.download');
+
 // PPID Routes
 Route::prefix('ppid')->group(function () {
     // Beranda

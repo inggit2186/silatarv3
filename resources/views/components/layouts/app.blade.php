@@ -111,12 +111,21 @@
                     <h4 class="neo-app-promo-title">SILATAR Android App</h4>
                     <p class="neo-app-promo-text">Dapatkan aplikasi mobile SILATAR untuk kemudahan akses di mana saja!</p>
                 </div>
-                <a href="https://play.google.com/store/apps/details?id=com.silatar.app" target="_blank" rel="noopener noreferrer" class="neo-app-promo-btn">
+                @auth
+                <a href="{{ route('apk.download') }}" class="neo-app-promo-btn">
                     <svg class="neo-app-promo-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4"/>
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                     </svg>
                     Download Sekarang
                 </a>
+                @else
+                <a href="{{ route('login') }}" class="neo-app-promo-btn">
+                    <svg class="neo-app-promo-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/>
+                    </svg>
+                    Login untuk Download
+                </a>
+                @endauth
                 <button @click="dismiss()" type="button" class="neo-app-promo-close" aria-label="Tutup pemberitahuan">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M6 18L18 6M6 6l12 12"/>
