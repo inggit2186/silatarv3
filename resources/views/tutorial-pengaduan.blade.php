@@ -611,7 +611,7 @@
                     </li>
                     <li>
                         <span class="dot-color" style="background: #8b5cf6;"></span>
-                        <span><strong>Lupa Presensi Pusaka</strong> &mdash; Lupa melakukan presensi kehadiran pada hari tertentu</span>
+                        <span><strong>Lupa Presensi Pusaka</strong> &mdash; Lupa presensi H-1 (kemarin) saja. Tidak bisa untuk tanggal lain.</span>
                     </li>
                 </ul>
                 <div class="screenshot">
@@ -628,10 +628,10 @@
                 <span class="tag tag-red">Khusus Lupa Presensi</span>
             </div>
             <div class="step-card-body">
-                <p>Jika Anda memilih alasan <strong>"Lupa Presensi Pusaka"</strong>, akan muncul kolom untuk memilih tanggal. Pilih tanggal saat Anda lupa melakukan presensi menggunakan <em>date picker</em> yang tersedia.</p>
-                <div class="tip tip-blue">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                    <span>Lokasi GPS akan otomatis terdeteksi dan jarak dari kantor akan dihitung secara otomatis oleh sistem.</span>
+                <p>Jika Anda memilih alasan <strong>"Lupa Presensi Pusaka"</strong>, akan muncul kolom untuk memilih tanggal. Sistem secara otomatis membatasi pilihan hanya pada <strong>tanggal H-1 (kemarin)</strong>. Anda tidak dapat memilih tanggal lain.</p>
+                <div class="tip tip-red">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                    <span><strong>Aturan:</strong> Pengaduan lupa presensi hanya dapat dilakukan untuk tanggal H-1 (kemarin). Tidak dapat memilih tanggal lebih dari 1 hari yang lalu.</span>
                 </div>
                 <div class="screenshot">
                     <img src="{{ asset('images/tutorial/step-05.webp') }}" alt="Pilih Tanggal Lupa Presensi">
