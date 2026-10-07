@@ -257,8 +257,18 @@
 
         <table class="info-table">
             <tr>
-                <td class="label">Hari / Tanggal</td>
+                <td class="label">Hari / Tanggal Presensi</td>
                 <td class="value">{{ $tanggal }}</td>
+            </tr>
+            <tr>
+                <td class="label">Tanggal Pelaporan</td>
+                <td class="value">
+                    @if($alasan === 'LUPA_PRESNSI_PUSAKA')
+                        {{ \Carbon\Carbon::now('Asia/Jakarta')->locale('id_ID')->isoFormat('dddd, D MMMM Y') }} (H+1 dari tanggal presensi)
+                    @else
+                        {{ $tanggal }}
+                    @endif
+                </td>
             </tr>
             <tr>
                 <td class="label">Tipe Presensi</td>
@@ -306,7 +316,7 @@
                 Demikian surat keterangan ini dibuat dengan sebenar-benarnya dan dapat dipertanggungjawabkan.
                 @if($alasan === 'LUPA_PRESNSI_PUSAKA')
                     Surat ini diterbitkan karena pegawai yang bersangkutan lupa melakukan presensi kehadiran kerja
-                    pada tanggal yang tertera di atas, sehingga dilaporkan melalui halaman alternatif <strong>Pengaduan Presensi</strong>.
+                    pada <strong>tanggal H-1 (sebelum tanggal pelaporan)</strong>, sehingga dilaporkan melalui halaman alternatif <strong>Pengaduan Presensi</strong>.
                 @else
                     Surat ini diterbitkan karena terjadi gangguan pada sistem presensi utama, sehingga presensi
                     dilakukan melalui halaman alternatif <strong>Pengaduan Presensi</strong>.
