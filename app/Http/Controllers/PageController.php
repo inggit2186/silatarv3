@@ -8897,7 +8897,7 @@ class PageController extends Controller
             'jenis' => 'required|in:masuk,pulang',
             'alasan' => 'required|in:SISTEM_ERROR,TUGAS_LUAR,LUPA_PRESNSI_PUSAKA',
             'keterangan_tugas_luar' => 'required_if:alasan,TUGAS_LUAR|nullable|string',
-            'tanggal_lupa' => 'required_if:alasan,LUPA_PRESNSI_PUSAKA|nullable|date|before_or_equal:today',
+            'tanggal_lupa' => 'required_if:alasan,LUPA_PRESNSI_PUSAKA|nullable|date|after_or_equal:yesterday|before_or_equal:today',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'jarak_meter' => 'nullable|numeric',

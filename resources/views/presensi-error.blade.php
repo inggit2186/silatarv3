@@ -328,8 +328,12 @@
 
                             {{-- Tanggal Lupa Presensi --}}
                             <div id="tanggalLupaPresensi" class="hidden mt-4">
-                                <x-ui.datepicker name="tanggal_lupa" label="Tanggal Lupa Presensi" placeholder="Pilih tanggal lupa presensi" value="{{ date('Y-m-d') }}" defaultDate="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}" :required="true" />
-                                <p class="text-xs text-[var(--ink-soft)] mt-1">Pilih tanggal saat Anda lupa melakukan presensi</p>
+                                @php
+                                    $yesterday = \Carbon\Carbon::yesterday('Asia/Jakarta')->format('Y-m-d');
+                                    $today = \Carbon\Carbon::today('Asia/Jakarta')->format('Y-m-d');
+                                @endphp
+                                <x-ui.datepicker name="tanggal_lupa" label="Tanggal Lupa Presensi" placeholder="Pilih tanggal lupa presensi" value="{{ $yesterday }}" defaultDate="{{ $yesterday }}" min="{{ $yesterday }}" max="{{ $today }}" :required="true" />
+                                <p class="text-xs text-[var(--ink-soft)] mt-1">Hanya bisa memilih tanggal H-1 (kemarin)</p>
                             </div>
                         </div>
 
@@ -635,14 +639,18 @@
             } else if (selectedAlasan && selectedAlasan.value === 'LUPA_PRESNSI_PUSAKA') {
                 tanggalField.classList.remove('hidden');
                 keteranganField.classList.add('hidden');
-                // Reset datepicker month to current month
+                // Reset datepicker ke H-1 (kemarin)
                 var datepickerEl = tanggalField.querySelector('[x-data]');
                 if (datepickerEl && typeof Alpine !== 'undefined') {
                     var dpData = Alpine.$data(datepickerEl);
                     if (dpData) {
                         var now = new Date();
-                        dpData.monthCursor = new Date(now.getFullYear(), now.getMonth(), 1);
-                        dpData.value = '{{ date("Y-m-d") }}';
+                        var yesterday = new Date(now);
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        dpData.monthCursor = new Date(yesterday.getFullYear(), yesterday.getMonth(), 1);
+                        dpData.value = yesterday.getFullYear() + '-' +
+                            String(yesterday.getMonth() + 1).padStart(2, '0') + '-' +
+                            String(yesterday.getDate()).padStart(2, '0');
                     }
                 }
             } else {
