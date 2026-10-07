@@ -5048,11 +5048,11 @@ class PageController extends Controller
     {
         $user = $request->user();
 
-        // Get user's WhatsApp number
-        $whatsapp = $user->whatsapp ?? $user->no_hp ?? null;
+        // Get user's WhatsApp/Telepon number
+        $whatsapp = $user->telp ?? null;
 
         if (! $whatsapp) {
-            return redirect()->back()->with('error', 'Nomor WhatsApp belum terdaftar. Silakan update profil Anda terlebih dahulu.');
+            return redirect()->back()->with('error', 'Nomor telepon belum terdaftar. Silakan update profil Anda terlebih dahulu.');
         }
 
         // Normalize phone number
