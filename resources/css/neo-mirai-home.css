@@ -10431,3 +10431,234 @@ a.neo-upload-preview:active {
   }
 }
 
+/* ============================================
+   NEO APP PROMO BANNER - Android App Notification
+   ============================================ */
+
+.neo-app-promo {
+  position: fixed;
+  top: calc(var(--header-height) + 1rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  width: calc(100% - 2rem);
+  max-width: 680px;
+  pointer-events: auto;
+}
+
+.neo-app-promo-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, var(--night) 0%, var(--night-soft) 100%);
+  border: 1px solid var(--gold);
+  border-radius: 1rem;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(212, 168, 83, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.neo-app-promo-glow {
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 60%;
+  height: 200%;
+  background: radial-gradient(ellipse, var(--gold) 0%, transparent 70%);
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.neo-app-promo-badge {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--sun) 100%);
+  border-radius: 0.75rem;
+  animation: promo-pulse 2s ease-in-out infinite;
+}
+
+@keyframes promo-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(212, 168, 83, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(212, 168, 83, 0);
+  }
+}
+
+.neo-app-promo-icon {
+  width: 2rem;
+  height: 2rem;
+  stroke: var(--night);
+  stroke-width: 1.5;
+}
+
+.neo-app-promo-badge-text {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--night);
+}
+
+.neo-app-promo-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.neo-app-promo-title {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--rice);
+  line-height: 1.2;
+}
+
+.neo-app-promo-text {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: oklch(85% 0.02 78 / 0.8);
+  color: rgba(230, 225, 218, 0.8);
+  line-height: 1.4;
+}
+
+.neo-app-promo-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--sun-deep) 100%);
+  color: var(--night);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  border-radius: 2rem;
+  border: none;
+  cursor: pointer;
+  transition: all 200ms var(--ease);
+  box-shadow: 0 4px 16px rgba(212, 168, 83, 0.3);
+}
+
+.neo-app-promo-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(212, 168, 83, 0.4);
+}
+
+.neo-app-promo-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.neo-app-promo-btn-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  stroke: var(--night);
+  stroke-width: 2;
+}
+
+.neo-app-promo-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: oklch(85% 0.02 78 / 0.6);
+  cursor: pointer;
+  transition: all 200ms var(--ease);
+}
+
+.neo-app-promo-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--gold);
+  color: var(--gold);
+  transform: rotate(90deg);
+}
+
+.neo-app-promo-close svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+/* Responsive for Mobile */
+@media (max-width: 640px) {
+  .neo-app-promo {
+    top: calc(var(--header-height) + 0.5rem);
+    width: calc(100% - 1rem);
+    max-width: none;
+  }
+
+  .neo-app-promo-inner {
+    flex-wrap: wrap;
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .neo-app-promo-badge {
+    flex-direction: row;
+    padding: 0.5rem 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .neo-app-promo-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .neo-app-promo-badge-text {
+    font-size: 0.6rem;
+  }
+
+  .neo-app-promo-content {
+    flex: 1 1 calc(100% - 4rem);
+  }
+
+  .neo-app-promo-title {
+    font-size: 0.9rem;
+  }
+
+  .neo-app-promo-text {
+    font-size: 0.75rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .neo-app-promo-btn {
+    flex: 1 1 100%;
+    justify-content: center;
+    padding: 0.6rem 1rem;
+    font-size: 0.65rem;
+  }
+}
+
+/* Hide promo on mobile bottom nav area */
+@media (max-width: 900px) {
+  .neo-app-promo {
+    bottom: calc(70px + env(safe-area-inset-bottom, 0px) + 0.5rem);
+    top: auto;
+  }
+}
+

@@ -81,6 +81,51 @@
             window.livewireScriptConfig = {!! json_encode($livewireConfig) !!};
         </script>
 
+        <!-- Android App Promo Banner -->
+        <div x-data="{
+            show: true,
+            dismissed: false,
+            init() {
+                if (localStorage.getItem('android-promo-dismissed')) {
+                    this.dismissed = true;
+                    this.show = false;
+                }
+            },
+            dismiss() {
+                this.show = false;
+                this.dismissed = true;
+                localStorage.setItem('android-promo-dismissed', 'true');
+            }
+        }" x-show="show && !dismissed" x-transition:enter="transition ease-out duration-500" x-transition:enter-start="opacity-0 -translate-y-full" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-full"
+            class="neo-app-promo" style="display: none;">
+            <div class="neo-app-promo-inner">
+                <div class="neo-app-promo-badge">
+                    <svg class="neo-app-promo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                        <path d="M8 12l2 2 4-4"/>
+                        <path d="M7 16.5c0 .83.67 1.5 1.5 1.5h7c.83 0 1.5-.67 1.5-1.5V14l-2 2.5h-6l-2-2.5v2.5z"/>
+                    </svg>
+                    <span class="neo-app-promo-badge-text">BARU!</span>
+                </div>
+                <div class="neo-app-promo-content">
+                    <h4 class="neo-app-promo-title">SILATAR Android App</h4>
+                    <p class="neo-app-promo-text">Dapatkan aplikasi mobile SILATAR untuk kemudahan akses di mana saja!</p>
+                </div>
+                <a href="https://play.google.com/store/apps/details?id=com.silatar.app" target="_blank" rel="noopener noreferrer" class="neo-app-promo-btn">
+                    <svg class="neo-app-promo-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4"/>
+                    </svg>
+                    Download Sekarang
+                </a>
+                <button @click="dismiss()" type="button" class="neo-app-promo-close" aria-label="Tutup pemberitahuan">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="neo-app-promo-glow" aria-hidden="true"></div>
+        </div>
+
         <!-- Toast Notification -->
         <div x-data="{
             show: false,
