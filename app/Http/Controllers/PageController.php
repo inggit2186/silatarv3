@@ -5058,14 +5058,20 @@ class PageController extends Controller
         // Normalize phone number
         $normalizedPhone = WhatsAppService::normalizePhoneNumber($whatsapp);
 
-        // Get APK file path from storage
-        $apkPath = 'apk/silatar.apk';
-        $apkFullPath = Storage::disk('public')->path($apkPath);
+        // Find APK file in storage/app/public/apk/ directory
+        $apkFiles = Storage::disk('public')->files('apk');
+        $apkFiles = array_filter($apkFiles, fn($file) => str_ends_with($file, '.apk'));
 
-        if (! Storage::disk('public')->exists($apkPath)) {
-            Log::error('APK file not found', ['path' => $apkPath]);
+        if (empty($apkFiles)) {
+            Log::error('APK file not found in storage', ['files' => $apkFiles]);
             return redirect()->back()->with('error', 'File APK tidak ditemukan. Hubungi administrator.');
         }
+
+        // Get latest APK file (sort by name descending to get newest version)
+        rsort($apkFiles);
+        $apkPath = $apkFiles[0];
+        $apkFullPath = Storage::disk('public')->path($apkPath);
+        $apkFileName = basename($apkPath);
 
         // Get APK URL for WhatsApp API
         $apkUrl = url(Storage::url($apkPath));
@@ -5078,6 +5084,7 @@ class PageController extends Controller
         $caption = "*APLIKASI SILATAR ANDROID*\n\n".
             "📱 *SILATAR V2*\n".
             "Kantor Kementerian Agama Kabupaten Tanah Datar\n\n".
+            "📦 File: {$apkFileName}\n".
             "📦 Ukuran: {$fileSizeFormatted} MB\n".
             "📅 Tanggal: ".date('d/m/Y')."\n\n".
             "Petunjuk Instalasi:\n".
