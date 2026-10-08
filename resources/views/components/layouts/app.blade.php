@@ -135,48 +135,6 @@
             <div class="neo-app-promo-glow" aria-hidden="true"></div>
 
 
-        <!-- APK Download Info Modal -->
-        <div id="apkModal" class="neo-app-modal-backdrop" style="display: none;">
-            <div class="neo-app-modal" onclick="event.stopPropagation()">
-                <div class="neo-app-modal-header">
-                    <div class="neo-app-modal-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
-                            <path d="M8 12l2 2 4-4"/><path d="M7 16.5c0 .83.67 1.5 1.5 1.5h7c.83 0 1.5-.67 1.5-1.5V14l-2 2.5h-6l-2-2.5v2.5z"/>
-                        </svg>
-                    </div>
-                    <div><h3 class="neo-app-modal-title">Download SILATAR Android</h3><p class="neo-app-modal-subtitle">Kantor Kementerian Agama Kab. Tanah Datar</p></div>
-                    <button onclick="closeApkModal()" type="button" class="neo-app-modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
-                </div>
-                <div class="neo-app-modal-body">
-                    <div class="neo-app-modal-section">
-                        <h4 class="neo-app-modal-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4"/></svg>System Requirements</h4>
-                        <div class="neo-app-modal-req-grid">
-                            <div class="neo-app-modal-req-item"><span class="neo-app-modal-req-label">OS Android</span><span class="neo-app-modal-req-value">7.0 (Nougat) ke atas</span></div>
-                            <div class="neo-app-modal-req-item"><span class="neo-app-modal-req-label">minSdk</span><span class="neo-app-modal-req-value">24</span></div>
-                            <div class="neo-app-modal-req-item"><span class="neo-app-modal-req-label">Flutter SDK</span><span class="neo-app-modal-req-value">3.12+</span></div>
-                            <div class="neo-app-modal-req-item"><span class="neo-app-modal-req-label">Java/Kotlin</span><span class="neo-app-modal-req-value">17</span></div>
-                        </div>
-                        <div class="neo-app-modal-coverage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>~99.9% device Android didukung</span></div>
-                    </div>
-                    <div class="neo-app-modal-section">
-                        <h4 class="neo-app-modal-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Petunjuk Instalasi</h4>
-                        <ol class="neo-app-modal-steps">
-                            <li>Download file APK</li>
-                            <li>Aktifkan <strong>Sumber Tidak Dikenal</strong> di Pengaturan > Keamanan</li>
-                            <li>Install file APK</li>
-                            <li>Buka aplikasi & Login</li>
-                        </ol>
-                    </div>
-                    <div class="neo-app-modal-warning">
-                        <div class="neo-app-modal-warning-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><span>Peringatan Penting</span></div>
-                        <p><strong>JANGAN</strong> install APK ini jika didownload dari sumber tidak resmi!</p>
-                        <p>HANYA install dari Website Resmi SILATAR atau link resmi dari nomor resmi.</p>
-                        <div class="neo-app-modal-contact"><span>Hubungi Official Number:</span> <a href="https://wa.me/6289509007078" target="_blank" class="neo-app-modal-contact-link"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>0895 0900 7078</a></div>
-                    </div>
-                </div>
-                <div class="neo-app-modal-footer"><a href="{{ route('apk.download') }}" class="neo-app-modal-download-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Kirim ke WhatsApp Saya</a></div>
-            </div>
         </div>
 
 
@@ -228,27 +186,5 @@
                 </svg>
             </button>
         </div>
-
-        <script>
-            // APK Modal event listeners (functions defined in site-header)
-            document.addEventListener('DOMContentLoaded', function() {
-                // Close on backdrop click
-                var apkModal = document.getElementById('apkModal');
-                if (apkModal) {
-                    apkModal.addEventListener('click', function(e) {
-                        if (e.target === this) {
-                            closeApkModal();
-                        }
-                    });
-                }
-
-                // Close on Escape key
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape') {
-                        closeApkModal();
-                    }
-                });
-            });
-        </script>
-</body>
+    </body>
 </html>

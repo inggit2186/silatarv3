@@ -458,6 +458,87 @@
     </div>
 </div>
 
+<!-- APK Download Modal - NEO MIRAI Theme -->
+<div id="apkModal" class="modal-overlay">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header-custom">
+            <div class="flex items-center gap-3">
+                <div class="modal-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                        <path d="M8 12l2 2 4-4"/>
+                        <path d="M7 16.5c0 .83.67 1.5 1.5 1.5h7c.83 0 1.5-.67 1.5-1.5V14l-2 2.5h-6l-2-2.5v2.5z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="modal-title-custom">Download SILATAR Android</h3>
+                    <p class="modal-subtitle">Kantor Kementerian Agama Kab. Tanah Datar</p>
+                </div>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="closeApkModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="modal-body-custom">
+            <div class="form-group-custom">
+                <h4 class="modal-subtitle" style="font-weight: 600; color: var(--ink); margin-bottom: 0.75rem;">System Requirements</h4>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 0.5rem; font-size: 0.875rem;">
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0.75rem; background: var(--paper-soft); border-radius: 0.5rem;">
+                        <span style="color: var(--ink-soft);">Versi Android</span>
+                        <span style="color: var(--ink); font-weight: 500;">7.0 (Nougat) ke atas</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0.75rem; background: var(--paper-soft); border-radius: 0.5rem;">
+                        <span style="color: var(--ink-soft);">RAM Minimum</span>
+                        <span style="color: var(--ink); font-weight: 500;">2 GB</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0.75rem; background: var(--paper-soft); border-radius: 0.5rem;">
+                        <span style="color: var(--ink-soft);">Ruang Penyimpanan</span>
+                        <span style="color: var(--ink); font-weight: 500;">~50 MB</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0.75rem; background: var(--paper-soft); border-radius: 0.5rem;">
+                        <span style="color: var(--ink-soft);">Koneksi Internet</span>
+                        <span style="color: var(--ink); font-weight: 500;">Diperlukan</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group-custom">
+                <h4 class="modal-subtitle" style="font-weight: 600; color: var(--ink); margin-bottom: 0.75rem;">Petunjuk Instalasi</h4>
+                <ol style="margin: 0; padding-left: 1.25rem; color: var(--ink); font-size: 0.9375rem; line-height: 1.7;">
+                    <li>Download file APK</li>
+                    <li>Aktifkan <strong>Sumber Tidak Dikenal</strong> di Pengaturan &rsaquo; Keamanan</li>
+                    <li>Install file APK</li>
+                    <li>Buka aplikasi &amp; Login</li>
+                </ol>
+            </div>
+
+            <div class="error-alert">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div>
+                    <p style="margin: 0 0 0.25rem 0; font-weight: 600;">Peringatan Penting</p>
+                    <p style="margin: 0 0 0.5rem 0;"><strong>JANGAN</strong> install APK jika didownload dari sumber tidak resmi. HANYA install dari Website Resmi SILATAR atau link resmi dari nomor resmi.</p>
+                    <p style="margin: 0;">Hubungi Official Number: <strong><a href="https://wa.me/6289509007078" target="_blank" style="color: inherit; text-decoration: underline;">0895 0900 7078</a></strong></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer-custom">
+            <button type="button" class="btn-secondary" onclick="closeApkModal()">Batal</button>
+            <a href="{{ route('apk.download') }}" class="btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                Download APK
+            </a>
+        </div>
+    </div>
+</div>
+
 <style>
     /* Bottom Navigation Bar - Mobile Only */
     .bottom-nav {
@@ -835,20 +916,16 @@
 
 <script>
     // APK Modal Functions
+    const apkModal = document.getElementById('apkModal');
+
     function openApkModal() {
-        var apkModal = document.getElementById('apkModal');
-        if (apkModal) {
-            apkModal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
+        apkModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
 
     function closeApkModal() {
-        var apkModal = document.getElementById('apkModal');
-        if (apkModal) {
-            apkModal.style.display = 'none';
-            document.body.style.overflow = '';
-        }
+        apkModal.classList.remove('active');
+        document.body.style.overflow = '';
     }
 
     // APK Download button handler
@@ -856,10 +933,17 @@
     if (apkBtn) {
         apkBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            // Close dropdown first
             document.body.click();
-            // Open APK modal
             openApkModal();
+        });
+    }
+
+    // Close APK modal on backdrop click
+    if (apkModal) {
+        apkModal.addEventListener('click', function(e) {
+            if (e.target === apkModal) {
+                closeApkModal();
+            }
         });
     }
 
@@ -892,8 +976,12 @@
 
     // Close on Escape key
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && passwordModal.classList.contains('active')) {
-            closePasswordModal();
+        if (e.key === 'Escape') {
+            if (passwordModal.classList.contains('active')) {
+                closePasswordModal();
+            } else if (apkModal && apkModal.classList.contains('active')) {
+                closeApkModal();
+            }
         }
     });
 
@@ -921,20 +1009,6 @@
         mobilePasswordBtnBottom.addEventListener('click', function(e) {
             e.preventDefault();
             openPasswordModal();
-        });
-    }
-
-    // APK Download button handler
-    const apkBtn = document.getElementById('apkBtn');
-    if (apkBtn) {
-        apkBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            // Close dropdown first
-            document.body.click();
-            // Open APK modal
-            if (typeof openApkModal === 'function') {
-                openApkModal();
-            }
         });
     }
 
