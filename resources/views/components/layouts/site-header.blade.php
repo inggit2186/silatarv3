@@ -529,11 +529,11 @@
 
         <div class="modal-footer-custom">
             <button type="button" class="btn-secondary" onclick="closeApkModal()">Batal</button>
-            <a href="{{ route('apk.download') }}" class="btn-primary">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            <a href="{{ route('apk.download') }}" id="apkDownloadBtn" class="btn-primary" onclick="handleApkDownload(this, event)">
+                <svg id="apkDownloadIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                 </svg>
-                Download APK
+                <span id="apkDownloadLabel">Download APK</span>
             </a>
         </div>
     </div>
@@ -937,6 +937,32 @@
             openApkModal();
         });
     }
+
+    // APK Download submit handler — show loading state then navigate
+    const SPINNER_ICON = '<svg class="animate-spin" style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-opacity="1"/></svg>';
+
+    window.handleApkDownload = function(btn, e) {
+        e.preventDefault();
+        if (btn.dataset.loading === '1') return;
+
+        const icon = document.getElementById('apkDownloadIcon');
+        const label = document.getElementById('apkDownloadLabel');
+        const originalIcon = icon ? icon.outerHTML : '';
+
+        btn.dataset.loading = '1';
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.7';
+        if (icon) icon.outerHTML = SPINNER_ICON;
+        if (label) label.textContent = 'Mengirim...';
+
+        // Re-fetch the (replaced) icon wrapper to restore on error/cancel
+        const newIconWrap = btn.querySelector('svg');
+
+        // Navigate after a short delay so user sees the spinner
+        setTimeout(function() {
+            window.location.href = btn.href;
+        }, 150);
+    };
 
     // Close APK modal on backdrop click
     if (apkModal) {
