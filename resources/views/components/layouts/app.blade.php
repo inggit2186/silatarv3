@@ -112,7 +112,7 @@
                     <p class="neo-app-promo-text">Dapatkan aplikasi mobile SILATAR untuk kemudahan akses di mana saja!</p>
                 </div>
                 @auth
-                <button @click="$dispatch('open-apk-modal')" type="button" class="neo-app-promo-btn">
+                <button @click.prevent="window.dispatchEvent(new CustomEvent('open-apk-modal'))" type="button" class="neo-app-promo-btn">
                     <svg class="neo-app-promo-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                     </svg>
@@ -136,7 +136,7 @@
 
 
         <!-- APK Download Info Modal -->
-        <div x-data="{ show: false }" @open-apk-modal.window="show = true" @keydown.escape.window="show = false" x-show="show" x-transition class="neo-app-modal-backdrop" style="display: none;">
+        <div x-data="{ show: false, init() { window.addEventListener('open-apk-modal', () => this.show = true); } }" @open-apk-modal.window="show = true" @keydown.escape.window="show = false" x-show="show" x-transition class="neo-app-modal-backdrop" style="display: none;">
             <div class="neo-app-modal" @click.outside="show = false">
                 <div class="neo-app-modal-header">
                     <div class="neo-app-modal-icon">

@@ -101,13 +101,13 @@
                     Laporan Madrasah
                 </a>
                 @endif
-                <a href="#" @click.prevent="$dispatch('open-apk-modal')" class="user-dropdown-item user-dropdown-item-apk">
+                <a href="#" @click.prevent="window.dispatchEvent(new CustomEvent('open-apk-modal'))" class="user-dropdown-item user-dropdown-item-apk">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
                         <path d="M8 12l2 2 4-4"/>
                         <path d="M7 16.5c0 .83.67 1.5 1.5 1.5h7c.83 0 1.5-.67 1.5-1.5V14l-2 2.5h-6l-2-2.5v2.5z"/>
                     </svg>
-                    Download Aplikasi Android
+                    SILATAR Android
                 </a>
                 <div class="user-dropdown-divider"></div>
                 <a href="#" class="user-dropdown-item" id="changePasswordBtn">
