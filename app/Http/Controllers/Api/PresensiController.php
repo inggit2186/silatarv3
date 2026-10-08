@@ -360,6 +360,13 @@ class PresensiController extends BaseApiController
      */
     public function submitError(Request $request)
     {
+        \Log::info('submitError called', [
+            'user_id' => $request->user()?->id,
+            'jenis' => $request->input('jenis'),
+            'alasan' => $request->input('alasan'),
+            'foto_length' => strlen($request->input('foto') ?? ''),
+        ]);
+
         $request->validate([
             'jenis' => 'required|in:masuk,pulang',
             'alasan' => 'required|in:SISTEM_ERROR,TUGAS_LUAR,LUPA_PRESNSI_PUSAKA',
@@ -380,13 +387,15 @@ class PresensiController extends BaseApiController
         $alasan = $request->input('alasan');
 
         // Tentukan tanggal target
-        $targetTanggal = Carbon::now('Asia/Jakarta')->toDateString();
+        $targetTanggal = Carbon::now('Asia/Jakarta')->format('Y-m-d');
         if ($alasan === 'LUPA_PRESNSI_PUSAKA') {
             $tanggalLupa = $request->input('tanggal_lupa');
             if ($tanggalLupa) {
                 $targetTanggal = Carbon::parse($tanggalLupa)->format('Y-m-d');
             }
         }
+
+        \Log::info('submitError - target date', ['target_tanggal' => $targetTanggal]);
 
         // Cek apakah sudah ada record
         $presensi = KtdPresensi::where('user_nip', $user->nomor_induk)
@@ -435,11 +444,19 @@ class PresensiController extends BaseApiController
             $presensi->keterangan = $alasan;
         }
 
+        \Log::info('submitError - about to save', [
+            'user_nip' => $presensi->user_nip,
+            'tanggal' => $presensi->tanggal,
+            'status' => $presensi->status,
+        ]);
+
         $presensi->save();
+
+        \Log::info('submitError - saved successfully', ['id' => $presensi->id]);
 
         return $this->success([
             'id' => $presensi->id,
-            'tanggal' => $presensi->tanggal,
+            'tanggal' => $targetTanggal,
             'jenis' => $jenis,
             'alasan' => $alasan,
             'jam' => $jam,
@@ -456,6 +473,12 @@ class PresensiController extends BaseApiController
         $bulan = $request->input('bulan', Carbon::now()->month);
         $tahun = $request->input('tahun', Carbon::now()->year);
 
+        \Log::info('errorHistory called', [
+            'user_nip' => $user->nomor_induk,
+            'bulan' => $bulan,
+            'tahun' => $tahun,
+        ]);
+
         $data = KtdPresensi::where('user_nip', $user->nomor_induk)
             ->whereYear('tanggal', $tahun)
             ->whereMonth('tanggal', $bulan)
@@ -463,6 +486,8 @@ class PresensiController extends BaseApiController
             ->orderBy('tanggal', 'desc')
             ->get()
             ->map(fn ($p) => $this->formatErrorPresensi($p));
+
+        \Log::info('errorHistory result', ['count' => $data->count()]);
 
         return $this->success([
             'bulan' => $bulan,

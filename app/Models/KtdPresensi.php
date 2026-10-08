@@ -41,7 +41,6 @@ class KtdPresensi extends Model
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
         'm_latitude' => 'decimal:7',
         'm_longitude' => 'decimal:7',
         'm_distance' => 'decimal:2',
