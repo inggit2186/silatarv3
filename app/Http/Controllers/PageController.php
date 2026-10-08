@@ -5072,19 +5072,54 @@ class PageController extends Controller
         $apkFileName = $latestApk->file_name ?? 'silatar_v2.apk';
         $fileSizeFormatted = $latestApk->size_hint ?? 'N/A';
 
-        // Caption message
-        $caption = "*APLIKASI SILATAR ANDROID*\n\n".
-            "📱 *SILATAR V2*\n".
-            "Kantor Kementerian Agama Kabupaten Tanah Datar\n\n".
-            "📦 Versi: {$latestApk->full_version}\n".
-            "📦 File: {$apkFileName}\n".
-            "📦 Ukuran: {$fileSizeFormatted}\n".
-            "📅 Tanggal: ".date('d/m/Y')."\n\n".
-            "Petunjuk Instalasi:\n".
-            "1. Download file APK\n".
-            "2. Aktifkan 'Sumber Tidak Dikenal' di Pengaturan\n".
-            "3. Install file APK\n\n".
-            "_Dokumen ini dikirim otomatis via SILATAR_";
+        // Caption message - Enhanced WhatsApp format
+        $caption = "━━━━━━━━━━━━━━━━━━\n".
+            "📱 *SILATAR V2 - APLIKASI ANDROID*\n".
+            "━━━━━━━━━━━━━━━━━━\n\n".
+            "🏛️ *Kantor Kementerian Agama*\n".
+            "   Kabupaten Tanah Datar\n\n".
+            "━━━━━━━━━━━━━━━━━━\n".
+            "📋 *INFORMASI VERSI*\n".
+            "━━━━━━━━━━━━━━━━━━\n".
+            "🔹 Versi    : *{$latestApk->full_version}*\n".
+            "🔹 File     : {$apkFileName}\n".
+            "🔹 Ukuran   : {$fileSizeFormatted}\n".
+            "🔹 Tanggal  : ".date('d/m/Y')."\n\n".
+            "━━━━━━━━━━━━━━━━━━\n".
+            "📲 *SYSTEM REQUIREMENTS*\n".
+            "━━━━━━━━━━━━━━━━━━\n".
+            "🔸 OS Android    : *7.0 (Nougat)* ke atas\n".
+            "🔸 minSdk        : 24\n".
+            "🔸 Flutter SDK    : 3.12+\n".
+            "🔸 Dart          : 3.12+\n".
+            "🔸 Java/Kotlin   : 17\n\n".
+            "📊 *Device Coverage Indonesia*\n".
+            "✅ ~99.9% device Android didukung\n".
+            "❌ Tidak support Android 6.0 ke bawah\n\n".
+            "━━━━━━━━━━━━━━━━━━\n".
+            "📥 *PETUNJUK INSTALASI*\n".
+            "━━━━━━━━━━━━━━━━━━\n".
+            "1️⃣  Download file APK\n".
+            "2️⃣  Aktifkan *Sumber Tidak Dikenal*\n".
+            "      di Pengaturan > Keamanan\n".
+            "3️⃣  Install file APK\n".
+            "4️⃣  Buka aplikasi & Login\n\n".
+            "━━━━━━━━━━━━━━━━━━\n".
+            "⚠️ *PERINGATAN PENTING*\n".
+            "━━━━━━━━━━━━━━━━━━\n".
+            "🚫 *JANGAN* install APK ini\n".
+            "   jika didownload dari sumber\n".
+            "   tidak resmi!\n\n".
+            "✅ *HANYA* install dari:\n".
+            "   📌 Website Resmi SILATAR\n".
+            "   📌 Link resmi dari nomor ini\n\n".
+            "📞 *Hubungi Official Number:*\n".
+            "   *0895 0900 7078*\n".
+            "   (WhatsApp Only)\n\n".
+            "━━━━━━━━━━━━━━━━━━\n".
+            "_Pesan ini dikirim otomatis via_\n".
+            "_SILATAR V2 - Kankemenag Tanah Datar_";
+
 
         try {
             // Initialize WhatsApp service
