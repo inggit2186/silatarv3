@@ -396,7 +396,6 @@ class PresensiController extends BaseApiController
         if (!$presensi) {
             $presensi = new KtdPresensi();
             $presensi->user_nip = $user->nomor_induk;
-            $presensi->dept_id = $user->dept_id;
             $presensi->tanggal = $targetTanggal;
         }
 
