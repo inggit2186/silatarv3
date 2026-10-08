@@ -112,7 +112,7 @@
                     <p class="neo-app-promo-text">Dapatkan aplikasi mobile SILATAR untuk kemudahan akses di mana saja!</p>
                 </div>
                 @auth
-                <button @click.prevent="window.dispatchEvent(new CustomEvent('open-apk-modal'))" type="button" class="neo-app-promo-btn">
+                <button onclick="openApkModal()" type="button" class="neo-app-promo-btn">
                     <svg class="neo-app-promo-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                     </svg>
@@ -136,8 +136,8 @@
 
 
         <!-- APK Download Info Modal -->
-        <div x-data="{ show: false, init() { window.addEventListener('open-apk-modal', () => this.show = true); } }" @open-apk-modal.window="show = true" @keydown.escape.window="show = false" x-show="show" x-transition class="neo-app-modal-backdrop" style="display: none;">
-            <div class="neo-app-modal" @click.outside="show = false">
+        <div id="apkModal" class="neo-app-modal-backdrop" style="display: none;">
+            <div class="neo-app-modal" onclick="event.stopPropagation()">
                 <div class="neo-app-modal-header">
                     <div class="neo-app-modal-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -146,7 +146,7 @@
                         </svg>
                     </div>
                     <div><h3 class="neo-app-modal-title">Download SILATAR Android</h3><p class="neo-app-modal-subtitle">Kantor Kementerian Agama Kab. Tanah Datar</p></div>
-                    <button @click="show = false" type="button" class="neo-app-modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+                    <button onclick="closeApkModal()" type="button" class="neo-app-modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
                 </div>
                 <div class="neo-app-modal-body">
                     <div class="neo-app-modal-section">
@@ -228,5 +228,32 @@
                 </svg>
             </button>
         </div>
+
+        <script>
+            // APK Modal Functions
+            function openApkModal() {
+                document.getElementById('apkModal').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeApkModal() {
+                document.getElementById('apkModal').style.display = 'none';
+                document.body.style.overflow = '';
+            }
+
+            // Close on backdrop click
+            document.getElementById('apkModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeApkModal();
+                }
+            });
+
+            // Close on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeApkModal();
+                }
+            });
+        </script>
 </body>
 </html>
