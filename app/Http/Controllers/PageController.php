@@ -5088,11 +5088,10 @@ class PageController extends Controller
             "━━━━━━━━━━━━━━━━━━\n".
             "📲 *SYSTEM REQUIREMENTS*\n".
             "━━━━━━━━━━━━━━━━━━\n".
-            "🔸 OS Android    : *7.0 (Nougat)* ke atas\n".
-            "🔸 minSdk        : 24\n".
-            "🔸 Flutter SDK    : 3.12+\n".
-            "🔸 Dart          : 3.12+\n".
-            "🔸 Java/Kotlin   : 17\n\n".
+            "🔸 Versi Android : *7.0 (Nougat)* ke atas\n".
+            "🔸 RAM Minimum   : 2 GB\n".
+            "🔸 Penyimpanan   : ~50 MB\n".
+            "🔸 Internet      : Diperlukan\n\n".
             "📊 *Device Coverage Indonesia*\n".
             "✅ ~99.9% device Android didukung\n".
             "❌ Tidak support Android 6.0 ke bawah\n\n".
@@ -5113,7 +5112,7 @@ class PageController extends Controller
             "✅ *HANYA* install dari:\n".
             "   📌 Website Resmi SILATAR\n".
             "   📌 Link resmi dari nomor ini\n\n".
-            "📞 *Hubungi Official Number:*\n".
+            "📞 *Official Number:*\n".
             "   *0895 0900 7078*\n".
             "   (WhatsApp Only)\n\n".
             "━━━━━━━━━━━━━━━━━━\n".

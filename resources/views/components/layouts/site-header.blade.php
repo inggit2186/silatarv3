@@ -522,7 +522,7 @@
                 <div>
                     <p style="margin: 0 0 0.25rem 0; font-weight: 600;">Peringatan Penting</p>
                     <p style="margin: 0 0 0.5rem 0;"><strong>JANGAN</strong> install APK jika didownload dari sumber tidak resmi. HANYA install dari Website Resmi SILATAR atau link resmi dari nomor resmi.</p>
-                    <p style="margin: 0;">Hubungi Official Number: <strong><a href="https://wa.me/6289509007078" target="_blank" style="color: inherit; text-decoration: underline;">0895 0900 7078</a></strong></p>
+                    <p style="margin: 0;">Official Number: <strong><a href="https://wa.me/6289509007078" target="_blank" style="color: inherit; text-decoration: underline;">0895 0900 7078</a></strong></p>
                 </div>
             </div>
         </div>
