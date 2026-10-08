@@ -47,18 +47,6 @@
         </a>
     </nav>
 
-    <!-- Android App Download Button -->
-    @auth
-    <button @click="$dispatch('open-apk-modal')" type="button" class="header-apk-btn" title="Download Aplikasi Android">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
-            <path d="M8 12l2 2 4-4"/>
-            <path d="M7 16.5c0 .83.67 1.5 1.5 1.5h7c.83 0 1.5-.67 1.5-1.5V14l-2 2.5h-6l-2-2.5v2.5z"/>
-        </svg>
-        <span>Android</span>
-    </button>
-    @endauth
-
     @php
     $userRole = auth()->user()->role ?? '';
     $canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', 'petugas', 'kasi', 'kasubag', 'kasubbag', 'kepala']);
@@ -113,6 +101,14 @@
                     Laporan Madrasah
                 </a>
                 @endif
+                <a href="#" @click.prevent="$dispatch('open-apk-modal')" class="user-dropdown-item user-dropdown-item-apk">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                        <path d="M8 12l2 2 4-4"/>
+                        <path d="M7 16.5c0 .83.67 1.5 1.5 1.5h7c.83 0 1.5-.67 1.5-1.5V14l-2 2.5h-6l-2-2.5v2.5z"/>
+                    </svg>
+                    Download Aplikasi Android
+                </a>
                 <div class="user-dropdown-divider"></div>
                 <a href="#" class="user-dropdown-item" id="changePasswordBtn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
@@ -330,6 +326,25 @@
     .bottom-nav-dropdown-form {
         margin: 0;
         padding: 0;
+    }
+
+    .user-dropdown-item-apk {
+        margin-top: 0.5rem;
+        background: linear-gradient(135deg, rgba(212, 168, 83, 0.1), rgba(212, 168, 83, 0.05));
+        border: 1px dashed rgba(212, 168, 83, 0.3) !important;
+        color: var(--gold);
+        font-weight: 500;
+    }
+
+    .user-dropdown-item-apk:hover {
+        background: linear-gradient(135deg, rgba(212, 168, 83, 0.15), rgba(212, 168, 83, 0.08));
+        border-color: rgba(212, 168, 83, 0.5) !important;
+        color: var(--gold);
+    }
+
+    .user-dropdown-item-apk svg {
+        color: var(--gold);
+        opacity: 1;
     }
 </style>
 
