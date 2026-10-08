@@ -101,7 +101,7 @@
                     Laporan Madrasah
                 </a>
                 @endif
-                <a href="#" onclick="document.body.click(); openApkModal();" class="user-dropdown-item user-dropdown-item-apk">
+                <a href="#" id="apkBtn" class="user-dropdown-item user-dropdown-item-apk">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
                         <path d="M8 12l2 2 4-4"/>
@@ -834,6 +834,35 @@
 </style>
 
 <script>
+    // APK Modal Functions
+    function openApkModal() {
+        var apkModal = document.getElementById('apkModal');
+        if (apkModal) {
+            apkModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeApkModal() {
+        var apkModal = document.getElementById('apkModal');
+        if (apkModal) {
+            apkModal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    }
+
+    // APK Download button handler
+    const apkBtn = document.getElementById('apkBtn');
+    if (apkBtn) {
+        apkBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Close dropdown first
+            document.body.click();
+            // Open APK modal
+            openApkModal();
+        });
+    }
+
     // Password Modal Functions
     const passwordModal = document.getElementById('passwordModal');
 
@@ -892,6 +921,20 @@
         mobilePasswordBtnBottom.addEventListener('click', function(e) {
             e.preventDefault();
             openPasswordModal();
+        });
+    }
+
+    // APK Download button handler
+    const apkBtn = document.getElementById('apkBtn');
+    if (apkBtn) {
+        apkBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Close dropdown first
+            document.body.click();
+            // Open APK modal
+            if (typeof openApkModal === 'function') {
+                openApkModal();
+            }
         });
     }
 

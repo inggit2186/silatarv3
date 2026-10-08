@@ -230,29 +230,24 @@
         </div>
 
         <script>
-            // APK Modal Functions
-            function openApkModal() {
-                document.getElementById('apkModal').style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-            }
-
-            function closeApkModal() {
-                document.getElementById('apkModal').style.display = 'none';
-                document.body.style.overflow = '';
-            }
-
-            // Close on backdrop click
-            document.getElementById('apkModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeApkModal();
+            // APK Modal event listeners (functions defined in site-header)
+            document.addEventListener('DOMContentLoaded', function() {
+                // Close on backdrop click
+                var apkModal = document.getElementById('apkModal');
+                if (apkModal) {
+                    apkModal.addEventListener('click', function(e) {
+                        if (e.target === this) {
+                            closeApkModal();
+                        }
+                    });
                 }
-            });
 
-            // Close on Escape key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    closeApkModal();
-                }
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        closeApkModal();
+                    }
+                });
             });
         </script>
 </body>
