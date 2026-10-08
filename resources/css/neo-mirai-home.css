@@ -224,6 +224,64 @@ html {
   display: none;
 }
 
+/* Header Android App Button */
+.header-apk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(135deg, var(--night) 0%, var(--night-soft) 100%);
+  border: 1px solid var(--gold);
+  border-radius: 2rem;
+  color: var(--rice);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 180ms var(--ease);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.header-apk-btn svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  stroke: var(--gold);
+}
+
+.header-apk-btn span {
+  display: none;
+}
+
+.header-apk-btn:hover {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--sun-deep) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 168, 83, 0.3);
+}
+
+.header-apk-btn:hover svg {
+  stroke: var(--night);
+}
+
+.header-apk-btn:hover span {
+  color: var(--night);
+}
+
+/* Show text on larger screens */
+@media (min-width: 1024px) {
+  .header-apk-btn span {
+    display: inline;
+  }
+}
+
+/* Mobile: hide header button, modal is still accessible from banner */
+@media (max-width: 900px) {
+  .header-apk-btn {
+    display: none;
+  }
+}
+
 /* Page Content Container - Account for fixed header */
 .page-content,
 .content-centered {

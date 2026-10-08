@@ -47,6 +47,18 @@
         </a>
     </nav>
 
+    <!-- Android App Download Button -->
+    @auth
+    <button @click="$dispatch('open-apk-modal')" type="button" class="header-apk-btn" title="Download Aplikasi Android">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+            <path d="M8 12l2 2 4-4"/>
+            <path d="M7 16.5c0 .83.67 1.5 1.5 1.5h7c.83 0 1.5-.67 1.5-1.5V14l-2 2.5h-6l-2-2.5v2.5z"/>
+        </svg>
+        <span>Android</span>
+    </button>
+    @endauth
+
     @php
     $userRole = auth()->user()->role ?? '';
     $canAccessAdminPanel = in_array(strtolower($userRole), ['admin', 'superadmin', 'petugas', 'kasi', 'kasubag', 'kasubbag', 'kepala']);
