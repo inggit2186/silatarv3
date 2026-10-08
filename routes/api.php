@@ -91,11 +91,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/today', [PresensiController::class, 'today']);
         Route::get('/history', [PresensiController::class, 'history']);
         Route::get('/rekap', [PresensiController::class, 'rekap']);
+    });
 
-        // Presensi Error (Mobile App)
-        Route::get('/presensi-error/today', [PresensiController::class, 'errorToday']);
-        Route::post('/presensi-error', [PresensiController::class, 'submitError']);
-        Route::get('/presensi-error/history', [PresensiController::class, 'errorHistory']);
+    // Presensi Error (Mobile App) - separate prefix for clean URL
+    Route::prefix('presensi-error')->group(function () {
+        Route::get('/today', [PresensiController::class, 'errorToday']);
+        Route::post('/', [PresensiController::class, 'submitError']);
+        Route::get('/history', [PresensiController::class, 'errorHistory']);
     });
 
     // Laporan Kegiatan Harian (CKH)
