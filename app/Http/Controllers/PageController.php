@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\FileHelper;
+use App\Models\AppPatch;
 use App\Models\SatkerPemberkasan;
 use App\Services\WhatsAppService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -5058,34 +5059,26 @@ class PageController extends Controller
         // Normalize phone number
         $normalizedPhone = WhatsAppService::normalizePhoneNumber($whatsapp);
 
-        // Find APK file in storage/app/public/apk/ directory
-        $apkFiles = Storage::disk('public')->files('apk');
-        $apkFiles = array_filter($apkFiles, fn($file) => str_ends_with($file, '.apk'));
+        // Get latest APK from AppPatch model
+        $latestApk = AppPatch::getLatestApk();
 
-        if (empty($apkFiles)) {
-            Log::error('APK file not found in storage', ['files' => $apkFiles]);
-            return redirect()->back()->with('error', 'File APK tidak ditemukan. Hubungi administrator.');
+        if (! $latestApk) {
+            Log::error('APK not found in app_patches table');
+            return redirect()->back()->with('error', 'File APK belum tersedia. Hubungi administrator.');
         }
 
-        // Get latest APK file (sort by name descending to get newest version)
-        rsort($apkFiles);
-        $apkPath = $apkFiles[0];
-        $apkFullPath = Storage::disk('public')->path($apkPath);
-        $apkFileName = basename($apkPath);
-
-        // Get APK URL for WhatsApp API
-        $apkUrl = url(Storage::url($apkPath));
-
-        // Get APK info
-        $fileSize = filesize($apkFullPath);
-        $fileSizeFormatted = number_format($fileSize / (1024 * 1024), 2); // MB
+        // Get APK download URL
+        $apkUrl = $latestApk->getDownloadUrl();
+        $apkFileName = $latestApk->file_name ?? 'silatar_v2.apk';
+        $fileSizeFormatted = $latestApk->size_hint ?? 'N/A';
 
         // Caption message
         $caption = "*APLIKASI SILATAR ANDROID*\n\n".
             "📱 *SILATAR V2*\n".
             "Kantor Kementerian Agama Kabupaten Tanah Datar\n\n".
+            "📦 Versi: {$latestApk->full_version}\n".
             "📦 File: {$apkFileName}\n".
-            "📦 Ukuran: {$fileSizeFormatted} MB\n".
+            "📦 Ukuran: {$fileSizeFormatted}\n".
             "📅 Tanggal: ".date('d/m/Y')."\n\n".
             "Petunjuk Instalasi:\n".
             "1. Download file APK\n".
@@ -5108,6 +5101,7 @@ class PageController extends Controller
                 Log::info('APK sent via WhatsApp', [
                     'user_id' => $user->id,
                     'phone' => $normalizedPhone,
+                    'version' => $latestApk->full_version,
                 ]);
 
                 return redirect()->back()->with('success', 'Link download APK berhasil dikirim ke WhatsApp Anda: '.$whatsapp);
