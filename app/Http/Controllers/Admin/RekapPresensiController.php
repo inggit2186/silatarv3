@@ -216,7 +216,7 @@ class RekapPresensiController extends Controller
     }
 
     /**
-     * Generate tukin calculation (based on Unit Kerja)
+     * Generate tukin calculation (based on Unit Kerja OR Kategori Bank)
      * POST /admin/rekap-presensi/generate-tukin
      */
     public function generateTukin(Request $request)
@@ -228,51 +228,198 @@ class RekapPresensiController extends Controller
         $method = $request->input('method', 'unit_kerja');
         $isAjax = $request->ajax() || $request->expectsJson();
 
-        // Jika Kategori Bank, tampilkan pesan bahwa fitur belum tersedia
-        if ($method === 'kategori_bank') {
-            if ($isAjax) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Fitur Generate Tukin berdasarkan Kategori Bank belum tersedia. Silakan gunakan metode Unit Kerja.'
-                ], 400);
-            }
-            return back()->with('error', 'Fitur Generate Tukin berdasarkan Kategori Bank belum tersedia. Silakan gunakan metode Unit Kerja.');
-        }
-
         try {
+            if ($method === 'kategori_bank') {
+                // Handle Kategori Bank method
+                $request->validate([
+                    'group_key' => 'required|string',
+                    'month' => 'required|integer|between:1,12',
+                    'year' => 'required|integer|between:2020,2030',
+                ]);
+
+                return $this->generateTukinByGroup($request, $isAjax);
+            }
+
+            // Default: Unit Kerja method
             $request->validate([
                 'dept_id' => 'required|integer|exists:ktd_department,id',
                 'month' => 'required|integer|between:1,12',
                 'year' => 'required|integer|between:2020,2030',
             ]);
+
+            $deptId = $request->dept_id;
+            $month = $request->month;
+            $year = $request->year;
+
+            $dept = Department::find($deptId);
+            if (! $dept) {
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan']);
+                }
+                return back()->with('error', 'Unit kerja tidak ditemukan');
+            }
+
+            $users = DB::table('users')
+                ->where('dept_id', $deptId)
+                ->where('status', 1)
+                ->whereNotNull('nomor_induk')
+                ->where('nomor_induk', '!=', '')
+                ->select('id', 'name', 'nomor_induk')
+                ->orderBy('name')
+                ->get();
+
+            if ($users->isEmpty()) {
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'message' => 'Tidak ada user di unit kerja ini']);
+                }
+                return back()->with('error', 'Tidak ada user di unit kerja ini');
+            }
+
+            $title = strtoupper($dept->nama);
+            $cleanName = preg_replace('/[^a-zA-Z0-9]/', '_', $dept->nama);
+
+            $result = $this->processAndSaveTukin($users, $title, $cleanName, $month, $year, $dept->nama, null, $deptId);
+
+            if ($isAjax) {
+                return response()->json($result, $result['success'] ? 200 : 500);
+            }
+
+            $flashMethod = $result['success'] ? 'success' : 'error';
+            return back()->with($flashMethod, $result['message']);
+
         } catch (ValidationException $e) {
             if ($isAjax) {
-                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+                $errors = $e->errors();
+                $firstError = collect($errors)->flatten()->first();
+                return response()->json(['success' => false, 'message' => $firstError], 422);
             }
             throw $e;
+        } catch (\Exception $e) {
+            Log::error('Generate tukin error: '.$e->getMessage());
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Gagal generate tukin: '.$e->getMessage()], 500);
+            }
+            return back()->with('error', 'Gagal generate tukin: '.$e->getMessage());
         }
+    }
 
-        $deptId = $request->dept_id;
+    /**
+     * Generate tukin berdasarkan Kategori Bank
+     */
+    protected function generateTukinByGroup(Request $request, bool $isAjax = false)
+    {
+        $groupKey = $request->group_key;
         $month = $request->month;
         $year = $request->year;
 
-        $dept = Department::find($deptId);
-        if (! $dept) {
-            if ($isAjax) {
-                return response()->json(['success' => false, 'message' => 'Unit kerja tidak ditemukan']);
+        // Handle belum_dikategorikan
+        if ($groupKey === 'belum_dikategorikan') {
+            $users = DB::table('users')
+                ->where(function ($q) {
+                    $q->whereNull('bank_kategori')->orWhere('bank_kategori', '=', '');
+                })
+                ->where('status', 1)
+                ->whereNotNull('nomor_induk')
+                ->where('nomor_induk', '!=', '')
+                ->select('id', 'name', 'nomor_induk')
+                ->orderBy('name')
+                ->get();
+
+            if ($users->isEmpty()) {
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'message' => 'Tidak ada user tanpa kategori bank']);
+                }
+                return back()->with('error', 'Tidak ada user tanpa kategori bank');
             }
 
-            return back()->with('error', 'Unit kerja tidak ditemukan');
+            $title = 'BELUM DIKATEGORIKAN';
+            $cleanName = 'belum_dikategorikan';
+
+            $result = $this->processAndSaveTukin($users, $title, $cleanName, $month, $year, $title, $groupKey);
+
+            if ($isAjax) {
+                return response()->json($result, $result['success'] ? 200 : 500);
+            }
+            return back()->with($result['success'] ? 'success' : 'error', $result['message']);
         }
 
+        $group = $this->resolveGroup($groupKey);
+        if (! $group) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Kelompok tidak ditemukan: '.$groupKey]);
+            }
+            return back()->with('error', 'Kelompok tidak ditemukan: '.$groupKey);
+        }
+
+        // Get users by group (like generateByGroup)
+        $query = DB::table('users')
+            ->join('tenaga_ktd', 'users.nomor_induk', '=', 'tenaga_ktd.nomor_induk')
+            ->where('users.bank_kategori', $group['bank_kategori'])
+            ->where('tenaga_ktd.status', $group['status'])
+            ->where('users.status', 1);
+
+        if (isset($group['serdik'])) {
+            if ($group['serdik'] === 'non-guru') {
+                $query->where('tenaga_ktd.serdik', 'non-guru');
+            } else {
+                $query->where(function ($q) use ($group) {
+                    $q->where('tenaga_ktd.serdik', $group['serdik'])
+                        ->orWhereNull('tenaga_ktd.serdik');
+                });
+            }
+        }
+
+        $users = $query
+            ->whereNotNull('users.nomor_induk')
+            ->where('users.nomor_induk', '!=', '')
+            ->select('users.id', 'users.name', 'users.nomor_induk')
+            ->orderBy('users.name')
+            ->get();
+
+        if ($users->isEmpty()) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada user di kelompok ini']);
+            }
+            return back()->with('error', 'Tidak ada user di kelompok ini');
+        }
+
+        $title = $group['label'];
+        $cleanName = preg_replace('/[^a-zA-Z0-9]/', '_', $groupKey);
+
+        $result = $this->processAndSaveTukin($users, $title, $cleanName, $month, $year, $title, $groupKey);
+
+        if ($isAjax) {
+            return response()->json($result, $result['success'] ? 200 : 500);
+        }
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    /**
+     * Proses generate Excel Tukin dan simpan ke storage + DB
+     */
+    protected function processAndSaveTukin(
+        $users,
+        string $title,
+        string $cleanName,
+        int $month,
+        int $year,
+        string $deptLabel,
+        ?string $groupKey,
+        ?int $deptId = null
+    ): array {
+        $nips = $users->pluck('nomor_induk')->toArray();
+        $periode = sprintf('%04d-%02d', $year, $month);
+
+        // Get tukin data
+        $tukinData = DB::table('ktd_tukin')
+            ->whereIn('user_nip', $nips)
+            ->where('periode', $periode)
+            ->get()
+            ->keyBy('user_nip');
+
         try {
-            $tanggal = sprintf('%04d-%02d-01', $year, $month);
-            $export = new PresensiTukin($deptId, $tanggal);
-            $cleanName = preg_replace('/[^a-zA-Z0-9]/', '_', $dept->nama);
+            $tukinFile = $this->generateTukinExcel($users, $tukinData, $title, $month, $year);
 
-            Log::info("Generating tukin for dept: {$dept->nama}, period: {$month}/{$year}");
-
-            // Create directory if not exists
             $rekapDir = storage_path('app/rekap_presensi');
             if (! file_exists($rekapDir)) {
                 mkdir($rekapDir, 0755, true);
@@ -282,49 +429,48 @@ class RekapPresensiController extends Controller
                 mkdir($deptDir, 0755, true);
             }
 
-            // Generate timestamp and filename
             $timestamp = date('Ymd_His');
             $tukinFilename = "rekap_tukin_{$cleanName}_{$year}_{$month}_{$timestamp}.xlsx";
             $tukinPath = "rekap_presensi/{$cleanName}/{$tukinFilename}";
-            $fullPath = storage_path("app/{$tukinPath}");
+            file_put_contents(storage_path("app/{$tukinPath}"), base64_decode($tukinFile));
 
-            // Store Excel file directly (same method as presensi)
-            $tukinFile = Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
-            file_put_contents($fullPath, $tukinFile);
-
-            Log::info("Tukin file stored at: {$fullPath}");
+            Log::info("Tukin file stored at: {$tukinPath}");
 
             // Save/update ke ktd_presensifiles
-            $existingQuery = KtdPresensiFile::where('dept', $dept->nama)
+            $existingQuery = KtdPresensiFile::where('dept', $deptLabel)
                 ->where('bulan', $month)
                 ->where('tahun', $year);
+
+            if ($groupKey) {
+                $existingQuery->where('group_key', $groupKey);
+            } else {
+                $existingQuery->whereNull('group_key');
+            }
 
             $existing = $existingQuery->first();
 
             if ($existing) {
                 // Hapus file LAMA jika ada
-                if (isset($existing->tukin) && $existing->tukin && file_exists(storage_path('app/'.$existing->tukin))) {
+                if ($existing->tukin && file_exists(storage_path('app/'.$existing->tukin))) {
                     unlink(storage_path('app/'.$existing->tukin));
                 }
 
-                // Update record di database
                 $existing->update([
                     'tukin' => $tukinPath,
                     'user_id' => auth()->id(),
                     'updated_at' => now(),
                 ]);
-
                 $existing->touch();
 
                 Log::info('Tukin file diupdate', [
                     'id' => $existing->id,
-                    'dept' => $dept->nama,
-                    'updated_at' => now()->toDateTimeString(),
+                    'dept' => $deptLabel,
+                    'group_key' => $groupKey,
                 ]);
             } else {
                 $newRecord = KtdPresensiFile::create([
-                    'dept' => $dept->nama,
-                    'group_key' => null,
+                    'dept' => $deptLabel,
+                    'group_key' => $groupKey,
                     'user_id' => auth()->id(),
                     'bulan' => $month,
                     'tahun' => $year,
@@ -335,38 +481,25 @@ class RekapPresensiController extends Controller
 
                 Log::info('Tukin file dibuat baru', [
                     'id' => $newRecord->id,
-                    'dept' => $dept->nama,
+                    'dept' => $deptLabel,
+                    'group_key' => $groupKey,
                 ]);
             }
 
             Log::info('Tukin berhasil digenerate', [
-                'dept' => $dept->nama,
+                'dept' => $deptLabel,
+                'group_key' => $groupKey,
                 'month' => $month,
                 'year' => $year,
-                'file' => $tukinPath,
+                'users' => $users->count(),
             ]);
 
-            // For AJAX requests, return JSON with download URL
-            if ($isAjax) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Tukin berhasil di-generate untuk '.$dept->nama,
-                    'download_url' => route('admin.rekap-presensi.download-tukin-direct', [
-                        'dept_id' => $deptId,
-                        'month' => $month,
-                        'year' => $year,
-                    ]),
-                ]);
-            }
+            return ['success' => true, 'message' => 'Tukin berhasil digenerate untuk '.$deptLabel];
 
-            return Excel::download($export, $tukinFilename);
         } catch (\Exception $e) {
-            Log::error('Generate tukin error: '.$e->getMessage());
-            if ($isAjax) {
-                return response()->json(['success' => false, 'message' => 'Gagal generate tukin: '.$e->getMessage()], 500);
-            }
+            Log::error('Gagal generate tukin: '.$e->getMessage());
 
-            return back()->with('error', 'Gagal generate tukin: '.$e->getMessage());
+            return ['success' => false, 'message' => 'Gagal generate tukin: '.$e->getMessage()];
         }
     }
 
