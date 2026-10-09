@@ -570,6 +570,30 @@ class PresensiController extends BaseApiController
             'tahun' => $tahun,
         ]);
 
+        // Debug: cek semua data presensi error user tanpa filter
+        $allData = KtdPresensi::where('user_nip', $user->nomor_induk)
+            ->whereIn('status', ['SISTEM_ERROR', 'TUGAS_LUAR', 'LUPA_PRESNSI_PUSAKA'])
+            ->get(['id', 'user_nip', 'tanggal', 'status', 'keterangan']);
+
+        \Log::info('errorHistory - all data without month/year filter', [
+            'count' => $allData->count(),
+            'data' => $allData->toArray(),
+        ]);
+
+        // Debug: cek data dengan filter bulan/tahun
+        $filteredData = KtdPresensi::where('user_nip', $user->nomor_induk)
+            ->whereYear('tanggal', $tahun)
+            ->whereMonth('tanggal', $bulan)
+            ->whereIn('status', ['SISTEM_ERROR', 'TUGAS_LUAR', 'LUPA_PRESNSI_PUSAKA'])
+            ->get(['id', 'user_nip', 'tanggal', 'status']);
+
+        \Log::info('errorHistory - filtered data', [
+            'bulan' => $bulan,
+            'tahun' => $tahun,
+            'count' => $filteredData->count(),
+            'data' => $filteredData->toArray(),
+        ]);
+
         $data = KtdPresensi::where('user_nip', $user->nomor_induk)
             ->whereYear('tanggal', $tahun)
             ->whereMonth('tanggal', $bulan)
