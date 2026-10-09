@@ -1,12 +1,12 @@
 <table>
     <thead>
         <tr>
-            <th colspan="{{ count($jenis) + 17 }}" style="text-align: center; font-size: 18pt; font-weight: bold;">
+            <th colspan="{{ count($jenis) + 15 }}" style="text-align: center; font-size: 18pt; font-weight: bold;">
                 REKAP TUKIN - {{ $date }}
             </th>
         </tr>
         <tr>
-            <th colspan="{{ count($jenis) + 17 }}" style="text-align: center; font-size: 11pt;">
+            <th colspan="{{ count($jenis) + 15 }}" style="text-align: center; font-size: 11pt;">
                 Periode: {{ $date }}
             </th>
         </tr>
@@ -18,8 +18,6 @@
             <th rowspan="2" style="border: 1px solid black; text-align: center; vertical-align: middle;">Nama</th>
             <th rowspan="2" style="border: 1px solid black; text-align: center; vertical-align: middle;">Unit Kerja</th>
             <th rowspan="2" style="border: 1px solid black; text-align: center; vertical-align: middle;">Status</th>
-            <th rowspan="2" style="border: 1px solid black; text-align: center; vertical-align: middle;">Gol</th>
-            <th rowspan="2" style="border: 1px solid black; text-align: center; vertical-align: middle;">Grade</th>
             <th colspan="8" style="border: 1px solid black; text-align: center; vertical-align: middle;">DATA LAMA (PUSAKA)</th>
             <th colspan="{{ count($jenis) }}" style="border: 1px solid black; text-align: center; vertical-align: middle;">PERHITUNGAN BARU</th>
             <th colspan="4" style="border: 1px solid black; text-align: center; vertical-align: middle;">HASIL AKHIR</th>
@@ -73,8 +71,6 @@
                     <td style="border: 1px solid black; text-align: left;">{{ $a->name }}</td>
                     <td style="border: 1px solid black; text-align: left;">{{ $a->dept->nama ?? '-' }}</td>
                     <td style="border: 1px solid black; text-align: center; {{ $a->asn_status === 'CPNS (80%)' ? 'background-color: #FFE4B5;' : '' }}">{{ $a->asn_status ?? '-' }}</td>
-                    <td style="border: 1px solid black; text-align: center;">{{ $a->gol ?? '-' }}</td>
-                    <td style="border: 1px solid black; text-align: center;">{{ $a->grade ?? '-' }}</td>
                     <!-- OLD DATA (PUSAKA) -->
                     <td style="border: 1px solid black; text-align: right; mso-number-format:'\#,\#\#0'; background-color: #F0F8FF;">{{ number_format($a->tukin_lama ?? 0, 0, ',', '.') }}</td>
                     <td style="border: 1px solid black; text-align: right; mso-number-format:'\#,\#\#0'; background-color: #F0F8FF;">{{ number_format($a->tk_jumlah_lama ?? 0, 0, ',', '.') }}</td>
@@ -110,7 +106,7 @@
     </tbody>
     <tfoot>
         <tr>
-            <td colspan="{{ count($jenis) + 17 }}" style="border: 1px solid black; padding: 10px; font-size: 11px; color: #666;">
+            <td colspan="{{ count($jenis) + 15 }}" style="border: 1px solid black; padding: 10px; font-size: 11px; color: #666;">
                 <strong>Keterangan:</strong>
                 <span style="background-color: #FFCCCC; padding: 2px 6px; margin-left: 10px; border: 1px solid #CC0000;">&nbsp;</span> = Hari Libur / Cuti Bersama
                 <span style="margin-left: 20px;">|</span>
