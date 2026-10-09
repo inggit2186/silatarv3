@@ -663,6 +663,9 @@ class PresensiController extends BaseApiController
         $kepalaNama = '..................................';
         $kepalaNip = '';
         $kepalaSignaturePath = null;
+        $kepalaLabel = "Mengetahui<br>Kepala {$unitKerja},";
+        $isUserAtasan = false;
+        $isPlh = false;
 
         // Cek apakah user adalah atasan
         $atasanJabatan = ['kepala', 'kasi', 'kasubbag'];
@@ -673,6 +676,7 @@ class PresensiController extends BaseApiController
             $kepalaNama = $presensi->manual_supervisor_name ?? '..................................';
             $kepalaNip = $presensi->manual_supervisor_nip ?? '';
             $unitKerja = $presensi->manual_unit_kerja ?? $unitKerja;
+            $kepalaLabel = "Mengetahui<br>Atasan,";
         } elseif ($isUserAtasan) {
             // User adalah atasan - gunakan Kepala Kankemenag
             $kepalaKankemenag = DB::table('users')
@@ -682,6 +686,7 @@ class PresensiController extends BaseApiController
             if ($kepalaKankemenag) {
                 $kepalaNama = $kepalaKankemenag->name;
                 $kepalaNip = $kepalaKankemenag->nomor_induk ?? '';
+                $kepalaLabel = 'Mengetahui<br>Kepala Kankemenag Kab. Tanah Datar,';
 
                 if ($kepalaKankemenag->pp) {
                     $kepalaCheck = storage_path('app/public/users_berkas/'.$kepalaKankemenag->nomor_induk.'/'.$kepalaKankemenag->pp);
@@ -699,8 +704,10 @@ class PresensiController extends BaseApiController
             if ($pltPlh) {
                 $pltUser = DB::table('users')->where('id', $pltPlh->user_id)->first();
                 if ($pltUser) {
+                    $isPlh = true;
                     $kepalaNama = $pltUser->name;
                     $kepalaNip = $pltUser->nomor_induk ?? '';
+                    $kepalaLabel = 'Mengetahui<br>PLT Kepala,';
 
                     if ($pltUser->pp) {
                         $pltCheck = storage_path('app/public/users_berkas/'.$pltUser->nomor_induk.'/'.$pltUser->pp);
@@ -722,6 +729,14 @@ class PresensiController extends BaseApiController
                     $kepalaNama = $atasan->name;
                     $kepalaNip = $atasan->nomor_induk ?? '';
 
+                    if ($atasan->kat_jabatan === 'kepala') {
+                        $kepalaLabel = 'Mengetahui<br>Kepala Kankemenag Kab. Tanah Datar,';
+                    } elseif ($atasan->kat_jabatan === 'kasi') {
+                        $kepalaLabel = "Mengetahui<br>Kepala {$unitKerja},";
+                    } else {
+                        $kepalaLabel = "Mengetahui<br>Kasubbag {$unitKerja},";
+                    }
+
                     if ($atasan->pp) {
                         $atasanCheck = storage_path('app/public/users_berkas/'.$atasan->nomor_induk.'/'.$atasan->pp);
                         if (file_exists($atasanCheck)) {
@@ -732,59 +747,120 @@ class PresensiController extends BaseApiController
             }
         }
 
-        // Tentukan jenis (masuk atau pulang)
-        $jenis = 'MASUK';
-        $jamAbsen = $presensi->m_absen;
+        // Tentukan jenis (masuk atau pulang) - lowercase untuk blade
+        $jenis = 'masuk';
+        $jam = $presensi->m_absen ?? '-';
+        $jamActual = $presensi->error_masuk_taken_at ?? '-';
+        $latitude = $presensi->m_latitude ?? '-';
+        $longitude = $presensi->m_longitude ?? '-';
+        $distance = $presensi->m_distance ?? '-';
+        $fotoPath = $presensi->m_location ?? null;
+        $alamat = $presensi->m_alamat ?? '';
+
         if (!empty($presensi->p_absen) && empty($presensi->m_absen)) {
-            $jenis = 'PULANG';
-            $jamAbsen = $presensi->p_absen;
+            $jenis = 'pulang';
+            $jam = $presensi->p_absen ?? '-';
+            $jamActual = $presensi->error_pulang_taken_at ?? '-';
+            $latitude = $presensi->p_latitude ?? '-';
+            $longitude = $presensi->p_longitude ?? '-';
+            $distance = $presensi->p_distance ?? '-';
+            $fotoPath = $presensi->p_location ?? null;
+            $alamat = $presensi->p_alamat ?? '';
         } elseif (!empty($presensi->p_absen) && !empty($presensi->m_absen)) {
-            // Jika keduanya ada, default ke error_pulang_taken_at
+            // Jika keduanya ada, cek error_pulang_taken_at
             if (!empty($presensi->error_pulang_taken_at)) {
-                $jenis = 'PULANG';
-                $jamAbsen = $presensi->p_absen;
-            } else {
-                $jenis = 'MASUK';
-                $jamAbsen = $presensi->m_absen;
+                $jenis = 'pulang';
+                $jam = $presensi->p_absen ?? '-';
+                $jamActual = $presensi->error_pulang_taken_at ?? '-';
+                $latitude = $presensi->p_latitude ?? '-';
+                $longitude = $presensi->p_longitude ?? '-';
+                $distance = $presensi->p_distance ?? '-';
+                $fotoPath = $presensi->p_location ?? null;
+                $alamat = $presensi->p_alamat ?? '';
             }
         }
 
-        // Tentukan status label
-        $statusLabel = 'Sistem Error';
-        if ($presensi->status === 'TUGAS_LUAR') {
-            $statusLabel = 'Tugas Luar';
-        } elseif ($presensi->status === 'LUPA_PRESNSI_PUSAKA') {
-            $statusLabel = 'Lupa Presensi';
+        // Format jarak
+        $distanceFormatted = '-';
+        if ($distance && $distance != '-') {
+            $distanceInMeters = round((float) $distance);
+            if ($distanceInMeters >= 1000) {
+                $km = floor($distanceInMeters / 1000);
+                $remainingMeters = $distanceInMeters % 1000;
+                $distanceFormatted = $km.' km '.$remainingMeters.' meter';
+            } else {
+                $distanceFormatted = $distanceInMeters.' meter';
+            }
         }
 
-        // Format tanggal
-        $tanggal = Carbon::parse($presensi->tanggal)->format('d F Y');
-        $nomorSurat = '00' . $presensi->id . '/KP.05.03/' . Carbon::now()->format('Y');
+        // Format lokasi
+        $lokasi = '-';
+        if ($latitude && $longitude && $latitude != '-' && $longitude != '-') {
+            $lokasi = $latitude.', '.$longitude;
+        }
 
-        // Generate PDF
-        $data = [
-            'presensi' => $presensi,
-            'userData' => $userData,
+        // Path foto lengkap
+        $fotoFullPath = null;
+        if ($fotoPath) {
+            $fotoFullPath = storage_path('app/public/'.$fotoPath);
+            if (!file_exists($fotoFullPath)) {
+                $fotoFullPath = null;
+            }
+        }
+
+        // Header image
+        $headerPath = public_path('assets/img/template/header.webp');
+        $headerExists = file_exists($headerPath);
+
+        // Generate nomor surat unik/random
+        $randomNumber = strtoupper(substr(uniqid(), -6));
+        $nomorSurat = 'SK-PE/'.$randomNumber.'/'.now()->format('m/Y');
+
+        // Format tanggal
+        $tanggal = Carbon::parse($presensi->tanggal)->locale('id_ID')->isoFormat('dddd, D MMMM Y');
+
+        // Build data untuk blade template
+        $pdfData = [
+            'nomorSurat' => $nomorSurat,
+            'tanggal' => $tanggal,
+            'nama' => $userData->name,
+            'nip' => $userData->nomor_induk,
+            'jabatan' => $userData->pekerjaan ?? '-',
             'unitKerja' => $unitKerja,
+            'jam' => $jam,
+            'jamActual' => $jamActual,
+            'jenisPresensi' => $jenis === 'masuk' ? 'Presensi Masuk' : 'Presensi Pulang',
+            'alasan' => $presensi->status ?? 'SISTEM_ERROR',
+            'lokasi' => $lokasi,
+            'alamat' => $alamat,
+            'jarak' => $distanceFormatted,
+            'keterangan' => $presensi->keterangan ?? 'Dilaporkan melalui Presensi Error',
+            'fotoPath' => $fotoFullPath,
+            'headerPath' => $headerExists ? $headerPath : null,
+            'kepalaLabel' => $kepalaLabel,
             'kepalaNama' => $kepalaNama,
             'kepalaNip' => $kepalaNip,
             'kepalaSignaturePath' => $kepalaSignaturePath,
-            'jenis' => $jenis,
-            'jamAbsen' => $jamAbsen,
-            'statusLabel' => $statusLabel,
-            'tanggal' => $tanggal,
-            'nomorSurat' => $nomorSurat,
         ];
 
-        $pdf = Pdf::loadView('pdf.surat-keterangan-presensi-error', $data);
-        $pdf->setPaper('A4', 'portrait');
+        // Log untuk debug
+        \Log::info('downloadSuratError - generating PDF', [
+            'id' => $id,
+            'nomorSurat' => $nomorSurat,
+            'jenis' => $jenis,
+        ]);
 
-        $filename = 'Surat_Keterangan_Presensi_Error_' . $presensi->id . '_' . $jenis . '.pdf';
+        $pdf = Pdf::loadView('pdf.surat-keterangan-presensi-error', $pdfData)
+            ->setPaper('a4', 'portrait')
+            ->setOption('isRemoteEnabled', true)
+            ->setOption('isHtml5ParserEnabled', true);
 
-        return response()->streamDownload(function () use ($pdf) {
-            echo $pdf->output();
-        }, $filename, [
+        $filename = 'surat-keterangan-presensi-error-'.$presensi->user_nip.'-'.$id.'.pdf';
+
+        return response($pdf->output(), 200, [
             'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Content-Transfer-Encoding' => 'binary',
         ]);
     }
 }
