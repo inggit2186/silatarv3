@@ -7,6 +7,7 @@ use App\Models\KtdPresensi;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PresensiController extends BaseApiController
 {
@@ -357,6 +358,8 @@ class PresensiController extends BaseApiController
     /**
      * Submit presensi error (Sistem Error / Tugas Luar / Lupa Presensi)
      * POST /api/presensi-error
+     *
+     * Standarisasi sesuai dengan versi web (PageController::presensiErrorSubmit)
      */
     public function submitError(Request $request)
     {
@@ -370,8 +373,8 @@ class PresensiController extends BaseApiController
         $request->validate([
             'jenis' => 'required|in:masuk,pulang',
             'alasan' => 'required|in:SISTEM_ERROR,TUGAS_LUAR,LUPA_PRESNSI_PUSAKA',
-            'keterangan_tugas_luar' => 'nullable|string|max:500',
-            'tanggal_lupa' => 'nullable|date',
+            'keterangan_tugas_luar' => 'required_if:alasan,TUGAS_LUAR|nullable|string',
+            'tanggal_lupa' => 'required_if:alasan,LUPA_PRESNSI_PUSAKA|nullable|date|after_or_equal:yesterday|before_or_equal:today',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'jarak_meter' => 'nullable|numeric',
@@ -385,82 +388,170 @@ class PresensiController extends BaseApiController
         $user = $request->user();
         $jenis = $request->input('jenis');
         $alasan = $request->input('alasan');
+        $now = Carbon::now('Asia/Jakarta');
 
-        // Tentukan tanggal target
-        $targetTanggal = Carbon::now('Asia/Jakarta')->format('Y-m-d');
-        if ($alasan === 'LUPA_PRESNSI_PUSAKA') {
-            $tanggalLupa = $request->input('tanggal_lupa');
-            if ($tanggalLupa) {
-                $targetTanggal = Carbon::parse($tanggalLupa)->format('Y-m-d');
-            }
-        }
+        // Waktu tetap untuk presensi error (standar web)
+        $jamMasuk = '05:59:00';
+        $jamPulang = '19:59:00';
+
+        // Tentukan tanggal: lupa presensi pakai tanggal dari form, lainnya pakai hari ini
+        $targetTanggal = $alasan === 'LUPA_PRESNSI_PUSAKA'
+            ? Carbon::parse($request->input('tanggal_lupa'))->format('Y-m-d')
+            : $now->toDateString();
 
         \Log::info('submitError - target date', ['target_tanggal' => $targetTanggal]);
+
+        // Tentukan status berdasarkan alasan
+        $status = $alasan;
+
+        // Tentukan keterangan
+        if ($alasan === 'TUGAS_LUAR') {
+            $keterangan = $request->input('keterangan_tugas_luar', 'Tugas Luar');
+        } elseif ($alasan === 'LUPA_PRESNSI_PUSAKA') {
+            $keterangan = 'Dilaporkan melalui halaman Presensi Error (Lupa Presensi Pusaka)';
+        } else {
+            $keterangan = 'Dilaporkan melalui halaman Presensi Error (Sistem Error)';
+        }
+
+        // Handle photo upload
+        $fotoPath = $this->saveErrorPhoto($request->input('foto'), $user->nomor_induk);
+        if (!$fotoPath) {
+            return $this->error('Gagal menyimpan foto. Silakan coba lagi.', 422);
+        }
 
         // Cek apakah sudah ada record
         $presensi = KtdPresensi::where('user_nip', $user->nomor_induk)
             ->whereDate('tanggal', $targetTanggal)
             ->first();
 
-        if (!$presensi) {
-            $presensi = new KtdPresensi();
-            $presensi->user_nip = $user->nomor_induk;
-            $presensi->tanggal = $targetTanggal;
+        $dataUpdate = [
+            'status' => $status,
+            'keterangan' => $keterangan,
+            'updated_at' => now(),
+        ];
+
+        // Simpan data atasan manual untuk dept 998/999
+        $specialDeptIds = [998, 999];
+        if (in_array((int) $user->dept_id, $specialDeptIds)) {
+            $dataUpdate['manual_supervisor_name'] = $request->input('supervisor_name', '');
+            $dataUpdate['manual_supervisor_nip'] = $request->input('supervisor_nip', '');
+            $dataUpdate['manual_unit_kerja'] = $request->input('unit_kerja_manual', '');
         }
 
-        // Set timezone
-        $now = Carbon::now('Asia/Jakarta');
-        $jam = $now->format('H:i:s');
-
-        // Handle photo upload
-        $fotoPath = $this->saveErrorPhoto($request->input('foto'), $user->nomor_induk);
+        // Hitung jarak dari kantor (standar web)
+        $distance = $this->calculateDistanceFromOffice(
+            $user->dept_id,
+            $request->input('latitude', 0),
+            $request->input('longitude', 0)
+        );
 
         if ($jenis === 'masuk') {
-            $presensi->m_absen = $jam;
-            $presensi->m_latitude = $request->input('latitude');
-            $presensi->m_longitude = $request->input('longitude');
-            $presensi->m_distance = $request->input('jarak_meter');
-            $presensi->m_alamat = $request->input('alamat');
-            $presensi->m_location = $fotoPath;
-            $presensi->error_masuk_taken_at = $jam;
-            $presensi->status = $alasan;
+            $dataUpdate['m_absen'] = $jamMasuk;
+            $dataUpdate['m_latitude'] = $request->input('latitude', 0);
+            $dataUpdate['m_longitude'] = $request->input('longitude', 0);
+            $dataUpdate['m_location'] = $fotoPath;
+            $dataUpdate['m_alamat'] = $request->input('alamat', '');
+            $dataUpdate['error_masuk_taken_at'] = $now->format('H:i:s');
+            $dataUpdate['m_distance'] = $distance ?? $request->input('jarak_meter', 0);
         } else {
-            $presensi->p_absen = $jam;
-            $presensi->p_latitude = $request->input('latitude');
-            $presensi->p_longitude = $request->input('longitude');
-            $presensi->p_distance = $request->input('jarak_meter');
-            $presensi->p_alamat = $request->input('alamat');
-            $presensi->p_location = $fotoPath;
-            $presensi->error_pulang_taken_at = $jam;
-            if (empty($presensi->status) || $presensi->status === $alasan) {
-                $presensi->status = $alasan;
-            }
-        }
-
-        // Set keterangan
-        if ($alasan === 'TUGAS_LUAR') {
-            $presensi->keterangan = $request->input('keterangan_tugas_luar');
-        } else {
-            $presensi->keterangan = $alasan;
+            $dataUpdate['p_absen'] = $jamPulang;
+            $dataUpdate['p_latitude'] = $request->input('latitude', 0);
+            $dataUpdate['p_longitude'] = $request->input('longitude', 0);
+            $dataUpdate['p_location'] = $fotoPath;
+            $dataUpdate['p_alamat'] = $request->input('alamat', '');
+            $dataUpdate['error_pulang_taken_at'] = $now->format('H:i:s');
+            $dataUpdate['p_distance'] = $distance ?? $request->input('jarak_meter', 0);
         }
 
         \Log::info('submitError - about to save', [
-            'user_nip' => $presensi->user_nip,
-            'tanggal' => $presensi->tanggal,
-            'status' => $presensi->status,
+            'user_nip' => $user->nomor_induk,
+            'tanggal' => $targetTanggal,
+            'status' => $status,
         ]);
 
-        $presensi->save();
+        try {
+            $presensiId = null;
+            if ($presensi) {
+                KtdPresensi::where('id', $presensi->id)->update($dataUpdate);
+                $presensiId = $presensi->id;
+            } else {
+                $dataInsert = array_merge($dataUpdate, [
+                    'user_nip' => $user->nomor_induk,
+                    'tanggal' => $targetTanggal,
+                    'created_at' => now(),
+                ]);
+                $newPresensi = new KtdPresensi($dataInsert);
+                $newPresensi->save();
+                $presensiId = $newPresensi->id;
+            }
 
-        \Log::info('submitError - saved successfully', ['id' => $presensi->id]);
+            \Log::info('submitError - saved successfully', ['id' => $presensiId]);
 
-        return $this->success([
-            'id' => $presensi->id,
-            'tanggal' => $targetTanggal,
-            'jenis' => $jenis,
-            'alasan' => $alasan,
-            'jam' => $jam,
-        ], 'Presensi error berhasil disimpan', 201);
+            return $this->success([
+                'id' => $presensiId,
+                'tanggal' => $targetTanggal,
+                'jenis' => $jenis,
+                'alasan' => $alasan,
+                'jam' => $now->format('H:i:s'),
+            ], 'Presensi error berhasil disimpan', 201);
+        } catch (\Exception $e) {
+            \Log::error('Failed to save error presensi', ['error' => $e->getMessage()]);
+            return $this->error('Gagal menyimpan data presensi: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Calculate distance from office based on department coordinates
+     */
+    private function calculateDistanceFromOffice(?int $deptId, float $userLat, float $userLon): ?float
+    {
+        // Jika koordinat user tidak valid, return null
+        if ($userLat == 0 && $userLon == 0) {
+            return null;
+        }
+
+        // Ambil data department
+        $dept = DB::table('ktd_department')->where('id', $deptId)->first();
+        if (!$dept) {
+            return null;
+        }
+
+        // Cek apakah department memiliki koordinat
+        if (empty($dept->latitude) || empty($dept->longitude)) {
+            return null;
+        }
+
+        $officeLat = (float) $dept->latitude;
+        $officeLon = (float) $dept->longitude;
+
+        // Validasi koordinat office
+        if ($officeLat == 0 && $officeLon == 0) {
+            return null;
+        }
+
+        return $this->calculateDistance($officeLat, $officeLon, $userLat, $userLon);
+    }
+
+    /**
+     * Calculate distance between two coordinates using Haversine formula
+     */
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2): float
+    {
+        $earthRadius = 6371000; // meters
+
+        $lat1 = deg2rad($lat1);
+        $lon1 = deg2rad($lon1);
+        $lat2 = deg2rad($lat2);
+        $lon2 = deg2rad($lon2);
+
+        $dLat = $lat2 - $lat1;
+        $dLon = $lon2 - $lon1;
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+             cos($lat1) * cos($lat2) * sin($dLon / 2) * sin($dLon / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 
     /**
