@@ -20,17 +20,14 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
 {
-    protected $identifier; // dept_id (int/string) or group_key (string)
+    protected $satker;
 
     protected $tanggalView;
 
-    protected $type; // 'dept' or 'group'
-
-    public function __construct($identifier, $tanggalView, $type = 'dept')
+    public function __construct($satker, $tanggalView)
     {
-        $this->identifier = $identifier;
+        $this->satker = $satker;
         $this->tanggalView = $tanggalView;
-        $this->type = $type;
     }
 
     public function view(): View
@@ -46,7 +43,7 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
         $period = CarbonPeriod::create($start, $end);
 
         Log::info('=== PRESENSI TUKIN EXPORT ===');
-        Log::info("Type: {$this->type}; Identifier: {$this->identifier}; Periode: {$start->toDateString()} s/d {$end->toDateString()}");
+        Log::info("Satker: {$this->satker}; Periode: {$start->toDateString()} s/d {$end->toDateString()}");
 
         // Load ketidakhadiran statuses (dynamic from database)
         $ketidakhadiran = Ketidakhadiran::all();
@@ -86,18 +83,13 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
         // Pass libur data to view for styling
         $liburDates = $allLibur->keys()->toArray();
 
-        // Load users based on type
-        if ($this->type === 'group') {
-            $users = $this->loadUsersByGroup($this->identifier);
-        } else {
-            // Load users by dept_id (default behavior)
-            $users = User::with(['dept', 'tenaga'])
-                ->where('dept_id', (string) $this->identifier)
-                ->whereNotIn('role', ['pindah', 'pensiun'])
-                ->get();
-        }
+        // Load ASN
+        $users = User::with(['dept', 'tenaga'])
+            ->where('dept_id', (string) $this->satker)
+            ->whereNotIn('role', ['pindah', 'pensiun'])
+            ->get();
 
-        Log::info('Jumlah user ditemukan: '.$users->count());
+        Log::info('Jumlah user ASN ditemukan: '.$users->count());
 
         // buat list NIP yang dinormalisasi (digits only)
         $nipList = $users->pluck('nomor_induk')
@@ -349,17 +341,10 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
             $asn->detail_potongan_calc = $detailPotongan;
         }
 
-        // Sort users based on type
-        if ($this->type === 'group') {
-            $users = $users->sortBy('name');
-        } else {
-            $users = $users->sortBy('dept_id');
-        }
-
         return view('backend.export.TukinDate', [
             'date' => $month,
             'jenis' => $ketidakhadiran,
-            'asn' => $users,
+            'asn' => $users->sortBy('dept_id'),
             'liburDates' => $liburDates,
         ]);
     }
@@ -368,34 +353,16 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
 
     public function styles(Worksheet $sheet): ?array
     {
+        $cek = User::where('dept_id', $this->satker)
+            ->whereNotIn('role', ['pindah', 'pensiun'])
+            ->count();
+
         $sheet->freezePane('C5');
         $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(1, 4);
         $sheet->getPageSetup()->setOrientation(PageSetup::ORIENTATION_LANDSCAPE);
         $sheet->getPageSetup()->setPaperSize(PageSetup::PAPERSIZE_A4);
         $sheet->getPageSetup()->setScale(70);
         $sheet->getPageMargins()->setTop(0.25);
-
-        // Count users based on type
-        if ($this->type === 'group') {
-            $group = $this->resolveGroup($this->identifier);
-            if ($group) {
-                $query = DB::table('users')
-                    ->join('tenaga_ktd', 'users.nomor_induk', '=', 'tenaga_ktd.nomor_induk')
-                    ->where('users.bank_kategori', $group['bank_kategori'])
-                    ->where('tenaga_ktd.status', $group['status'])
-                    ->where('users.status', 1);
-                if (isset($group['serdik'])) {
-                    $query->where('tenaga_ktd.serdik', $group['serdik']);
-                }
-                $cek = $query->count();
-            } else {
-                $cek = 0;
-            }
-        } else {
-            $cek = User::where('dept_id', $this->identifier)
-                ->whereNotIn('role', ['pindah', 'pensiun'])
-                ->count();
-        }
 
         // Style legend row at the bottom
         $lastRow = $cek + 6; // +6 for header rows and data rows
@@ -458,136 +425,5 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
         }
 
         return null;
-    }
-
-    /**
-     * Load users by group_key (bank kategori)
-     */
-    protected function loadUsersByGroup(string $groupKey): \Illuminate\Support\Collection
-    {
-        // Parse group key to get bank_kategori, status, and serdik
-        $group = $this->resolveGroup($groupKey);
-
-        if (! $group) {
-            Log::warning("Group not found: {$groupKey}");
-            return collect();
-        }
-
-        $query = DB::table('users')
-            ->join('tenaga_ktd', 'users.nomor_induk', '=', 'tenaga_ktd.nomor_induk')
-            ->leftJoin('ktd_department', 'users.dept_id', '=', 'ktd_department.id')
-            ->where('users.bank_kategori', $group['bank_kategori'])
-            ->where('tenaga_ktd.status', $group['status'])
-            ->where('users.status', 1)
-            ->whereNotIn('users.role', ['pindah', 'pensiun']);
-
-        if (isset($group['serdik'])) {
-            if ($group['serdik'] === 'non-guru') {
-                $query->where('tenaga_ktd.serdik', 'non-guru');
-            } else {
-                $query->where(function ($q) use ($group) {
-                    $q->where('tenaga_ktd.serdik', $group['serdik'])
-                        ->orWhereNull('tenaga_ktd.serdik');
-                });
-            }
-        }
-
-        $query->whereNotNull('users.nomor_induk')
-            ->where('users.nomor_induk', '!=', '');
-
-        // Select needed columns and convert to User-like objects
-        $results = $query->select(
-            'users.id',
-            'users.name',
-            'users.nomor_induk',
-            'users.dept_id',
-            'users.bank_kategori',
-            'ktd_department.nama as dept_nama',
-            'ktd_department.hari_kerja as hari_kerja',
-            'tenaga_ktd.status as tenaga_status',
-            'tenaga_ktd.serdik'
-        )->get();
-
-        // Convert to User model-like objects with relations
-        $users = collect();
-        foreach ($results as $row) {
-            $user = new User();
-            $user->id = $row->id;
-            $user->name = $row->name;
-            $user->nomor_induk = $row->nomor_induk;
-            $user->dept_id = $row->dept_id;
-
-            // Create dept relation
-            $dept = new \stdClass();
-            $dept->nama = $row->dept_nama ?? '-';
-            $dept->hari_kerja = $row->hari_kerja;
-            $user->dept = $dept;
-
-            // Create tenaga relation
-            $tenaga = new \stdClass();
-            $tenaga->status = $row->tenaga_status;
-            $tenaga->serdik = $row->serdik;
-            $user->tenaga = $tenaga;
-
-            $users->push($user);
-        }
-
-        Log::info('Users loaded by group: '.$users->count());
-
-        return $users;
-    }
-
-    /**
-     * Resolve group definition dari group_key
-     */
-    protected function resolveGroup(string $groupKey): ?array
-    {
-        $labels = [
-            'pns_keagamaan_bank_nagari' => ['bk' => 'KEAGAMAAN_BANK NAGARI', 'status' => 'pns'],
-            'pppk_keagamaan_bank_nagari' => ['bk' => 'KEAGAMAAN_BANK NAGARI', 'status' => 'pppk'],
-            'pns_keagamaan_nagari' => ['bk' => 'KEAGAMAAN_PPPK_NAGARI', 'status' => 'pns'],
-            'pppk_keagamaan_nagari' => ['bk' => 'KEAGAMAAN_PPPK_NAGARI', 'status' => 'pppk'],
-            'pns_keagamaan_bsi' => ['bk' => 'KEAGAMAAN_BSI', 'status' => 'pns'],
-            'cpns_keagamaan_bsi' => ['bk' => 'KEAGAMAAN_BSI', 'status' => 'cpns'],
-            'pns_kependidikan_bank_nagari_serdik' => ['bk' => 'KEPENDIDIKAN_BANK NAGARI', 'status' => 'pns', 'serdik' => 'sertifikasi'],
-            'pns_kependidikan_bank_nagari_nonserdik' => ['bk' => 'KEPENDIDIKAN_BANK NAGARI', 'status' => 'pns', 'serdik' => 'non-sertifikasi'],
-            'pns_kependidikan_bank_nagari_nonguru' => ['bk' => 'KEPENDIDIKAN_BANK NAGARI', 'status' => 'pns', 'serdik' => 'non-guru'],
-            'pns_kependidikan_bank_nagari_unknown' => ['bk' => 'KEPENDIDIKAN_BANK NAGARI', 'status' => 'pns', 'serdik' => 'unknown'],
-            'pppk_kependidikan_bsi_serdik' => ['bk' => 'KEPENDIDIKAN_PPPK_BSI', 'status' => 'pppk', 'serdik' => 'sertifikasi'],
-            'pppk_kependidikan_bsi_nonserdik' => ['bk' => 'KEPENDIDIKAN_PPPK_BSI', 'status' => 'pppk', 'serdik' => 'non-sertifikasi'],
-            'pppk_kependidikan_bsi_nonguru' => ['bk' => 'KEPENDIDIKAN_PPPK_BSI', 'status' => 'pppk', 'serdik' => 'non-guru'],
-            'pppk_kependidikan_bsi_unknown' => ['bk' => 'KEPENDIDIKAN_PPPK_BSI', 'status' => 'pppk', 'serdik' => 'unknown'],
-            'pppk_kependidikan_nagari_serdik' => ['bk' => 'KEPENDIDIKAN_PPPK_NAGARI', 'status' => 'pppk', 'serdik' => 'sertifikasi'],
-            'pppk_kependidikan_nagari_nonserdik' => ['bk' => 'KEPENDIDIKAN_PPPK_NAGARI', 'status' => 'pppk', 'serdik' => 'non-sertifikasi'],
-            'pppk_kependidikan_nagari_nonguru' => ['bk' => 'KEPENDIDIKAN_PPPK_NAGARI', 'status' => 'pppk', 'serdik' => 'non-guru'],
-            'pppk_kependidikan_nagari_unknown' => ['bk' => 'KEPENDIDIKAN_PPPK_NAGARI', 'status' => 'pppk', 'serdik' => 'unknown'],
-            'pns_kependidikan_bri_serdik' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pns', 'serdik' => 'sertifikasi'],
-            'pns_kependidikan_bri_nonserdik' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pns', 'serdik' => 'non-sertifikasi'],
-            'pns_kependidikan_bri_nonguru' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pns', 'serdik' => 'non-guru'],
-            'pns_kependidikan_bri_unknown' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pns', 'serdik' => 'unknown'],
-            'pppk_kependidikan_bri_serdik' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pppk', 'serdik' => 'sertifikasi'],
-            'pppk_kependidikan_bri_nonserdik' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pppk', 'serdik' => 'non-sertifikasi'],
-            'pppk_kependidikan_bri_nonguru' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pppk', 'serdik' => 'non-guru'],
-            'pppk_kependidikan_bri_unknown' => ['bk' => 'KEPENDIDIKAN_BRI', 'status' => 'pppk', 'serdik' => 'unknown'],
-            'pns_kependidikan_bsi_serdik' => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pns', 'serdik' => 'sertifikasi'],
-            'pns_kependidikan_bsi_nonserdik' => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pns', 'serdik' => 'non-sertifikasi'],
-            'pns_kependidikan_bsi_nonguru' => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pns', 'serdik' => 'non-guru'],
-            'pns_kependidikan_bsi_unknown' => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pns', 'serdik' => 'unknown'],
-            'cpns_kependidikan_bsi_nonserdik' => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'cpns', 'serdik' => 'non-sertifikasi'],
-            'pppk_kependidikan_bsi_serdik_bsi' => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pppk', 'serdik' => 'sertifikasi'],
-            'pppk_kependidikan_bsi_nonserdik_bsi' => ['bk' => 'KEPENDIDIKAN_BSI', 'status' => 'pppk', 'serdik' => 'non-sertifikasi'],
-        ];
-
-        if (! isset($labels[$groupKey])) {
-            return null;
-        }
-
-        $def = $labels[$groupKey];
-
-        return [
-            'bank_kategori' => $def['bk'],
-            'status' => $def['status'],
-            'serdik' => $def['serdik'] ?? null,
-        ];
     }
 }
