@@ -98,6 +98,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/today', [PresensiController::class, 'errorToday']);
         Route::post('/', [PresensiController::class, 'submitError']);
         Route::get('/history', [PresensiController::class, 'errorHistory']);
+        Route::get('/{id}/surat', [PresensiController::class, 'downloadSuratError']);
     });
 
     // Laporan Kegiatan Harian (CKH)

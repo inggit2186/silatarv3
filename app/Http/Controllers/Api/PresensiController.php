@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PresensiController extends BaseApiController
 {
@@ -564,36 +565,6 @@ class PresensiController extends BaseApiController
         $bulan = $request->input('bulan', Carbon::now()->month);
         $tahun = $request->input('tahun', Carbon::now()->year);
 
-        \Log::info('errorHistory called', [
-            'user_nip' => $user->nomor_induk,
-            'bulan' => $bulan,
-            'tahun' => $tahun,
-        ]);
-
-        // Debug: cek semua data presensi error user tanpa filter
-        $allData = KtdPresensi::where('user_nip', $user->nomor_induk)
-            ->whereIn('status', ['SISTEM_ERROR', 'TUGAS_LUAR', 'LUPA_PRESNSI_PUSAKA'])
-            ->get(['id', 'user_nip', 'tanggal', 'status', 'keterangan']);
-
-        \Log::info('errorHistory - all data without month/year filter', [
-            'count' => $allData->count(),
-            'data' => $allData->toArray(),
-        ]);
-
-        // Debug: cek data dengan filter bulan/tahun
-        $filteredData = KtdPresensi::where('user_nip', $user->nomor_induk)
-            ->whereYear('tanggal', $tahun)
-            ->whereMonth('tanggal', $bulan)
-            ->whereIn('status', ['SISTEM_ERROR', 'TUGAS_LUAR', 'LUPA_PRESNSI_PUSAKA'])
-            ->get(['id', 'user_nip', 'tanggal', 'status']);
-
-        \Log::info('errorHistory - filtered data', [
-            'bulan' => $bulan,
-            'tahun' => $tahun,
-            'count' => $filteredData->count(),
-            'data' => $filteredData->toArray(),
-        ]);
-
         $data = KtdPresensi::where('user_nip', $user->nomor_induk)
             ->whereYear('tanggal', $tahun)
             ->whereMonth('tanggal', $bulan)
@@ -601,8 +572,6 @@ class PresensiController extends BaseApiController
             ->orderBy('tanggal', 'desc')
             ->get()
             ->map(fn ($p) => $this->formatErrorPresensi($p));
-
-        \Log::info('errorHistory result', ['count' => $data->count()]);
 
         return $this->success([
             'bulan' => $bulan,
@@ -651,5 +620,171 @@ class PresensiController extends BaseApiController
             \Log::error('Failed to save error presensi photo', ['error' => $e->getMessage()]);
             return null;
         }
+    }
+
+    /**
+     * Download Surat Keterangan Presensi Error
+     * GET /api/presensi-error/{id}/surat
+     */
+    public function downloadSuratError(Request $request, int $id)
+    {
+        $presensi = KtdPresensi::find($id);
+        if (!$presensi) {
+            return $this->error('Data presensi tidak ditemukan', 404);
+        }
+
+        $user = $request->user();
+
+        // Verifikasi user adalah pemilik data atau admin
+        $isAdmin = in_array($user->role, ['admin', 'superadmin', 'kepala']);
+        if ($user->nomor_induk !== $presensi->user_nip && !$isAdmin) {
+            return $this->error('Anda tidak memiliki akses ke data ini', 403);
+        }
+
+        // Ambil data user dari tabel users
+        $userData = DB::table('users')->where('nomor_induk', $presensi->user_nip)->first();
+        if (!$userData) {
+            return $this->error('Data user tidak ditemukan', 404);
+        }
+
+        // Ambil nama unit kerja
+        $unitKerja = '-';
+        if ($userData->dept_id) {
+            $dept = DB::table('ktd_department')->where('id', $userData->dept_id)->first();
+            if ($dept) {
+                $unitKerja = $dept->nama;
+            }
+        }
+
+        // Logic Atasan
+        $specialDeptIds = [998, 999];
+        $deptId = (int) $userData->dept_id;
+
+        $kepalaNama = '..................................';
+        $kepalaNip = '';
+        $kepalaSignaturePath = null;
+
+        // Cek apakah user adalah atasan
+        $atasanJabatan = ['kepala', 'kasi', 'kasubbag'];
+        $isUserAtasan = in_array($userData->kat_jabatan, $atasanJabatan);
+
+        if (in_array($deptId, $specialDeptIds)) {
+            // Dept 998/999: ambil data atasan dari input manual
+            $kepalaNama = $presensi->manual_supervisor_name ?? '..................................';
+            $kepalaNip = $presensi->manual_supervisor_nip ?? '';
+            $unitKerja = $presensi->manual_unit_kerja ?? $unitKerja;
+        } elseif ($isUserAtasan) {
+            // User adalah atasan - gunakan Kepala Kankemenag
+            $kepalaKankemenag = DB::table('users')
+                ->where('role', 'kepala')
+                ->first();
+
+            if ($kepalaKankemenag) {
+                $kepalaNama = $kepalaKankemenag->name;
+                $kepalaNip = $kepalaKankemenag->nomor_induk ?? '';
+
+                if ($kepalaKankemenag->pp) {
+                    $kepalaCheck = storage_path('app/public/users_berkas/'.$kepalaKankemenag->nomor_induk.'/'.$kepalaKankemenag->pp);
+                    if (file_exists($kepalaCheck)) {
+                        $kepalaSignaturePath = $kepalaCheck;
+                    }
+                }
+            }
+        } else {
+            // Cek PLT/PLH
+            $pltPlh = DB::table('plt_plh')
+                ->where('dept_id_plh', $userData->dept_id)
+                ->first();
+
+            if ($pltPlh) {
+                $pltUser = DB::table('users')->where('id', $pltPlh->user_id)->first();
+                if ($pltUser) {
+                    $kepalaNama = $pltUser->name;
+                    $kepalaNip = $pltUser->nomor_induk ?? '';
+
+                    if ($pltUser->pp) {
+                        $pltCheck = storage_path('app/public/users_berkas/'.$pltUser->nomor_induk.'/'.$pltUser->pp);
+                        if (file_exists($pltCheck)) {
+                            $kepalaSignaturePath = $pltCheck;
+                        }
+                    }
+                }
+            } else {
+                // Ambil atasan langsung berdasarkan kat_jabatan
+                $atasanJabatanList = ['kasi', 'kasubbag', 'kepala'];
+                $atasan = DB::table('users')
+                    ->where('dept_id', $userData->dept_id)
+                    ->whereIn('kat_jabatan', $atasanJabatanList)
+                    ->orderByRaw("FIELD(kat_jabatan, 'kepala', 'kasi', 'kasubbag')")
+                    ->first();
+
+                if ($atasan) {
+                    $kepalaNama = $atasan->name;
+                    $kepalaNip = $atasan->nomor_induk ?? '';
+
+                    if ($atasan->pp) {
+                        $atasanCheck = storage_path('app/public/users_berkas/'.$atasan->nomor_induk.'/'.$atasan->pp);
+                        if (file_exists($atasanCheck)) {
+                            $kepalaSignaturePath = $atasanCheck;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Tentukan jenis (masuk atau pulang)
+        $jenis = 'MASUK';
+        $jamAbsen = $presensi->m_absen;
+        if (!empty($presensi->p_absen) && empty($presensi->m_absen)) {
+            $jenis = 'PULANG';
+            $jamAbsen = $presensi->p_absen;
+        } elseif (!empty($presensi->p_absen) && !empty($presensi->m_absen)) {
+            // Jika keduanya ada, default ke error_pulang_taken_at
+            if (!empty($presensi->error_pulang_taken_at)) {
+                $jenis = 'PULANG';
+                $jamAbsen = $presensi->p_absen;
+            } else {
+                $jenis = 'MASUK';
+                $jamAbsen = $presensi->m_absen;
+            }
+        }
+
+        // Tentukan status label
+        $statusLabel = 'Sistem Error';
+        if ($presensi->status === 'TUGAS_LUAR') {
+            $statusLabel = 'Tugas Luar';
+        } elseif ($presensi->status === 'LUPA_PRESNSI_PUSAKA') {
+            $statusLabel = 'Lupa Presensi';
+        }
+
+        // Format tanggal
+        $tanggal = Carbon::parse($presensi->tanggal)->format('d F Y');
+        $nomorSurat = '00' . $presensi->id . '/KP.05.03/' . Carbon::now()->format('Y');
+
+        // Generate PDF
+        $data = [
+            'presensi' => $presensi,
+            'userData' => $userData,
+            'unitKerja' => $unitKerja,
+            'kepalaNama' => $kepalaNama,
+            'kepalaNip' => $kepalaNip,
+            'kepalaSignaturePath' => $kepalaSignaturePath,
+            'jenis' => $jenis,
+            'jamAbsen' => $jamAbsen,
+            'statusLabel' => $statusLabel,
+            'tanggal' => $tanggal,
+            'nomorSurat' => $nomorSurat,
+        ];
+
+        $pdf = Pdf::loadView('pdf.surat-keterangan-presensi-error', $data);
+        $pdf->setPaper('A4', 'portrait');
+
+        $filename = 'Surat_Keterangan_Presensi_Error_' . $presensi->id . '_' . $jenis . '.pdf';
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->output();
+        }, $filename, [
+            'Content-Type' => 'application/pdf',
+        ]);
     }
 }
