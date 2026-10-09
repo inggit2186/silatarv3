@@ -362,6 +362,8 @@ class UserController extends Controller
      */
     public function update(Request $request, int $id)
     {
+        \Log::info('User update called', ['user_id' => $id, 'status_input' => $request->input('status')]);
+
         $user = DB::table('users')->where('id', $id)->first();
 
         if (! $user) {
@@ -421,6 +423,8 @@ class UserController extends Controller
             'serdik' => ['nullable', 'string', Rule::in(['sertifikasi', 'non-sertifikasi', 'non-guru'])],
         ]);
 
+        \Log::info('User update validated', ['user_id' => $id, 'validated_status' => $validated['status'] ?? 'not set']);
+
         // Update users table
         $updateData = [
             'name' => $validated['name'],
@@ -441,6 +445,8 @@ class UserController extends Controller
             'jabatan' => $validated['jabatan'] ?? null,
             'updated_at' => now(),
         ];
+
+        \Log::info('User update data', ['user_id' => $id, 'updateData' => $updateData, 'old_status' => $user->status]);
 
         // Add optional fields if provided
         if (isset($validated['tanggal_lahir'])) {
