@@ -240,7 +240,7 @@ class RekapPresensiController extends Controller
                 return $this->generateTukinByGroup($request, $isAjax);
             }
 
-            // Default: Unit Kerja method
+            // Default: Unit Kerja method - use PresensiTukin export (detailed calculations)
             $request->validate([
                 'dept_id' => 'required|integer|exists:ktd_department,id',
                 'month' => 'required|integer|between:1,12',
@@ -259,33 +259,98 @@ class RekapPresensiController extends Controller
                 return back()->with('error', 'Unit kerja tidak ditemukan');
             }
 
-            $users = DB::table('users')
-                ->where('dept_id', $deptId)
-                ->where('status', 1)
-                ->whereNotNull('nomor_induk')
-                ->where('nomor_induk', '!=', '')
-                ->select('id', 'name', 'nomor_induk')
-                ->orderBy('name')
-                ->get();
-
-            if ($users->isEmpty()) {
-                if ($isAjax) {
-                    return response()->json(['success' => false, 'message' => 'Tidak ada user di unit kerja ini']);
-                }
-                return back()->with('error', 'Tidak ada user di unit kerja ini');
-            }
-
-            $title = strtoupper($dept->nama);
+            $tanggal = sprintf('%04d-%02d-01', $year, $month);
+            $export = new PresensiTukin($deptId, $tanggal, 'dept');
             $cleanName = preg_replace('/[^a-zA-Z0-9]/', '_', $dept->nama);
 
-            $result = $this->processAndSaveTukin($users, $title, $cleanName, $month, $year, $dept->nama, null, $deptId);
+            Log::info("Generating tukin for dept: {$dept->nama}, period: {$month}/{$year}");
 
-            if ($isAjax) {
-                return response()->json($result, $result['success'] ? 200 : 500);
+            // Create directory if not exists
+            $rekapDir = storage_path('app/rekap_presensi');
+            if (! file_exists($rekapDir)) {
+                mkdir($rekapDir, 0755, true);
+            }
+            $deptDir = "{$rekapDir}/{$cleanName}";
+            if (! file_exists($deptDir)) {
+                mkdir($deptDir, 0755, true);
             }
 
-            $flashMethod = $result['success'] ? 'success' : 'error';
-            return back()->with($flashMethod, $result['message']);
+            // Generate timestamp and filename
+            $timestamp = date('Ymd_His');
+            $tukinFilename = "rekap_tukin_{$cleanName}_{$year}_{$month}_{$timestamp}.xlsx";
+            $tukinPath = "rekap_presensi/{$cleanName}/{$tukinFilename}";
+            $fullPath = storage_path("app/{$tukinPath}");
+
+            // Store Excel file directly
+            $tukinFile = Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
+            file_put_contents($fullPath, $tukinFile);
+
+            Log::info("Tukin file stored at: {$fullPath}");
+
+            // Save/update ke ktd_presensifiles
+            $existingQuery = KtdPresensiFile::where('dept', $dept->nama)
+                ->where('bulan', $month)
+                ->where('tahun', $year);
+
+            $existing = $existingQuery->first();
+
+            if ($existing) {
+                // Hapus file LAMA jika ada
+                if (isset($existing->tukin) && $existing->tukin && file_exists(storage_path('app/'.$existing->tukin))) {
+                    unlink(storage_path('app/'.$existing->tukin));
+                }
+
+                // Update record di database
+                $existing->update([
+                    'tukin' => $tukinPath,
+                    'user_id' => auth()->id(),
+                    'updated_at' => now(),
+                ]);
+
+                $existing->touch();
+
+                Log::info('Tukin file diupdate', [
+                    'id' => $existing->id,
+                    'dept' => $dept->nama,
+                ]);
+            } else {
+                $newRecord = KtdPresensiFile::create([
+                    'dept' => $dept->nama,
+                    'group_key' => null,
+                    'user_id' => auth()->id(),
+                    'bulan' => $month,
+                    'tahun' => $year,
+                    'presensi' => null,
+                    'uangmakan' => null,
+                    'tukin' => $tukinPath,
+                ]);
+
+                Log::info('Tukin file dibuat baru', [
+                    'id' => $newRecord->id,
+                    'dept' => $dept->nama,
+                ]);
+            }
+
+            Log::info('Tukin berhasil digenerate', [
+                'dept' => $dept->nama,
+                'month' => $month,
+                'year' => $year,
+            ]);
+
+            // For AJAX requests, return JSON with download URL
+            if ($isAjax) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Tukin berhasil di-generate untuk '.$dept->nama,
+                    'download_url' => route('admin.rekap-presensi.download-tukin-direct', [
+                        'dept_id' => $deptId,
+                        'month' => $month,
+                        'year' => $year,
+                    ]),
+                ]);
+            }
+
+            return Excel::download($export, $tukinFilename);
 
         } catch (ValidationException $e) {
             if ($isAjax) {
@@ -396,6 +461,7 @@ class RekapPresensiController extends Controller
 
     /**
      * Proses generate Excel Tukin dan simpan ke storage + DB
+     * Menggunakan PresensiTukin export untuk detail lengkap (TL1, TL2, PSW1, PSW2, dll)
      */
     protected function processAndSaveTukin(
         $users,
@@ -407,19 +473,8 @@ class RekapPresensiController extends Controller
         ?string $groupKey,
         ?int $deptId = null
     ): array {
-        $nips = $users->pluck('nomor_induk')->toArray();
-        $periode = sprintf('%04d-%02d', $year, $month);
-
-        // Get tukin data
-        $tukinData = DB::table('ktd_tukin')
-            ->whereIn('user_nip', $nips)
-            ->where('periode', $periode)
-            ->get()
-            ->keyBy('user_nip');
-
         try {
-            $tukinFile = $this->generateTukinExcel($users, $tukinData, $title, $month, $year);
-
+            // Buat directory jika belum ada
             $rekapDir = storage_path('app/rekap_presensi');
             if (! file_exists($rekapDir)) {
                 mkdir($rekapDir, 0755, true);
@@ -429,10 +484,26 @@ class RekapPresensiController extends Controller
                 mkdir($deptDir, 0755, true);
             }
 
+            // Generate timestamp dan filename
             $timestamp = date('Ymd_His');
+            $tanggal = sprintf('%04d-%02d-01', $year, $month);
+
+            // Gunakan PresensiTukin export untuk hasil yang lengkap dengan TL1, TL2, PSW1, PSW2
+            if ($groupKey) {
+                // Kategori Bank method - load user by group
+                $export = new PresensiTukin($groupKey, $tanggal, 'group');
+            } else {
+                // Unit Kerja method
+                $export = new PresensiTukin($deptId, $tanggal, 'dept');
+            }
+
+            // Generate Excel
+            $tukinFile = Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
+
+            // Simpan file
             $tukinFilename = "rekap_tukin_{$cleanName}_{$year}_{$month}_{$timestamp}.xlsx";
             $tukinPath = "rekap_presensi/{$cleanName}/{$tukinFilename}";
-            file_put_contents(storage_path("app/{$tukinPath}"), base64_decode($tukinFile));
+            file_put_contents(storage_path("app/{$tukinPath}"), $tukinFile);
 
             Log::info("Tukin file stored at: {$tukinPath}");
 
@@ -1028,195 +1099,6 @@ class RekapPresensiController extends Controller
         $user = auth()->user();
 
         return in_array($user->role, ['admin', 'superadmin']);
-    }
-
-    /**
-     * Generate Excel Tukin - Format lebih menarik dan user-friendly
-     */
-    protected function generateTukinExcel($users, $tukinData, string $title, int $month, int $year): string
-    {
-        $spreadsheet = new Spreadsheet;
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->freezePane('A6');
-
-        // Colors
-        $headerBg = '6D28D9';
-        $headerFg = 'FFFFFF';
-        $dayRowBg = 'F3E8FF';
-        $altRowBg = 'FAF5FF';
-        $totalBg = '6D28D9';
-        $borderColor = 'C4B5FD';
-
-        // Column mapping: A=No, B=NIP, C=Nama, D=TUKIN, E=TK Jml, F=TK %, G=TL, H=TL %, I=PSW, J=PSW %, K=Hukdis, L=Hukdis %, M=CPNS, N=CPNS %, O=SKP, P=SKP %, Q=TB, R=TB %, S=Pot Lain, T=Pot Lain %, U=Total Pot, V=Tukin Dibayar
-        $lastColIdx = 22; // V
-        $lastCol = 'V';
-        $totalCol = 'U'; // Total Potongan
-
-        // Title
-        $sheet->mergeCells("A1:{$lastCol}1");
-        $sheet->setCellValue('A1', 'REKAP TUKIN - '.$title);
-        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('FFFFFF');
-        $sheet->getStyle('A1')->getAlignment()->setHorizontal('center')->setVertical('center');
-        $sheet->getStyle("A1:{$lastCol}1")->getFill()->setFillType('solid')->getStartColor()->setRGB($headerBg);
-        $sheet->getRowDimension(1)->setRowHeight(30);
-
-        // Subtitle
-        $sheet->mergeCells("A2:{$lastCol}2");
-        $sheet->setCellValue('A2', 'Bulan: '.$this->getMonthName($month).' '.$year);
-        $sheet->getStyle('A2')->getFont()->setItalic(true)->setSize(11)->getColor()->setRGB('6D28D9');
-        $sheet->getStyle('A2')->getAlignment()->setHorizontal('center')->setVertical('center');
-        $sheet->getStyle("A2:{$lastCol}2")->getFill()->setFillType('solid')->getStartColor()->setRGB($dayRowBg);
-
-        // Headers (Row 5)
-        $headerRow = 5;
-        $headers = [
-            'No', 'NIP', 'Nama', 'TUKIN', 'TK Jml', 'TK %',
-            'TL (Telat)', 'TL %', 'PSW', 'PSW %', 'Hukdis',
-            'Hukdis %', 'CPNS', 'CPNS %', 'SKP', 'SKP %',
-            'TB', 'TB %', 'Pot Lain', 'Pot Lain %', 'Total Pot', 'Tukin Dibayar',
-        ];
-
-        foreach ($headers as $col => $header) {
-            $colLetter = Coordinate::stringFromColumnIndex($col + 1);
-            $sheet->setCellValue("{$colLetter}{$headerRow}", $header);
-        }
-
-        // Style headers
-        $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getFont()->setBold(true)->getColor()->setRGB($headerFg);
-        $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getFill()->setFillType('solid')->getStartColor()->setRGB($headerBg);
-        $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getAlignment()->setHorizontal('center')->setVertical('center');
-        $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getBorders()->getAllBorders()->setBorderStyle('thin')->getColor()->setRGB($borderColor);
-        $sheet->getRowDimension($headerRow)->setRowHeight(22);
-
-        // Column widths
-        $sheet->getColumnDimension('A')->setWidth(5);   // No
-        $sheet->getColumnDimension('B')->setWidth(20);  // NIP
-        $sheet->getColumnDimension('C')->setWidth(30);  // Nama
-        $sheet->getColumnDimension('D')->setWidth(15);  // TUKIN
-        $sheet->getColumnDimension('E')->setWidth(10);  // TK Jml
-        $sheet->getColumnDimension('F')->setWidth(7);   // TK %
-        $sheet->getColumnDimension('G')->setWidth(10);  // TL
-        $sheet->getColumnDimension('H')->setWidth(7);   // TL %
-        $sheet->getColumnDimension('I')->setWidth(10);  // PSW
-        $sheet->getColumnDimension('J')->setWidth(7);   // PSW %
-        $sheet->getColumnDimension('K')->setWidth(10);  // Hukdis
-        $sheet->getColumnDimension('L')->setWidth(9);   // Hukdis %
-        $sheet->getColumnDimension('M')->setWidth(8);   // CPNS
-        $sheet->getColumnDimension('N')->setWidth(8);   // CPNS %
-        $sheet->getColumnDimension('O')->setWidth(8);   // SKP
-        $sheet->getColumnDimension('P')->setWidth(7);   // SKP %
-        $sheet->getColumnDimension('Q')->setWidth(8);   // TB
-        $sheet->getColumnDimension('R')->setWidth(7);   // TB %
-        $sheet->getColumnDimension('S')->setWidth(10);  // Pot Lain
-        $sheet->getColumnDimension('T')->setWidth(10);  // Pot Lain %
-        $sheet->getColumnDimension('U')->setWidth(12);  // Total Pot
-        $sheet->getColumnDimension('V')->setWidth(15);  // Tukin Dibayar
-
-        // Data
-        $dataStartRow = 6;
-        $rowNum = $dataStartRow;
-        $no = 1;
-        $totalTukin = 0;
-        $totalPotongan = 0;
-
-        foreach ($users as $user) {
-            $tukin = $tukinData->get($user->nomor_induk);
-
-            // Alternate row colors
-            $rowBg = (($rowNum - $dataStartRow) % 2 === 0) ? 'FFFFFF' : $altRowBg;
-
-            // Hitung tukin dibayarkan
-            $tukinDibayar = $tukin ? ($tukin->tukin - $tukin->total_potongan) : 0;
-
-            $sheet->setCellValue("A{$rowNum}", $no++);
-            $sheet->setCellValue("B{$rowNum}", $user->nomor_induk);
-            $sheet->setCellValue("C{$rowNum}", $user->name);
-            $sheet->setCellValue("D{$rowNum}", $tukin ? $tukin->tukin : 0);
-            $sheet->setCellValue("E{$rowNum}", $tukin ? $tukin->tk_jumlah : 0);
-            $sheet->setCellValue("F{$rowNum}", $tukin ? $tukin->tk_persen : 0);
-            $sheet->setCellValue("G{$rowNum}", $tukin ? $tukin->tl : 0);
-            $sheet->setCellValue("H{$rowNum}", $tukin ? $tukin->tl_persen : 0);
-            $sheet->setCellValue("I{$rowNum}", $tukin ? $tukin->psw : 0);
-            $sheet->setCellValue("J{$rowNum}", $tukin ? $tukin->psw_persen : 0);
-            $sheet->setCellValue("K{$rowNum}", $tukin ? $tukin->hukdis : 0);
-            $sheet->setCellValue("L{$rowNum}", $tukin ? $tukin->hukdis_persen : 0);
-            $sheet->setCellValue("M{$rowNum}", $tukin ? $tukin->cpns : 0);
-            $sheet->setCellValue("N{$rowNum}", $tukin ? $tukin->cpns_persen : 0);
-            $sheet->setCellValue("O{$rowNum}", $tukin ? $tukin->skp : 0);
-            $sheet->setCellValue("P{$rowNum}", $tukin ? $tukin->skp_persen : 0);
-            $sheet->setCellValue("Q{$rowNum}", $tukin ? $tukin->tb : 0);
-            $sheet->setCellValue("R{$rowNum}", $tukin ? $tukin->tb_persen : 0);
-            $sheet->setCellValue("S{$rowNum}", $tukin ? $tukin->potongan_lain : 0);
-            $sheet->setCellValue("T{$rowNum}", $tukin ? $tukin->potongan_lain_persen : 0);
-            $sheet->setCellValue("U{$rowNum}", $tukin ? $tukin->total_potongan : 0);
-            $sheet->setCellValue("V{$rowNum}", $tukinDibayar);
-
-            $totalTukin += $tukin ? $tukin->tukin : 0;
-            $totalPotongan += $tukin ? $tukin->total_potongan : 0;
-
-            // Apply row styling
-            $rowRange = "A{$rowNum}:{$lastCol}{$rowNum}";
-            $sheet->getStyle($rowRange)->getFill()->setFillType('solid')->getStartColor()->setRGB($rowBg);
-            $sheet->getStyle($rowRange)->getBorders()->getAllBorders()->setBorderStyle('thin')->getColor()->setRGB($borderColor);
-            $sheet->getStyle($rowRange)->getFont()->setSize(9);
-
-            // Format angka
-            $sheet->getStyle("D{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
-            $sheet->getStyle("E{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
-            $sheet->getStyle("G{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
-            $sheet->getStyle("I{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
-            $sheet->getStyle("K{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
-            $sheet->getStyle("M{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
-            $sheet->getStyle("O{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
-            $sheet->getStyle("Q{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
-            $sheet->getStyle("S{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
-            $sheet->getStyle("U{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
-            $sheet->getStyle("V{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
-
-            $rowNum++;
-        }
-
-        // Total row
-        $totalRow = $rowNum;
-        $sheet->setCellValue("A{$totalRow}", '');
-        $sheet->setCellValue("B{$totalRow}", '');
-        $sheet->setCellValue("C{$totalRow}", 'TOTAL');
-        $sheet->setCellValue("D{$totalRow}", $totalTukin);
-        $sheet->setCellValue("E{$totalRow}", '');
-        $sheet->setCellValue("F{$totalRow}", '');
-        $sheet->setCellValue("G{$totalRow}", '');
-        $sheet->setCellValue("H{$totalRow}", '');
-        $sheet->setCellValue("I{$totalRow}", '');
-        $sheet->setCellValue("J{$totalRow}", '');
-        $sheet->setCellValue("K{$totalRow}", '');
-        $sheet->setCellValue("L{$totalRow}", '');
-        $sheet->setCellValue("M{$totalRow}", '');
-        $sheet->setCellValue("N{$totalRow}", '');
-        $sheet->setCellValue("O{$totalRow}", '');
-        $sheet->setCellValue("P{$totalRow}", '');
-        $sheet->setCellValue("Q{$totalRow}", '');
-        $sheet->setCellValue("R{$totalRow}", '');
-        $sheet->setCellValue("S{$totalRow}", '');
-        $sheet->setCellValue("T{$totalRow}", '');
-        $sheet->setCellValue("U{$totalRow}", $totalPotongan);
-        $sheet->setCellValue("V{$totalRow}", $totalTukin - $totalPotongan);
-
-        // Style total row
-        $sheet->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-        $sheet->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")->getFill()->setFillType('solid')->getStartColor()->setRGB($totalBg);
-        $sheet->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")->getBorders()->getAllBorders()->setBorderStyle('thin')->getColor()->setRGB($borderColor);
-        $sheet->getStyle("D{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
-        $sheet->getStyle("U{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
-        $sheet->getStyle("V{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
-
-        // Save to temp file then read
-        $tempFile = tempnam(sys_get_temp_dir(), 'tukin_');
-        $writer = new Xlsx($spreadsheet);
-        $writer->save($tempFile);
-        $excelContent = file_get_contents($tempFile);
-        unlink($tempFile);
-
-        return base64_encode($excelContent);
     }
 
     /**
