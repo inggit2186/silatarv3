@@ -216,7 +216,7 @@ class RekapPresensiController extends Controller
     }
 
     /**
-     * Generate tukin calculation only (based on Unit Kerja)
+     * Generate tukin calculation (based on Unit Kerja)
      * POST /admin/rekap-presensi/generate-tukin
      */
     public function generateTukin(Request $request)
@@ -225,7 +225,19 @@ class RekapPresensiController extends Controller
             abort(403, 'Anda tidak memiliki akses ke halaman rekap presensi.');
         }
 
+        $method = $request->input('method', 'unit_kerja');
         $isAjax = $request->ajax() || $request->expectsJson();
+
+        // Jika Kategori Bank, tampilkan pesan bahwa fitur belum tersedia
+        if ($method === 'kategori_bank') {
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Fitur Generate Tukin berdasarkan Kategori Bank belum tersedia. Silakan gunakan metode Unit Kerja.'
+                ], 400);
+            }
+            return back()->with('error', 'Fitur Generate Tukin berdasarkan Kategori Bank belum tersedia. Silakan gunakan metode Unit Kerja.');
+        }
 
         try {
             $request->validate([
