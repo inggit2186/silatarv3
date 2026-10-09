@@ -602,6 +602,8 @@ class UserController extends Controller
      */
     public function toggleStatus(int $id)
     {
+        \Log::info('toggleStatus called', ['user_id' => $id]);
+
         $user = DB::table('users')->where('id', $id)->first();
 
         if (! $user) {
@@ -609,6 +611,8 @@ class UserController extends Controller
         }
 
         $newStatus = $user->status === 1 ? 0 : 1;
+
+        \Log::info('Updating user status', ['user_id' => $id, 'old_status' => $user->status, 'new_status' => $newStatus]);
 
         DB::table('users')->where('id', $id)->update([
             'status' => $newStatus,

@@ -347,17 +347,27 @@
 <script>
 async function toggleUserStatus(button) {
     const userId = button.dataset.userId;
-    const currentStatus = button.dataset.currentStatus;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    console.log('CSRF Token:', csrfToken ? 'Present' : 'Missing');
     try {
         const response = await fetch(`/admin/users/${userId}/toggle-status`, {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
                 'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
             },
         });
+        if (!response.ok) {
+            const text = await response.text();
+            console.error('HTTP Error:', response.status, text);
+            showToast('error', 'Error: ' + response.status);
+            return;
+        }
         const data = await response.json();
+        console.log('Response:', data);
         if (data.success) {
             const newStatus = data.new_status;
             button.dataset.currentStatus = newStatus;
@@ -368,7 +378,8 @@ async function toggleUserStatus(button) {
             showToast('error', data.message);
         }
     } catch (error) {
-        showToast('error', 'Terjadi kesalahan. Silakan coba lagi.');
+        console.error('Toggle status error:', error);
+        showToast('error', 'Terjadi kesalahan: ' + (error.message || 'Unknown error'));
     }
 }
 
