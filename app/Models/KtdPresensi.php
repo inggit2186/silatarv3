@@ -38,6 +38,8 @@ class KtdPresensi extends Model
         'imported_by',
         'imported_at',
         'import_source',
+        'created_at',
+        'updated_at',
     ];
 
     protected $casts = [
