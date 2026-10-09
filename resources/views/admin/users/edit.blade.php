@@ -540,13 +540,6 @@
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="status" class="form-label">Status</label>
-                                <select id="status" name="status" class="form-select">
-                                    <option value="1" {{ old('status', $user->status) == '1' ? 'selected' : '' }}>Aktif</option>
-                                    <option value="0" {{ old('status', $user->status) == '0' ? 'selected' : '' }}>Nonaktif</option>
-                                </select>
-                            </div>
 
                             {{-- Jabatan & Kepegawaian --}}
                             <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100">
