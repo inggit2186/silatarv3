@@ -215,6 +215,7 @@ Route::middleware(['auth', 'admin'])
         Route::get('/rekap-presensi/download-tukin-direct/{dept_id}/{month}/{year}', [RekapPresensiController::class, 'downloadTukinDirect'])->name('rekap-presensi.download-tukin-direct');
         Route::get('/rekap-presensi/download-tukin-temp/{dept_id}/{month}/{year}', [RekapPresensiController::class, 'downloadTukinTemp'])->name('rekap-presensi.download-tukin-temp');
         Route::get('/rekap-presensi/download-by-group', [RekapPresensiController::class, 'downloadByGroup'])->name('rekap-presensi.download-by-group');
+        Route::get('/rekap-presensi/download-tukin-group-direct/{group_key}/{month}/{year}', [RekapPresensiController::class, 'downloadTukinGroupDirect'])->name('rekap-presensi.download-tukin-group-direct');
         Route::post('/rekap-presensi/delete', [RekapPresensiController::class, 'delete'])->name('rekap-presensi.delete');
         Route::get('/rekap-presensi/tukin/{satker}/{tanggal}', [RekapPresensiController::class, 'exportTukin'])->name('rekap-presensi.tukin-export');
 
