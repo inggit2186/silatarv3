@@ -38,6 +38,20 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
         ini_set('max_execution_time', '0');
         set_time_limit(0);
 
+        try {
+            return $this->doExport();
+        } catch (\Throwable $e) {
+            Log::error('PresensiTukin export failed: '.$e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'type' => $this->type,
+                'identifier' => $this->identifier,
+            ]);
+            throw $e;
+        }
+    }
+
+    protected function doExport(): View
+    {
         $xdate = Carbon::parse($this->tanggalView);
         $month = $xdate->format('M Y');
         $periode = $xdate->format('Y-m');
@@ -141,19 +155,30 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
             } catch (\Throwable $e) {
                 Log::warning('REGEXP_REPLACE query failed: '.$e->getMessage().' — fallback to PHP filter');
 
-                $presRaw = KtdPresensi::whereBetween('tanggal', [$dateStart, $dateEnd])->get();
-                Log::info('Presensi fetched fallback (by date) count: '.$presRaw->count());
+                // Optimized fallback: chunk NIPs to avoid huge IN clause
+                $presensiAll = collect();
+                $chunkSize = 20;
+                $chunks = array_chunk($nipArray, $chunkSize);
 
-                $presRaw = $presRaw->map(function ($p) {
-                    $p->nip_norm = preg_replace('/\D/', '', (string) ($p->user_nip ?? ''));
+                foreach ($chunks as $chunk) {
+                    $chunkPresensi = KtdPresensi::whereBetween('tanggal', [$dateStart, $dateEnd])
+                        ->where(function ($q) use ($chunk) {
+                            foreach ($chunk as $nip) {
+                                $q->orWhere('user_nip', 'like', '%'.$nip);
+                            }
+                        })
+                        ->get();
 
-                    return $p;
-                });
+                    foreach ($chunkPresensi as $p) {
+                        $nip_norm = preg_replace('/\D/', '', (string) ($p->user_nip ?? ''));
+                        if (!isset($presensiAll[$nip_norm])) {
+                            $presensiAll[$nip_norm] = collect();
+                        }
+                        $presensiAll[$nip_norm]->push($p);
+                    }
+                }
 
-                $presFiltered = $presRaw->filter(fn ($p) => in_array($p->nip_norm, $nipArray));
-                Log::info('Presensi after PHP filter count: '.$presFiltered->count());
-
-                $presensiAll = $presFiltered->groupBy('nip_norm');
+                Log::info('Presensi fetched via fallback (chunked LIKE) count: '.$presensiAll->flatten()->count());
             }
         } else {
             Log::info('NIP list kosong, presensiAll tetap kosong');
@@ -355,6 +380,8 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
         } else {
             $users = $users->sortBy('dept_id');
         }
+
+        Log::info('Rendering TukinDate view with '.count($users).' users');
 
         return view('backend.export.TukinDate', [
             'date' => $month,
