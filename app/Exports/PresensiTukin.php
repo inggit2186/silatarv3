@@ -501,8 +501,6 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
             'users.nomor_induk',
             'users.dept_id',
             'users.bank_kategori',
-            'users.gol',
-            'users.grade',
             'ktd_department.nama as dept_nama',
             'ktd_department.hari_kerja as hari_kerja',
             'tenaga_ktd.status as tenaga_status',
@@ -517,8 +515,6 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
             $user->name = $row->name;
             $user->nomor_induk = $row->nomor_induk;
             $user->dept_id = $row->dept_id;
-            $user->gol = $row->gol ?? null;
-            $user->grade = $row->grade ?? null;
 
             // Create dept relation
             $dept = new \stdClass();
