@@ -1334,6 +1334,9 @@ class RekapPresensiController extends Controller
         $dataStartRow = 6;
         $rowNum = $dataStartRow;
 
+        // Status yang tetap dihitung sebagai HADIR meskipun ada status
+        $hadirStatuses = ['LUPA_PRESNSI_PUSAKA', 'TUGAS_LUAR', 'SISTEM_ERROR'];
+
         foreach ($users as $user) {
             $sheet->setCellValue("A{$rowNum}", $user->nomor_induk);
             $sheet->setCellValue("B{$rowNum}", $user->name);
@@ -1353,9 +1356,10 @@ class RekapPresensiController extends Controller
             if ($userPresensi) {
                 for ($day = 1; $day <= $daysInMonth; $day++) {
                     $presensi = $userPresensi[$day] ?? null;
+                    // Hadir jika: ada jam masuk/pulang DAN (status null ATAU status termasuk hadirStatuses)
                     $hasPresensi = $presensi &&
                         (! empty($presensi->m_absen) || ! empty($presensi->p_absen)) &&
-                        ($presensi->status === null);
+                        ($presensi->status === null || in_array($presensi->status, $hadirStatuses));
 
                     if ($hasPresensi) {
                         // Kolom D (day=1), E (day=2), ..., AI (day=31)
@@ -1531,6 +1535,9 @@ class RekapPresensiController extends Controller
         $dataStartRow = 6;
         $rowNum = $dataStartRow;
 
+        // Status yang tetap dihitung sebagai HADIR meskipun ada status
+        $hadirStatuses = ['LUPA_PRESNSI_PUSAKA', 'TUGAS_LUAR', 'SISTEM_ERROR'];
+
         foreach ($users as $user) {
             $sheet->setCellValue("A{$rowNum}", $user->nomor_induk);
             $sheet->setCellValue("B{$rowNum}", $user->name);
@@ -1550,17 +1557,21 @@ class RekapPresensiController extends Controller
             if ($userPresensi) {
                 for ($day = 1; $day <= $daysInMonth; $day++) {
                     $presensi = $userPresensi[$day] ?? null;
+                    // Hadir jika: ada jam masuk/pulang DAN (status null ATAU status termasuk hadirStatuses)
                     $hasPresensi = $presensi &&
                         (! empty($presensi->m_absen) || ! empty($presensi->p_absen)) &&
-                        ($presensi->status === null);
+                        ($presensi->status === null || in_array($presensi->status, $hadirStatuses));
 
                     if ($hasPresensi) {
                         $jamMasuk = $formatJam($presensi->m_absen);
                         $jamPulang = $formatJam($presensi->p_absen);
                         $sheet->setCellValue("{$getColumnName($day + 3)}{$rowNum}", "{$jamMasuk} / {$jamPulang}");
                         $total++;
-                    } elseif ($presensi && ! empty($presensi->status)) {
-                        $sheet->setCellValue("{$getColumnName($day + 3)}{$rowNum}", strtoupper($presensi->status));
+                    } elseif ($presensi && (! empty($presensi->m_absen) || ! empty($presensi->p_absen))) {
+                        // Tampilkan jam meskipun ada status lain (bukan hadirStatuses)
+                        $jamMasuk = $formatJam($presensi->m_absen);
+                        $jamPulang = $formatJam($presensi->p_absen);
+                        $sheet->setCellValue("{$getColumnName($day + 3)}{$rowNum}", "{$jamMasuk} / {$jamPulang}");
                     }
                 }
             }
