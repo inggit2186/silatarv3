@@ -102,7 +102,10 @@ class PenilaianKinerjaController extends Controller
             ->where('users.id', '!=', $user->id)
             ->where('users.dept_id', 14)
             ->whereIn('users.status', [1, 2])
-            ->where('kat_jabatan', '!=', 'kepala') // exclude kepala (sudah ada di query struktural)
+            ->where(function ($query) {
+                $query->whereNull('users.kat_jabatan')
+                    ->orWhereRaw('LOWER(users.kat_jabatan) != ?', ['kepala']);
+            })
             ->orderBy('users.name');
 
         // Combine dengan union

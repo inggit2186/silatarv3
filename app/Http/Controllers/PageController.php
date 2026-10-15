@@ -2705,10 +2705,14 @@ class PageController extends Controller
         $monthEnd = $monthStart->copy()->endOfMonth();
 
         // Get all users in the same department (excluding kepala/head and current user)
+        // Use LOWER() for case-insensitive comparison and handle NULL values
         $bawahanUsers = DB::table('users')
             ->where('dept_id', $user->dept_id)
             ->where('id', '!=', $user->id)
-            ->where('kat_jabatan', '!=', 'kepala')
+            ->where(function ($query) {
+                $query->whereNull('kat_jabatan')
+                    ->orWhereRaw('LOWER(kat_jabatan) != ?', ['kepala']);
+            })
             ->whereNotIn('role', ['pindah', 'pensiun'])
             ->select(['id', 'name', 'kat_jabatan', 'pekerjaan'])
             ->get();

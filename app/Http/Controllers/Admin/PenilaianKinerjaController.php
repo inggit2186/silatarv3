@@ -97,7 +97,10 @@ class PenilaianKinerjaController extends Controller
         $pejabatsDept14 = User::where('id', '!=', $user->id)
             ->where('dept_id', 14)
             ->whereIn('status', [1, 2])
-            ->where('kat_jabatan', '!=', 'kepala')
+            ->where(function ($query) {
+                $query->whereNull('kat_jabatan')
+                    ->orWhereRaw('LOWER(kat_jabatan) != ?', ['kepala']);
+            })
             ->orderBy('name');
 
         // Combine dengan union
@@ -392,7 +395,10 @@ class PenilaianKinerjaController extends Controller
         $queryDept14 = User::where('id', '!=', $user->id)
             ->where('dept_id', 14)
             ->whereIn('status', [1, 2])
-            ->where('kat_jabatan', '!=', 'kepala')
+            ->where(function ($query) {
+                $query->whereNull('kat_jabatan')
+                    ->orWhereRaw('LOWER(kat_jabatan) != ?', ['kepala']);
+            })
             ->orderBy('name');
 
         $pejabats = $queryStruktural->union($queryDept14)->get(['id', 'name', 'kat_jabatan', 'jabatan']);
