@@ -499,36 +499,35 @@
             </button>
         </div>
 
-        <div class="modal-body-custom">
-            <div class="form-group-custom">
-                <h4 class="modal-subtitle" style="font-weight: 600; color: var(--ink); margin-bottom: 0.75rem;">System Requirements</h4>
-                <div style="display: grid; grid-template-columns: 1fr; gap: 0.5rem; font-size: 0.875rem;">
-                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0.75rem; background: var(--paper-soft); border-radius: 0.5rem;">
-                        <span style="color: var(--ink-soft);">Versi Android</span>
-                        <span style="color: var(--ink); font-weight: 500;">7.0 (Nougat) ke atas</span>
+        <div class="modal-body-custom" style="padding: 1rem;">
+            <div class="form-group-custom" style="margin-bottom: 0.75rem;">
+                <h4 class="modal-subtitle" style="font-weight: 600; color: var(--ink); margin-bottom: 0.5rem; font-size: 0.8125rem;">System Requirements</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.375rem; font-size: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; padding: 0.375rem 0.5rem; background: var(--paper-soft); border-radius: 0.375rem;">
+                        <span style="color: var(--ink-soft);">Versi</span>
+                        <span style="color: var(--ink); font-weight: 500;">Android 7.0+</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0.75rem; background: var(--paper-soft); border-radius: 0.5rem;">
-                        <span style="color: var(--ink-soft);">RAM Minimum</span>
+                    <div style="display: flex; justify-content: space-between; padding: 0.375rem 0.5rem; background: var(--paper-soft); border-radius: 0.375rem;">
+                        <span style="color: var(--ink-soft);">RAM</span>
                         <span style="color: var(--ink); font-weight: 500;">2 GB</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0.75rem; background: var(--paper-soft); border-radius: 0.5rem;">
-                        <span style="color: var(--ink-soft);">Ruang Penyimpanan</span>
+                    <div style="display: flex; justify-content: space-between; padding: 0.375rem 0.5rem; background: var(--paper-soft); border-radius: 0.375rem;">
+                        <span style="color: var(--ink-soft);">Penyimpanan</span>
                         <span style="color: var(--ink); font-weight: 500;">~50 MB</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0.75rem; background: var(--paper-soft); border-radius: 0.5rem;">
-                        <span style="color: var(--ink-soft);">Koneksi Internet</span>
+                    <div style="display: flex; justify-content: space-between; padding: 0.375rem 0.5rem; background: var(--paper-soft); border-radius: 0.375rem;">
+                        <span style="color: var(--ink-soft);">Internet</span>
                         <span style="color: var(--ink); font-weight: 500;">Diperlukan</span>
                     </div>
                 </div>
             </div>
 
-            <div class="form-group-custom">
-                <h4 class="modal-subtitle" style="font-weight: 600; color: var(--ink); margin-bottom: 0.75rem;">Petunjuk Instalasi</h4>
-                <ol style="margin: 0; padding-left: 1.25rem; color: var(--ink); font-size: 0.9375rem; line-height: 1.7;">
+            <div class="form-group-custom" style="margin-bottom: 0.75rem;">
+                <h4 class="modal-subtitle" style="font-weight: 600; color: var(--ink); margin-bottom: 0.5rem; font-size: 0.8125rem;">Petunjuk Instalasi</h4>
+                <ol style="margin: 0; padding-left: 1rem; color: var(--ink); font-size: 0.8125rem; line-height: 1.6;">
                     <li>Download file APK</li>
-                    <li>Aktifkan <strong>Sumber Tidak Dikenal</strong> di Pengaturan &rsaquo; Keamanan</li>
-                    <li>Install file APK</li>
-                    <li>Buka aplikasi &amp; Login</li>
+                    <li>Aktifkan <strong>Sumber Tidak Dikenal</strong></li>
+                    <li>Install &amp; Buka aplikasi</li>
                 </ol>
             </div>
 
@@ -536,10 +535,10 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                 </svg>
-                <div>
+                <div style="font-size: 0.8125rem;">
                     <p style="margin: 0 0 0.25rem 0; font-weight: 600;">Peringatan Penting</p>
-                    <p style="margin: 0 0 0.5rem 0;"><strong>JANGAN</strong> install APK jika didownload dari sumber tidak resmi. HANYA install dari Website Resmi SILATAR atau link resmi dari nomor resmi.</p>
-                    <p style="margin: 0;">Official Number: <strong><a href="https://wa.me/6289509007078" target="_blank" style="color: inherit; text-decoration: underline;">0895 0900 7078</a></strong></p>
+                    <p style="margin: 0 0 0.5rem 0;"><strong>JANGAN</strong> install APK dari sumber tidak resmi.</p>
+                    <p style="margin: 0; font-size: 0.75rem;">Official: <a href="https://wa.me/6289509007078" target="_blank" style="color: inherit; text-decoration: underline;">0895 0900 7078</a></p>
                 </div>
             </div>
         </div>
@@ -695,8 +694,26 @@
         border-radius: 1rem;
         width: 100%;
         max-width: 440px;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         animation: modalIn 0.3s var(--ease);
+    }
+
+    /* APK Modal body scrollable on mobile */
+    #apkModal .modal-body-custom {
+        overflow-y: auto;
+        max-height: calc(90vh - 180px);
+    }
+
+    @media (max-width: 480px) {
+        .modal-content {
+            max-height: 85vh;
+        }
+        #apkModal .modal-body-custom {
+            max-height: calc(85vh - 160px);
+        }
     }
     @keyframes modalIn {
         from {
