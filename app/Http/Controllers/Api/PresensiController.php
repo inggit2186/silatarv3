@@ -269,7 +269,7 @@ class PresensiController extends BaseApiController
             'id' => $presensi->id,
             'user_nip' => $presensi->user_nip,
             // dept_id tidak ada di ktd_presensi, hapus dari response
-            'tanggal' => $presensi->tanggal->format('Y-m-d'),
+            'tanggal' => $presensi->tanggal instanceof Carbon ? $presensi->tanggal->format('Y-m-d') : $presensi->tanggal,
             'm_absen' => $presensi->m_absen,
             'm_diff' => $presensi->m_diff,
             'm_latitude' => $presensi->m_latitude,
