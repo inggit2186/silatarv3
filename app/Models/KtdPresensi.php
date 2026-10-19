@@ -60,11 +60,12 @@ class KtdPresensi extends Model
     }
 
     /**
-     * Get the department (unit kerja).
+     * Get the department (unit kerja) via user relationship.
+     * dept_id tidak ada di ktd_presensi, jadi akses melalui user.
      */
     public function dept()
     {
-        return $this->belongsTo(Department::class, 'dept_id');
+        return $this->user->dept ?? null;
     }
 
     /**

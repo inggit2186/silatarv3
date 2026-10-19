@@ -54,7 +54,6 @@ class PresensiController extends BaseApiController
             // Create new record
             $presensi = new KtdPresensi;
             $presensi->user_nip = $user->nomor_induk;
-            $presensi->dept_id = $deptId;
             $presensi->tanggal = $today;
         }
 
@@ -269,7 +268,7 @@ class PresensiController extends BaseApiController
         return [
             'id' => $presensi->id,
             'user_nip' => $presensi->user_nip,
-            'dept_id' => $presensi->dept_id,
+            // dept_id tidak ada di ktd_presensi, hapus dari response
             'tanggal' => $presensi->tanggal->format('Y-m-d'),
             'm_absen' => $presensi->m_absen,
             'm_diff' => $presensi->m_diff,
