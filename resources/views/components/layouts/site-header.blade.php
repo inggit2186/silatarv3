@@ -183,6 +183,14 @@
                 Admin Panel
             </a>
             @endif
+            <a href="#" class="bottom-nav-dropdown-item bottom-nav-dropdown-apk" id="mobileApkBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                    <path d="M8 12l2 2 4-4"/>
+                    <path d="M7 16.5c0 .83.67 1.5 1.5 1.5h7c.83 0 1.5-.67 1.5-1.5V14l-2 2.5h-6l-2-2.5v2.5z"/>
+                </svg>
+                SILATAR Android
+            </a>
             <div class="bottom-nav-dropdown-divider"></div>
             <a href="#" class="bottom-nav-dropdown-item" id="mobilePasswordBtnBottom">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
@@ -321,6 +329,15 @@
 
     .bottom-nav-dropdown-logout svg {
         color: #dc2626;
+    }
+
+    .bottom-nav-dropdown-apk {
+        color: var(--gold);
+        font-weight: 500;
+    }
+
+    .bottom-nav-dropdown-apk svg {
+        color: var(--gold);
     }
 
     .bottom-nav-dropdown-form {
@@ -1035,6 +1052,15 @@
         mobilePasswordBtnBottom.addEventListener('click', function(e) {
             e.preventDefault();
             openPasswordModal();
+        });
+    }
+
+    // Mobile APK button handler
+    const mobileApkBtn = document.getElementById('mobileApkBtn');
+    if (mobileApkBtn) {
+        mobileApkBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openApkModal();
         });
     }
 
