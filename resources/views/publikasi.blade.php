@@ -122,6 +122,8 @@
                         $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
                         $isPdf = $ext === 'pdf';
                         $filePath = $item->file_path ?? null;
+                        // Generate proper storage URL
+                        $fileUrl = $filePath ? Storage::url($filePath) : null;
 
                         $iconConfig = match($ext) {
                             'pdf' => ['color' => '#dc2626', 'bg' => 'rgba(220, 38, 38, 0.15)', 'icon' => 'pdf', 'label' => 'PDF'],
@@ -138,12 +140,12 @@
                     <a href="{{ route('publikasi.download', $item->slug) }}" class="preview-card" style="text-decoration: none; border-radius: 1rem; overflow: hidden; background: white; border: 1px solid var(--line); transition: all 200ms ease; display: block;">
                         <!-- Preview Area -->
                         <div class="preview-area" style="height: 140px; position: relative; overflow: hidden;">
-                            @if($isImage && $filePath)
+                            @if($isImage && $fileUrl)
                             <!-- Image Preview -->
-                            <img src="{{ $filePath }}" alt="{{ $item->title }}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\'display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:0.5rem;color:var(--ash);background:rgba(8,145,178,0.15);\'><svg width=\'40\' height=\'40\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#0891b2\' stroke-width=\'1.5\'><rect x=\'3\' y=\'3\' width=\'18\' height=\'18\' rx=\'2\'/><circle cx=\'8.5\' cy=\'8.5\' r=\'1.5\'/><path d=\'M21 15l-5-5L5 21\'/></svg><span style=\'font-size:0.75rem;font-family:var(--font-mono);color:#0891b2;\'>GAMBAR</span></div>'">
-                            @elseif($isPdf && $filePath)
+                            <img src="{{ $fileUrl }}" alt="{{ $item->title }}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\'display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:0.5rem;color:var(--ash);background:rgba(8,145,178,0.15);\'><svg width=\'40\' height=\'40\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#0891b2\' stroke-width=\'1.5\'><rect x=\'3\' y=\'3\' width=\'18\' height=\'18\' rx=\'2\'/><circle cx=\'8.5\' cy=\'8.5\' r=\'1.5\'/><path d=\'M21 15l-5-5L5 21\'/></svg><span style=\'font-size:0.75rem;font-family:var(--font-mono);color:#0891b2;\'>GAMBAR</span></div>'">
+                            @elseif($isPdf && $fileUrl)
                             <!-- PDF Preview -->
-                            <div class="pdf-preview" data-pdf-url="{{ $filePath }}" data-item-id="grid-{{ $item->id }}" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative;">
+                            <div class="pdf-preview" data-pdf-url="{{ $fileUrl }}" data-item-id="grid-{{ $item->id }}" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative;">
                                 <canvas id="grid-pdf-{{ $item->id }}" style="width: 100%; height: 100%; object-fit: contain;"></canvas>
                                 <div class="pdf-loading" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.8);">
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" style="animation: spin 1s linear infinite;">
