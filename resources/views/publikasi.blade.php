@@ -197,7 +197,13 @@
                             <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.4rem; background: {{ $iconConfig['bg'] }}; color: {{ $iconConfig['color'] }}; font-size: 0.55rem; font-family: var(--font-mono); font-weight: 700; border-radius: 0.2rem;">{{ strtoupper($ext) }}</span>
                             @if($item->file_size)
                             <span style="color: rgba(255,255,255,0.9); font-size: 0.6rem; font-family: var(--font-mono);">
-                                {{ $item->file_size >= 1024 ? round($item->file_size / 1024, 1) . ' MB' : round($item->file_size, 0) . ' KB' }}
+                                @if($item->file_size >= 1048576)
+                                    {{ round($item->file_size / 1048576, 1) }} MB
+                                @elseif($item->file_size >= 1024)
+                                    {{ round($item->file_size / 1024, 1) }} KB
+                                @else
+                                    {{ $item->file_size }} B
+                                @endif
                             </span>
                             @endif
                         </div>
