@@ -5,7 +5,107 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
 
-    <main class="neo-mirai">
+    <main class="neo-mirai"
+        x-data="{
+            showModal: false,
+            modalData: null,
+            openModal(item) {
+                this.modalData = item;
+                this.showModal = true;
+            },
+            closeModal() {
+                this.showModal = false;
+                this.modalData = null;
+            },
+            renderPdfModal(url) {
+                const canvas = document.getElementById('modal-pdf-canvas');
+                if (!canvas || !url) return;
+                pdfjsLib.getDocument(url).promise.then(pdf => {
+                    pdf.getPage(1).then(page => {
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                    });
+                }).catch(err => console.log('PDF error:', err));
+            }
+        }"
+    >
+        <!-- Preview Modal -->
+        <div x-show="showModal" x-cloak
+            class="neo-modal-backdrop pub-modal-backdrop"
+            @click="closeModal()"
+            @keydown.escape.window="closeModal()"
+            x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+
+            <!-- Modal Content -->
+            <div class="neo-modal pub-modal" @click.stop
+                x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+
+                <!-- Header -->
+                <div class="neo-modal-header pub-modal-header">
+                    <div style="min-width: 0;">
+                        <h3 class="neo-modal-title" style="font-size: 1rem;">Pratinjau Dokumen</h3>
+                        <p class="pub-modal-subtitle" x-text="modalData ? modalData.title : ''"></p>
+                    </div>
+                    <button @click="closeModal()" class="neo-modal-close" aria-label="Tutup pratinjau" style="flex-shrink: 0;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Preview Area -->
+                <div class="neo-modal-scroll pub-modal-scroll">
+                    <!-- Image Preview: tampil pada resolusi asli, digulir untuk melihat detail -->
+                    <template x-if="modalData && modalData.type === 'image'">
+                        <img :src="modalData.url" class="pub-modal-image" :alt="modalData ? modalData.title : ''">
+                    </template>
+
+                    <!-- PDF Preview -->
+                    <template x-if="modalData && modalData.type === 'pdf'">
+                        <div style="display: flex; flex-direction: column; align-items: center; width: 100%;" x-init="renderPdfModal(modalData.url)">
+                            <div style="background: white; border-radius: 0.5rem; padding: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                                <canvas id="modal-pdf-canvas" class="pub-modal-canvas"></canvas>
+                            </div>
+                            <p style="font-size: 0.75rem; color: var(--ink-soft); margin-top: 0.75rem; text-align: center;">Gulir area pratinjau untuk melihat file, atau klik Unduh File</p>
+                        </div>
+                    </template>
+
+                    <!-- Other Files -->
+                    <template x-if="modalData && modalData.type === 'other'">
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem; text-align: center; width: 100%;">
+                            <div style="width: 6rem; height: 6rem; border-radius: 1rem; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; background: rgba(212, 168, 83, 0.1);">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14,2 14,8 20,8"/>
+                                </svg>
+                            </div>
+                            <p style="font-size: 0.875rem; color: var(--ink); font-weight: 600; margin: 0 0 0.25rem;" x-text="modalData ? modalData.ext : ''"></p>
+                            <p style="font-size: 0.75rem; color: var(--ink-soft); margin: 0;">File tidak dapat ditampilkan langsung</p>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Footer -->
+                <div class="pub-modal-footer">
+                    <div class="pub-modal-meta">
+                        <span class="pub-modal-badge" x-text="modalData ? modalData.ext : ''"></span>
+                        <span class="pub-modal-size" x-text="modalData ? modalData.size : ''"></span>
+                    </div>
+                    <a :href="modalData ? modalData.downloadUrl : '#'" class="pub-modal-download">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7,10 12,15 17,10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Unduh File
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <!-- Hero Section -->
         <section class="hero-page" style="background-image: url('/assets/img/template/news-bg.webp'); background-size: cover; background-position: center top; padding: 120px 2rem 4rem; min-height: 350px;">
             <div class="hero-page-content" style="max-width: 36rem; margin: 0 auto; text-align: center;">
@@ -137,7 +237,7 @@
                         };
                     @endphp
 
-                    <a href="{{ route('publikasi.download', $item->slug) }}" class="preview-card" style="text-decoration: none; border-radius: 1rem; overflow: hidden; background: white; border: 1px solid var(--line); transition: all 200ms ease; display: block;">
+                    <div class="preview-card" @click="openModal({id: '{{ $item->id }}', title: '{{ addslashes($item->title) }}', ext: '{{ strtoupper($ext) }}', type: '{{ $isImage ? 'image' : ($isPdf ? 'pdf' : 'other') }}', url: '{{ $fileUrl ?? '' }}', size: '{{ $item->file_size ? ($item->file_size >= 1048576 ? round($item->file_size / 1048576, 1) . ' MB' : ($item->file_size >= 1024 ? round($item->file_size / 1024, 1) . ' KB' : $item->file_size . ' B')) : '' }}', downloadUrl: '{{ route('publikasi.download', $item->slug) }}'})" style="cursor: pointer; border-radius: 1rem; overflow: hidden; background: white; border: 1px solid var(--line); transition: all 200ms ease;">
                         <!-- Preview Area -->
                         <div class="preview-area" style="height: 140px; position: relative; overflow: hidden;">
                             @if($isImage && $fileUrl)
@@ -238,7 +338,7 @@
                                 </span>
                             </div>
                         </div>
-                    </a>
+                    </div>
                     @endforeach
                 </div>
 
@@ -351,6 +451,201 @@
     @media (max-width: 640px) {
         .publication-preview-grid {
             grid-template-columns: 1fr !important;
+        }
+    }
+
+    /* ============================================
+       PUBLIKASI PREVIEW MODAL - RESPONSIVE & SCROLL
+       ============================================ */
+
+    /* Modal Backdrop Override */
+    .pub-modal-backdrop {
+        z-index: 9999;
+        padding: 0;
+    }
+
+    /* Modal Container - Desktop */
+    .pub-modal {
+        max-width: 72rem;
+        max-height: 92vh;
+        max-height: 92dvh;
+        width: 100%;
+        border-radius: 0.75rem;
+        margin: 0;
+    }
+
+    /* Header */
+    .pub-modal-header {
+        flex-shrink: 0;
+        padding: 1rem 1.25rem;
+        gap: 0.75rem;
+    }
+    .pub-modal-subtitle {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--ink-soft);
+        margin: 0.2rem 0 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    /* Scrollable Preview Area */
+    .pub-modal-scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        background: var(--paper-soft);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 1.25rem;
+        scroll-behavior: smooth;
+    }
+
+    /* Image: tampil pada resolusi asli, bisa di-scroll */
+    .pub-modal-image {
+        display: block;
+        width: auto;
+        height: auto;
+        max-width: none;
+        min-width: 0;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+        background: white;
+    }
+
+    /* PDF Canvas */
+    .pub-modal-canvas {
+        display: block;
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* Footer */
+    .pub-modal-footer {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.875rem 1.25rem;
+        border-top: 1px solid var(--line);
+        background: white;
+        flex-wrap: wrap;
+    }
+    .pub-modal-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    .pub-modal-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.2rem 0.6rem;
+        background: rgba(212, 168, 83, 0.12);
+        color: var(--sun);
+        font-size: 0.7rem;
+        font-weight: 700;
+        font-family: var(--font-mono);
+        border-radius: 9999px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .pub-modal-size {
+        font-size: 0.75rem;
+        color: var(--ash);
+        font-family: var(--font-mono);
+    }
+    .pub-modal-download {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1.25rem;
+        background: linear-gradient(135deg, var(--gold) 0%, var(--sun) 100%);
+        color: #1a2c35;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        text-decoration: none;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 12px rgba(212, 168, 83, 0.3);
+        transition: all 180ms ease;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .pub-modal-download:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(212, 168, 83, 0.4);
+    }
+    .pub-modal-download:active {
+        transform: translateY(0);
+    }
+
+    /* ============================================
+       MOBILE RESPONSIVE (< 640px)
+       ============================================ */
+    @media (max-width: 640px) {
+        .pub-modal {
+            max-width: 100%;
+            max-height: 100vh;
+            max-height: 100dvh;
+            border-radius: 0;
+            border: none;
+            margin: 0;
+            height: 100%;
+        }
+
+        .pub-modal-header {
+            padding: 0.75rem 1rem;
+        }
+        .pub-modal-header h3 {
+            font-size: 0.9rem !important;
+        }
+        .pub-modal-subtitle {
+            font-size: 0.65rem;
+        }
+
+        .pub-modal-scroll {
+            padding: 0.75rem;
+        }
+
+        /* Image: gunakan min-width agar gambar kecil tetap responsif */
+        .pub-modal-image {
+            min-width: 100%;
+            width: 100%;
+        }
+
+        .pub-modal-footer {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.625rem;
+            padding: 0.75rem 1rem;
+        }
+        .pub-modal-meta {
+            justify-content: center;
+        }
+        .pub-modal-download {
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+        }
+    }
+
+    /* ============================================
+       TABLET RESPONSIVE (641px - 1024px)
+       ============================================ */
+    @media (min-width: 641px) and (max-width: 1024px) {
+        .pub-modal {
+            max-width: 90vw;
+            max-height: 90dvh;
+        }
+        .pub-modal-scroll {
+            padding: 1rem;
         }
     }
 </style>
