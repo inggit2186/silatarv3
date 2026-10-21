@@ -1,21 +1,24 @@
 <x-layouts.app title="Publikasi - SILATAR">
+    <!-- PDF.js for PDF Preview -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
     <main class="neo-mirai">
         <!-- Hero Section -->
         <section class="hero-page" style="background-image: url('/assets/img/template/news-bg.webp'); background-size: cover; background-position: center top; padding: 120px 2rem 4rem; min-height: 350px;">
             <div class="hero-page-content" style="max-width: 36rem; margin: 0 auto; text-align: center;">
                 <p class="section-label-gold section-label-sm">
-                    <!-- Bookmark Icon -->
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
                     </svg>
                     <span style="font-family: var(--font-mono); letter-spacing: 0.15em; font-size: 0.7rem;">ARSIP DOKUMEN RESMI</span>
                 </p>
                 <h1 class="hero-page-title" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.25rem;">
-                    <!-- Icon Badge with Glow -->
                     <div class="relative">
                         <div class="absolute inset-0 w-16 h-16 rounded-2xl blur-xl opacity-40" style="background: var(--gold);"></div>
                         <div class="relative w-16 h-16 rounded-2xl flex items-center justify-center" style="background: linear-gradient(135deg, var(--gold) 0%, var(--sun) 100%); box-shadow: 0 8px 32px rgba(212, 168, 83, 0.4);">
-                            <!-- Archive/Book Icon -->
                             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1a2c35" stroke-width="2">
                                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
                                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
@@ -33,7 +36,6 @@
                 <p style="color: var(--ink-soft); font-size: 1rem; max-width: 28rem; margin: 1.5rem auto;">Kumpulan dokumen resmi yang dapat diunduh untuk keperluan informasi atau referensi.</p>
                 <div class="hero-page-actions">
                     <a href="{{ url('/') }}" class="neo-hero-cta">
-                        <!-- Home Icon -->
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                             <polyline points="9,22 9,12 15,12 15,22"/>
@@ -41,7 +43,6 @@
                         Beranda
                     </a>
                     <a href="{{ route('pelayanan') }}" class="neo-hero-cta neo-hero-cta-primary">
-                        <!-- Document Icon -->
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                             <polyline points="14,2 14,8 20,8"/>
@@ -62,19 +63,17 @@
 
         <section class="page-content">
             <div class="content-centered">
-                <!-- Enhanced Search Form -->
+                <!-- Search Form -->
                 <form method="GET" action="{{ route('publikasi') }}" role="search" style="margin-bottom: 1.5rem;">
                     <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                         <div class="relative" style="flex: 1; min-width: 280px;">
-                            <!-- Search Icon -->
                             <svg class="absolute left-4 top-1/2 -translate-y-1/2" style="color: var(--ash);" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="11" cy="11" r="8"/>
                                 <path d="m21 21-4.35-4.35"/>
                             </svg>
-                            <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Cari judul, deskripsi, atau nama file..." style="width: 100%; padding: 0.875rem 1rem 0.875rem 3rem; background: var(--paper); border: 1px solid var(--line); border-radius: 0.5rem; font-size: 0.95rem; color: var(--ink); transition: border-color 200ms, box-shadow 200ms;" onfocus="this.style.borderColor='var(--gold)'; this.style.boxShadow='0 0 0 3px rgba(212, 168, 83, 0.15)';" onblur="this.style.borderColor='var(--line)'; this.style.boxShadow='none';">
+                            <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Cari judul, deskripsi, atau nama file..." style="width: 100%; padding: 0.875rem 1rem 0.875rem 3rem; background: var(--paper); border: 1px solid var(--line); border-radius: 0.5rem; font-size: 0.95rem; color: var(--ink);">
                         </div>
-                        <button type="submit" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; background: linear-gradient(135deg, var(--gold) 0%, var(--sun) 100%); border: none; border-radius: 0.5rem; color: #1a2c35; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: transform 150ms, box-shadow 150ms; box-shadow: 0 4px 12px rgba(212, 168, 83, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(212, 168, 83, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(212, 168, 83, 0.3)';">
-                            <!-- Magnify Icon -->
+                        <button type="submit" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; background: linear-gradient(135deg, var(--gold) 0%, var(--sun) 100%); border: none; border-radius: 0.5rem; color: #1a2c35; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                 <circle cx="11" cy="11" r="8"/>
                                 <path d="m21 21-4.35-4.35"/>
@@ -86,7 +85,6 @@
 
                 @if($categories->count() > 0)
                 <div class="neo-publication-filters mb-8">
-                    <!-- All Icon -->
                     <a href="{{ route('publikasi') }}" class="neo-tab {{ !$selectedCategory ? 'is-active' : '' }}" style="padding: 0.625rem 1rem; border-radius: 9999px; display: inline-flex; align-items: center; gap: 0.5rem;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="7" height="7" rx="1"/>
@@ -100,13 +98,11 @@
                     @foreach($categories as $category)
                     <a href="{{ route('publikasi', ['category' => $category]) }}" class="neo-tab {{ $selectedCategory === $category ? 'is-active' : '' }}" style="padding: 0.625rem 1rem; border-radius: 9999px; display: inline-flex; align-items: center; gap: 0.5rem;">
                         @if($selectedCategory === $category)
-                        <!-- Folder Open Icon -->
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
                             <path d="M2 10h20"/>
                         </svg>
                         @else
-                        <!-- Folder Icon -->
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
                         </svg>
@@ -118,167 +114,130 @@
                 @endif
 
                 @if($publikasi->count() > 0)
-                <div class="neo-publication-list">
-                    @foreach($publikasi as $item)
-                    <article class="neo-publication-card" style="position: relative; overflow: hidden;">
-                        <!-- Gradient Top Border on Hover -->
-                        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--gold), var(--sun)); transform: scaleX(0); transform-origin: left; transition: transform 300ms ease;" class="gradient-border"></div>
+                <!-- Preview Grid: Max 3 columns x 3 rows -->
+                <div class="publication-preview-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+                    @foreach($publikasi->take(9) as $item)
+                    @php
+                        $ext = strtolower(pathinfo($item->original_filename, PATHINFO_EXTENSION) ?: 'file');
+                        $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                        $isPdf = $ext === 'pdf';
+                        $filePath = $item->file_path ?? null;
 
-                        <div class="neo-publication-icon">
-                            @php
-                                $ext = strtolower(pathinfo($item->original_filename, PATHINFO_EXTENSION) ?: 'file');
-                                $iconConfig = match($ext) {
-                                    'pdf' => ['color' => '#dc2626', 'bg' => 'rgba(220, 38, 38, 0.12)', 'icon' => 'pdf'],
-                                    'doc', 'docx' => ['color' => '#2563eb', 'bg' => 'rgba(37, 99, 235, 0.12)', 'icon' => 'doc'],
-                                    'xls', 'xlsx' => ['color' => '#16a34a', 'bg' => 'rgba(22, 163, 74, 0.12)', 'icon' => 'xls'],
-                                    'ppt', 'pptx' => ['color' => '#ea580c', 'bg' => 'rgba(234, 88, 12, 0.12)', 'icon' => 'ppt'],
-                                    'zip', 'rar' => ['color' => '#9333ea', 'bg' => 'rgba(147, 51, 234, 0.12)', 'icon' => 'zip'],
-                                    'jpg', 'jpeg', 'png', 'gif', 'webp' => ['color' => '#0891b2', 'bg' => 'rgba(8, 145, 178, 0.12)', 'icon' => 'img'],
-                                    'txt' => ['color' => '#64748b', 'bg' => 'rgba(100, 116, 139, 0.12)', 'icon' => 'txt'],
-                                    default => ['color' => 'var(--gold)', 'bg' => 'rgba(212, 168, 83, 0.12)', 'icon' => 'file']
-                                };
-                            @endphp
-                            <div style="width: 4rem; height: 4rem; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; background: {{ $iconConfig['bg'] }}; position: relative;">
+                        $iconConfig = match($ext) {
+                            'pdf' => ['color' => '#dc2626', 'bg' => 'rgba(220, 38, 38, 0.15)', 'icon' => 'pdf', 'label' => 'PDF'],
+                            'doc', 'docx' => ['color' => '#2563eb', 'bg' => 'rgba(37, 99, 235, 0.15)', 'icon' => 'doc', 'label' => 'WORD'],
+                            'xls', 'xlsx' => ['color' => '#16a34a', 'bg' => 'rgba(22, 163, 74, 0.15)', 'icon' => 'xls', 'label' => 'EXCEL'],
+                            'ppt', 'pptx' => ['color' => '#ea580c', 'bg' => 'rgba(234, 88, 12, 0.15)', 'icon' => 'ppt', 'label' => 'PPT'],
+                            'zip', 'rar' => ['color' => '#9333ea', 'bg' => 'rgba(147, 51, 234, 0.15)', 'icon' => 'zip', 'label' => 'ZIP'],
+                            'jpg', 'jpeg', 'png', 'gif', 'webp' => ['color' => '#0891b2', 'bg' => 'rgba(8, 145, 178, 0.15)', 'icon' => 'img', 'label' => strtoupper($ext)],
+                            'txt' => ['color' => '#64748b', 'bg' => 'rgba(100, 116, 139, 0.15)', 'icon' => 'txt', 'label' => 'TXT'],
+                            default => ['color' => 'var(--gold)', 'bg' => 'rgba(212, 168, 83, 0.15)', 'icon' => 'file', 'label' => strtoupper($ext)]
+                        };
+                    @endphp
+
+                    <a href="{{ route('publikasi.download', $item->slug) }}" class="preview-card" style="text-decoration: none; border-radius: 1rem; overflow: hidden; background: white; border: 1px solid var(--line); transition: all 200ms ease; display: block;">
+                        <!-- Preview Area -->
+                        <div class="preview-area" style="height: 140px; position: relative; overflow: hidden;">
+                            @if($isImage && $filePath)
+                            <!-- Image Preview -->
+                            <img src="{{ $filePath }}" alt="{{ $item->title }}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\'display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:0.5rem;color:var(--ash);background:rgba(8,145,178,0.15);\'><svg width=\'40\' height=\'40\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#0891b2\' stroke-width=\'1.5\'><rect x=\'3\' y=\'3\' width=\'18\' height=\'18\' rx=\'2\'/><circle cx=\'8.5\' cy=\'8.5\' r=\'1.5\'/><path d=\'M21 15l-5-5L5 21\'/></svg><span style=\'font-size:0.75rem;font-family:var(--font-mono);color:#0891b2;\'>GAMBAR</span></div>'">
+                            @elseif($isPdf && $filePath)
+                            <!-- PDF Preview -->
+                            <div class="pdf-preview" data-pdf-url="{{ $filePath }}" data-item-id="grid-{{ $item->id }}" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative;">
+                                <canvas id="grid-pdf-{{ $item->id }}" style="width: 100%; height: 100%; object-fit: contain;"></canvas>
+                                <div class="pdf-loading" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.8);">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" style="animation: spin 1s linear infinite;">
+                                        <circle cx="12" cy="12" r="10" stroke-dasharray="30 60"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            @else
+                            <!-- File Icon Preview -->
+                            <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; background: {{ $iconConfig['bg'] }};">
                                 @if($iconConfig['icon'] === 'pdf')
-                                <!-- Adobe PDF Icon -->
-                                <svg width="2.5rem" height="2.5rem" viewBox="0 0 24 24" fill="none">
-                                    <!-- PDF Background -->
-                                    <rect x="3" y="1" width="18" height="22" rx="2" fill="{{ $iconConfig['color'] }}" opacity="0.15"/>
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="{{ $iconConfig['color'] }}"/>
-                                    <!-- PDF Text -->
-                                    <text x="12" y="16" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="white" text-anchor="middle">PDF</text>
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                                    <rect x="3" y="1" width="18" height="22" rx="2" fill="{{ $iconConfig['color'] }}"/>
+                                    <text x="12" y="15" font-family="Arial, sans-serif" font-size="6" font-weight="bold" fill="white" text-anchor="middle">PDF</text>
                                 </svg>
                                 @elseif($iconConfig['icon'] === 'doc')
-                                <!-- Microsoft Word Icon -->
-                                <svg width="2.5rem" height="2.5rem" viewBox="0 0 24 24" fill="none">
-                                    <rect x="3" y="1" width="18" height="22" rx="2" fill="{{ $iconConfig['color'] }}" opacity="0.15"/>
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="{{ $iconConfig['color'] }}"/>
-                                    <!-- W letter -->
-                                    <text x="12" y="16" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="white" text-anchor="middle">W</text>
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                                    <rect x="3" y="1" width="18" height="22" rx="2" fill="{{ $iconConfig['color'] }}"/>
+                                    <text x="12" y="15" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="white" text-anchor="middle">W</text>
                                 </svg>
                                 @elseif($iconConfig['icon'] === 'xls')
-                                <!-- Microsoft Excel Icon -->
-                                <svg width="2.5rem" height="2.5rem" viewBox="0 0 24 24" fill="none">
-                                    <rect x="3" y="1" width="18" height="22" rx="2" fill="{{ $iconConfig['color'] }}" opacity="0.15"/>
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="{{ $iconConfig['color'] }}"/>
-                                    <!-- X letter -->
-                                    <text x="12" y="16" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="white" text-anchor="middle">X</text>
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                                    <rect x="3" y="1" width="18" height="22" rx="2" fill="{{ $iconConfig['color'] }}"/>
+                                    <text x="12" y="15" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="white" text-anchor="middle">X</text>
                                 </svg>
                                 @elseif($iconConfig['icon'] === 'ppt')
-                                <!-- Microsoft PowerPoint Icon -->
-                                <svg width="2.5rem" height="2.5rem" viewBox="0 0 24 24" fill="none">
-                                    <rect x="3" y="1" width="18" height="22" rx="2" fill="{{ $iconConfig['color'] }}" opacity="0.15"/>
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="{{ $iconConfig['color'] }}"/>
-                                    <!-- P letter -->
-                                    <text x="12" y="16" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="white" text-anchor="middle">P</text>
-                                </svg>
-                                @elseif($iconConfig['icon'] === 'zip')
-                                <!-- Archive/ZIP Icon -->
-                                <svg width="2.5rem" height="2.5rem" viewBox="0 0 24 24" fill="none">
-                                    <rect x="3" y="1" width="18" height="22" rx="2" fill="{{ $iconConfig['color'] }}" opacity="0.15"/>
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="{{ $iconConfig['color'] }}"/>
-                                    <!-- Zip lines -->
-                                    <path d="M9 9v2M9 13v2M15 9v2M15 13v2" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                                    <rect x="3" y="1" width="18" height="22" rx="2" fill="{{ $iconConfig['color'] }}"/>
+                                    <text x="12" y="15" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="white" text-anchor="middle">P</text>
                                 </svg>
                                 @elseif($iconConfig['icon'] === 'img')
-                                <!-- Image File Icon -->
-                                <svg width="2.5rem" height="2.5rem" viewBox="0 0 24 24" fill="none">
-                                    <rect x="3" y="1" width="18" height="22" rx="2" fill="{{ $iconConfig['color'] }}" opacity="0.15"/>
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="{{ $iconConfig['color'] }}"/>
-                                    <!-- Mountain and sun -->
-                                    <circle cx="10" cy="10" r="2" fill="white"/>
-                                    <path d="M6 17l4-4 3 3 4-5 3 4" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                @elseif($iconConfig['icon'] === 'txt')
-                                <!-- Text File Icon -->
-                                <svg width="2.5rem" height="2.5rem" viewBox="0 0 24 24" fill="none">
-                                    <rect x="3" y="1" width="18" height="22" rx="2" fill="{{ $iconConfig['color'] }}" opacity="0.15"/>
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="{{ $iconConfig['color'] }}"/>
-                                    <!-- Lines -->
-                                    <path d="M7 9h10M7 13h8M7 17h6" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="{{ $iconConfig['color'] }}" stroke-width="1.5">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <path d="M21 15l-5-5L5 21"/>
                                 </svg>
                                 @else
-                                <!-- Generic File Icon -->
-                                <svg width="2.5rem" height="2.5rem" viewBox="0 0 24 24" fill="none">
-                                    <rect x="3" y="1" width="18" height="22" rx="2" fill="{{ $iconConfig['color'] }}" opacity="0.15"/>
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="{{ $iconConfig['color'] }}"/>
-                                    <!-- Document lines -->
-                                    <path d="M7 9h10M7 13h6" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="{{ $iconConfig['color'] }}" stroke-width="1.5">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14,2 14,8 20,8"/>
                                 </svg>
                                 @endif
+                                <span style="font-size: 0.7rem; font-family: var(--font-mono); font-weight: 700; color: {{ $iconConfig['color'] }};">{{ $iconConfig['label'] }}</span>
                             </div>
+                            @endif
+
+                            <!-- File Info Bar -->
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 0.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.6)); display: flex; align-items: center; justify-content: space-between;">
+                            <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.4rem; background: {{ $iconConfig['bg'] }}; color: {{ $iconConfig['color'] }}; font-size: 0.55rem; font-family: var(--font-mono); font-weight: 700; border-radius: 0.2rem;">{{ strtoupper($ext) }}</span>
+                            @if($item->file_size)
+                            <span style="color: rgba(255,255,255,0.9); font-size: 0.6rem; font-family: var(--font-mono);">
+                                {{ $item->file_size >= 1024 ? round($item->file_size / 1024, 1) . ' MB' : round($item->file_size, 0) . ' KB' }}
+                            </span>
+                            @endif
                         </div>
-                        <div class="neo-publication-body">
+                    </div>
+
+                        <!-- Card Body -->
+                        <div style="padding: 1rem;">
                             @if($item->category)
-                            <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.625rem; background: rgba(212, 168, 83, 0.1); color: var(--sun); border: 1px solid rgba(212, 168, 83, 0.25); border-radius: 9999px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;">
-                                <!-- Tag Icon -->
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-                                    <line x1="7" y1="7" x2="7.01" y2="7"/>
-                                </svg>
+                            <span style="display: inline-block; padding: 0.15rem 0.5rem; background: rgba(212, 168, 83, 0.1); color: var(--sun); font-size: 0.6rem; font-weight: 600; text-transform: uppercase; border-radius: 9999px; margin-bottom: 0.5rem;">
                                 {{ $item->category }}
                             </span>
                             @endif
-                            <h2 class="neo-publication-title" style="font-size: 1.1rem; font-weight: 600; margin-top: 0.5rem;">{{ $item->title }}</h2>
-                            <p class="neo-publication-desc">{{ $item->description }}</p>
-                            <div class="neo-publication-meta" style="margin-top: 0.75rem;">
-                                <!-- Calendar Icon -->
-                                <span class="neo-publication-meta-item">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                        <line x1="16" y1="2" x2="16" y2="6"/>
-                                        <line x1="8" y1="2" x2="8" y2="6"/>
-                                        <line x1="3" y1="10" x2="21" y2="10"/>
-                                    </svg>
-                                    {{ $item->published_at ? \Carbon\Carbon::parse($item->published_at)->format('d M Y') : \Carbon\Carbon::parse($item->created_at)->format('d M Y') }}
-                                </span>
-                                <!-- File Type Badge -->
-                                <span style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.5rem; background: {{ $iconConfig['bg'] }}; border-radius: 0.25rem; font-size: 0.68rem; font-weight: 700; color: {{ $iconConfig['color'] }}; font-family: var(--font-mono);">
-                                    <!-- File Text Icon -->
+                            <h3 style="font-size: 0.9rem; font-weight: 600; color: var(--ink); margin: 0 0 0.25rem; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ $item->title }}</h3>
+                            <p style="font-size: 0.75rem; color: var(--ink-soft); margin: 0 0 0.5rem; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">{{ Str::limit($item->description, 50) }}</p>
+                            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.65rem; color: var(--ash); font-family: var(--font-mono);">
+                                <span>{{ $item->published_at ? \Carbon\Carbon::parse($item->published_at)->format('d M Y') : \Carbon\Carbon::parse($item->created_at)->format('d M Y') }}</span>
+                                <span style="display: flex; align-items: center; gap: 0.25rem;">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                        <polyline points="14,2 14,8 20,8"/>
-                                    </svg>
-                                    {{ strtoupper($ext) }}
-                                </span>
-                                @if($item->file_size)
-                                <!-- Hard Drive Icon -->
-                                <span class="neo-publication-meta-item">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <line x1="22" y1="12" x2="2" y2="12"/>
-                                        <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
-                                        <line x1="6" y1="16" x2="6.01" y2="16"/>
-                                        <line x1="10" y1="16" x2="10.01" y2="16"/>
-                                    </svg>
-                                    {{ round($item->file_size / 1024, 1) }} KB
-                                </span>
-                                @endif
-                                <!-- Download Icon -->
-                                <span class="neo-publication-meta-item">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                                         <polyline points="7,10 12,15 17,10"/>
                                         <line x1="12" y1="15" x2="12" y2="3"/>
                                     </svg>
-                                    {{ number_format($item->download_count) }} unduhan
+                                    {{ number_format($item->download_count) }}
                                 </span>
                             </div>
                         </div>
-                        <a href="{{ route('publikasi.download', $item->slug) }}" class="neo-publication-action" title="Unduh {{ $item->original_filename }}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem 1.25rem; min-width: 7rem; background: linear-gradient(135deg, var(--gold) 0%, var(--sun) 100%); color: #1a2c35; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none; transition: all 200ms ease;">
-                            <!-- Download Icon -->
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="7,10 12,15 17,10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
-                            </svg>
-                            <span>Unduh</span>
-                        </a>
-                    </article>
+                    </a>
                     @endforeach
                 </div>
 
+                @if($publikasi->count() > 9)
+                <!-- Remaining items count -->
+                <div style="text-align: center; padding: 1rem; background: rgba(212, 168, 83, 0.05); border-radius: 0.75rem; margin-bottom: 2rem;">
+                    <p style="color: var(--ink-soft); font-size: 0.9rem; margin: 0;">
+                        Dan {{ $publikasi->count() - 9 }} dokumen lainnya...
+                        <a href="#" style="color: var(--gold); text-decoration: none; font-weight: 600;">Lihat semua</a>
+                    </p>
+                </div>
+                @endif
+
                 @if($publikasi->hasPages())
-                <div class="neo-pagination-wrapper" style="margin-top: 3rem;">
+                <div class="neo-pagination-wrapper" style="margin-top: 2rem;">
                     <div class="neo-pagination">
                         @if($publikasi->onFirstPage())
                             <span class="disabled">
@@ -318,23 +277,18 @@
                 @endif
 
                 @else
-                <!-- Enhanced Empty State -->
                 <div class="neo-empty" style="padding: 4rem 2rem; text-align: center;">
                     <div style="width: 8rem; height: 8rem; margin: 0 auto 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(212, 168, 83, 0.08) 0%, rgba(214, 138, 58, 0.04) 100%); position: relative;">
-                        <!-- Decorative Ring -->
                         <div style="position: absolute; inset: -8px; border: 2px dashed rgba(212, 168, 83, 0.2); border-radius: 50%;"></div>
-                        <!-- Empty Folder Icon -->
                         <svg width="4rem" height="4rem" viewBox="0 0 24 24" fill="none" stroke="var(--ash)" stroke-width="1">
                             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
                             <path d="M2 10h20"/>
-                            <!-- Plus Sign -->
                             <circle cx="12" cy="14" r="2" fill="rgba(212, 168, 83, 0.3)" stroke="none"/>
                         </svg>
                     </div>
                     <p class="neo-empty-title" style="font-size: 1.35rem; font-weight: 700; color: var(--ink); margin-bottom: 0.5rem;">Belum Ada Publikasi</p>
                     <p class="neo-empty-text" style="color: var(--ink-soft); max-width: 24rem; margin: 0 auto 2rem;">Dokumen publikasi akan tersedia soon. Silakan kembali lagi nanti atau jelajahi layanan kami.</p>
-                    <a href="{{ route('home') }}" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; background: linear-gradient(135deg, var(--gold) 0%, var(--sun) 100%); color: #1a2c35; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none; border-radius: 0.5rem; box-shadow: 0 4px 12px rgba(212, 168, 83, 0.3); transition: transform 150ms, box-shadow 150ms;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(212, 168, 83, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(212, 168, 83, 0.3)';">
-                        <!-- Home Icon -->
+                    <a href="{{ route('home') }}" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; background: linear-gradient(135deg, var(--gold) 0%, var(--sun) 100%); color: #1a2c35; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none; border-radius: 0.5rem;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                             <polyline points="9,22 9,12 15,12 15,22"/>
@@ -364,25 +318,60 @@
 </x-layouts.app>
 
 <style>
-    .neo-publication-card:hover .gradient-border {
-        transform: scaleX(1) !important;
-    }
-    .neo-publication-card:hover {
+    .preview-card:hover {
         border-color: var(--gold);
-        box-shadow: 0 8px 30px rgba(212, 168, 83, 0.12);
+        box-shadow: 0 8px 30px rgba(212, 168, 83, 0.15);
+        transform: translateY(-2px);
     }
-    .neo-publication-card:hover .neo-publication-title {
-        color: var(--gold);
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
-    .neo-publication-card:hover .neo-publication-icon svg,
-    .neo-publication-card:hover .neo-publication-icon > div {
-        transform: scale(1.05);
+    @media (max-width: 1024px) {
+        .publication-preview-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
     }
-    .neo-publication-icon svg,
-    .neo-publication-icon > div {
-        transition: transform 200ms ease;
-    }
-    .neo-publication-title {
-        transition: color 150ms ease;
+    @media (max-width: 640px) {
+        .publication-preview-grid {
+            grid-template-columns: 1fr !important;
+        }
     }
 </style>
+
+<script>
+    // PDF.js Preview Loader for Grid
+    document.addEventListener('DOMContentLoaded', function() {
+        const pdfContainers = document.querySelectorAll('[data-pdf-url]');
+
+        pdfContainers.forEach(function(container) {
+            const pdfUrl = container.dataset.pdfUrl;
+            const itemId = container.dataset.itemId;
+            const canvas = document.getElementById('grid-pdf-' + itemId.replace('grid-', ''));
+            const loader = container.querySelector('.pdf-loading');
+
+            if (!pdfUrl || !canvas) return;
+
+            pdfjsLib.getDocument(pdfUrl).promise.then(function(pdf) {
+                pdf.getPage(1).then(function(page) {
+                    const viewport = page.getViewport({ scale: 0.8 });
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+
+                    const context = canvas.getContext('2d');
+                    page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise.then(function() {
+                        if (loader) loader.style.display = 'none';
+                    }).catch(function() {
+                        if (loader) loader.style.display = 'none';
+                    });
+                });
+            }).catch(function(error) {
+                console.log('PDF preview error:', error);
+                if (loader) loader.style.display = 'none';
+            });
+        });
+    });
+</script>
