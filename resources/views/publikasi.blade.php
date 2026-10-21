@@ -192,20 +192,28 @@
                             </div>
                             @endif
 
-                            <!-- File Info Bar -->
-                        <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 0.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.6)); display: flex; align-items: center; justify-content: space-between;">
-                            <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.4rem; background: {{ $iconConfig['bg'] }}; color: {{ $iconConfig['color'] }}; font-size: 0.55rem; font-family: var(--font-mono); font-weight: 700; border-radius: 0.2rem;">{{ strtoupper($ext) }}</span>
-                            @if($item->file_size)
-                            <span style="color: rgba(255,255,255,0.9); font-size: 0.6rem; font-family: var(--font-mono);">
-                                @if($item->file_size >= 1048576)
+                            <!-- File Info Bar - More Visible -->
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 0.75rem; background: linear-gradient(transparent, rgba(0,0,0,0.7)); display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="display: inline-flex; align-items: center; padding: 0.25rem 0.6rem; background: white; color: {{ $iconConfig['color'] }}; font-size: 0.7rem; font-family: var(--font-mono); font-weight: 700; border-radius: 0.3rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">{{ strtoupper($ext) }}</span>
+                                @if($item->file_size)
+                                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.6rem; background: rgba(255,255,255,0.9); color: #333; font-size: 0.7rem; font-family: var(--font-mono); font-weight: 600; border-radius: 0.3rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                                    @if($item->file_size >= 1048576)
                                     {{ round($item->file_size / 1048576, 1) }} MB
-                                @elseif($item->file_size >= 1024)
+                                    @elseif($item->file_size >= 1024)
                                     {{ round($item->file_size / 1024, 1) }} KB
-                                @else
+                                    @else
                                     {{ $item->file_size }} B
+                                    @endif
+                                </span>
                                 @endif
-                            </span>
-                            @endif
+                            </div>
+                            <!-- Download Icon -->
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3);">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7,10 12,15 17,10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
                         </div>
                     </div>
 
