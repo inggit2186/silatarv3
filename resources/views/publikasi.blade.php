@@ -279,43 +279,40 @@
 
                 @if($publikasi->hasPages())
                 <div class="neo-pagination-wrapper" style="margin-top: 3rem;">
-                    <div style="display: flex; justify-content: center;">
-                        <div class="neo-pagination" style="display: inline-flex; align-items: center; gap: 0.375rem; background: white; padding: 0.5rem; border-radius: 1rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); border: 1px solid var(--line);">
-                            @if($publikasi->onFirstPage())
-                                <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 0.875rem; opacity: 0.4; cursor: not-allowed; color: var(--ink-soft); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600;">
-                                    <!-- Chevron Left Icon -->
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-                                    Prev
-                                </span>
-                            @else
-                                <a href="{{ $publikasi->previousPageUrl() }}" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 0.875rem; color: var(--ink-soft); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; text-decoration: none; border-radius: 0.5rem; transition: all 150ms ease;" onmouseover="this.style.background='var(--paper-soft)'; this.style.color='var(--ink)';" onmouseout="this.style.background='transparent'; this.style.color='var(--ink-soft)';">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-                                    Prev
-                                </a>
-                            @endif
+                    <div class="neo-pagination">
+                        @if($publikasi->onFirstPage())
+                            <span class="disabled">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                                Prev
+                            </span>
+                        @else
+                            <a href="{{ $publikasi->previousPageUrl() }}">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                                Prev
+                            </a>
+                        @endif
 
-                            @foreach($publikasi->getUrlRange(1, $publikasi->lastPage()) as $page => $url)
-                                @if($page == $publikasi->currentPage())
-                                    <span style="display: inline-flex; align-items: center; justify-content: center; min-width: 2.5rem; height: 2.5rem; padding: 0 0.75rem; background: linear-gradient(135deg, var(--gold) 0%, var(--sun) 100%); color: #1a2c35; border-radius: 0.5rem; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; box-shadow: 0 2px 8px rgba(212, 168, 83, 0.3);">{{ $page }}</span>
-                                @elseif($page <= 3 || $page > $publikasi->lastPage() - 2 || abs($page - $publikasi->currentPage()) <= 1)
-                                    <a href="{{ $url }}" style="display: inline-flex; align-items: center; justify-content: center; min-width: 2.5rem; height: 2.5rem; padding: 0 0.75rem; color: var(--ink-soft); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; text-decoration: none; border-radius: 0.5rem; transition: all 150ms ease;" onmouseover="this.style.background='var(--paper-soft)'; this.style.color='var(--ink)';" onmouseout="this.style.background='transparent'; this.style.color='var(--ink-soft)';">{{ $page }}</a>
-                                @elseif($page == 4 || $page == $publikasi->lastPage() - 3)
-                                    <span style="padding: 0 0.5rem; color: var(--ash);">...</span>
-                                @endif
-                            @endforeach
-
-                            @if($publikasi->hasMorePages())
-                                <a href="{{ $publikasi->nextPageUrl() }}" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 0.875rem; color: var(--ink-soft); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; text-decoration: none; border-radius: 0.5rem; transition: all 150ms ease;" onmouseover="this.style.background='var(--paper-soft)'; this.style.color='var(--ink)';" onmouseout="this.style.background='transparent'; this.style.color='var(--ink-soft)';">
-                                    Next
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-                                </a>
-                            @else
-                                <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 0.875rem; opacity: 0.4; cursor: not-allowed; color: var(--ink-soft); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600;">
-                                    Next
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-                                </span>
+                        @foreach($publikasi->getUrlRange(1, $publikasi->lastPage()) as $page => $url)
+                            @if($page == $publikasi->currentPage())
+                                <span class="current">{{ $page }}</span>
+                            @elseif($page <= 3 || $page > $publikasi->lastPage() - 2 || abs($page - $publikasi->currentPage()) <= 1)
+                                <a href="{{ $url }}">{{ $page }}</a>
+                            @elseif($page == 4 || $page == $publikasi->lastPage() - 3)
+                                <span class="dots">...</span>
                             @endif
-                        </div>
+                        @endforeach
+
+                        @if($publikasi->hasMorePages())
+                            <a href="{{ $publikasi->nextPageUrl() }}">
+                                Next
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                            </a>
+                        @else
+                            <span class="disabled">
+                                Next
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                            </span>
+                        @endif
                     </div>
                 </div>
                 @endif
