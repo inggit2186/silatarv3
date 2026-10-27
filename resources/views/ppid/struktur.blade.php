@@ -38,22 +38,9 @@
             {{-- Peran Section --}}
             @if(isset($sectionsByType['peran']))
                 @php $peran = $sectionsByType['peran']->first(); @endphp
-                @php $cards = json_decode($peran->metadata)->cards ?? []; @endphp
                 <section class="ppid-section" data-reveal>
                     <h2 class="ppid-section-title">{{ $peran->title ?? 'Struktur Organisasi' }}</h2>
-                    <div class="ppid-grid">
-                        @foreach($cards as $card)
-                            <div class="ppid-card" style="text-align: center;">
-                                <div class="ppid-card-icon" style="margin: 0 auto 1rem;">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                    </svg>
-                                </div>
-                                <h3 class="ppid-card-title">{{ $card->title }}</h3>
-                                <p class="ppid-card-text">{{ $card->description }}</p>
-                            </div>
-                        @endforeach
-                    </div>
+                    @include('ppid.partials.section-body', ['section' => $peran])
                 </section>
             @endif
         </div>

@@ -23,9 +23,9 @@
                         <h2 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; margin: 0 0 0.5rem;">
                             {{ $peringatan->title ?? 'Informasi Serta Merta' }}
                         </h2>
-                        <p style="opacity: 0.95; margin: 0;">
-                            {!! $peringatan->content ?? 'Informasi yang harus segera diumumkan karena menyangkut hal yang dapat mengancam kehidupan dan ketertiban umum.' !!}
-                        </p>
+                        <div style="opacity: 0.95; margin: 0;">
+                            @include('ppid.partials.section-body', ['section' => $peringatan, 'fallback' => 'Informasi yang harus segera diumumkan karena menyangkut hal yang dapat mengancam kehidupan dan ketertiban umum.'])
+                        </div>
                     </div>
                 </section>
             @endif
@@ -33,14 +33,9 @@
             {{-- Daftar Informasi Section --}}
             @if(isset($sectionsByType['daftar_informasi']))
                 @php $informasi = $sectionsByType['daftar_informasi']->first(); @endphp
-                @php $items = json_decode($informasi->metadata)->items ?? []; @endphp
                 <section class="ppid-section" data-reveal>
                     <h2 class="ppid-section-title">{{ $informasi->title ?? 'Daftar Informasi' }}</h2>
-                    <ul class="ppid-list">
-                        @foreach($items as $item)
-                            <li>{{ $item }}</li>
-                        @endforeach
-                    </ul>
+                    @include('ppid.partials.section-body', ['section' => $informasi])
                 </section>
             @endif
         </div>

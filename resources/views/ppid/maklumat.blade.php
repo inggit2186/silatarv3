@@ -23,9 +23,9 @@
                         <h2 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 600; margin: 0 0 1rem;">
                             {{ $pernyataan->title ?? 'Maklumat Pelayanan' }}
                         </h2>
-                        <p style="font-size: 1.1rem; line-height: 1.7; max-width: 700px; margin: 0 auto; opacity: 0.95;">
-                            {!! $pernyataan->content ?? 'Kami PPID Kantor Kementerian Agama Kabupaten Tanah Datar akan memberikan pelayanan informasi publik sesuai dengan standar pelayanan yang telah ditetapkan.' !!}
-                        </p>
+                        <div style="font-size: 1.1rem; line-height: 1.7; max-width: 700px; margin: 0 auto; opacity: 0.95;">
+                            @include('ppid.partials.section-body', ['section' => $pernyataan, 'fallback' => 'Kami PPID Kantor Kementerian Agama Kabupaten Tanah Datar akan memberikan pelayanan informasi publik sesuai dengan standar pelayanan yang telah ditetapkan.'])
+                        </div>
                     </div>
                 </section>
             @endif
@@ -76,14 +76,9 @@
             {{-- Janji Pelayanan Section --}}
             @if(isset($sectionsByType['janji_pelayanan']))
                 @php $janji = $sectionsByType['janji_pelayanan']->first(); @endphp
-                @php $items = json_decode($janji->metadata)->items ?? []; @endphp
                 <section class="ppid-section" data-reveal>
                     <h2 class="ppid-section-title">{{ $janji->title ?? 'Janji Layanan' }}</h2>
-                    <ul class="ppid-list">
-                        @foreach($items as $item)
-                            <li>{{ $item }}</li>
-                        @endforeach
-                    </ul>
+                    @include('ppid.partials.section-body', ['section' => $janji])
                 </section>
             @endif
         </div>

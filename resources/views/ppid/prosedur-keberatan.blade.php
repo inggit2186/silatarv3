@@ -18,32 +18,18 @@
             {{-- Timeline Section --}}
             @if(isset($sectionsByType['timeline']))
                 @php $timeline = $sectionsByType['timeline']->first(); @endphp
-                @php $steps = json_decode($timeline->metadata)->steps ?? []; @endphp
                 <section class="ppid-section" data-reveal>
                     <h2 class="ppid-section-title">{{ $timeline->title ?? 'Alur Pengajuan' }}</h2>
-                    <div class="ppid-timeline">
-                        @foreach($steps as $step)
-                            <div class="ppid-timeline-item">
-                                <span class="ppid-timeline-number">Langkah {{ $step->number }}</span>
-                                <h3 class="ppid-timeline-title">{{ $step->title }}</h3>
-                                <p class="ppid-timeline-text">{{ $step->description }}</p>
-                            </div>
-                        @endforeach
-                    </div>
+                    @include('ppid.partials.section-body', ['section' => $timeline])
                 </section>
             @endif
 
             {{-- Alasan Keberatan Section --}}
             @if(isset($sectionsByType['alasan_keberatan']))
                 @php $alasan = $sectionsByType['alasan_keberatan']->first(); @endphp
-                @php $items = json_decode($alasan->metadata)->items ?? []; @endphp
                 <section class="ppid-section" data-reveal>
                     <h2 class="ppid-section-title">{{ $alasan->title ?? 'Alasan Keberatan' }}</h2>
-                    <ul class="ppid-list">
-                        @foreach($items as $item)
-                            <li>{{ $item }}</li>
-                        @endforeach
-                    </ul>
+                    @include('ppid.partials.section-body', ['section' => $alasan])
                 </section>
             @endif
         </div>

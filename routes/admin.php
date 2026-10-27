@@ -244,12 +244,9 @@ Route::middleware(['auth', 'admin'])
             Route::get('/', [PpidController::class, 'index'])->name('index');
             Route::get('/{slug}', [PpidController::class, 'edit'])->name('edit');
             Route::put('/{slug}', [PpidController::class, 'update'])->name('update');
-            Route::get('/{slug}/edit-section/{sectionId}', [PpidController::class, 'editSection'])->name('edit-section');
             Route::post('/{slug}/sections', [PpidController::class, 'storeSection'])->name('sections.store');
-            Route::put('/sections/{id}', [PpidController::class, 'updateSection'])->name('sections.update');
+            Route::put('/sections/{id}/type', [PpidController::class, 'updateType'])->name('sections.update-type');
             Route::delete('/sections/{id}', [PpidController::class, 'destroySection'])->name('sections.destroy');
-            Route::post('/sections/{id}/toggle-visibility', [PpidController::class, 'toggleVisibility'])->name('sections.toggle-visibility');
-            Route::post('/sections/reorder', [PpidController::class, 'reorder'])->name('sections.reorder');
             Route::post('/upload-image', [PpidController::class, 'uploadImage'])->name('upload-image');
 
             // Gallery Routes

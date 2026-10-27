@@ -148,7 +148,8 @@ html {
   font-size: 0.875rem;
   font-weight: 500;
 }
-.site-nav a {
+.site-nav a,
+.site-nav .nav-dropdown-toggle {
   position: relative;
   min-height: 44px;
   display: inline-flex;
@@ -156,6 +157,10 @@ html {
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   color: var(--ink-soft);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
   text-decoration: none;
   border-radius: 0.5rem;
   transition: all 180ms var(--ease);
@@ -166,7 +171,8 @@ html {
   opacity: 0.7;
   transition: opacity 180ms var(--ease);
 }
-.site-nav a:hover {
+.site-nav a:hover,
+.site-nav .nav-dropdown-toggle:hover {
   color: var(--ink);
   /* Fallback for older browsers */
   background: rgba(247, 246, 243, 0.8);
@@ -176,14 +182,16 @@ html {
   opacity: 1;
 }
 .site-nav a.is-active,
-.site-nav a[aria-current="page"] {
+.site-nav a[aria-current="page"],
+.site-nav .nav-dropdown-toggle.is-active {
   color: var(--gold);
   /* Fallback for older browsers */
   background: rgba(212, 168, 83, 0.1);
   background: oklch(68% 0.145 74 / 0.1);
 }
 .site-nav a.is-active svg,
-.site-nav a[aria-current="page"] svg {
+.site-nav a[aria-current="page"] svg,
+.site-nav .nav-dropdown-toggle.is-active svg {
   opacity: 1;
 }
 
@@ -3367,41 +3375,29 @@ html {
 /* Nav Dropdown for PPID */
 .nav-dropdown {
   position: relative;
+  /* flex prevents inline-level baseline gap between button and dropdown panel */
+  display: flex;
 }
 
 .nav-dropdown-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 44px;
-  padding: 0;
-  color: var(--ink-soft);
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  /* Typography is inherited from the shared .site-nav rule above. */
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: color 180ms var(--ease);
 }
 
 .nav-dropdown-toggle svg {
   transition: transform 200ms var(--ease);
 }
 
-.nav-dropdown-toggle:hover,
-.nav-dropdown-toggle.is-open {
-  color: var(--ink);
-}
-
-.nav-dropdown-toggle.is-open svg {
+.nav-dropdown:hover .nav-dropdown-toggle svg {
   transform: rotate(180deg);
 }
 
 .nav-dropdown-menu {
   position: absolute;
-  top: 100%;
+  /* Overlaps the toggle by a few px so there is no gap to cross */
+  top: calc(100% - 6px);
   left: 50%;
   transform: translateX(-50%);
   min-width: 200px;
@@ -3415,7 +3411,29 @@ html {
   box-shadow: 0 16px 40px oklch(18% 0.03 76 / 0.15);
   padding: 0.5rem;
   z-index: 50;
-  margin-top: 0.5rem;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 160ms var(--ease), visibility 160ms var(--ease);
+}
+
+/* Keep the panel open while the cursor travels from the toggle to the panel.
+   The panel is a DOM descendant, so hovering it keeps .nav-dropdown hovered. */
+.nav-dropdown:hover .nav-dropdown-menu,
+.nav-dropdown:focus-within .nav-dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.nav-dropdown:hover > .nav-dropdown-toggle:not(.is-active),
+.nav-dropdown:focus-within > .nav-dropdown-toggle:not(.is-active) {
+  color: var(--ink);
+}
+
+.nav-dropdown:hover > .nav-dropdown-toggle svg,
+.nav-dropdown:focus-within > .nav-dropdown-toggle svg {
+  transform: rotate(180deg);
 }
 
 .nav-dropdown-menu a {
@@ -3571,10 +3589,9 @@ html {
   width: 100%;
   padding: 1rem 0;
   color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
   text-decoration: none;
   background: transparent;
   border: none;

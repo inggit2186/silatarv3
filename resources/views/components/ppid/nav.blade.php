@@ -10,12 +10,12 @@
         <a href="{{ route('ppid') }}" class="{{ request()->routeIs('ppid') && !request()->routeIs('ppid.*') ? 'is-active' : '' }}">Beranda</a>
 
         {{-- Profil PPID --}}
-        <div class="nav-dropdown" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-            <button type="button" class="nav-dropdown-toggle" :class="open ? 'is-open' : ''">
+        <div class="nav-dropdown">
+            <button type="button" class="nav-dropdown-toggle {{ request()->routeIs('ppid.profil-singkat', 'ppid.visi-misi', 'ppid.tugas-fungsi', 'ppid.struktur') ? 'is-active' : '' }}" aria-haspopup="true" aria-expanded="false">
                 Profil PPID
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
             </button>
-            <div class="nav-dropdown-menu" x-show="open" x-transition>
+            <div class="nav-dropdown-menu">
                 <a href="{{ route('ppid.profil-singkat') }}" class="{{ request()->routeIs('ppid.profil-singkat') ? 'is-active' : '' }}">Profil Singkat</a>
                 <a href="{{ route('ppid.visi-misi') }}" class="{{ request()->routeIs('ppid.visi-misi') ? 'is-active' : '' }}">Visi Misi</a>
                 <a href="{{ route('ppid.tugas-fungsi') }}" class="{{ request()->routeIs('ppid.tugas-fungsi') ? 'is-active' : '' }}">Tugas, Fungsi & Wewenang</a>
@@ -26,12 +26,12 @@
         <a href="{{ route('ppid.regulasi') }}" class="{{ request()->routeIs('ppid.regulasi') ? 'is-active' : '' }}">Regulasi</a>
 
         {{-- Standar Layanan --}}
-        <div class="nav-dropdown" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-            <button type="button" class="nav-dropdown-toggle" :class="open ? 'is-open' : ''">
+        <div class="nav-dropdown">
+            <button type="button" class="nav-dropdown-toggle {{ request()->routeIs('ppid.maklumat', 'ppid.jadwal', 'ppid.biaya', 'ppid.laporan-layanan') ? 'is-active' : '' }}" aria-haspopup="true" aria-expanded="false">
                 Standar Layanan
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
             </button>
-            <div class="nav-dropdown-menu" x-show="open" x-transition>
+            <div class="nav-dropdown-menu">
                 <a href="{{ route('ppid.maklumat') }}" class="{{ request()->routeIs('ppid.maklumat') ? 'is-active' : '' }}">Maklumat Pelayanan</a>
                 <a href="{{ route('ppid.jadwal') }}" class="{{ request()->routeIs('ppid.jadwal') ? 'is-active' : '' }}">Jadwal Layanan</a>
                 <a href="{{ route('ppid.biaya') }}" class="{{ request()->routeIs('ppid.biaya') ? 'is-active' : '' }}">Biaya Layanan</a>
@@ -40,12 +40,12 @@
         </div>
 
         {{-- Layanan Informasi --}}
-        <div class="nav-dropdown" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-            <button type="button" class="nav-dropdown-toggle" :class="open ? 'is-open' : ''">
+        <div class="nav-dropdown">
+            <button type="button" class="nav-dropdown-toggle {{ request()->routeIs('ppid.prosedur-permohonan', 'ppid.prosedur-keberatan', 'ppid.prosedur-sengketa', 'ppid.formulir-permohonan', 'ppid.formulir-keberatan', 'ppid.informasi-berkala', 'ppid.informasi-serta-merta', 'ppid.informasi-setiap-saat', 'ppid.pengaduan') ? 'is-active' : '' }}" aria-haspopup="true" aria-expanded="false">
                 Layanan Informasi
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
             </button>
-            <div class="nav-dropdown-menu nav-dropdown-wide" x-show="open" x-transition>
+            <div class="nav-dropdown-menu nav-dropdown-wide">
                 <div class="nav-dropdown-section">
                     <span class="nav-dropdown-label">Prosedur Layanan</span>
                     <a href="{{ route('ppid.prosedur-permohonan') }}" class="{{ request()->routeIs('ppid.prosedur-permohonan') ? 'is-active' : '' }}">Tata Cara Permohonan</a>
@@ -71,12 +71,12 @@
         </div>
 
         {{-- Gallery --}}
-        <div class="nav-dropdown" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-            <button type="button" class="nav-dropdown-toggle" :class="open ? 'is-open' : ''">
+        <div class="nav-dropdown">
+            <button type="button" class="nav-dropdown-toggle {{ request()->routeIs('ppid.gallery-fasilitas', 'ppid.gallery-kegiatan') ? 'is-active' : '' }}" aria-haspopup="true" aria-expanded="false">
                 Gallery
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
             </button>
-            <div class="nav-dropdown-menu" x-show="open" x-transition>
+            <div class="nav-dropdown-menu">
                 <a href="{{ route('ppid.gallery-fasilitas') }}" class="{{ request()->routeIs('ppid.gallery-fasilitas') ? 'is-active' : '' }}">Fasilitas Publik</a>
                 <a href="{{ route('ppid.gallery-kegiatan') }}" class="{{ request()->routeIs('ppid.gallery-kegiatan') ? 'is-active' : '' }}">Kegiatan</a>
             </div>

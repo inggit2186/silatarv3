@@ -18,9 +18,13 @@
                         </svg>
                         {{ $hero->title ?? 'Pejabat Pengelola Informasi dan Dokumentasi' }}
                     </span>
-                    <h1 class="ppid-hero-title">
-                        <span>{!! $hero->content ?? 'Portal Informasi Publik' !!}</span>
-                    </h1>
+                    @if(($hero->section_type ?? 'text') === 'text')
+                        <h1 class="ppid-hero-title">
+                            <span>{!! $hero->content ?? 'Portal Informasi Publik' !!}</span>
+                        </h1>
+                    @else
+                        @include('ppid.partials.section-body', ['section' => $hero])
+                    @endif
                     <p class="ppid-hero-subtitle">
                         {{ $page->subtitle ?? 'Menyediakan akses informasi publik yang transparan, akuntabel, dan mudah diakses oleh masyarakat' }}
                     </p>
@@ -33,14 +37,8 @@
             <!-- Stats -->
             @if(isset($sectionsByType['stats']))
                 @php $stats = $sectionsByType['stats']->first(); @endphp
-                @php $statsData = json_decode($stats->metadata)->stats ?? []; @endphp
-                <div class="ppid-stats" data-reveal>
-                    @foreach($statsData as $stat)
-                        <div class="ppid-stat">
-                            <div class="ppid-stat-value">{{ $stat->value }}</div>
-                            <div class="ppid-stat-label">{{ $stat->label }}</div>
-                        </div>
-                    @endforeach
+                <div data-reveal>
+                    @include('ppid.partials.section-body', ['section' => $stats])
                 </div>
             @endif
 
@@ -50,7 +48,7 @@
                 <section class="ppid-section" data-reveal>
                     <h2 class="ppid-section-title">{{ $tentang->title ?? 'Tentang PPID' }}</h2>
                     <div class="ppid-section-content">
-                        {!! $tentang->content !!}
+                        @include('ppid.partials.section-body', ['section' => $tentang])
                     </div>
                 </section>
             @endif
@@ -61,9 +59,9 @@
                 <section class="ppid-section" data-reveal>
                     <div class="ppid-info-box">
                         <h3 class="ppid-info-box-title">{{ $motto->title ?? 'Motto Kami' }}</h3>
-                        <p class="ppid-info-box-text">
-                            {!! $motto->content !!}
-                        </p>
+                        <div class="ppid-info-box-text">
+                            @include('ppid.partials.section-body', ['section' => $motto])
+                        </div>
                     </div>
                 </section>
             @endif
@@ -71,51 +69,18 @@
             <!-- Layanan Populer -->
             @if(isset($sectionsByType['layanan_populer']))
                 @php $layanan = $sectionsByType['layanan_populer']->first(); @endphp
-                @php $cards = json_decode($layanan->metadata)->cards ?? []; @endphp
                 <section class="ppid-section" data-reveal>
                     <h2 class="ppid-section-title">{{ $layanan->title ?? 'Jelajahi Layanan Kami' }}</h2>
-                    <div class="ppid-grid">
-                        @foreach($cards as $card)
-                            @php
-                                $link = $card->link ?? '#';
-                                $link = str_replace('/ppid/', '', $link);
-                                $link = ltrim($link, '/');
-                                if ($link === '' || $link === 'ppid') {
-                                    $routeName = 'ppid';
-                                } else {
-                                    $routeName = 'ppid.' . $link;
-                                }
-                            @endphp
-                            <a href="{{ route($routeName) }}" class="ppid-card">
-                                <div class="ppid-card-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                        <polyline points="14 2 14 8 20 8"/>
-                                    </svg>
-                                </div>
-                                <h3 class="ppid-card-title">{{ $card->title }}</h3>
-                                <p class="ppid-card-text">{{ $card->description }}</p>
-                            </a>
-                        @endforeach
-                    </div>
+                    @include('ppid.partials.section-body', ['section' => $layanan])
                 </section>
             @endif
 
             <!-- Alur Prosedur -->
             @if(isset($sectionsByType['prosedur_timeline']))
                 @php $timeline = $sectionsByType['prosedur_timeline']->first(); @endphp
-                @php $steps = json_decode($timeline->metadata)->steps ?? []; @endphp
                 <section class="ppid-section" data-reveal>
                     <h2 class="ppid-section-title">{{ $timeline->title ?? 'Alur Permohonan Informasi' }}</h2>
-                    <div class="ppid-timeline">
-                        @foreach($steps as $step)
-                            <div class="ppid-timeline-item">
-                                <span class="ppid-timeline-number">Langkah {{ $step->number }}</span>
-                                <h3 class="ppid-timeline-title">{{ $step->title }}</h3>
-                                <p class="ppid-timeline-text">{{ $step->description }}</p>
-                            </div>
-                        @endforeach
-                    </div>
+                    @include('ppid.partials.section-body', ['section' => $timeline])
                 </section>
             @endif
         </div>

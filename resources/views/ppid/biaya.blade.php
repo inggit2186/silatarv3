@@ -23,9 +23,9 @@
                         <h2 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 600; margin: 0 0 0.5rem;">
                             {{ $biaya->title ?? 'Gratis!' }}
                         </h2>
-                        <p style="font-size: 1rem; opacity: 0.95; margin: 0;">
-                            {!! $biaya->content ?? 'Layanan Informasi Publik Tidak Dipungut Biaya' !!}
-                        </p>
+                        <div style="font-size: 1rem; opacity: 0.95; margin: 0;">
+                            @include('ppid.partials.section-body', ['section' => $biaya, 'fallback' => 'Layanan Informasi Publik Tidak Dipungut Biaya'])
+                        </div>
                     </div>
                 </section>
             @endif
@@ -46,32 +46,14 @@
             {{-- Pengecualian Section --}}
             @if(isset($sectionsByType['pengecualian']))
                 @php $pengecualian = $sectionsByType['pengecualian']->first(); @endphp
-                @php $tableData = json_decode($pengecualian->metadata); @endphp
                 <section class="ppid-section" data-reveal>
                     <h2 class="ppid-section-title">{{ $pengecualian->title ?? 'Pengecualian' }}</h2>
                     <div class="ppid-info-box">
                         <h3 class="ppid-info-box-title">Biaya Penggandaan</h3>
                         <p class="ppid-info-box-text">Hanya informasi dalam bentuk hardcopy yang dapat dikenakan biaya penggandaan sesuai biaya riil.</p>
                     </div>
-                    <div style="background: white; border: 1px solid rgba(140, 135, 130, 0.15); border-radius: 1.5rem; overflow: hidden; margin-top: 1.5rem;">
-                        <table class="ppid-table">
-                            <thead>
-                                <tr>
-                                    @foreach($tableData->headers as $header)
-                                        <th>{{ $header }}</th>
-                                    @endforeach
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($tableData->rows as $row)
-                                    <tr>
-                                        @foreach($row as $cell)
-                                            <td>{{ $cell }}</td>
-                                        @endforeach
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                    <div style="margin-top: 1.5rem;">
+                        @include('ppid.partials.section-body', ['section' => $pengecualian])
                     </div>
                 </section>
             @endif

@@ -22,7 +22,7 @@
                 <section class="ppid-section" data-reveal>
                     <div class="ppid-section-content">
                         <h2 class="ppid-section-title">{{ $profil->title ?? 'Tentang PPID' }}</h2>
-                        {!! $profil->content !!}
+                        @include('ppid.partials.section-body', ['section' => $profil])
                     </div>
                 </section>
             @endif
@@ -30,26 +30,20 @@
             {{-- Tugas Section --}}
             @if(isset($sectionsByType['tugas']))
                 @php $tugas = $sectionsByType['tugas']->first(); @endphp
-                @php $items = json_decode($tugas->metadata)->items ?? []; @endphp
                 <section class="ppid-section" data-reveal>
                     <div class="ppid-info-box">
                         <h3 class="ppid-info-box-title">{{ $tugas->title ?? 'Tugas Utama PPID' }}</h3>
-                        <p class="ppid-info-box-text">{{ implode(' ', array_slice($items, 0, 1)) }}</p>
                     </div>
+                    @include('ppid.partials.section-body', ['section' => $tugas])
                 </section>
             @endif
 
             {{-- Fungsi Section --}}
             @if(isset($sectionsByType['fungsi']))
                 @php $fungsi = $sectionsByType['fungsi']->first(); @endphp
-                @php $items = json_decode($fungsi->metadata)->items ?? []; @endphp
                 <section class="ppid-section" data-reveal>
                     <h3 class="ppid-section-title" style="font-size: 1.1rem;">{{ $fungsi->title ?? 'Fungsi PPID' }}</h3>
-                    <ul class="ppid-list">
-                        @foreach($items as $item)
-                            <li>{{ $item }}</li>
-                        @endforeach
-                    </ul>
+                    @include('ppid.partials.section-body', ['section' => $fungsi])
                 </section>
             @endif
         </div>

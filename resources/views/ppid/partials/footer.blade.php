@@ -1,3 +1,19 @@
+@if(!empty($extraSections))
+    {{-- Section tambahan: key-nya tidak dipakai template halaman ini --}}
+    <div class="ppid-page">
+        @foreach($extraSections as $extraSection)
+            <section class="ppid-section" data-reveal>
+                <h2 class="ppid-section-title">
+                    {{ $extraSection->title ?: \Illuminate\Support\Str::headline($extraSection->section_key) }}
+                </h2>
+                <div class="ppid-section-content">
+                    @include('ppid.partials.section-body', ['section' => $extraSection])
+                </div>
+            </section>
+        @endforeach
+    </div>
+@endif
+
 <footer class="ppid-footer">
     <div class="ppid-footer-inner">
         <div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\View;
 
 class PpidController extends Controller
 {
@@ -29,11 +30,40 @@ class PpidController extends Controller
         // Group sections by section_key
         $sectionsByType = $sections->groupBy('section_key');
 
+        // Section yang tidak dipakai template halaman (key di luar
+        // config('ppid.page_slots')) tetap ditampilkan di akhir halaman.
+        View::share('extraSections', $this->leftoverSections($sections, $slug));
+
         return [
             'page' => $page,
             'sections' => $sections,
             'sectionsByType' => $sectionsByType,
         ];
+    }
+
+    /**
+     * Pisahkan section yang sudah dipakai template halaman dari section tambahan.
+     */
+    private function leftoverSections($sections, string $slug)
+    {
+        $slotKeys = config("ppid.page_slots.{$slug}", []);
+        $used = [];
+
+        return $sections->reject(function ($section) use ($slotKeys, &$used) {
+            if (! in_array($section->section_key, $slotKeys, true)) {
+                return false;
+            }
+
+            // Hanya section pertama per key yang dipakai template; duplikat
+            // tetap ditampilkan sebagai section tambahan.
+            if (in_array($section->section_key, $used, true)) {
+                return false;
+            }
+
+            $used[] = $section->section_key;
+
+            return true;
+        })->values();
     }
 
     /**
