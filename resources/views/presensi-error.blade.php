@@ -332,7 +332,7 @@
                                     $oneMonthAgo = \Carbon\Carbon::now('Asia/Jakarta')->subDays(30)->format('Y-m-d');
                                     $today = \Carbon\Carbon::today('Asia/Jakarta')->format('Y-m-d');
                                 @endphp
-                                <x-ui.datepicker name="tanggal_lupa" label="Tanggal Lupa Presensi" placeholder="Pilih tanggal lupa presensi" value="{{ $oneMonthAgo }}" defaultDate="{{ $oneMonthAgo }}" min="{{ $oneMonthAgo }}" max="{{ $today }}" :required="true" />
+                                <x-ui.datepicker name="tanggal_lupa" label="Tanggal Lupa Presensi" placeholder="Pilih tanggal lupa presensi" value="{{ $today }}" defaultDate="{{ $today }}" min="{{ $oneMonthAgo }}" max="{{ $today }}" :required="true" />
                                 <p class="text-xs text-[var(--ink-soft)] mt-1">Bisa memilih tanggal 30 hari terakhir sampai hari ini</p>
                             </div>
                         </div>
@@ -639,19 +639,17 @@
             } else if (selectedAlasan && selectedAlasan.value === 'LUPA_PRESNSI_PUSAKA') {
                 tanggalField.classList.remove('hidden');
                 keteranganField.classList.add('hidden');
-                // Reset datepicker ke tanggal minimum (30 hari terakhir)
+                // Reset datepicker ke hari ini
                 var datepickerEl = tanggalField.querySelector('[x-data]');
                 if (datepickerEl && typeof Alpine !== 'undefined') {
                     var dpData = Alpine.$data(datepickerEl);
                     if (dpData) {
-                        var minDate = new Date();
-                        if (dpData.min) {
-                            minDate = dpData.parseValue(dpData.min);
-                        } else {
-                            minDate.setDate(minDate.getDate() - 30);
+                        var maxDate = new Date();
+                        if (dpData.max) {
+                            maxDate = dpData.parseValue(dpData.max);
                         }
-                        dpData.monthCursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-                        dpData.value = dpData.min || dpData.formatValue(minDate);
+                        dpData.monthCursor = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+                        dpData.value = dpData.max || dpData.formatValue(maxDate);
                     }
                 }
             } else {
