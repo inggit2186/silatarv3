@@ -329,11 +329,11 @@
                             {{-- Tanggal Lupa Presensi --}}
                             <div id="tanggalLupaPresensi" class="hidden mt-4">
                                 @php
-                                    $oneWeekAgo = \Carbon\Carbon::now('Asia/Jakarta')->subDays(7)->format('Y-m-d');
+                                    $oneMonthAgo = \Carbon\Carbon::now('Asia/Jakarta')->subDays(30)->format('Y-m-d');
                                     $today = \Carbon\Carbon::today('Asia/Jakarta')->format('Y-m-d');
                                 @endphp
-                                <x-ui.datepicker name="tanggal_lupa" label="Tanggal Lupa Presensi" placeholder="Pilih tanggal lupa presensi" value="{{ $oneWeekAgo }}" defaultDate="{{ $oneWeekAgo }}" min="{{ $oneWeekAgo }}" max="{{ $today }}" :required="true" />
-                                <p class="text-xs text-[var(--ink-soft)] mt-1">Bisa memilih tanggal H-7 sampai hari ini</p>
+                                <x-ui.datepicker name="tanggal_lupa" label="Tanggal Lupa Presensi" placeholder="Pilih tanggal lupa presensi" value="{{ $oneMonthAgo }}" defaultDate="{{ $oneMonthAgo }}" min="{{ $oneMonthAgo }}" max="{{ $today }}" :required="true" />
+                                <p class="text-xs text-[var(--ink-soft)] mt-1">Bisa memilih tanggal 30 hari terakhir sampai hari ini</p>
                             </div>
                         </div>
 
@@ -639,18 +639,19 @@
             } else if (selectedAlasan && selectedAlasan.value === 'LUPA_PRESNSI_PUSAKA') {
                 tanggalField.classList.remove('hidden');
                 keteranganField.classList.add('hidden');
-                // Reset datepicker ke H-7
+                // Reset datepicker ke tanggal minimum (30 hari terakhir)
                 var datepickerEl = tanggalField.querySelector('[x-data]');
                 if (datepickerEl && typeof Alpine !== 'undefined') {
                     var dpData = Alpine.$data(datepickerEl);
                     if (dpData) {
-                        var now = new Date();
-                        var sevenDaysAgo = new Date(now);
-                        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                        dpData.monthCursor = new Date(sevenDaysAgo.getFullYear(), sevenDaysAgo.getMonth(), 1);
-                        dpData.value = sevenDaysAgo.getFullYear() + '-' +
-                            String(sevenDaysAgo.getMonth() + 1).padStart(2, '0') + '-' +
-                            String(sevenDaysAgo.getDate()).padStart(2, '0');
+                        var minDate = new Date();
+                        if (dpData.min) {
+                            minDate = dpData.parseValue(dpData.min);
+                        } else {
+                            minDate.setDate(minDate.getDate() - 30);
+                        }
+                        dpData.monthCursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+                        dpData.value = dpData.min || dpData.formatValue(minDate);
                     }
                 }
             } else {
@@ -681,7 +682,8 @@
             }
 
             if (alasan.value === 'LUPA_PRESNSI_PUSAKA') {
-                var tanggalLupa = document.getElementById('inputTanggalLupa').value;
+                var tanggalLupaField = document.querySelector('input[name="tanggal_lupa"]');
+                var tanggalLupa = tanggalLupaField ? tanggalLupaField.value : '';
                 if (!tanggalLupa) {
                     alert('Harap pilih tanggal lupa presensi');
                     return false;

@@ -9022,7 +9022,7 @@ class PageController extends Controller
                 'required_if:alasan,LUPA_PRESNSI_PUSAKA',
                 'nullable',
                 'date',
-                'after_or_equal:' . Carbon::now('Asia/Jakarta')->subDays(7)->toDateString(),
+                'after_or_equal:' . Carbon::now('Asia/Jakarta')->subDays(30)->toDateString(),
                 'before_or_equal:today',
             ],
             'latitude' => 'nullable|numeric',
