@@ -5,8 +5,9 @@ namespace App\Services;
 use App\Models\KtdPresensi;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Reader\Exception;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class PresensiImportService
 {
@@ -26,39 +27,59 @@ class PresensiImportService
         // Increase memory limit for large files
         ini_set('memory_limit', '1024M');
 
+        $spreadsheet = null;
         try {
             $spreadsheet = IOFactory::load($filePath);
-            $sheet = $spreadsheet->getActiveSheet();
-            $highestRow = $sheet->getHighestRow();
-            $highestColumn = ord($sheet->getHighestColumn());
-
             $data = [];
-            for ($row = 2; $row <= $highestRow; $row++) {
-                $rowData = [];
-                for ($col = 'A'; ord($col) <= $highestColumn; $col++) {
-                    $rowData[] = $sheet->getCell($col.$row)->getValue();
+            $headers = [];
+            $emptyCount = 0;
+            foreach ($spreadsheet->getWorksheetIterator() as $sheet) {
+                $highestRow = $sheet->getHighestDataRow();
+                $highestColumn = Coordinate::columnIndexFromString($sheet->getHighestDataColumn());
+                if ($highestRow === 1 && $highestColumn === 1 && $sheet->getCell('A1')->getValue() === null) {
+                    continue;
                 }
-                $data[] = $rowData;
+                $headers = $this->getHeaders($sheet);
+                foreach ([1 => 'NIP', 3 => 'TANGGAL', 6 => 'ABSEN MASUK', 9 => 'ABSEN PULANG'] as $index => $expected) {
+                    if (strtoupper(trim((string) ($headers[$index] ?? ''))) !== $expected) {
+                        throw new \RuntimeException("Header sheet {$sheet->getTitle()} kolom ".Coordinate::stringFromColumnIndex($index + 1)." harus {$expected}");
+                    }
+                }
+                for ($row = 2; $row <= $highestRow; $row++) {
+                    $rowData = [];
+                    for ($col = 1; $col <= max(18, $highestColumn); $col++) {
+                        $rowData[] = $sheet->getCell([$col, $row])->getCalculatedValue();
+                    }
+                    if (count(array_filter($rowData, fn ($value) => $value !== null && trim((string) $value) !== '')) === 0) {
+                        $emptyCount++;
 
-                // Free memory every 100 rows
-                if ($row % 100 == 0) {
-                    gc_collect_cycles();
+                        continue;
+                    }
+                    if (is_numeric($rowData[3]) && $rowData[3] > 0) {
+                        $rowData[3] = Date::excelToDateTimeObject((float) $rowData[3])->format('Y-m-d');
+                    }
+                    $rowData['_row'] = $row;
+                    $rowData['_sheet'] = $sheet->getTitle();
+                    $data[] = $rowData;
                 }
             }
 
             return [
                 'success' => true,
-                'headers' => $this->getHeaders($sheet),
+                'headers' => $headers,
                 'data' => $data,
-                'total_rows' => $highestRow - 1, // Excluding header
+                'total_rows' => count($data),
+                'empty_count' => $emptyCount,
             ];
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Excel parse error: '.$e->getMessage());
 
             return [
                 'success' => false,
                 'error' => 'Gagal membaca file Excel: '.$e->getMessage(),
             ];
+        } finally {
+            $spreadsheet?->disconnectWorksheets();
         }
     }
 
@@ -68,8 +89,8 @@ class PresensiImportService
     protected function getHeaders($sheet): array
     {
         $headers = [];
-        for ($col = 'A'; $col <= $sheet->getHighestColumn(); $col++) {
-            $headers[] = $sheet->getCell($col.'1')->getValue();
+        for ($col = 1; $col <= Coordinate::columnIndexFromString($sheet->getHighestDataColumn()); $col++) {
+            $headers[] = $sheet->getCell([$col, 1])->getCalculatedValue();
         }
 
         return $headers;
@@ -106,11 +127,15 @@ class PresensiImportService
         ];
 
         foreach ($data as $index => $row) {
-            $rowNumber = $index + 2; // +2 karena header di row 1, dan index 0 = row 2
+            $rowNumber = $row['_row'] ?? $index + 2;
             $rowErrors = [];
+            $sheetName = $row['_sheet'] ?? '-';
 
-            // Validasi NIP (required)
-            $nip = $row[1] ?? null;
+            $rawNip = $row[1] ?? null;
+            $nip = is_string($rawNip) ? trim(str_replace("\u{00A0}", ' ', $rawNip)) : '';
+            if (is_int($rawNip) || is_float($rawNip)) {
+                $rowErrors[] = 'NIP numerik Excel tidak aman (presisi 18 digit); ekspor ulang NIP sebagai teks';
+            }
             if (empty($nip)) {
                 $rowErrors[] = 'NIP kosong';
             } elseif (! preg_match('/^\d{18}$/', $nip)) {
@@ -146,7 +171,19 @@ class PresensiImportService
             $psw = $row[10] ?? null;            // K: PSW (dalam menit)
             $jenisTugas = $row[12] ?? null;     // M: JENIS TUGAS
 
-            // Convert menit ke format yang sesuai
+            foreach (['ABSEN MASUK' => $absenMasuk, 'ABSEN PULANG' => $absenPulang] as $field => $value) {
+                if ($value !== null && trim((string) $value) !== '' && $this->normalizeTime($value) === null) {
+                    $rowErrors[] = "{$field}: format jam tidak valid";
+                }
+            }
+            $absenMasuk = $this->normalizeTime($absenMasuk);
+            $absenPulang = $this->normalizeTime($absenPulang);
+            foreach (['CEPAT TELAT' => $cepatTelat, 'PSW' => $psw] as $field => $value) {
+                if ($value !== null && trim((string) $value) !== '' && ! is_numeric($value)) {
+                    $rowErrors[] = "{$field}: harus angka menit";
+                }
+            }
+
             $mDiff = $this->convertMinutesToDiff($cepatTelat);
             $pDiff = $this->convertMinutesToDiff($psw);
 
@@ -154,12 +191,14 @@ class PresensiImportService
             if (count($rowErrors) > 0) {
                 $this->invalidRows[] = [
                     'row' => $rowNumber,
+                    'sheet' => $sheetName,
                     'data' => $row,
                     'errors' => $rowErrors,
                 ];
             } else {
                 $this->validRows[] = [
                     'row' => $rowNumber,
+                    'sheet' => $sheetName,
                     'nip' => $nip,
                     'nama' => $row[0] ?? '',
                     'jabatan' => $row[2] ?? '',
@@ -193,26 +232,19 @@ class PresensiImportService
     {
         $this->batchId = 'IMPORT_'.date('Ymd_His').'_'.uniqid();
         $importedCount = 0;
-        $skippedCount = 0;
-        $errors = [];
+        $updatedCount = 0;
+        $transactionLevel = DB::transactionLevel();
 
         try {
             DB::beginTransaction();
 
             foreach ($validatedData['valid_rows'] as $rowData) {
-                // Cek duplikat (NIP + tanggal sudah ada)
-                $exists = KtdPresensi::where('user_nip', $rowData['nip'])
+                $existing = KtdPresensi::where('user_nip', $rowData['nip'])
                     ->whereDate('tanggal', $rowData['tanggal'])
-                    ->exists();
+                    ->lockForUpdate()
+                    ->get();
 
-                if ($exists) {
-                    $skippedCount++;
-
-                    continue;
-                }
-
-                // Insert data dengan mapping yang benar
-                KtdPresensi::create([
+                $values = [
                     'user_nip' => $rowData['nip'],
                     'tanggal' => $rowData['tanggal'],
                     'm_absen' => $rowData['absen_masuk'] ?: null,    // ABSEN MASUK
@@ -221,13 +253,23 @@ class PresensiImportService
                     'p_diff' => $rowData['p_diff'],                  // PSW (menit)
                     'status' => $rowData['jenis_tugas'] ?: null,     // JENIS TUGAS
                     'keterangan' => $rowData['keterangan'] ?: null,
-                    'import_batch_id' => $this->batchId,
-                    'imported_by' => $userId,
-                    'imported_at' => now(),
-                    'import_source' => 'excel_manual',
-                ]);
-
-                $importedCount++;
+                ];
+                if ($existing->isNotEmpty()) {
+                    // Preserve batch ownership so rollback cannot delete pre-existing records.
+                    unset($values['user_nip'], $values['tanggal']);
+                    foreach ($existing as $record) {
+                        $record->update($values);
+                    }
+                    $updatedCount++;
+                } else {
+                    KtdPresensi::create($values + [
+                        'import_batch_id' => $this->batchId,
+                        'imported_by' => $userId,
+                        'imported_at' => now(),
+                        'import_source' => 'excel_manual',
+                    ]);
+                    $importedCount++;
+                }
             }
 
             DB::commit();
@@ -235,7 +277,7 @@ class PresensiImportService
             Log::info('Import presensi berhasil', [
                 'batch_id' => $this->batchId,
                 'imported' => $importedCount,
-                'skipped' => $skippedCount,
+                'updated' => $updatedCount,
                 'user_id' => $userId,
             ]);
 
@@ -243,12 +285,15 @@ class PresensiImportService
                 'success' => true,
                 'batch_id' => $this->batchId,
                 'imported_count' => $importedCount,
-                'skipped_count' => $skippedCount,
-                'message' => "Berhasil import {$importedCount} data presensi",
+                'skipped_count' => 0,
+                'updated_count' => $updatedCount,
+                'message' => "Berhasil import {$importedCount} data baru dan memperbarui {$updatedCount} data presensi",
             ];
 
-        } catch (\Exception $e) {
-            DB::rollBack();
+        } catch (\Throwable $e) {
+            if (DB::transactionLevel() > $transactionLevel) {
+                DB::rollBack();
+            }
             Log::error('Import presensi gagal: '.$e->getMessage(), [
                 'batch_id' => $this->batchId,
                 'trace' => $e->getTraceAsString(),
@@ -256,7 +301,10 @@ class PresensiImportService
 
             return [
                 'success' => false,
-                'error' => 'Gagal import data: '.$e->getMessage(),
+                'imported_count' => 0,
+                'updated_count' => 0,
+                'skipped_count' => 0,
+                'error' => 'Gagal import data (seluruh perubahan file dibatalkan), sheet '.($rowData['sheet'] ?? '-').' baris '.($rowData['row'] ?? '-').': '.$e->getMessage(),
             ];
         }
     }
@@ -320,7 +368,7 @@ class PresensiImportService
      */
     protected function convertMinutesToDiff($minutes): ?string
     {
-        if (empty($minutes) || ! is_numeric($minutes)) {
+        if ($minutes === null || $minutes === '' || ! is_numeric($minutes)) {
             return null;
         }
 
@@ -344,15 +392,15 @@ class PresensiImportService
             return null;
         }
 
-        // Jika sudah dalam format yyyy-mm-dd
-        if (preg_match('/^\d{4}-\d{2}-\d{2}/', $value)) {
-            return substr($value, 0, 10);
+        if (is_numeric($value) && $value > 0 && $value < 2958466) {
+            return Date::excelToDateTimeObject((float) $value)->format('Y-m-d');
         }
-
-        // Coba parse sebagai timestamp
-        $timestamp = strtotime($value);
-        if ($timestamp) {
-            return date('Y-m-d', $timestamp);
+        $value = trim((string) $value);
+        foreach (['Y-m-d', 'd/m/Y', 'd-m-Y', 'Y-m-d H:i:s'] as $format) {
+            $date = \DateTimeImmutable::createFromFormat('!'.$format, $value);
+            if ($date && $date->format($format) === $value) {
+                return $date->format('Y-m-d');
+            }
         }
 
         return null;
@@ -361,6 +409,22 @@ class PresensiImportService
     /**
      * Validate time format
      */
+    protected function normalizeTime($value): ?string
+    {
+        if ($value === null || trim((string) $value) === '') {
+            return null;
+        }
+        if (is_numeric($value) && $value >= 0 && $value < 1) {
+            return gmdate('H:i:s', (int) round((float) $value * 86400) % 86400);
+        }
+        $value = trim((string) $value);
+        if ($this->isValidTime($value)) {
+            return strlen($value) === 5 ? $value.':00' : $value;
+        }
+
+        return null;
+    }
+
     protected function isValidTime($time): bool
     {
         return preg_match('/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/', $time);

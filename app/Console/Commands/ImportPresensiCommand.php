@@ -98,35 +98,54 @@ class ImportPresensiCommand extends Command
             // Free memory before processing next file
             gc_collect_cycles();
 
-            $result = $this->processFile($file, true); // Pass true to skip individual confirmation
-            $importResults[] = $result;
+            try {
+                $result = $this->processFile($file, true);
+            } catch (\Throwable $e) {
+                $this->error('Gagal memproses '.basename($file).': '.$e->getMessage());
+                $result = ['file' => basename($file), 'imported' => 0, 'skipped' => 0, 'invalid' => 0, 'errors' => [$e->getMessage()]];
+            }
             $totalImported += $result['imported'];
             $totalSkipped += $result['skipped'];
             $totalInvalid += $result['invalid'];
 
             // Delete file immediately after successful import (unless --keep-files)
-            if (! $this->option('keep-files') && empty($result['errors']) && file_exists($file)) {
-                unlink($file);
-                $this->line('   🗑️  File dihapus: '.basename($file));
+            if (! $this->option('dry-run') && ! $this->option('keep-files') && ($result['complete'] ?? false) && file_exists($file)) {
+                if (@unlink($file)) {
+                    $this->line('File dihapus: '.basename($file));
+                } else {
+                    $result['errors'][] = 'Gagal menghapus file sumber';
+                    $this->warn('Data tersimpan, tetapi file tidak dapat dihapus: '.basename($file));
+                }
+            } else {
+                $this->line('File sumber dipertahankan: '.basename($file));
             }
+            $importResults[] = $result;
         }
 
         // Print summary
         $this->printSummary($importResults, $totalImported, $totalSkipped, $totalInvalid);
+        $this->info('Total diperbarui: '.array_sum(array_column($importResults, 'updated')).' baris');
+        $failed = $totalInvalid > 0 || count(array_filter($importResults, fn ($result) => ! empty($result['errors']))) > 0;
+        if ($failed) {
+            $this->error('Import belum lengkap. Perbaiki baris yang ditolak lalu jalankan ulang file yang dipertahankan.');
+        }
 
-        return Command::SUCCESS;
+        return $failed ? Command::FAILURE : Command::SUCCESS;
     }
 
     protected function scanExcelFiles(string $path): array
     {
         $files = [];
 
-        $excelFiles = glob($path.'/*.xlsx');
+        $excelFiles = glob($path.'/*');
 
         if ($excelFiles) {
             foreach ($excelFiles as $file) {
                 // Skip hidden files, temp files, and Excel lock files
                 $basename = basename($file);
+                if (! is_file($file) || strtolower(pathinfo($file, PATHINFO_EXTENSION)) !== 'xlsx') {
+                    continue;
+                }
                 if (strpos($basename, '.') === 0 || strpos($basename, '~$') === 0) {
                     continue;
                 }
@@ -184,7 +203,12 @@ class ImportPresensiCommand extends Command
             ];
         }
 
-        $this->info('📊 Total baris: '.$parsed['total_rows']);
+        $this->info('Total baris data: '.$parsed['total_rows'].'; baris kosong: '.($parsed['empty_count'] ?? 0));
+        if ($parsed['total_rows'] === 0) {
+            $this->warn('File tidak berisi data presensi. File dipertahankan.');
+
+            return ['file' => $filename, 'imported' => 0, 'skipped' => 0, 'invalid' => 0, 'errors' => ['Tidak ada baris data']];
+        }
 
         // Validate (dept_id akan diambil dari users berdasarkan NIP)
         $validated = $this->importService->validateData($parsed['data']);
@@ -194,14 +218,8 @@ class ImportPresensiCommand extends Command
             $this->warn("⚠️  Invalid: {$validated['invalid_count']} baris");
             $this->newLine();
 
-            // Show first few errors
-            $errors = array_slice($validated['invalid_rows'], 0, 5);
-            foreach ($errors as $error) {
-                $this->line("   Row {$error['row']}: ".implode(', ', $error['errors']));
-            }
-
-            if ($validated['invalid_count'] > 5) {
-                $this->line('   ... dan '.($validated['invalid_count'] - 5).' error lainnya');
+            foreach ($validated['invalid_rows'] as $error) {
+                $this->line('Sheet '.($error['sheet'] ?? '-')." baris {$error['row']}: ".implode(', ', $error['errors']));
             }
         }
 
@@ -251,10 +269,18 @@ class ImportPresensiCommand extends Command
         }
 
         $this->newLine();
+        if ($result['success'] && ($result['imported_count'] + ($result['updated_count'] ?? 0)) !== $validated['valid_count']) {
+            $result['success'] = false;
+            $result['error'] = 'Jumlah hasil penyimpanan tidak sesuai jumlah baris valid. File sumber dipertahankan.';
+            $this->error($result['error']);
+        }
 
         return [
             'file' => $filename,
             'imported' => $result['imported_count'] ?? 0,
+            'updated' => $result['updated_count'] ?? 0,
+            'complete' => $result['success'] && $validated['invalid_count'] === 0
+                && ($result['imported_count'] + ($result['updated_count'] ?? 0)) === $parsed['total_rows'],
             'skipped' => $result['skipped_count'] ?? 0,
             'invalid' => $validated['invalid_count'],
             'errors' => $result['success'] ? [] : [$result['error']],
@@ -385,7 +411,7 @@ class ImportPresensiCommand extends Command
         $this->newLine();
 
         if ($totalImported > 0) {
-            $this->info('✨ Import selesai! Data sudah tersimpan di database.');
+            $this->info('Data baru tersimpan; periksa jumlah invalid dan kegagalan pada ringkasan.');
         } else {
             $this->warn('⚠️  Tidak ada data yang diimport');
         }

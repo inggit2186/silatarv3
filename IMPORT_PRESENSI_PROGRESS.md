@@ -3,7 +3,38 @@
 ## Overview
 Fitur untuk mengimpor data presensi dari file Excel (.xlsx) ke dalam tabel `ktd_presensi`. Import dilakukan setiap bulan secara manual oleh admin/staff yang berwenang.
 
-## Status: **SELESAI**
+## Status: **DALAM PROGRES — verifikasi database menunggu pdo_sqlite**
+
+## Pengamanan Import (2026-11-04)
+- [x] Seluruh worksheet dibaca dengan validasi header penting dan indeks kolom aman setelah Z.
+- [x] Tanggal serial Excel, jam numerik, NIP teks ber-spasi, dan menit nol ditangani.
+- [x] NIP numerik berisiko kehilangan presisi ditolak; tidak menebak identitas pegawai.
+- [x] NIP/tanggal yang sudah ada diperbarui otomatis dari Excel; baris terakhir menang bila berulang.
+- [x] Kolom di luar mapping Excel tidak diubah. Nilai kosong Excel mengosongkan field mapping terkait.
+- [x] Transaksi per file membatalkan insert/update jika penyimpanan gagal.
+- [x] Dry-run tidak menghapus sumber; file invalid/gagal/kosong tetap disimpan.
+- [x] Semua baris invalid ditampilkan dengan sheet dan nomor baris; exit code gagal untuk hasil tidak lengkap.
+- [x] File .xlsx/.XLSX dideteksi, --keep-files tetap didukung.
+- [x] Ditambahkan tujuh tes regresi sintetis di tests/Feature/PresensiImportTest.php.
+- [x] PHP lint dan Laravel Pint dijalankan.
+- [ ] Jalankan tes database setelah ekstensi pdo_sqlite tersedia; runtime saat ini hanya menyediakan pdo_mysql.
+
+### Data Flow Pengamanan
+Excel -> seluruh sheet + pemeriksaan header -> normalisasi/validasi -> transaksi insert/update -> rekonsiliasi jumlah -> hapus sumber hanya jika lengkap.
+
+### Files yang Dimodifikasi
+| File | Perubahan |
+|------|-----------|
+| app/Services/PresensiImportService.php | Parser, validasi, overwrite NIP/tanggal, transaksi dan diagnostik |
+| app/Console/Commands/ImportPresensiCommand.php | Perlindungan sumber, dry-run, pelaporan update dan exit code |
+| tests/Feature/PresensiImportTest.php | Tes baru parser, overwrite, rollback transaksi, file sumber dan dry-run |
+
+### Batasan Rollback
+Overwrite mempertahankan metadata batch milik record lama agar rollback batch baru tidak menghapus record yang sudah ada. `--rollback` hanya menghapus record baru milik batch tersebut; tidak mengembalikan nilai sebelum overwrite. Riwayat berbasis batch tidak mencatat batch yang hanya melakukan update. Gunakan backup database bila memerlukan pemulihan nilai lama.
+
+### Changelog 2026-11-04
+- Pengamanan sumber dan pelacakan kegagalan import diterapkan, termasuk overwrite otomatis sesuai permintaan.
+- Tidak menjalankan import terhadap database produksi. Hasil tes database belum terverifikasi karena pdo_sqlite tidak tersedia.
 
 ## Package Excel yang Digunakan
 ✅ **Maatwebsite/Excel v4.0.0** + **PhpSpreadsheet v5.9.0**
