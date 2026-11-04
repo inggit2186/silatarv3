@@ -87,7 +87,7 @@ $canAccessDoc = $isAdmin || $isHumas || ($userRole === 'petugas' && $userDeptId 
             @endif
 
             @if($canAccessAdminPanel)
-            <div class="menu-group {{ request()->routeIs('admin.users.*', 'admin.services.*', 'admin.units.*', 'admin.requests.*', 'admin.import-asn.*', 'admin.ppid.*', 'admin.patches.*') ? 'has-active' : '' }}" data-group="kelola" id="menuGroupKelola">
+            <div class="menu-group {{ request()->routeIs('admin.users.*', 'admin.services.*', 'admin.units.*', 'admin.requests.*', 'admin.import-asn.*', 'admin.ppid.*', 'admin.patches.*', 'admin.ujian.*') ? 'has-active' : '' }}" data-group="kelola" id="menuGroupKelola">
                 <div class="menu-group-header" onclick="toggleMenuGroup('kelola')">
                     <div class="menu-group-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -96,7 +96,7 @@ $canAccessDoc = $isAdmin || $isHumas || ($userRole === 'petugas' && $userDeptId 
                         </svg>
                     </div>
                     <span class="menu-group-header-text">Kelola</span>
-                    <span class="menu-group-count">6</span>
+                    <span class="menu-group-count">7</span>
                     <svg class="menu-group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                     </svg>
@@ -141,6 +141,16 @@ $canAccessDoc = $isAdmin || $isHumas || ($userRole === 'petugas' && $userDeptId 
                         <span>Unit Kerja</span>
                     </a>
                     @endif
+
+                    <a href="{{ route('admin.ujian.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.ujian.*') ? 'active' : '' }}">
+                        <div class="sidebar-nav-icon-wrap indigo">
+                            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l2 2"/>
+                            </svg>
+                        </div>
+                        <span>Ujian</span>
+                    </a>
 
                     <a href="{{ route('admin.requests.index') }}" class="sidebar-nav-item {{ request()->routeIs('admin.requests.*') ? 'active' : '' }}">
                         <div class="sidebar-nav-icon-wrap rose">

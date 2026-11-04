@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\RekapPresensiController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SuratManualController;
 use App\Http\Controllers\Admin\TpgController;
+use App\Http\Controllers\Admin\UjianController;
 use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
@@ -237,6 +238,33 @@ Route::middleware(['auth', 'admin'])
             Route::post('/preview', [AsnImportController::class, 'preview'])->name('preview');
             Route::post('/import', [AsnImportController::class, 'import'])->name('import');
             Route::get('/history', [AsnImportController::class, 'history'])->name('history');
+        });
+
+        // Ujian (Manajemen Soal & Peserta)
+        Route::prefix('ujian')->name('ujian.')->group(function () {
+            Route::get('/', [UjianController::class, 'index'])->name('index');
+            Route::get('/create', [UjianController::class, 'create'])->name('create');
+            Route::post('/', [UjianController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [UjianController::class, 'edit'])->name('edit')->whereNumber('id');
+            Route::put('/{id}', [UjianController::class, 'update'])->name('update')->whereNumber('id');
+            Route::delete('/{id}', [UjianController::class, 'destroy'])->name('destroy')->whereNumber('id');
+            Route::get('/{id}/hasil', [UjianController::class, 'hasil'])->name('hasil')->whereNumber('id');
+
+            // Soal & pilihan
+            Route::post('/{id}/soal', [UjianController::class, 'storeSoal'])->name('soal.store')->whereNumber('id');
+            Route::put('/soal/{soalId}', [UjianController::class, 'updateSoal'])->name('soal.update')->whereNumber('soalId');
+            Route::delete('/soal/{soalId}', [UjianController::class, 'destroySoal'])->name('soal.destroy')->whereNumber('soalId');
+            Route::post('/soal/{soalId}/pilihan', [UjianController::class, 'storePilihan'])->name('pilihan.store')->whereNumber('soalId');
+            Route::put('/pilihan/{pilihanId}', [UjianController::class, 'updatePilihan'])->name('pilihan.update')->whereNumber('pilihanId');
+            Route::delete('/pilihan/{pilihanId}', [UjianController::class, 'destroyPilihan'])->name('pilihan.destroy')->whereNumber('pilihanId');
+
+            // Peserta
+            Route::post('/{id}/peserta', [UjianController::class, 'storePeserta'])->name('peserta.store')->whereNumber('id');
+            Route::delete('/peserta/{pesertaId}', [UjianController::class, 'destroyPeserta'])->name('peserta.destroy')->whereNumber('pesertaId');
+            Route::get('/{id}/peserta/cari', [UjianController::class, 'cariPeserta'])->name('peserta.cari')->whereNumber('id');
+
+            // Penilaian manual
+            Route::put('/jawaban/{jawabanId}/skor', [UjianController::class, 'updateSkor'])->name('skor.update')->whereNumber('jawabanId');
         });
 
         // PPID Management Routes

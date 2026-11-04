@@ -5,6 +5,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PenilaianKinerjaController;
 use App\Http\Controllers\PpidController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\UjianController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
@@ -61,6 +62,17 @@ Route::middleware('auth')->group(function () {
         Route::put('/{id}', [PenilaianKinerjaController::class, 'update'])->name('update');
         Route::delete('/{id}', [PenilaianKinerjaController::class, 'destroy'])->name('destroy');
     });
+    // Ujian - Halaman peserta ujian
+    Route::prefix('ujian')->name('ujian.')->group(function () {
+        Route::get('/', [UjianController::class, 'index'])->name('index');
+        Route::get('/{id}', [UjianController::class, 'kerjakan'])->whereNumber('id')->name('kerjakan');
+        Route::post('/{id}/jawaban', [UjianController::class, 'simpanJawaban'])->whereNumber('id')->name('jawaban');
+        Route::post('/{id}/upload', [UjianController::class, 'uploadLampiran'])->whereNumber('id')->name('upload');
+        Route::post('/{id}/submit', [UjianController::class, 'submit'])->whereNumber('id')->name('submit');
+        Route::get('/{id}/hasil', [UjianController::class, 'hasil'])->whereNumber('id')->name('hasil');
+        Route::get('/jawaban/{jawabanId}/berkas', [UjianController::class, 'unduhBerkas'])->whereNumber('jawabanId')->name('berkas');
+    });
+
     Route::get('/profil', [PageController::class, 'profil'])->name('profil');
     Route::get('/profil/edit', [PageController::class, 'editProfil'])->name('profil.edit');
     Route::put('/profil/edit', [PageController::class, 'updateProfil'])->name('profil.update');
