@@ -10,7 +10,12 @@ Fitur untuk mengimpor data presensi dari file Excel (.xlsx) ke dalam tabel `ktd_
 - [x] Tanggal serial Excel, jam numerik, NIP teks ber-spasi, dan menit nol ditangani.
 - [x] NIP numerik berisiko kehilangan presisi ditolak; tidak menebak identitas pegawai.
 - [x] NIP/tanggal yang sudah ada diperbarui otomatis dari Excel; baris terakhir menang bila berulang.
-- [x] Kolom di luar mapping Excel tidak diubah. Nilai kosong Excel mengosongkan field mapping terkait.
+- [x] Kolom di luar mapping Excel tidak diubah. Jam masuk/pulang kosong mempertahankan jam lama; field mapping lainnya tetap mengikuti Excel.
+- [x] Format jam satu digit seperti 7:30, 7:5, 16:0 dinormalisasi menjadi HH:mm:ss.
+
+### Changelog 2026-11-05
+- Jam Excel yang kosong tidak lagi menghapus m_absen/p_absen pada record lama; record baru tetap menyimpan null jika kosong.
+- Tambahkan tes format jam satu digit, batas jam invalid, preservasi jam dua arah, dan update tengah malam.
 - [x] Transaksi per file membatalkan insert/update jika penyimpanan gagal.
 - [x] Dry-run tidak menghapus sumber; file invalid/gagal/kosong tetap disimpan.
 - [x] Semua baris invalid ditampilkan dengan sheet dan nomor baris; exit code gagal untuk hasil tidak lengkap.

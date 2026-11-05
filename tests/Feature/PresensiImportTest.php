@@ -99,6 +99,35 @@ class PresensiImportTest extends TestCase
         $this->assertSame(0, $service->rollbackImport($result['batch_id'])['deleted_count']);
     }
 
+    public function test_unpadded_times_are_normalized_and_invalid_times_rejected(): void
+    {
+        $method = new \ReflectionMethod(PresensiImportService::class, 'normalizeTime');
+        $service = app(PresensiImportService::class);
+        foreach (['7:30' => '07:30:00', '7:5' => '07:05:00', '16:0' => '16:00:00', '16:1' => '16:01:00', '0:0' => '00:00:00', '7:5:9' => '07:05:09'] as $input => $expected) {
+            $this->assertSame($expected, $method->invoke($service, $input));
+        }
+        foreach (['24:00', '7:60', '7:5:60', '-', ''] as $input) {
+            $this->assertNull($method->invoke($service, $input));
+        }
+    }
+
+    public function test_empty_excel_times_preserve_existing_times_in_both_directions(): void
+    {
+        $service = app(PresensiImportService::class);
+        $validated = $service->validateData($service->parseExcel($this->workbook())['data']);
+        $this->assertTrue($service->importToDatabase($validated, 1)['success']);
+        $validated['valid_rows'][0]['absen_masuk'] = null;
+        $validated['valid_rows'][0]['absen_pulang'] = '17:11:00';
+        $this->assertTrue($service->importToDatabase($validated, 1)['success']);
+        $this->assertSame('07:30:00', DB::table('ktd_presensi')->value('m_absen'));
+        $this->assertSame('17:11:00', DB::table('ktd_presensi')->value('p_absen'));
+        $validated['valid_rows'][0]['absen_masuk'] = '00:00:00';
+        $validated['valid_rows'][0]['absen_pulang'] = null;
+        $this->assertTrue($service->importToDatabase($validated, 1)['success']);
+        $this->assertSame('00:00:00', DB::table('ktd_presensi')->value('m_absen'));
+        $this->assertSame('17:11:00', DB::table('ktd_presensi')->value('p_absen'));
+    }
+
     public function test_dry_run_never_deletes_or_writes(): void
     {
         $path = $this->workbook();

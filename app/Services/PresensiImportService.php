@@ -257,6 +257,11 @@ class PresensiImportService
                 if ($existing->isNotEmpty()) {
                     // Preserve batch ownership so rollback cannot delete pre-existing records.
                     unset($values['user_nip'], $values['tanggal']);
+                    foreach (['m_absen', 'p_absen'] as $field) {
+                        if ($values[$field] === null) {
+                            unset($values[$field]);
+                        }
+                    }
                     foreach ($existing as $record) {
                         $record->update($values);
                     }
@@ -419,7 +424,9 @@ class PresensiImportService
         }
         $value = trim((string) $value);
         if ($this->isValidTime($value)) {
-            return strlen($value) === 5 ? $value.':00' : $value;
+            $parts = array_map('intval', explode(':', $value));
+
+            return sprintf('%02d:%02d:%02d', $parts[0], $parts[1], $parts[2] ?? 0);
         }
 
         return null;
@@ -427,6 +434,6 @@ class PresensiImportService
 
     protected function isValidTime($time): bool
     {
-        return preg_match('/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/', $time);
+        return preg_match('/^([01]?\d|2[0-3]):([0-5]?\d)(:[0-5]?\d)?$/', $time);
     }
 }
