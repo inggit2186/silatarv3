@@ -28,6 +28,7 @@ yang benar-benar terhubung ke fitur masing-masing.
 - [x] Tampilkan SEMUA berita dalam satu request (`per_page`/`limit` maksimum 200)
 - [x] Tombol "Lihat Semua" di slideshow dihapus (cukup lewat aksi cepat Berita)
 - [x] Aksi cepat "Info" diganti "Berita" (icon `newspaper_rounded`) -> `NewsListPage`
+- [x] Tampilkan jumlah dilihat, pembaca unik, penulis, editor & fotografer di halaman detail
 
 ## Data Flow
 ```
@@ -48,6 +49,9 @@ GET /api/news?limit=5
   -> GET /api/news/categories -> chip filter kategori
   -> GET /api/news?...&category=&q= -> filter & pencarian
   -> tap item -> NewsDetailPage
+       -> GET /api/news/{slug} (track view: view_count +1, unique_view_count +1 per IP/hari)
+       -> { content, writer, editor, photographer, view_count, unique_view_count }
+       -> tampilkan statistik dibaca + kredit berita (penulis/editor/fotografer)
 ```
 
 ## Files yang Dimodifikasi
@@ -97,3 +101,9 @@ GET /api/news?limit=5
   batas `limit` di `/api/news` dinaikkan dari 20 menjadi 200.
 - Tombol "Lihat Semua" pada slideshow dihapus; aksi cepat "Info" diganti "Berita"
   (icon `newspaper_rounded`) yang membuka `NewsListPage`.
+- Halaman detail berita menampilkan statistik dibaca (`view_count` sebagai "dilihat" dan
+  `unique_view_count` sebagai "pembaca") serta kredit **Penulis**, **Editor**, dan
+  **Fotografer** yang hanya muncul jika datanya tersedia. `writer` kosong akan diisi
+  dari nama `users.name` (author_id) oleh backend.
+- `NewsController@show` kini mencatat kunjungan (`trackView`): `view_count` selalu naik,
+  `unique_view_count` + baris `news_views` hanya sekali per IP per hari.

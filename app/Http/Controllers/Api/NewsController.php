@@ -117,7 +117,7 @@ class NewsController extends BaseApiController
      * Get single news detail
      * GET /api/news/{slug}
      */
-    public function show(string $slug)
+    public function show(Request $request, string $slug)
     {
         $news = DB::table('news')
             ->where('slug', $slug)
@@ -126,6 +126,21 @@ class NewsController extends BaseApiController
 
         if (! $news || $news->status !== 'published') {
             return $this->notFound('Berita tidak ditemukan');
+        }
+
+        // Catat kunjungan (total + unik per IP/hari) lalu ambil angka terbaru
+        $this->trackView($news->id, $request);
+
+        $stats = DB::table('news')
+            ->where('id', $news->id)
+            ->first(['view_count', 'unique_view_count']);
+
+        // Nama penulis dari tabel users (bila writer kosong)
+        $authorName = null;
+        if (! empty($news->author_id)) {
+            $authorName = DB::table('users')
+                ->where('id', $news->author_id)
+                ->value('name');
         }
 
         return $this->success([
@@ -140,10 +155,57 @@ class NewsController extends BaseApiController
                 ? asset('storage/'.$news->image)
                 : null,
             'publish_date' => $news->publish_date,
-            'writer' => $news->writer ?? null,
-            'editor' => $news->editor ?? null,
-            'photographer' => $news->photographer ?? null,
+            'writer' => $this->cleanText($news->writer ?? null) ?? $this->cleanText($authorName),
+            'editor' => $this->cleanText($news->editor ?? null),
+            'photographer' => $this->cleanText($news->photographer ?? null),
+            'view_count' => (int) ($stats->view_count ?? 0),
+            'unique_view_count' => (int) ($stats->unique_view_count ?? 0),
         ], 'Detail berita');
+    }
+
+    /**
+     * Catat kunjungan berita: view_count selalu naik, unique_view_count
+     * hanya sekali per IP per hari (mengikuti perilaku versi web).
+     */
+    private function trackView(int $newsId, Request $request): void
+    {
+        try {
+            $ipAddress = $request->ip();
+            $today = now()->toDateString();
+
+            $alreadyViewed = DB::table('news_views')
+                ->where('news_id', $newsId)
+                ->where('ip_address', $ipAddress)
+                ->whereDate('viewed_at', $today)
+                ->exists();
+
+            DB::table('news')->where('id', $newsId)->increment('view_count');
+
+            if (! $alreadyViewed) {
+                DB::table('news')->where('id', $newsId)->increment('unique_view_count');
+
+                DB::table('news_views')->insert([
+                    'news_id' => $newsId,
+                    'ip_address' => $ipAddress,
+                    'session_id' => null,
+                    'user_agent' => substr((string) $request->userAgent(), 0, 500),
+                    'viewed_at' => now(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Kegagalan pencatatan tidak boleh menggagalkan pembacaan berita
+            \Log::warning('[NewsView] gagal mencatat kunjungan: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Bersihkan teks metadata (trim + null bila kosong).
+     */
+    private function cleanText(?string $value): ?string
+    {
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
     }
 
     /**
