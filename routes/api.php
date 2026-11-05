@@ -36,6 +36,7 @@ Route::get('/layanan/{id}', [LayananController::class, 'show']);
 
 // Berita - Public (slideshow berita terbaru di dashboard app)
 Route::get('/news', [NewsController::class, 'index']);
+Route::get('/news/categories', [NewsController::class, 'categories']);
 Route::get('/news/{slug}', [NewsController::class, 'show']);
 
 // App Patch & Version (Public - untuk auto-update)
