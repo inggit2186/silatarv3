@@ -74,8 +74,7 @@ Input: dept_id, bulan, tahun
 - `total_potongan_final` - Total potongan dari presensi
 - `detail_potongan_calc` - JSON detail potongan per jenis
 
-### 2. Status Presensi Logic
-**"HADIR" (dihitung TL/PSW):**
+### 2. Status Presensi Logic**"HADIR" (dihitung TL/PSW):**
 - NULL, '', MASUK, TERLAMBAT, PULANG, PULANG_CEPAT
 - SISTEM_ERROR, TUGAS_LUAR (pengganti presensi dari /presensi-error)
 
@@ -108,3 +107,37 @@ Input: dept_id, bulan, tahun
 - Create HariLibur model
 - Create AsnHariKerja model
 - Implementasi working day logic berdasarkan harikerja_id
+
+## Changelog
+
+### 2026-11-05 — Fix nilai terpotong & kolom persen
+**Masalah:**
+1. Nilai tukin di Excel terpotong (mis. DB `tl = 49860.00` → Excel `4986`).
+2. Kolom `*_persen` (tk_persen, tl_persen, psw_persen, dll) tidak muncul di Excel.
+
+**Akar masalah #1:**
+View mengirim `number_format($v, 0, ',', '.')` → `"49.860"`. PhpSpreadsheet
+`Reader\Html` memakai `DefaultValueBinder` yang membaca titik sebagai
+**desimal**, sehingga `49.860` diparse menjadi `49.86` (sebagian nilai lain
+seperti `5.183.000` malah jadi string).
+
+**Perbaikan:**
+- `resources/views/backend/export/TukinDate.blade.php`
+  - Semua sel numerik kini mengirim nilai mentah (`.`) sebagai desimal tanpa
+    pemisah ribuan, ditambah `data-type="n"` dan `data-format="#,##0"` /
+    `data-format="0.00"` sehingga Excel tetap menampilkan format ribuan.
+  - NIP diberi `data-type="s"` agar tidak diubah ke notasi ilmiah.
+  - Kolom `DATA LAMA (PUSAKA)` diperluas dari 8 → 19 kolom: setiap nilai
+    dipasangkan dengan kolom persennya (`TK %`, `TL %`, `PSW %`, `Hukdis %`,
+    `CPNS %`, `SKP %`, `TB %`, `Pot Lain %`).
+  - Kolom total dihitung dinamis (`$totalCols`) agar colspan header/footer
+    selalu konsisten.
+- `app/Exports/PresensiTukin.php`
+  - Attach atribut `tk_persen_lama`, `tl_persen_lama`, `psw_persen_lama`,
+    `hukdis_persen_lama`, `cpns_persen_lama`, `skp_persen_lama`,
+    `tb_persen_lama`, `potongan_lain_persen_lama` dari record `ktd_tukin`.
+
+**Verifikasi:**
+Generate dept `20220927102` periode 2026-08 → sel H/I/K/W/AZ/BA berisi angka
+numerik benar (`5183000`, `18905`, `49785`) dengan format `#,##0`, dan kolom
+persen (H, J, L, N, P, R, T, V) berisi `0.5`, `1.5`, `2` dengan format `0.00`.

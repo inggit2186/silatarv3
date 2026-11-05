@@ -51,6 +51,7 @@ class KegiatanController extends BaseApiController
             $dailyGroups = [];
             $totalEntries = 0;
             $totalVolume = 0;
+            $totalDurasi = 0;
             $latestUpdate = null;
 
             Log::info('Found '.$dailyEntries->count().' kegiatan entries');
@@ -94,9 +95,13 @@ class KegiatanController extends BaseApiController
                 }, array_values($items));
 
                 $dayVolume = array_sum(array_column($mappedItems, 'volume'));
+                $dayDurasi = array_sum(array_map(function ($item) {
+                    return max(0, (int) ($item['durasi_menit'] ?? 0));
+                }, $mappedItems));
                 $dayEntries = count($mappedItems);
                 $totalEntries += $dayEntries;
                 $totalVolume += $dayVolume;
+                $totalDurasi += $dayDurasi;
 
                 if ($row->updated_at && (! $latestUpdate || $row->updated_at > $latestUpdate)) {
                     $latestUpdate = $row->updated_at;
@@ -111,6 +116,7 @@ class KegiatanController extends BaseApiController
                         'items' => [],
                         'entries' => 0,
                         'volume' => 0,
+                        'total_durasi_menit' => 0,
                         'row_id' => $row->id,
                     ];
                 }
@@ -118,15 +124,39 @@ class KegiatanController extends BaseApiController
                 $dailyGroups[$date]['items'] = array_merge($dailyGroups[$date]['items'], $mappedItems);
                 $dailyGroups[$date]['entries'] += $dayEntries;
                 $dailyGroups[$date]['volume'] += $dayVolume;
+                $dailyGroups[$date]['total_durasi_menit'] += $dayDurasi;
             }
 
             // Sort by date
             ksort($dailyGroups);
 
+            // Urutkan item tiap hari secara kronologis:
+            // kegiatan ber-jam lebih dulu, tanpa jam mulai di akhir.
+            foreach ($dailyGroups as &$group) {
+                usort($group['items'], function ($a, $b) {
+                    $menitA = WaktuPelaksanaan::menit($a['jam_mulai'] ?? null);
+                    $menitB = WaktuPelaksanaan::menit($b['jam_mulai'] ?? null);
+
+                    if ($menitA === null && $menitB === null) {
+                        return 0;
+                    }
+                    if ($menitA === null) {
+                        return 1;
+                    }
+                    if ($menitB === null) {
+                        return -1;
+                    }
+
+                    return $menitA <=> $menitB;
+                });
+            }
+            unset($group);
+
             Log::info('Processed kegiatan', [
                 'total_groups' => count($dailyGroups),
                 'total_entries' => $totalEntries,
                 'total_volume' => $totalVolume,
+                'total_durasi_menit' => $totalDurasi,
                 'sample_data' => array_slice(array_values($dailyGroups), 0, 1),
             ]);
 
@@ -136,6 +166,7 @@ class KegiatanController extends BaseApiController
                     'entries' => $totalEntries,
                     'days' => count($dailyGroups),
                     'volume' => $totalVolume,
+                    'total_durasi_menit' => $totalDurasi,
                     'latest_update' => $latestUpdate,
                 ],
             ]);
@@ -195,8 +226,8 @@ class KegiatanController extends BaseApiController
                 // Append new items (those with null id)
                 $maxId = 0;
                 foreach ($existingItems as $item) {
-                    if (isset($item['id']) && $item['id'] > $maxId) {
-                        $maxId = $item['id'];
+                    if (isset($item['id']) && is_numeric($item['id']) && (int) $item['id'] > $maxId) {
+                        $maxId = (int) $item['id'];
                     }
                 }
 
@@ -297,10 +328,19 @@ class KegiatanController extends BaseApiController
                 return $this->error('Data kegiatan tidak ditemukan', 404);
             }
 
-            // Update items with IDs
+            // Update items with IDs (numerik, konsisten dengan jalur web)
+            $maxId = 0;
+            foreach ($items as $item) {
+                if (isset($item['id']) && is_numeric($item['id'])) {
+                    $maxId = max($maxId, (int) $item['id']);
+                }
+            }
+
             foreach ($items as &$item) {
-                if (! isset($item['id'])) {
-                    $item['id'] = uniqid();
+                if (! isset($item['id']) || ! is_numeric($item['id'])) {
+                    $item['id'] = ++$maxId;
+                } else {
+                    $item['id'] = (int) $item['id'];
                 }
             }
             unset($item);
@@ -324,6 +364,142 @@ class KegiatanController extends BaseApiController
             Log::error('Error updating kegiatan: '.$e->getMessage());
 
             return $this->error('Gagal update kegiatan', 500);
+        }
+    }
+
+    /**
+     * Update satu item kegiatan (berdasarkan tanggal + id item di data_json).
+     * PUT /api/laporan-kinerja/item
+     */
+    public function updateItem(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            $request->validate([
+                'tanggal' => 'required|date',
+                'id' => 'required|integer|min:1',
+                'k' => 'required|string|max:1000',
+                'v' => 'nullable|integer|min:0',
+                's' => 'nullable|string|max:50',
+                'jm' => 'nullable|date_format:H:i',
+                'dm' => 'nullable|integer|min:0|max:1440',
+            ]);
+
+            $tanggal = $request->input('tanggal');
+            $itemId = (int) $request->input('id');
+
+            $row = DB::table('satker_kegiatan')
+                ->where('user_id', $user->id)
+                ->whereDate('tanggal', $tanggal)
+                ->first();
+
+            if (! $row) {
+                return $this->error('Data kegiatan tidak ditemukan', 404);
+            }
+
+            $data = json_decode((string) ($row->data_json ?? '{"items":[]}'), true) ?: ['items' => []];
+            $items = $data['items'] ?? [];
+
+            $updated = false;
+            foreach ($items as &$item) {
+                if ((int) ($item['id'] ?? 0) !== $itemId) {
+                    continue;
+                }
+
+                $normalized = $this->normalizeWaktu([[
+                    'jm' => $request->input('jm'),
+                    'dm' => $request->input('dm'),
+                ]])[0];
+
+                $item['k'] = trim((string) $request->input('k'));
+                $item['v'] = (int) ($request->input('v') ?? 0);
+                $item['s'] = $request->input('s') ?? 'Kegiatan';
+                $item['jm'] = $normalized['jm'];
+                $item['dm'] = $normalized['dm'];
+                $updated = true;
+                break;
+            }
+            unset($item);
+
+            if (! $updated) {
+                return $this->error('Item kegiatan tidak ditemukan', 404);
+            }
+
+            DB::table('satker_kegiatan')
+                ->where('id', $row->id)
+                ->update([
+                    'data_json' => json_encode(['items' => array_values($items)], JSON_UNESCAPED_UNICODE),
+                    'updated_at' => now(),
+                ]);
+
+            return $this->success(['message' => 'Item kegiatan berhasil diupdate']);
+        } catch (ValidationException $e) {
+            return $this->error($e->getMessage(), 422, $e->errors());
+        } catch (\Exception $e) {
+            Log::error('Error updating kegiatan item: '.$e->getMessage());
+
+            return $this->error('Gagal update item kegiatan', 500);
+        }
+    }
+
+    /**
+     * Hapus satu item kegiatan (berdasarkan tanggal + id item di data_json).
+     * DELETE /api/laporan-kinerja/item
+     */
+    public function deleteItem(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            $request->validate([
+                'tanggal' => 'required|date',
+                'id' => 'required|integer|min:1',
+            ]);
+
+            $tanggal = $request->input('tanggal');
+            $itemId = (int) $request->input('id');
+
+            $row = DB::table('satker_kegiatan')
+                ->where('user_id', $user->id)
+                ->whereDate('tanggal', $tanggal)
+                ->first();
+
+            if (! $row) {
+                return $this->error('Data kegiatan tidak ditemukan', 404);
+            }
+
+            $data = json_decode((string) ($row->data_json ?? '{"items":[]}'), true) ?: ['items' => []];
+            $items = $data['items'] ?? [];
+
+            $filtered = array_values(array_filter($items, function ($item) use ($itemId) {
+                return (int) ($item['id'] ?? 0) !== $itemId;
+            }));
+
+            if (count($filtered) === count($items)) {
+                return $this->error('Item kegiatan tidak ditemukan', 404);
+            }
+
+            if (empty($filtered)) {
+                DB::table('satker_kegiatan')->where('id', $row->id)->delete();
+
+                return $this->success(['message' => 'Kegiatan hari tersebut dihapus karena tidak ada item tersisa']);
+            }
+
+            DB::table('satker_kegiatan')
+                ->where('id', $row->id)
+                ->update([
+                    'data_json' => json_encode(['items' => $filtered], JSON_UNESCAPED_UNICODE),
+                    'updated_at' => now(),
+                ]);
+
+            return $this->success(['message' => 'Item kegiatan berhasil dihapus']);
+        } catch (ValidationException $e) {
+            return $this->error($e->getMessage(), 422, $e->errors());
+        } catch (\Exception $e) {
+            Log::error('Error deleting kegiatan item: '.$e->getMessage());
+
+            return $this->error('Gagal hapus item kegiatan', 500);
         }
     }
 
@@ -484,6 +660,7 @@ class KegiatanController extends BaseApiController
 
             $totalEntries = 0;
             $totalVolume = 0;
+            $totalDurasi = 0;
             $latestUpdate = null;
 
             foreach ($dailyEntries as $row) {
@@ -497,6 +674,7 @@ class KegiatanController extends BaseApiController
                 foreach ($items as $item) {
                     $totalEntries++;
                     $totalVolume += (int) ($item['v'] ?? 0);
+                    $totalDurasi += max(0, (int) ($item['dm'] ?? 0));
                 }
 
                 if ($row->updated_at && (! $latestUpdate || $row->updated_at > $latestUpdate)) {
@@ -508,6 +686,7 @@ class KegiatanController extends BaseApiController
                 'entries' => $totalEntries,
                 'days' => $dailyEntries->count(),
                 'volume' => $totalVolume,
+                'total_durasi_menit' => $totalDurasi,
                 'latest_update' => $latestUpdate,
             ]);
         } catch (\Exception $e) {
@@ -603,6 +782,7 @@ class KegiatanController extends BaseApiController
             $dailyGroups = [];
             $totalEntries = 0;
             $totalVolume = 0;
+            $totalDurasi = 0;
 
             foreach ($dailyEntries as $row) {
                 $date = Carbon::parse($row->tanggal)->toDateString();
@@ -652,9 +832,33 @@ class KegiatanController extends BaseApiController
                 $dailyGroups[$date]['items'] = array_merge($dailyGroups[$date]['items'], $mappedItems);
                 $totalEntries += count($mappedItems);
                 $totalVolume += $dayVolume;
+                $totalDurasi += array_sum(array_map(function ($item) {
+                    return max(0, (int) ($item['durasi_menit'] ?? 0));
+                }, $mappedItems));
             }
 
             ksort($dailyGroups);
+
+            // Urutkan item tiap hari secara kronologis (sama seperti index()).
+            foreach ($dailyGroups as &$group) {
+                usort($group['items'], function ($a, $b) {
+                    $menitA = WaktuPelaksanaan::menit($a['jam_mulai'] ?? null);
+                    $menitB = WaktuPelaksanaan::menit($b['jam_mulai'] ?? null);
+
+                    if ($menitA === null && $menitB === null) {
+                        return 0;
+                    }
+                    if ($menitA === null) {
+                        return 1;
+                    }
+                    if ($menitB === null) {
+                        return -1;
+                    }
+
+                    return $menitA <=> $menitB;
+                });
+            }
+            unset($group);
 
             // Get user info from database
             $unitName = DB::table('ktd_department')

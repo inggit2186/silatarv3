@@ -47,3 +47,6 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 database/kemenagtd_db.sql
+
+# Claude Code worktrees (bukan konten proyek)
+/.claude/worktrees/

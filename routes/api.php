@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\JanjiTemuController;
 use App\Http\Controllers\Api\KegiatanController;
 use App\Http\Controllers\Api\LayananController;
+use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\PengajuanController;
 use App\Http\Controllers\Api\PresensiController;
 use App\Http\Controllers\Api\SimpegController;
@@ -32,6 +33,10 @@ Route::prefix('auth')->group(function () {
 // Layanan - Public (bisa dilihat tanpa login)
 Route::get('/layanan', [LayananController::class, 'index']);
 Route::get('/layanan/{id}', [LayananController::class, 'show']);
+
+// Berita - Public (slideshow berita terbaru di dashboard app)
+Route::get('/news', [NewsController::class, 'index']);
+Route::get('/news/{slug}', [NewsController::class, 'show']);
 
 // App Patch & Version (Public - untuk auto-update)
 Route::prefix('patch')->group(function () {
@@ -108,6 +113,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/day', [KegiatanController::class, 'updateByDate']);
         Route::delete('/day', [KegiatanController::class, 'deleteByDate']);
         Route::get('/rekap', [KegiatanController::class, 'rekap']);
+        Route::put('/item', [KegiatanController::class, 'updateItem']);
+        Route::delete('/item', [KegiatanController::class, 'deleteItem']);
         Route::get('/pdf', [KegiatanController::class, 'downloadPdf']);
         Route::get('/bulanan', [KegiatanController::class, 'bulanan']);
     });

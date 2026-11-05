@@ -91,6 +91,51 @@ class WaktuPelaksanaan
     }
 
     /**
+     * Ubah jam mulai menjadi menit sejak tengah malam (untuk pengurutan).
+     * Mengembalikan null bila kosong / tidak valid.
+     */
+    public static function menit(?string $jamMulai): ?int
+    {
+        $jamMulai = self::normalisasiJam($jamMulai);
+
+        if ($jamMulai === '') {
+            return null;
+        }
+
+        try {
+            $carbon = Carbon::createFromFormat('H:i', $jamMulai);
+
+            return ($carbon->hour * 60) + $carbon->minute;
+        } catch (\Throwable $exception) {
+            return null;
+        }
+    }
+
+    /**
+     * Ubah durasi (menit) menjadi label ringkas.
+     * Contoh: 90 → "1 jam 30 menit", 60 → "1 jam", 45 → "45 menit", ≤0 → null.
+     */
+    public static function durasiLabel(?int $durasiMenit): ?string
+    {
+        if ($durasiMenit === null || $durasiMenit <= 0) {
+            return null;
+        }
+
+        $jam = intdiv($durasiMenit, 60);
+        $menit = $durasiMenit % 60;
+
+        if ($jam === 0) {
+            return "{$menit} menit";
+        }
+
+        if ($menit === 0) {
+            return "{$jam} jam";
+        }
+
+        return "{$jam} jam {$menit} menit";
+    }
+
+    /**
      * Hitung jam selesai dari jam mulai + durasi (menit).
      */
     private static function hitungSelesai(string $jamMulai, int $durasiMenit): ?string

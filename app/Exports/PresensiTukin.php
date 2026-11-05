@@ -198,10 +198,21 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
             // Attach OLD tukin data to user object for Excel display
             $asn->tukin_lama = $existingRecord->tukin ?? 0;
             $asn->tk_jumlah_lama = $existingRecord->tk_jumlah ?? 0;
+            $asn->tk_persen_lama = $existingRecord->tk_persen ?? 0;
             $asn->tl_lama = $existingRecord->tl ?? 0;
+            $asn->tl_persen_lama = $existingRecord->tl_persen ?? 0;
             $asn->psw_lama = $existingRecord->psw ?? 0;
+            $asn->psw_persen_lama = $existingRecord->psw_persen ?? 0;
             $asn->hukdis_lama = $existingRecord->hukdis ?? 0;
+            $asn->hukdis_persen_lama = $existingRecord->hukdis_persen ?? 0;
             $asn->cpns_lama = $existingRecord->cpns ?? 0;
+            $asn->cpns_persen_lama = $existingRecord->cpns_persen ?? 0;
+            $asn->skp_lama = $existingRecord->skp ?? 0;
+            $asn->skp_persen_lama = $existingRecord->skp_persen ?? 0;
+            $asn->tb_lama = $existingRecord->tb ?? 0;
+            $asn->tb_persen_lama = $existingRecord->tb_persen ?? 0;
+            $asn->potongan_lain_lama = $existingRecord->potongan_lain ?? 0;
+            $asn->potongan_lain_persen_lama = $existingRecord->potongan_lain_persen ?? 0;
             $asn->total_potongan_lama = $existingRecord->total_potongan ?? 0;
             $asn->nett_lama = ($existingRecord->tukin ?? 0) - ($existingRecord->total_potongan ?? 0);
 
@@ -395,8 +406,9 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
 
     public function styles(Worksheet $sheet): ?array
     {
-        $sheet->freezePane('C5');
-        $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(1, 4);
+        // Header menempati baris 1-5 (judul, periode, kosong, grup, sub-header)
+        $sheet->freezePane('C6');
+        $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(1, 5);
         $sheet->getPageSetup()->setOrientation(PageSetup::ORIENTATION_LANDSCAPE);
         $sheet->getPageSetup()->setPaperSize(PageSetup::PAPERSIZE_A4);
         $sheet->getPageSetup()->setScale(70);
@@ -424,9 +436,9 @@ class PresensiTukin implements FromView, ShouldAutoSize, WithStyles
                 ->count();
         }
 
-        // Style legend row at the bottom
-        $lastRow = $cek + 6; // +6 for header rows and data rows
-        $sheet->getStyle("A{$lastRow}:Z{$lastRow}")->applyFromArray([
+        // Style legend row at the bottom (data mulai baris 6)
+        $lastRow = $cek + 6;
+        $sheet->getStyle("A{$lastRow}:BC{$lastRow}")->applyFromArray([
             'font' => ['size' => 10, 'color' => ['rgb' => '666666']],
             'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'F5F5F5']],
             'borders' => ['top' => ['borderStyle' => 'thin', 'color' => ['rgb' => 'CCCCCC']]],

@@ -35,7 +35,7 @@ Volume / Jenis) pada modal Tambah maupun Edit, di layar PC maupun mobile.
 - [x] `npm run build` (Vite — CSS & JS ter-compile)
 - [x] `php artisan view:cache` (semua Blade template compile)
 - [ ] Verifikasi manual di browser
-- [ ] Side Flutter (repo `../flutterSILATAR`) memakai field baru
+- [x] Side Flutter (repo `../flutterSILATAR`) memakai field baru
 
 ## Data Flow
 
@@ -145,10 +145,51 @@ satu kolom di layar sempit tanpa media query tambahan.
 ## TODO
 
 - [ ] Verifikasi manual di browser (desktop & mobile) — user menguji sendiri
-- [ ] Side Flutter: tampilkan `waktu_label` dari `GET /api/laporan-kinerja`
-      (belum berlaku — app Flutter `flutterSILATAR/silatar_v2` baru punya fitur
-      home/login/welcome, belum ada modul laporan kinerja)
-- [ ] Pertimbangkan agregasi total durasi per hari/bulan di rekap (follow-up, belum diminta)
+- [x] Side Flutter: tampilkan `waktu_label` dari `GET /api/laporan-kinerja`
+      (selesai 2026-11-05 — lihat bagian **Sinkronisasi Flutter**)
+- [x] Agregasi total durasi per hari & per bulan pada rekap + respons API
+- [ ] Pertimbangkan tampilan diagram distribusi waktu (follow-up, belum diminta)
+
+## Sinkronisasi Flutter (`d:\silatar_v2`)
+
+Semua rekomendasi paritas fitur telah dikerjakan di aplikasi Flutter:
+
+| # | Item | Perubahan |
+|---|------|-----------|
+| 1 | Waktu tampil di tab Rekap | `kegiatan_bulanan_tab.dart` — setiap kartu "Aktivitas Terakhir" menampilkan badge total durasi hari + daftar kegiatan ber-waktu beserta `waktuLabel`; kartu statistik mendapat baris **Total Durasi** |
+| 2 | Urutan kronologis per hari | `KegiatanItem.urutanMenit` + sort di `KegiatanHarian.fromJson`; backend `Api\KegiatanController::index()` & `downloadPdf()` juga meng-`usort` item per tanggal (ber-jam dulu) |
+| 3 | Input jam manual + picker | `_JamMaskFormatter` pada field Jam Mulai (masker `HH:MM`, auto-koreksi 00-23 / 00-59) + tombol picker tetap tersedia; `_lengkapiJam()` menormalkan nilai tidak lengkap saat simpan |
+| 4 | `copyWith` bisa mengosongkan waktu | parameter `clearJamMulai` / `clearDurasiMenit` di `KegiatanItem.copyWith` |
+| 5 | Penanda "Tidak tercatat" | `kegiatan_harian_item.dart` — bila hari punya minimal satu kegiatan ber-jam, kegiatan tanpa jam diberi label *italic* "Tidak tercatat" (+ durasi bila ada) |
+| 6 | Endpoint per-item yang benar | Backend baru `PUT/DELETE /api/laporan-kinerja/item` (berbasis `tanggal` + `id` item di `data_json`); service Flutter `updateKegiatanItem()` / `deleteKegiatanItem()` disesuaikan |
+| 7 | Agregasi total durasi | `KegiatanHarian.totalDurasiMenit/totalDurasiLabel`, `KegiatanRekap.totalDurasiMenit/totalDurasiLabel`; API `summary.total_durasi_menit` & `rekap.total_durasi_menit` |
+
+### File Flutter yang Dimodifikasi
+
+| File | Perubahan |
+|------|-----------|
+| `lib/core/models/kegiatan_model.dart` | `copyWith` + clear flag, `urutanMenit`, `menitDariJam()`, `formatDurasi()`, sort & total durasi di `KegiatanHarian`, `totalDurasiMenit` di `KegiatanRekap` |
+| `lib/core/services/kegiatan_service.dart` | `updateKegiatanItem` / `deleteKegiatanItem` memakai `/laporan-kinerja/item` |
+| `lib/core/services/api_config.dart` | Konstanta `kegiatanItem` |
+| `lib/core/providers/kegiatan_provider.dart` | `_calculateRekap()` menghitung total durasi |
+| `lib/features/kegiatan/widgets/kegiatan_form_modal.dart` | `_JamMaskFormatter`, `_lengkapiJam()`, helper durasi, input jam manual + picker, `id` item dipertahankan |
+| `lib/features/kegiatan/widgets/kegiatan_harian_item.dart` | Badge total durasi di header tanggal, label "Tidak tercatat" |
+| `lib/features/kegiatan/widgets/kegiatan_harian_tab.dart` | Stat card Durasi (jika ada) |
+| `lib/features/kegiatan/widgets/kegiatan_bulanan_tab.dart` | Total Durasi di statistik + rincian kegiatan ber-waktu per kartu |
+
+### File Backend yang Dimodifikasi (tambahan)
+
+| File | Perubahan |
+|------|-----------|
+| `app/Http/Controllers/Api/KegiatanController.php` | `total_durasi_menit` di `index()`/`rekap()`, `total_durasi_menit` per hari, `usort` kronologis, endpoint `updateItem()` & `deleteItem()` |
+| `app/Support/WaktuPelaksanaan.php` | Helper `menit()` & `durasiLabel()` |
+| `routes/api.php` | Rute `PUT/DELETE /laporan-kinerja/item` |
+
+### Changelog Flutter
+
+### 2026-11-05
+- Paritas fitur waktu pelaksanaan di aplikasi Flutter (semua poin rekomendasi)
+- Backend: agregasi total durasi bulanan, pengurutan kronologis, endpoint per-item
 
 ## Changelog
 ### 2026-11-05 (perubahan kesembilan — fix off-by-one jam picker)
