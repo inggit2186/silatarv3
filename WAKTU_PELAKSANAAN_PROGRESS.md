@@ -146,6 +146,8 @@ satu kolom di layar sempit tanpa media query tambahan.
 
 - [ ] Verifikasi manual di browser (desktop & mobile) — user menguji sendiri
 - [ ] Side Flutter: tampilkan `waktu_label` dari `GET /api/laporan-kinerja`
+      (belum berlaku — app Flutter `flutterSILATAR/silatar_v2` baru punya fitur
+      home/login/welcome, belum ada modul laporan kinerja)
 - [ ] Pertimbangkan agregasi total durasi per hari/bulan di rekap (follow-up, belum diminta)
 
 ## Changelog
