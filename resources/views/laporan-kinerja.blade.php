@@ -35,12 +35,16 @@
                     'kegiatan' => $item['kegiatan'] ?? '',
                     'volume' => $item['volume'] ?? '',
                     'satuan' => $item['satuan'] ?? ($activityUnits[0] ?? 'Kegiatan'),
+                    'jam_mulai' => $item['jam_mulai'] ?? '',
+                    'durasi_menit' => $item['durasi_menit'] ?? '',
                 ];
             })->values()->all()
             : [[
                 'kegiatan' => '',
                 'volume' => '',
                 'satuan' => $activityUnits[0] ?? 'Kegiatan',
+                'jam_mulai' => '',
+                'durasi_menit' => '',
             ]];
         $editingGroupItems = isset($editingGroup['items']) ? collect($editingGroup['items']) : collect();
         $editingDateValue = old('tanggal', $editingGroup['date'] ?? '');
@@ -78,6 +82,8 @@
                     'kegiatan' => $item['kegiatan'] ?? '',
                     'volume' => $item['volume'] ?? '',
                     'satuan' => $item['satuan'] ?? ($activityUnits[0] ?? 'Kegiatan'),
+                    'jam_mulai' => $item['jam_mulai'] ?? '',
+                    'durasi_menit' => $item['durasi_menit'] ?? '',
                 ];
             })->values()->all()
             : $editingGroupItems->map(function ($item) use ($activityUnits) {
@@ -85,6 +91,8 @@
                     'kegiatan' => $item['kegiatan'] ?? '',
                     'volume' => $item['volume'] ?? '',
                     'satuan' => $item['satuan'] ?? ($activityUnits[0] ?? 'Kegiatan'),
+                    'jam_mulai' => $item['jam_mulai'] ?? '',
+                    'durasi_menit' => $item['durasi_menit'] ?? '',
                 ];
             })->values()->all();
         $editModalOpen = $editModalOpen || $editingGroupItems->isNotEmpty();
@@ -363,6 +371,12 @@
                                                                         <p class="leading-6" style="color: var(--ink);">{{ $activity['kegiatan'] }}</p>
                                                                         @if (! empty($activity['meta']))
                                                                             <p class="mt-1 font-mono text-sm" style="color: var(--ink-soft);">{{ $activity['meta'] }}</p>
+                                                                        @endif
+                                                                        @if (! empty($activity['waktu_label']))
+                                                                            <span class="neo-badge neo-badge-gold mt-2">
+                                                        <span class="neo-badge-dot"></span>
+                                                        {{ $activity['waktu_label'] }}
+                                                                            </span>
                                                                         @endif
                                                                     </div>
                                                                 </div>
@@ -1007,8 +1021,8 @@
 
                         <div class="silatar-report-create-row-list space-y-3">
                             <template x-for="(row, index) in rows" :key="index">
-                                <div class="silatar-report-create-grid">
-                                    <div>
+                                <div class="silatar-report-create-grid silatar-report-create-grid--item">
+                                    <div class="sr-item-kegiatan">
                                         <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">Kegiatan Anda</label>
                                         <input
                                             :name="`items[${index}][kegiatan]`"
@@ -1018,7 +1032,7 @@
                                             placeholder="Kegiatan Anda"
                                         >
                                     </div>
-                                    <div>
+                                    <div class="sr-item-volume">
                                         <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">Volume</label>
                                         <input
                                             :name="`items[${index}][volume]`"
@@ -1029,7 +1043,7 @@
                                             placeholder="Volume"
                                         >
                                     </div>
-                                    <div>
+                                    <div class="sr-item-jenis">
                                         <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">Jenis</label>
                                         <select
                                             :name="`items[${index}][satuan]`"
@@ -1041,7 +1055,35 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="flex items-end justify-end">
+                                    <div class="sr-item-waktu">
+                                        <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">
+                                            Waktu Pelaksanaan
+                                            <span class="font-normal normal-case tracking-normal text-slate-400">(opsional)</span>
+                                        </label>
+                                        <div class="sr-item-waktu-grid">
+                                            <div>
+                                                <label class="mb-1 block text-[0.65rem] font-medium uppercase tracking-wider text-slate-500">Jam Mulai</label>
+                                                <x-jam-input name="items[${index}][jam_mulai]" />
+                                            </div>
+                                            <div>
+                                                <label class="mb-1 block text-[0.65rem] font-medium uppercase tracking-wider text-slate-500">Durasi (menit)</label>
+                                                <input
+                                                    :name="`items[${index}][durasi_menit]`"
+                                                    x-model="row.durasi_menit"
+                                                    type="number"
+                                                    min="0"
+                                                    max="1440"
+                                                    class="silatar-report-edit-field"
+                                                    placeholder="Contoh: 90"
+                                                >
+                                            </div>
+                                        </div>
+                                        <p class="mt-2 text-[0.7rem] leading-5 text-slate-500">
+                                            Jam diisi format 24 jam (00:00&ndash;23:59) WIB, contoh 14:30.
+                                            Input 12 jam (mis. 2:30 PM) otomatis dikonversi ke 24 jam. Durasi diisi dalam menit.
+                                        </p>
+                                    </div>
+                                    <div class="sr-item-aksi flex items-end justify-end">
                                         <button type="button" @click="removeRow(index)" class="silatar-report-create-remove" aria-label="Hapus baris">
                                             <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 6.5h10" />
@@ -1171,8 +1213,8 @@
 
                         <div class="silatar-report-create-row-list space-y-3">
                             <template x-for="(row, index) in editRows" :key="index">
-                                <div class="silatar-report-create-grid">
-                                    <div>
+                                <div class="silatar-report-create-grid silatar-report-create-grid--item">
+                                    <div class="sr-item-kegiatan">
                                         <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">Kegiatan Anda</label>
                                         <input
                                             :name="`items[${index}][kegiatan]`"
@@ -1182,7 +1224,7 @@
                                             placeholder="Kegiatan Anda"
                                         >
                                     </div>
-                                    <div>
+                                    <div class="sr-item-volume">
                                         <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">Volume</label>
                                         <input
                                             :name="`items[${index}][volume]`"
@@ -1193,7 +1235,7 @@
                                             placeholder="Volume"
                                         >
                                     </div>
-                                    <div>
+                                    <div class="sr-item-jenis">
                                         <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">Jenis</label>
                                         <select
                                             :name="`items[${index}][satuan]`"
@@ -1205,7 +1247,35 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="flex items-end justify-end">
+                                    <div class="sr-item-waktu">
+                                        <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">
+                                            Waktu Pelaksanaan
+                                            <span class="font-normal normal-case tracking-normal text-slate-400">(opsional)</span>
+                                        </label>
+                                        <div class="sr-item-waktu-grid">
+                                            <div>
+                                                <label class="mb-1 block text-[0.65rem] font-medium uppercase tracking-wider text-slate-500">Jam Mulai</label>
+                                                <x-jam-input name="items[${index}][jam_mulai]" />
+                                            </div>
+                                            <div>
+                                                <label class="mb-1 block text-[0.65rem] font-medium uppercase tracking-wider text-slate-500">Durasi (menit)</label>
+                                                <input
+                                                    :name="`items[${index}][durasi_menit]`"
+                                                    x-model="row.durasi_menit"
+                                                    type="number"
+                                                    min="0"
+                                                    max="1440"
+                                                    class="silatar-report-edit-field"
+                                                    placeholder="Contoh: 90"
+                                                >
+                                            </div>
+                                        </div>
+                                        <p class="mt-2 text-[0.7rem] leading-5 text-slate-500">
+                                            Jam diisi format 24 jam (00:00&ndash;23:59) WIB, contoh 14:30.
+                                            Input 12 jam (mis. 2:30 PM) otomatis dikonversi ke 24 jam. Durasi diisi dalam menit.
+                                        </p>
+                                    </div>
+                                    <div class="sr-item-aksi flex items-end justify-end">
                                         <button type="button" @click="removeEditRow(index)" class="silatar-report-create-remove" aria-label="Hapus baris">
                                             <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 6.5h10" />

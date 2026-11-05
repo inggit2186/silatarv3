@@ -216,19 +216,34 @@
         }
 
         .col-date {
-            width: 160px;
+            width: 92px;
+        }
+
+        .col-time {
+            width: 92px;
         }
 
         .col-activity {
             width: auto;
         }
 
+        .col-realisasi {
+            width: 104px;
+        }
+
         /* Date Cell */
         .date-cell {
-            background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
-            padding: 12px 10px;
+            background: #eef2f7;
+            padding: 10px 8px;
             border-right: 2px solid #2563eb;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #cbd5e1;
+            vertical-align: top;
+        }
+
+        .date-cell-empty {
+            background: #eef2f7;
+            border-right: 2px solid #2563eb;
+            border-bottom: 1px solid #cbd5e1;
         }
 
         .date-day {
@@ -251,70 +266,110 @@
             letter-spacing: 0.03em;
         }
 
+        .date-count {
+            font-size: 6.5pt;
+            color: #2563eb;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        /* Time Cell */
+        .time-cell {
+            padding: 7px 8px;
+            border-right: 1px solid #f1f5f9;
+            border-bottom: 1px solid #cbd5e1;
+            vertical-align: middle;
+        }
+
+        .time-jam {
+            font-size: 8pt;
+            font-weight: 700;
+            color: #1e40af;
+            line-height: 1.3;
+        }
+
+        .time-durasi {
+            font-size: 7pt;
+            font-weight: 600;
+            color: #64748b;
+            line-height: 1.3;
+            margin-top: 1px;
+        }
+
+        .time-cell-empty {
+            color: #cbd5e1;
+            font-weight: 500;
+            font-size: 8pt;
+        }
+
+        .time-missing {
+            font-size: 7.5pt;
+            color: #94a3b8;
+            font-weight: 600;
+            font-style: italic;
+            line-height: 1.3;
+        }
+
         /* Activity Cell */
         .activity-cell {
-            padding: 12px 12px;
+            padding: 7px 12px;
             background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .activity-header {
-            padding-bottom: 6px;
-            margin-bottom: 8px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .activity-header-day {
-            font-size: 8pt;
-            font-weight: 600;
-            color: #2563eb;
-        }
-
-        .activity-header-count {
-            font-size: 7pt;
-            color: #94a3b8;
-        }
-
-        .activity-list {
-            padding-left: 0;
-            margin: 0;
-            list-style: none;
-        }
-
-        .activity-item {
-            margin-bottom: 6px;
-            padding-left: 14px;
-            position: relative;
-        }
-
-        .activity-item::before {
-            content: "-";
-            position: absolute;
-            left: 0;
-            color: #2563eb;
-            font-size: 11px;
-            font-weight: 700;
-        }
-
-        .activity-item:last-child {
-            margin-bottom: 0;
+            border-bottom: 1px solid #cbd5e1;
+            vertical-align: middle;
         }
 
         .activity-text {
             font-size: 9pt;
             color: #1a1a2e;
+            line-height: 1.35;
         }
 
-        .activity-meta {
-            font-size: 7.5pt;
-            color: #2563eb;
-            font-weight: 600;
-            margin-top: 1px;
+        .activity-item {
+            position: relative;
+            padding-left: 13px;
+        }
+
+        .activity-bullet {
+            position: absolute;
+            left: 1px;
+            top: 4px;
+            width: 4px;
+            height: 4px;
+            background: #2563eb;
+            border-radius: 50%;
+        }
+
+        /* Realisasi Cell */
+        .realisasi-cell {
+            padding: 7px 8px;
+            border-left: 1px solid #f1f5f9;
+            border-bottom: 1px solid #cbd5e1;
+            text-align: center;
+            font-size: 8.5pt;
+            font-weight: 700;
+            color: #1e40af;
+            vertical-align: middle;
+        }
+
+        .realisasi-empty {
+            color: #cbd5e1;
+            font-weight: 500;
         }
 
         /* Row Alternating */
-        .data-row:nth-child(even) .activity-cell {
+        .data-row:nth-child(even) .activity-cell,
+        .data-row:nth-child(even) .time-cell,
+        .data-row:nth-child(even) .realisasi-cell {
             background: #fafbfc;
+        }
+
+        /* Pemisah antartanggal (lebih tegas dari pemisah antar kegiatan) */
+        .data-row.group-start .date-cell,
+        .data-row.group-start .date-cell-empty,
+        .data-row.group-start .time-cell,
+        .data-row.group-start .activity-cell,
+        .data-row.group-start .realisasi-cell {
+            border-top: 1px solid #94a3b8;
         }
 
         /* Signature Section - using table for PDF compatibility */
@@ -490,7 +545,9 @@
                 <thead>
                     <tr>
                         <th class="col-date">Tanggal</th>
+                        <th class="col-time">Waktu</th>
                         <th class="col-activity">Detail Kegiatan</th>
+                        <th class="col-realisasi">Realisasi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -514,33 +571,74 @@
                             ];
                             $weekdayId = $weekdayMap[$weekday] ?? $weekday;
                             $monthId = $monthMap[$monthName] ?? $monthName;
+                            $groupItems = collect($group['items'] ?? [])
+                                ->sortBy(function ($item) {
+                                    $jam = trim((string) ($item['jam_mulai'] ?? ''));
+
+                                    return ($jam !== '' ? '0' : '1').'-'.($jam !== '' ? $jam : '99:99');
+                                })
+                                ->values()
+                                ->all();
+                            $jumlahKegiatan = max(count($groupItems), 1);
                         @endphp
-                        <tr class="data-row">
-                            <td class="date-cell">
-                                <div class="date-day">{{ $weekdayId }}</div>
-                                <div class="date-number">{{ $dayNum }}</div>
-                                <div class="date-month">{{ $monthId }} {{ $dateObj->format('Y') }}</div>
-                            </td>
-                            <td class="activity-cell">
-                                <div class="activity-header">
-                                    <span class="activity-header-day">{{ $weekdayId }}, {{ $dayNum }} {{ $monthId }} {{ $dateObj->format('Y') }}</span>
-                                    <span class="activity-header-count">* {{ count($group['items']) }} kegiatan</span>
-                                </div>
-                                <ul class="activity-list">
-                                    @foreach ($group['items'] as $activity)
-                                        <li class="activity-item">
-                                            <span class="activity-text">{{ $activity['kegiatan'] }}</span>
-                                            @if (! empty($activity['meta']))
-                                                <div class="activity-meta">* {{ $activity['meta'] }}</div>
-                                            @endif
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </td>
-                        </tr>
+                        @foreach ($groupItems as $index => $activity)
+                            <tr class="data-row{{ $index === 0 ? ' group-start' : '' }}">
+                                @if ($index === 0)
+                                    <td class="date-cell">
+                                        <div class="date-day">{{ $weekdayId }}</div>
+                                        <div class="date-number">{{ $dayNum }}</div>
+                                        <div class="date-month">{{ $monthId }} {{ $dateObj->format('Y') }}</div>
+                                        <div class="date-count">{{ $jumlahKegiatan }} kegiatan</div>
+                                    </td>
+                                @else
+                                    <td class="date-cell-empty"></td>
+                                @endif
+                                <td class="time-cell">
+                                    @php
+                                        $waktuBagian = \App\Support\WaktuPelaksanaan::bagian(
+                                            $activity['jam_mulai'] ?? null,
+                                            isset($activity['durasi_menit']) ? (int) $activity['durasi_menit'] : null
+                                        );
+                                    @endphp
+                                    @if (! empty($waktuBagian['jam']))
+                                        <div class="time-jam">{{ $waktuBagian['jam'] }}</div>
+                                    @else
+                                        <div class="time-missing">Tidak tercatat</div>
+                                    @endif
+                                    @if (! empty($waktuBagian['durasi']))
+                                        <div class="time-durasi">{{ $waktuBagian['durasi'] }}</div>
+                                    @endif
+                                </td>
+                                <td class="activity-cell">
+                                    <div class="activity-item">
+                                        <span class="activity-bullet"></span>
+                                        <span class="activity-text">{{ $activity['kegiatan'] ?? '-' }}</span>
+                                    </div>
+                                </td>
+                                <td class="realisasi-cell">
+                                    @if (! empty($activity['volume'] ?? 0))
+                                        {{ $activity['meta'] ?? trim(($activity['volume'] ?? 0).' '.($activity['satuan'] ?? 'Kegiatan')) }}
+                                    @else
+                                        <span class="realisasi-empty">-</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                        @if (empty($groupItems))
+                            <tr class="data-row group-start">
+                                <td class="date-cell">
+                                    <div class="date-day">{{ $weekdayId }}</div>
+                                    <div class="date-number">{{ $dayNum }}</div>
+                                    <div class="date-month">{{ $monthId }} {{ $dateObj->format('Y') }}</div>
+                                </td>
+                                <td class="time-cell"><span class="time-cell-empty">-</span></td>
+                                <td class="activity-cell"><span class="time-cell-empty">-</span></td>
+                                <td class="realisasi-cell"><span class="realisasi-empty">-</span></td>
+                            </tr>
+                        @endif
                     @empty
                         <tr>
-                            <td colspan="2" class="empty-state">
+                            <td colspan="4" class="empty-state">
                                 Belum ada kegiatan pada periode ini
                             </td>
                         </tr>

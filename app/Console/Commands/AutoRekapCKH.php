@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Support\WaktuPelaksanaan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -231,12 +232,17 @@ class AutoRekapCKH extends Command
                         foreach ($itemsArr as $it) {
                             $volume = (int) ($it['v'] ?? ($it['volume'] ?? 0));
                             $unit = trim((string) ($it['s'] ?? ($it['satuan'] ?? 'Kegiatan')));
+                            $jamMulai = $it['jm'] ?? null;
+                            $durasiMenit = isset($it['dm']) ? (int) $it['dm'] : null;
 
                             $allItems[] = [
                                 'kegiatan' => trim((string) ($it['k'] ?? ($it['kegiatan'] ?? ''))),
                                 'volume' => $volume,
                                 'satuan' => $unit,
                                 'meta' => $volume > 0 ? trim($volume.' '.$unit) : $unit,
+                                'jam_mulai' => $jamMulai,
+                                'durasi_menit' => $durasiMenit,
+                                'waktu_label' => WaktuPelaksanaan::label($jamMulai, $durasiMenit),
                             ];
                         }
                     }

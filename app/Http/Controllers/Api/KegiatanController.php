@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\WaktuPelaksanaan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -76,6 +77,8 @@ class KegiatanController extends BaseApiController
                 $mappedItems = array_map(function ($item) use ($row) {
                     $volume = (int) ($item['v'] ?? 0);
                     $satuan = $item['s'] ?? 'Kegiatan';
+                    $jamMulai = $item['jm'] ?? null;
+                    $durasiMenit = isset($item['dm']) ? (int) $item['dm'] : null;
 
                     return [
                         'id' => $item['id'] ?? null,
@@ -83,6 +86,9 @@ class KegiatanController extends BaseApiController
                         'volume' => $volume,
                         'satuan' => $satuan,
                         'meta' => $volume > 0 ? trim($volume.' '.$satuan) : $satuan,
+                        'jam_mulai' => $jamMulai,
+                        'durasi_menit' => $durasiMenit,
+                        'waktu_label' => WaktuPelaksanaan::label($jamMulai, $durasiMenit),
                         'tanggal' => $row->tanggal,
                     ];
                 }, array_values($items));
@@ -155,6 +161,8 @@ class KegiatanController extends BaseApiController
                 'items.*.k' => 'required|string|max:1000',
                 'items.*.v' => 'nullable|integer|min:0',
                 'items.*.s' => 'nullable|string|max:50',
+                'items.*.jm' => 'nullable|date_format:H:i',
+                'items.*.dm' => 'nullable|integer|min:0|max:1440',
             ]);
 
             $tanggal = $request->input('tanggal');
@@ -168,6 +176,8 @@ class KegiatanController extends BaseApiController
             if (empty($items)) {
                 return $this->error('Tambahkan minimal satu kegiatan', 400);
             }
+
+            $items = $this->normalizeWaktu($items);
 
             $jsonData = json_encode(['items' => array_values($items)], JSON_UNESCAPED_UNICODE);
 
@@ -259,6 +269,8 @@ class KegiatanController extends BaseApiController
                 'items.*.k' => 'required|string|max:1000',
                 'items.*.v' => 'nullable|integer|min:0',
                 'items.*.s' => 'nullable|string|max:50',
+                'items.*.jm' => 'nullable|date_format:H:i',
+                'items.*.dm' => 'nullable|integer|min:0|max:1440',
             ]);
 
             $tanggal = $request->input('tanggal');
@@ -272,6 +284,8 @@ class KegiatanController extends BaseApiController
             if (empty($items)) {
                 return $this->error('Tambahkan minimal satu kegiatan', 400);
             }
+
+            $items = $this->normalizeWaktu($items);
 
             // Check if record exists
             $existing = DB::table('satker_kegiatan')
@@ -504,6 +518,23 @@ class KegiatanController extends BaseApiController
     }
 
     /**
+     * Helper: Normalisasi waktu pelaksanaan (opsional) pada item kegiatan
+     */
+    private function normalizeWaktu(array $items): array
+    {
+        foreach ($items as &$item) {
+            $jamMulai = trim((string) ($item['jm'] ?? ''));
+            $durasiMenit = $item['dm'] ?? null;
+
+            $item['jm'] = $jamMulai !== '' ? $jamMulai : null;
+            $item['dm'] = $durasiMenit !== null && $durasiMenit !== '' ? (int) $durasiMenit : null;
+        }
+        unset($item);
+
+        return $items;
+    }
+
+    /**
      * Helper: Format tanggal dalam bahasa Indonesia
      */
     private function indonesianDateLabel(Carbon $date)
@@ -592,10 +623,19 @@ class KegiatanController extends BaseApiController
                 }
 
                 $mappedItems = array_map(function ($item) {
+                    $jamMulai = $item['jm'] ?? null;
+                    $durasiMenit = isset($item['dm']) ? (int) $item['dm'] : null;
+                    $volume = (int) ($item['v'] ?? 0);
+                    $satuan = trim((string) ($item['s'] ?? 'Kegiatan'));
+
                     return [
                         'kegiatan' => trim((string) ($item['k'] ?? '')),
-                        'volume' => (int) ($item['v'] ?? 0),
-                        'satuan' => $item['s'] ?? 'Kegiatan',
+                        'volume' => $volume,
+                        'satuan' => $satuan,
+                        'meta' => $volume > 0 ? trim($volume.' '.$satuan) : $satuan,
+                        'jam_mulai' => $jamMulai,
+                        'durasi_menit' => $durasiMenit,
+                        'waktu_label' => WaktuPelaksanaan::label($jamMulai, $durasiMenit),
                     ];
                 }, array_values($items));
 

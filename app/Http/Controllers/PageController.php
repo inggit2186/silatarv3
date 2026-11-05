@@ -6,6 +6,7 @@ use App\Helpers\FileHelper;
 use App\Models\AppPatch;
 use App\Models\SatkerPemberkasan;
 use App\Services\WhatsAppService;
+use App\Support\WaktuPelaksanaan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -2356,6 +2357,8 @@ class PageController extends Controller
             $mappedItems = array_map(function ($item) use ($row) {
                 $volume = (int) ($item['v'] ?? 0);
                 $satuan = $item['s'] ?? 'Kegiatan';
+                $jamMulai = $item['jm'] ?? null;
+                $durasiMenit = isset($item['dm']) ? (int) $item['dm'] : null;
 
                 return [
                     'id' => $item['id'] ?? null,
@@ -2363,6 +2366,9 @@ class PageController extends Controller
                     'volume' => $volume,
                     'satuan' => $satuan,
                     'meta' => $volume > 0 ? trim($volume.' '.$satuan) : $satuan,
+                    'jam_mulai' => $jamMulai,
+                    'durasi_menit' => $durasiMenit,
+                    'waktu_label' => WaktuPelaksanaan::label($jamMulai, $durasiMenit),
                     'tanggal' => $row->tanggal,
                 ];
             }, array_values($items));
@@ -2624,11 +2630,17 @@ class PageController extends Controller
                     'date' => $dateCarbon->toDateString(),
                     'label' => $this->indonesianDateLabel($dateCarbon),
                     'items' => array_map(function ($item) {
+                        $jamMulai = $item['jm'] ?? null;
+                        $durasiMenit = isset($item['dm']) ? (int) $item['dm'] : null;
+
                         return [
                             'id' => $item['id'] ?? null,
                             'kegiatan' => trim((string) ($item['k'] ?? '')),
                             'volume' => (int) ($item['v'] ?? 0),
                             'satuan' => $item['s'] ?? 'Kegiatan',
+                            'jam_mulai' => $jamMulai,
+                            'durasi_menit' => $durasiMenit,
+                            'waktu_label' => WaktuPelaksanaan::label($jamMulai, $durasiMenit),
                         ];
                     }, $items),
                 ];
@@ -3292,12 +3304,17 @@ class PageController extends Controller
                     foreach ($itemsArr as $it) {
                         $volume = (int) ($it['v'] ?? ($it['volume'] ?? 0));
                         $unit = trim((string) ($it['s'] ?? ($it['satuan'] ?? 'Kegiatan')));
+                        $jamMulai = $it['jm'] ?? null;
+                        $durasiMenit = isset($it['dm']) ? (int) $it['dm'] : null;
 
                         $allItems[] = [
                             'kegiatan' => trim((string) ($it['k'] ?? ($it['kegiatan'] ?? ''))),
                             'volume' => $volume,
                             'satuan' => $unit,
                             'meta' => $volume > 0 ? trim($volume.' '.$unit) : $unit,
+                            'jam_mulai' => $jamMulai,
+                            'durasi_menit' => $durasiMenit,
+                            'waktu_label' => WaktuPelaksanaan::label($jamMulai, $durasiMenit),
                         ];
                     }
                 }
@@ -3623,12 +3640,17 @@ class PageController extends Controller
                     foreach ($itemsArr as $it) {
                         $volume = (int) ($it['v'] ?? ($it['volume'] ?? 0));
                         $unit = trim((string) ($it['s'] ?? ($it['satuan'] ?? 'Kegiatan')));
+                        $jamMulai = $it['jm'] ?? null;
+                        $durasiMenit = isset($it['dm']) ? (int) $it['dm'] : null;
 
                         $allItems[] = [
                             'kegiatan' => trim((string) ($it['k'] ?? ($it['kegiatan'] ?? ''))),
                             'volume' => $volume,
                             'satuan' => $unit,
                             'meta' => $volume > 0 ? trim($volume.' '.$unit) : $unit,
+                            'jam_mulai' => $jamMulai,
+                            'durasi_menit' => $durasiMenit,
+                            'waktu_label' => WaktuPelaksanaan::label($jamMulai, $durasiMenit),
                         ];
                     }
                 }
@@ -3920,12 +3942,17 @@ class PageController extends Controller
                     foreach ($itemsArr as $it) {
                         $volume = (int) ($it['v'] ?? ($it['volume'] ?? 0));
                         $unit = trim((string) ($it['s'] ?? ($it['satuan'] ?? 'Kegiatan')));
+                        $jamMulai = $it['jm'] ?? null;
+                        $durasiMenit = isset($it['dm']) ? (int) $it['dm'] : null;
 
                         $allItems[] = [
                             'kegiatan' => trim((string) ($it['k'] ?? ($it['kegiatan'] ?? ''))),
                             'volume' => $volume,
                             'satuan' => $unit,
                             'meta' => $volume > 0 ? trim($volume.' '.$unit) : $unit,
+                            'jam_mulai' => $jamMulai,
+                            'durasi_menit' => $durasiMenit,
+                            'waktu_label' => WaktuPelaksanaan::label($jamMulai, $durasiMenit),
                         ];
                     }
                 }
@@ -4303,6 +4330,8 @@ class PageController extends Controller
             'items.*.kegiatan' => ['nullable', 'string', 'max:1000'],
             'items.*.volume' => ['nullable', 'integer', 'min:0'],
             'items.*.satuan' => ['nullable', 'string', 'max:50'],
+            'items.*.jam_mulai' => ['nullable', 'date_format:H:i'],
+            'items.*.durasi_menit' => ['nullable', 'integer', 'min:0', 'max:1440'],
             'tab' => ['nullable', 'string'],
             'month' => ['nullable', 'string'],
             'search' => ['nullable', 'string'],
@@ -4348,6 +4377,8 @@ class PageController extends Controller
             'k' => $row['kegiatan'],
             'v' => (int) ($row['volume'] ?? 0),
             's' => $row['satuan'],
+            'jm' => $row['jam_mulai'],
+            'dm' => $row['durasi_menit'],
         ])->toArray();
 
         $jsonData = json_encode(['items' => $jsonItems], JSON_UNESCAPED_UNICODE);
@@ -4438,6 +4469,8 @@ class PageController extends Controller
                     'k' => $prefix.' '.$item['kegiatan'],
                     'v' => (int) ($item['volume'] ?? 0),
                     's' => $item['satuan'],
+                    'jm' => $item['jam_mulai'] ?? null,
+                    'dm' => $item['durasi_menit'] ?? null,
                 ];
             }, $items, array_keys($items));
 
@@ -4629,6 +4662,8 @@ class PageController extends Controller
             'items.*.kegiatan' => ['nullable', 'string', 'max:1000'],
             'items.*.volume' => ['nullable', 'integer', 'min:0'],
             'items.*.satuan' => ['nullable', 'string', 'max:50'],
+            'items.*.jam_mulai' => ['nullable', 'date_format:H:i'],
+            'items.*.durasi_menit' => ['nullable', 'integer', 'min:0', 'max:1440'],
             'tab' => ['nullable', 'string'],
             'month' => ['nullable', 'string'],
             'search' => ['nullable', 'string'],
@@ -4680,6 +4715,8 @@ class PageController extends Controller
                 'k' => $row['kegiatan'],
                 'v' => (int) ($row['volume'] ?? 0),
                 's' => $row['satuan'],
+                'jm' => $row['jam_mulai'],
+                'dm' => $row['durasi_menit'],
             ];
         }
 
@@ -5068,6 +5105,7 @@ class PageController extends Controller
 
         if (! $latestApk) {
             Log::error('APK not found in app_patches table');
+
             return redirect()->back()->with('error', 'File APK belum tersedia. Hubungi administrator.');
         }
 
@@ -5088,7 +5126,7 @@ class PageController extends Controller
             "🔹 Versi    : *{$latestApk->full_version}*\n".
             "🔹 File     : {$apkFileName}\n".
             "🔹 Ukuran   : {$fileSizeFormatted}\n".
-            "🔹 Tanggal  : ".date('d/m/Y')."\n\n".
+            '🔹 Tanggal  : '.date('d/m/Y')."\n\n".
             "━━━━━━━━━━━━━━━━━━\n".
             "📲 *SYSTEM REQUIREMENTS*\n".
             "━━━━━━━━━━━━━━━━━━\n".
@@ -5121,12 +5159,11 @@ class PageController extends Controller
             "   (WhatsApp Only)\n\n".
             "━━━━━━━━━━━━━━━━━━\n".
             "_Pesan ini dikirim otomatis via_\n".
-            "_SILATAR V2 - Kankemenag Tanah Datar_";
-
+            '_SILATAR V2 - Kankemenag Tanah Datar_';
 
         try {
             // Initialize WhatsApp service
-            $waService = new WhatsAppService();
+            $waService = new WhatsAppService;
             $result = $waService->sendMedia(
                 number: $normalizedPhone,
                 url: $apkUrl,
@@ -5239,12 +5276,17 @@ class PageController extends Controller
                     foreach ($itemsArr as $it) {
                         $volume = (int) ($it['v'] ?? ($it['volume'] ?? 0));
                         $unit = trim((string) ($it['s'] ?? ($it['satuan'] ?? 'Kegiatan')));
+                        $jamMulai = $it['jm'] ?? null;
+                        $durasiMenit = isset($it['dm']) ? (int) $it['dm'] : null;
 
                         $allItems[] = [
                             'kegiatan' => trim((string) ($it['k'] ?? ($it['kegiatan'] ?? ''))),
                             'volume' => $volume,
                             'satuan' => $unit,
                             'meta' => $volume > 0 ? trim($volume.' '.$unit) : $unit,
+                            'jam_mulai' => $jamMulai,
+                            'durasi_menit' => $durasiMenit,
+                            'waktu_label' => WaktuPelaksanaan::label($jamMulai, $durasiMenit),
                         ];
                     }
                 }
@@ -5325,10 +5367,15 @@ class PageController extends Controller
     {
         return collect($items)
             ->map(function ($item) use ($defaultUnit) {
+                $jamMulai = trim((string) ($item['jam_mulai'] ?? ''));
+                $durasiMenit = $item['durasi_menit'] ?? null;
+
                 return [
                     'kegiatan' => trim((string) ($item['kegiatan'] ?? '')),
                     'volume' => (int) ($item['volume'] ?? 0),
                     'satuan' => trim((string) ($item['satuan'] ?? $defaultUnit)),
+                    'jam_mulai' => $jamMulai !== '' ? $jamMulai : null,
+                    'durasi_menit' => $durasiMenit !== null && $durasiMenit !== '' ? (int) $durasiMenit : null,
                 ];
             });
     }
@@ -9022,7 +9069,7 @@ class PageController extends Controller
                 'required_if:alasan,LUPA_PRESNSI_PUSAKA',
                 'nullable',
                 'date',
-                'after_or_equal:' . Carbon::now('Asia/Jakarta')->subDays(30)->toDateString(),
+                'after_or_equal:'.Carbon::now('Asia/Jakarta')->subDays(30)->toDateString(),
                 'before_or_equal:today',
             ],
             'latitude' => 'nullable|numeric',

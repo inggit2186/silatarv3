@@ -1269,26 +1269,45 @@ document.addEventListener('alpine:init', () => {
                 kegiatan: row?.kegiatan || '',
                 volume: row?.volume || '',
                 satuan: row?.satuan || (config.defaultUnit || 'Kegiatan'),
+                jam_mulai: row?.jam_mulai || '',
+                durasi_menit: row?.durasi_menit || '',
             }))
             : [{
                 kegiatan: '',
                 volume: '',
                 satuan: config.defaultUnit || 'Kegiatan',
+                jam_mulai: '',
+                durasi_menit: '',
             }],
         editRows: Array.isArray(config.editInitialRows) && config.editInitialRows.length
             ? config.editInitialRows.map((row) => ({
                 kegiatan: row?.kegiatan || '',
                 volume: row?.volume || '',
                 satuan: row?.satuan || (config.defaultUnit || 'Kegiatan'),
+                jam_mulai: row?.jam_mulai || '',
+                durasi_menit: row?.durasi_menit || '',
             }))
             : [{
                 kegiatan: '',
                 volume: '',
                 satuan: config.defaultUnit || 'Kegiatan',
+                jam_mulai: '',
+                durasi_menit: '',
             }],
         unitOptions: Array.isArray(config.unitOptions) && config.unitOptions.length
             ? config.unitOptions
             : ['Kegiatan', 'Dokumen', 'Jam'],
+        init() {
+            const normalize = (row) => {
+                if (row.jamOpen === undefined) row.jamOpen = false;
+                if (row.jamHour === undefined) row.jamHour = '';
+                if (row.jamMinute === undefined) row.jamMinute = '';
+                return row;
+            };
+
+            this.rows = this.rows.map(normalize);
+            this.editRows = this.editRows.map(normalize);
+        },
         // PDF Preview Modal
         pdfPreviewOpen: false,
         pdfPreviewUrl: '',
@@ -1329,6 +1348,11 @@ document.addEventListener('alpine:init', () => {
                 kegiatan: '',
                 volume: '',
                 satuan: this.unitOptions[0] || 'Kegiatan',
+                jam_mulai: '',
+                durasi_menit: '',
+                jamOpen: false,
+                jamHour: '',
+                jamMinute: '',
             }];
         },
         closeAddModal() {
@@ -1344,6 +1368,11 @@ document.addEventListener('alpine:init', () => {
                 kegiatan: item.kegiatan || '',
                 volume: item.volume || '',
                 satuan: item.satuan || this.unitOptions[0] || 'Kegiatan',
+                jam_mulai: item.jam_mulai || '',
+                durasi_menit: item.durasi_menit || '',
+                jamOpen: false,
+                jamHour: '',
+                jamMinute: '',
             }));
             this.editModalOpen = true;
         },
@@ -1357,6 +1386,11 @@ document.addEventListener('alpine:init', () => {
                 kegiatan: '',
                 volume: '',
                 satuan: this.unitOptions[0] || 'Kegiatan',
+                jam_mulai: '',
+                durasi_menit: '',
+                jamOpen: false,
+                jamHour: '',
+                jamMinute: '',
             });
         },
         removeRow(index) {
@@ -1365,6 +1399,11 @@ document.addEventListener('alpine:init', () => {
                     kegiatan: '',
                     volume: '',
                     satuan: this.unitOptions[0] || 'Kegiatan',
+                    jam_mulai: '',
+                    durasi_menit: '',
+                    jamOpen: false,
+                    jamHour: '',
+                    jamMinute: '',
                 };
                 return;
             }
@@ -1376,6 +1415,11 @@ document.addEventListener('alpine:init', () => {
                 kegiatan: '',
                 volume: '',
                 satuan: this.unitOptions[0] || 'Kegiatan',
+                jam_mulai: '',
+                durasi_menit: '',
+                jamOpen: false,
+                jamHour: '',
+                jamMinute: '',
             });
         },
         removeEditRow(index) {
@@ -1384,11 +1428,242 @@ document.addEventListener('alpine:init', () => {
                     kegiatan: '',
                     volume: '',
                     satuan: this.unitOptions[0] || 'Kegiatan',
+                    jam_mulai: '',
+                    durasi_menit: '',
+                    jamOpen: false,
+                    jamHour: '',
+                    jamMinute: '',
                 };
                 return;
             }
 
             this.editRows.splice(index, 1);
+        },
+        // Waktu pelaksanaan: input selalu format 24 jam (HH:MM)
+        pad2(value) {
+            return String(value).padStart(2, '0');
+        },
+        convert12to24(raw) {
+            const digits = raw.replace(/[^0-9]/g, '');
+            if (digits === '') return '';
+
+            let hours;
+            let minutes;
+            if (digits.length <= 2) {
+                hours = parseInt(digits, 10);
+                minutes = 0;
+            } else if (digits.length === 3) {
+                hours = parseInt(digits.slice(0, 1), 10);
+                minutes = parseInt(digits.slice(1), 10);
+            } else {
+                hours = parseInt(digits.slice(0, digits.length - 2), 10);
+                minutes = parseInt(digits.slice(-2), 10);
+            }
+
+            let hour = hours % 12;
+            if (/p/.test(raw)) hour += 12;
+
+            return this.pad2(hour) + ':' + this.pad2(Math.min(minutes, 59));
+        },
+        formatJamInput(value) {
+            const raw = String(value ?? '').trim().toLowerCase();
+            if (raw === '') return '';
+            if (/[ap]/.test(raw)) return this.convert12to24(raw);
+
+            const digits = raw.replace(/[^0-9]/g, '');
+            if (digits === '') return '';
+
+            if (raw.includes(':')) {
+                const parts = raw.split(':');
+                const jam = (parts[0] || '').replace(/[^0-9]/g, '').slice(0, 2);
+                const menit = (parts[1] || '').replace(/[^0-9]/g, '').slice(0, 2);
+                return jam + ':' + menit;
+            }
+
+            if (digits.length <= 2) return digits;
+
+            return digits.slice(0, 2) + ':' + digits.slice(2, 4);
+        },
+        formatJamFinal(value) {
+            const raw = String(value ?? '').trim().toLowerCase();
+            if (raw === '') return '';
+
+            const masked = this.formatJamInput(raw);
+            if (masked === '') return '';
+
+            const digits = masked.replace(/[^0-9]/g, '');
+            let hours;
+            let minutes;
+
+            if (raw.includes(':')) {
+                const parts = masked.split(':');
+                const jam = (parts[0] || '').replace(/[^0-9]/g, '');
+                const menit = (parts[1] || '').replace(/[^0-9]/g, '');
+                hours = jam === '' ? 0 : parseInt(jam, 10);
+                minutes = menit === '' ? 0 : parseInt(menit, 10);
+            } else {
+                hours = parseInt(digits.slice(0, 2), 10);
+                minutes = digits.length < 4 ? 0 : parseInt(digits.slice(2, 4), 10);
+
+                if (digits.length === 3) {
+                    hours = parseInt(digits.slice(0, 2), 10);
+                    minutes = parseInt(digits.slice(2), 10);
+                }
+                if (hours > 23 && digits.length === 3) {
+                    hours = parseInt(digits.slice(0, 1), 10);
+                    minutes = parseInt(digits.slice(1), 10);
+                }
+            }
+
+            if (hours > 23 || minutes > 59) {
+                return masked;
+            }
+
+            return this.pad2(hours) + ':' + this.pad2(minutes);
+        },
+        applyJam(event, final = false) {
+            const target = event.target;
+            const formatted = final ? this.formatJamFinal(target.value) : this.formatJamInput(target.value);
+
+            if (target.value !== formatted) {
+                target.value = formatted;
+                target.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        },
+        toggleJamPicker(row) {
+            const nilai = /^\d{2}:\d{2}$/.test(row.jam_mulai || '') ? row.jam_mulai : '';
+
+            row.jamHour = nilai ? nilai.slice(0, 2) : this.pad2(new Date().getHours());
+            row.jamMinute = nilai ? nilai.slice(3, 5) : this.pad2(new Date().getMinutes());
+            row.jamSynced = false;
+            row.jamLock = false;
+            row.jamOpen = !row.jamOpen;
+        },
+        syncJamRoll(element, row) {
+            requestAnimationFrame(() => {
+                row.jamSynced = true;
+                this.lockJamRoll(row, 300);
+
+                element.querySelectorAll('[data-jam-track]').forEach((track) => {
+                    const items = Array.from(track.querySelectorAll('.sr-jam-roll-item'));
+                    if (!items.length) return;
+
+                    const target = track.dataset.jamTrack === 'hour' ? row.jamHour : row.jamMinute;
+                    const index = items.findIndex((item) => item.textContent.trim() === target);
+                    if (index < 0) return;
+
+                    track.scrollTop = this.jamRollTop(index, items);
+                });
+            });
+        },
+        /**
+         * Posisi scroll agar item berada tepat di pita tengah (band).
+         * Item memakai scroll-snap-align: center, jadi posisi snap = index * tinggi item.
+         */
+        jamRollTop(index, items) {
+            const itemHeight = items[0] ? items[0].offsetHeight : 0;
+
+            return itemHeight ? index * itemHeight : 0;
+        },
+        onJamRoll(event, row, part) {
+            if (!row.jamSynced || row.jamLock) return;
+
+            const track = event.target;
+            const items = Array.from(track.querySelectorAll('.sr-jam-roll-item'));
+            if (!items.length) return;
+
+            const itemHeight = items[0].offsetHeight;
+            if (!itemHeight) return;
+
+            const index = Math.min(Math.max(Math.round(track.scrollTop / itemHeight), 0), items.length - 1);
+            const value = items[index].textContent.trim();
+
+            if (part === 'hour') {
+                if (row.jamHour === value) return;
+                row.jamHour = value;
+            } else {
+                if (row.jamMinute === value) return;
+                row.jamMinute = value;
+            }
+
+            row.jam_mulai = row.jamHour + ':' + row.jamMinute;
+        },
+        scrollJamTrack(track, value, smooth = true) {
+            const items = Array.from(track.querySelectorAll('.sr-jam-roll-item'));
+            if (!items.length) return;
+
+            const index = items.findIndex((item) => item.textContent.trim() === value);
+            if (index < 0) return;
+
+            const top = this.jamRollTop(index, items);
+            if (smooth && typeof track.scrollTo === 'function') {
+                track.scrollTo({ top, behavior: 'smooth' });
+            } else {
+                track.scrollTop = top;
+            }
+        },
+        nudgeJam(event, row, part, direction) {
+            const panel = event.currentTarget.closest('.sr-jam-roll');
+            const track = panel ? panel.querySelector(`[data-jam-track="${part}"]`) : null;
+            if (!track) return;
+
+            const items = Array.from(track.querySelectorAll('.sr-jam-roll-item'));
+            if (!items.length) return;
+
+            const step = part === 'minute' ? 5 : 1;
+            const current = part === 'hour' ? row.jamHour : row.jamMinute;
+            const index = items.findIndex((item) => item.textContent.trim() === current);
+            const next = Math.min(Math.max(index + direction * step, 0), items.length - 1);
+            if (next === index) return;
+
+            this.lockJamRoll(row);
+            this.scrollJamTrack(track, items[next].textContent.trim());
+            this.applyJamNilai(row, part === 'hour' ? items[next].textContent.trim() : row.jamHour, part === 'hour' ? row.jamMinute : items[next].textContent.trim());
+        },
+        setJamCepat(event, row, value) {
+            const jam = value.slice(0, 2);
+            const menit = value.slice(3, 5);
+
+            row.jamHour = jam;
+            row.jamMinute = menit;
+            row.jam_mulai = value;
+
+            const panel = event.currentTarget.closest('.sr-jam-roll');
+            if (!panel) return;
+
+            this.lockJamRoll(row, 700);
+            panel.querySelectorAll('[data-jam-track]').forEach((track) => {
+                this.scrollJamTrack(track, track.dataset.jamTrack === 'hour' ? jam : menit);
+            });
+
+            // Kuncikan nilai akhir setelah animasi scroll selesai
+            clearTimeout(row.jamFixTimer);
+            row.jamFixTimer = setTimeout(() => {
+                this.applyJamNilai(row, jam, menit);
+            }, 750);
+        },
+        applyJamNilai(row, jam, menit) {
+            row.jamHour = jam;
+            row.jamMinute = menit;
+            row.jam_mulai = jam + ':' + menit;
+        },
+        lockJamRoll(row, durasi = 500) {
+            row.jamLock = true;
+            clearTimeout(row.jamLockTimer);
+            row.jamLockTimer = setTimeout(() => {
+                row.jamLock = false;
+            }, durasi);
+        },
+        setJamSekarang(row) {
+            const sekarang = new Date();
+            row.jamHour = this.pad2(sekarang.getHours());
+            row.jamMinute = this.pad2(sekarang.getMinutes());
+            row.jam_mulai = row.jamHour + ':' + row.jamMinute;
+            row.jamOpen = false;
+        },
+        clearJam(row) {
+            row.jam_mulai = '';
+            row.jamOpen = false;
         },
         // Replace File Modal
         replaceModalOpen: false,
