@@ -5,6 +5,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PenilaianKinerjaController;
 use App\Http\Controllers\PpidController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\UjianController;
 use Illuminate\Support\Facades\Route;
 
@@ -222,7 +223,6 @@ Route::prefix('ppid')->group(function () {
 });
 
 // WhatsApp Webhook Routes
-use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\WebhookController;
 
 Route::prefix('webhook')->group(function () {

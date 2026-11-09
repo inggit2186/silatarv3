@@ -96,7 +96,7 @@
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
-                        <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Nama, alamat, NPSM..." class="form-input pl-10">
+                        <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Nama, kode, NPSM, alamat..." class="form-input pl-10">
                     </div>
                 </div>
 
@@ -174,6 +174,8 @@
                         <th>Kategori</th>
                         <th>NPSM</th>
                         <th>Alamat</th>
+                        <th>Kepala</th>
+                        <th>PLH/PLT Kepala</th>
                         <th>Pengguna</th>
                         <th>Status</th>
                         <th>Aksi</th>
@@ -194,13 +196,39 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="badge badge-info">{{ $kategoriOptions[$dept->kategori] ?? $dept->kategori }}</span>
+                                <span class="badge badge-info">{{ $kategoriOptions[$dept->kategori] ?? ($dept->kategori ?: 'Tidak Dikategorikan') }}</span>
                             </td>
                             <td>
                                 <span class="nip-code">{{ $dept->npsm ?? '-' }}</span>
                             </td>
                             <td>
-                                <span class="text-sm">{{ $dept->alamat ?? '-' }}</span>
+                                <span class="text-sm">{{ collect([$dept->jalan, $dept->jorong, $dept->nagari, $dept->kecamatan])->filter()->implode(', ') ?: '-' }}</span>
+                            </td>
+                            <td>
+                                @php $kepalaCount = (int) ($dept->kepala_count ?? 0); @endphp
+                                @if ($kepalaCount > 0)
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-sm">{{ $dept->kepala_names }}</span>
+                                        @if ($kepalaCount > 1)
+                                            <span class="badge badge-warning" title="{{ $kepalaCount }} kepala terdaftar di unit ini">Multi ({{ $kepalaCount }})</span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <span class="text-sm text-muted">-</span>
+                                @endif
+                            </td>
+                            <td>
+                                @php $pltCount = (int) ($dept->plt_plh_count ?? 0); @endphp
+                                @if ($pltCount > 0)
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-sm">{{ $dept->plt_plh_names }}</span>
+                                        @if ($pltCount > 1)
+                                            <span class="badge badge-warning" title="{{ $pltCount }} PLH/PLT terdaftar di unit ini">Multi ({{ $pltCount }})</span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <span class="text-sm text-muted">-</span>
+                                @endif
                             </td>
                             <td>
                                 <span class="badge badge-neutral">{{ $dept->user_count ?? 0 }} pengguna</span>
@@ -231,7 +259,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-12">
+                            <td colspan="9" class="text-center py-12">
                                 <div class="empty-state">
                                     <svg class="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>

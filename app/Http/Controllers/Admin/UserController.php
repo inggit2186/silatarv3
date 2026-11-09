@@ -339,7 +339,7 @@ class UserController extends Controller
             });
 
         // Kategori jabatan options
-        $katJabatanOptions = ['kepala', 'kasi', 'kasubbag', 'kaur', 'staf', 'guru', 'pelaksana', 'honorer'];
+        $katJabatanOptions = ['kepala', 'ex-kepala', 'kasi', 'kasubbag', 'kaur', 'staf', 'guru', 'pelaksana', 'honorer'];
 
         return view('admin.users.edit', [
             'title' => 'Edit Pengguna - SILATAR Admin',
@@ -379,7 +379,7 @@ class UserController extends Controller
             'dept_id' => ['nullable', 'numeric'],
             'madrasah_id' => ['nullable', 'numeric', 'exists:ktd_madrasah,id'],
             'custom_supervisor_id' => ['nullable', 'numeric', 'exists:users,id'],
-            'kat_jabatan' => ['nullable', 'string', Rule::in(['kepala', 'kasi', 'kasubbag', 'kaur', 'staf', 'guru', 'pelaksana', 'honorer'])],
+            'kat_jabatan' => ['nullable', 'string', Rule::in(['kepala', 'ex-kepala', 'kasi', 'kasubbag', 'kaur', 'staf', 'guru', 'pelaksana', 'honorer'])],
             'satker' => ['nullable', 'string', 'max:255'],
             'jk' => ['nullable', 'string', Rule::in(['Pria', 'Wanita'])],
             'pekerjaan' => ['nullable', 'string', 'max:255'],

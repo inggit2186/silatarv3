@@ -96,6 +96,9 @@ Route::middleware(['auth', 'admin'])
         Route::put('/units/{id}', [UnitController::class, 'update'])->name('units.update');
         Route::delete('/units/{id}', [UnitController::class, 'destroy'])->name('units.destroy');
         Route::get('/units/{id}', [UnitController::class, 'show'])->name('units.show');
+        Route::put('/units/{id}/kepala', [UnitController::class, 'updateKepala'])->name('units.kepala.update');
+        Route::post('/units/{id}/plt-plh', [UnitController::class, 'storePltPlh'])->name('units.plt-plh.store');
+        Route::delete('/units/{id}/plt-plh/{pltId}', [UnitController::class, 'destroyPltPlh'])->name('units.plt-plh.destroy');
 
         // App Patch Management
         Route::prefix('patches')->name('patches.')->group(function () {
