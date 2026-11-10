@@ -57,7 +57,19 @@ class KegiatanController extends BaseApiController
             Log::info('Found '.$dailyEntries->count().' kegiatan entries');
 
             foreach ($dailyEntries as $row) {
-                $date = Carbon::parse($row->tanggal)->toDateString();
+                try {
+                    $date = Carbon::parse($row->tanggal)->toDateString();
+                } catch (\Throwable $e) {
+                    Log::warning('Format tanggal tidak valid pada satker_kegiatan', [
+                        'row_id' => $row->id,
+                        'user_id' => $row->user_id,
+                        'tanggal_raw' => $row->tanggal,
+                        'message' => $e->getMessage(),
+                    ]);
+
+                    continue;
+                }
+
                 $jsonData = json_decode((string) ($row->data_json ?? '{"items":[]}'), true) ?: ['items' => []];
                 $items = $jsonData['items'] ?? [];
 
@@ -170,8 +182,15 @@ class KegiatanController extends BaseApiController
                     'latest_update' => $latestUpdate,
                 ],
             ]);
-        } catch (\Exception $e) {
-            Log::error('Error getting kegiatan: '.$e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Error getting kegiatan', [
+                'user_id' => $user->id ?? null,
+                'month' => $month,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile().':'.$e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'exception' => $e,
+            ]);
 
             return $this->error('Gagal memuat kegiatan', 500);
         }
@@ -590,8 +609,34 @@ class KegiatanController extends BaseApiController
                     ];
                     $status = $statusConfig[$item->status] ?? ['label' => $item->status, 'color' => 'slate'];
 
-                    $bulanRaw = is_string($item->bulan) ? substr($item->bulan, 0, 10) : $item->bulan;
-                    $bulanDate = Carbon::createFromFormat('Y-m-d', $bulanRaw);
+                    $bulanRaw = is_string($item->bulan) ? substr($item->bulan, 0, 10) : (string) $item->bulan;
+
+                    // Nilai 'bulan' yang tidak valid tidak boleh menggagalkan seluruh request.
+                    $bulanDate = null;
+                    try {
+                        $bulanDate = Carbon::createFromFormat('Y-m-d', $bulanRaw);
+                    } catch (\Throwable $e) {
+                        Log::warning('Format bulan tidak valid pada satker_ckh', [
+                            'ckh_id' => $item->id,
+                            'user_id' => $item->user_id,
+                            'bulan_raw' => $bulanRaw,
+                            'message' => $e->getMessage(),
+                        ]);
+                    }
+
+                    $sending = null;
+                    if ($item->sending) {
+                        try {
+                            $sending = Carbon::parse($item->sending)->format('d/m/Y H:i');
+                        } catch (\Throwable $e) {
+                            Log::warning('Format sending tidak valid pada satker_ckh', [
+                                'ckh_id' => $item->id,
+                                'user_id' => $item->user_id,
+                                'sending_raw' => $item->sending,
+                                'message' => $e->getMessage(),
+                            ]);
+                        }
+                    }
 
                     return [
                         'id' => $item->id,
@@ -599,14 +644,14 @@ class KegiatanController extends BaseApiController
                         'user_name' => $item->user_name ?? 'Unknown',
                         'nomor_induk' => $item->nomor_induk ?? '-',
                         'dept_name' => $item->dept_name ?? '-',
-                        'bulan' => $bulanDate->format('F Y'),
+                        'bulan' => $bulanDate ? $bulanDate->format('F Y') : $bulanRaw,
                         'bulan_raw' => $bulanRaw,
                         'filename' => $item->filename,
                         'status' => $item->status,
                         'status_label' => $status['label'],
                         'status_color' => $status['color'],
                         'alasan' => $item->alasan,
-                        'sending' => $item->sending ? Carbon::parse($item->sending)->format('d/m/Y H:i') : null,
+                        'sending' => $sending,
                         'pdf_url' => $item->filename ? url('storage/satker_ckh/'.$item->user_id.'/'.$item->filename) : null,
                     ];
                 });
@@ -625,8 +670,15 @@ class KegiatanController extends BaseApiController
                 'stats' => $stats,
                 'year' => $year,
             ]);
-        } catch (\Exception $e) {
-            Log::error('Error getting bulanan reports: '.$e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Error getting bulanan reports', [
+                'user_id' => $user->id ?? null,
+                'year' => $year,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile().':'.$e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'exception' => $e,
+            ]);
 
             return $this->error('Gagal memuat laporan bulanan', 500);
         }
@@ -689,8 +741,15 @@ class KegiatanController extends BaseApiController
                 'total_durasi_menit' => $totalDurasi,
                 'latest_update' => $latestUpdate,
             ]);
-        } catch (\Exception $e) {
-            Log::error('Error getting rekap: '.$e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Error getting rekap', [
+                'user_id' => $user->id ?? null,
+                'month' => $month,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile().':'.$e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'exception' => $e,
+            ]);
 
             return $this->error('Gagal memuat rekap', 500);
         }
@@ -718,7 +777,11 @@ class KegiatanController extends BaseApiController
      */
     private function indonesianDateLabel(Carbon $date)
     {
-        $dayName = match ($date->dayOfWeek) {
+        // PENTING: pakai isoWeekday() (1=Senin .. 7=Minggu).
+        // dayOfWeek pada Carbon 3 bernilai 0=Minggu .. 6=Sabtu, sehingga
+        // data bertanggal Minggu akan melempar UnhandledMatchError dan membuat
+        // seluruh endpoint laporan-kinerja gagal dengan HTTP 500.
+        $dayName = match ($date->isoWeekday()) {
             1 => 'Senin',
             2 => 'Selasa',
             3 => 'Rabu',
@@ -726,6 +789,7 @@ class KegiatanController extends BaseApiController
             5 => 'Jumat',
             6 => 'Sabtu',
             7 => 'Minggu',
+            default => 'Hari',
         };
 
         $monthName = match ($date->month) {
@@ -741,6 +805,7 @@ class KegiatanController extends BaseApiController
             10 => 'Oktober',
             11 => 'November',
             12 => 'Desember',
+            default => '-',
         };
 
         return "{$dayName}, {$date->day} {$monthName} {$date->year}";
