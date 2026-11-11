@@ -9029,30 +9029,58 @@ class PageController extends Controller
     }
 
     /**
-     * Riwayat presensi error user.
+     * Riwayat presensi user.
+     *
+     * Tab 'error'   : hanya laporan presensi error (SISTEM_ERROR, TUGAS_LUAR, LUPA_PRESNSI_PUSAKA).
+     * Tab 'riwayat' : seluruh data presensi user dari tabel ktd_presensi.
      */
     public function presensiHistory(Request $request)
     {
         $user = auth()->user();
         $nip = $user->nomor_induk;
 
+        $tab = $request->string('tab')->toString();
+        $tab = in_array($tab, ['error', 'riwayat'], true) ? $tab : 'error';
+
         $month = $request->input('month', date('m'));
         $year = $request->input('year', date('Y'));
 
-        $presensi = DB::table('ktd_presensi')
+        $baseQuery = DB::table('ktd_presensi')
             ->where('user_nip', $nip)
-            ->whereIn('status', ['SISTEM_ERROR', 'TUGAS_LUAR', 'LUPA_PRESNSI_PUSAKA'])
             ->whereMonth('tanggal', $month)
-            ->whereYear('tanggal', $year)
-            ->orderBy('tanggal', 'desc')
-            ->paginate(15)
-            ->withQueryString();
+            ->whereYear('tanggal', $year);
+
+        $stats = null;
+
+        if ($tab === 'riwayat') {
+            $presensi = (clone $baseQuery)
+                ->orderBy('tanggal', 'desc')
+                ->paginate(15)
+                ->withQueryString();
+
+            $stats = (clone $baseQuery)
+                ->selectRaw("
+                    COUNT(*) as total,
+                    SUM(CASE WHEN m_absen IS NOT NULL THEN 1 ELSE 0 END) as total_masuk,
+                    SUM(CASE WHEN p_absen IS NOT NULL THEN 1 ELSE 0 END) as total_pulang,
+                    SUM(CASE WHEN status IN ('SISTEM_ERROR','TUGAS_LUAR','LUPA_PRESNSI_PUSAKA') THEN 1 ELSE 0 END) as total_error
+                ")
+                ->first();
+        } else {
+            $presensi = (clone $baseQuery)
+                ->whereIn('status', ['SISTEM_ERROR', 'TUGAS_LUAR', 'LUPA_PRESNSI_PUSAKA'])
+                ->orderBy('tanggal', 'desc')
+                ->paginate(15)
+                ->withQueryString();
+        }
 
         return view('presensi-history', [
             'user' => $user,
             'presensi' => $presensi,
             'month' => $month,
             'year' => $year,
+            'tab' => $tab,
+            'stats' => $stats,
         ]);
     }
 
