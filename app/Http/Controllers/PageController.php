@@ -9050,22 +9050,26 @@ class PageController extends Controller
             ->whereMonth('tanggal', $month)
             ->whereYear('tanggal', $year);
 
-        $stats = null;
+        $stats = (clone $baseQuery)
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(CASE WHEN m_absen IS NOT NULL THEN 1 ELSE 0 END) as total_masuk,
+                SUM(CASE WHEN p_absen IS NOT NULL THEN 1 ELSE 0 END) as total_pulang,
+                SUM(CASE WHEN status IN ('SISTEM_ERROR','TUGAS_LUAR','LUPA_PRESNSI_PUSAKA') THEN 1 ELSE 0 END) as total_error,
+                SUM(CASE WHEN status = 'SISTEM_ERROR' THEN 1 ELSE 0 END) as total_sistem_error,
+                SUM(CASE WHEN status = 'TUGAS_LUAR' THEN 1 ELSE 0 END) as total_tugas_luar,
+                SUM(CASE WHEN status = 'LUPA_PRESNSI_PUSAKA' THEN 1 ELSE 0 END) as total_lupa
+            ")
+            ->first();
+
+        $errorCount = (int) $stats->total_error;
+        $totalCount = (int) $stats->total;
 
         if ($tab === 'riwayat') {
             $presensi = (clone $baseQuery)
                 ->orderBy('tanggal', 'desc')
                 ->paginate(15)
                 ->withQueryString();
-
-            $stats = (clone $baseQuery)
-                ->selectRaw("
-                    COUNT(*) as total,
-                    SUM(CASE WHEN m_absen IS NOT NULL THEN 1 ELSE 0 END) as total_masuk,
-                    SUM(CASE WHEN p_absen IS NOT NULL THEN 1 ELSE 0 END) as total_pulang,
-                    SUM(CASE WHEN status IN ('SISTEM_ERROR','TUGAS_LUAR','LUPA_PRESNSI_PUSAKA') THEN 1 ELSE 0 END) as total_error
-                ")
-                ->first();
         } else {
             $presensi = (clone $baseQuery)
                 ->whereIn('status', ['SISTEM_ERROR', 'TUGAS_LUAR', 'LUPA_PRESNSI_PUSAKA'])
@@ -9081,7 +9085,137 @@ class PageController extends Controller
             'year' => $year,
             'tab' => $tab,
             'stats' => $stats,
+            'errorCount' => $errorCount,
+            'totalCount' => $totalCount,
         ]);
+    }
+
+    /**
+     * Data bersama untuk export PDF & halaman pratinjau cetak riwayat presensi.
+     */
+    private function presensiHistoryPayload(Request $request): array
+    {
+        $user = auth()->user();
+        $nip = $user->nomor_induk;
+
+        $tab = $request->string('tab')->toString();
+        $tab = in_array($tab, ['error', 'riwayat'], true) ? $tab : 'error';
+
+        $month = (int) $request->input('month', date('m'));
+        $month = ($month >= 1 && $month <= 12) ? $month : (int) date('m');
+
+        $year = (int) $request->input('year', date('Y'));
+        $year = ($year >= 2000 && $year <= (int) date('Y') + 1) ? $year : (int) date('Y');
+
+        $baseQuery = DB::table('ktd_presensi')
+            ->where('user_nip', $nip)
+            ->whereMonth('tanggal', $month)
+            ->whereYear('tanggal', $year);
+
+        $stats = (clone $baseQuery)
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(CASE WHEN m_absen IS NOT NULL THEN 1 ELSE 0 END) as total_masuk,
+                SUM(CASE WHEN p_absen IS NOT NULL THEN 1 ELSE 0 END) as total_pulang,
+                SUM(CASE WHEN status IN ('SISTEM_ERROR','TUGAS_LUAR','LUPA_PRESNSI_PUSAKA') THEN 1 ELSE 0 END) as total_error,
+                SUM(CASE WHEN status = 'SISTEM_ERROR' THEN 1 ELSE 0 END) as total_sistem_error,
+                SUM(CASE WHEN status = 'TUGAS_LUAR' THEN 1 ELSE 0 END) as total_tugas_luar,
+                SUM(CASE WHEN status = 'LUPA_PRESNSI_PUSAKA' THEN 1 ELSE 0 END) as total_lupa
+            ")
+            ->first();
+
+        $rowsQuery = (clone $baseQuery);
+        if ($tab === 'error') {
+            $rowsQuery->whereIn('status', \App\Support\PresensiStatus::errorStatuses());
+        }
+        $rows = $rowsQuery->orderBy('tanggal', 'desc')->get();
+
+        $unitKerja = '-';
+        if ($user->dept_id) {
+            $dept = DB::table('ktd_department')->where('id', $user->dept_id)->first();
+            if ($dept) {
+                $unitKerja = $dept->nama;
+            }
+        }
+
+        $periodeLabel = Carbon::createFromDate($year, $month, 1)->locale('id')->isoFormat('MMMM Y');
+        $tabLabel = $tab === 'error' ? 'Laporan Presensi Error' : 'Riwayat Presensi';
+
+        if ($tab === 'error') {
+            $statistik = [
+                ['label' => 'Sistem Error', 'value' => (int) $stats->total_sistem_error, 'accent' => '#b91c1c', 'foot' => 'gagal absen otomatis'],
+                ['label' => 'Tugas Luar', 'value' => (int) $stats->total_tugas_luar, 'accent' => '#b45309', 'foot' => 'kegiatan di luar kantor'],
+                ['label' => 'Lupa Presensi', 'value' => (int) $stats->total_lupa, 'accent' => '#6d28d9', 'foot' => 'tidak absen sama sekali'],
+                ['label' => 'Total Laporan', 'value' => (int) $stats->total_error, 'accent' => '#1a2c35', 'foot' => 'perlu verifikasi atasan'],
+            ];
+        } else {
+            $total = max(1, (int) $stats->total);
+            $statistik = [
+                ['label' => 'Total Hari', 'value' => (int) $stats->total, 'accent' => '#1a2c35', 'foot' => 'hari tercatat pada '.mb_strtolower($periodeLabel)],
+                ['label' => 'Presensi Masuk', 'value' => (int) $stats->total_masuk, 'accent' => '#047857', 'foot' => 'absen masuk tercatat'],
+                ['label' => 'Presensi Pulang', 'value' => (int) $stats->total_pulang, 'accent' => '#1d4ed8', 'foot' => 'absen pulang tercatat'],
+                ['label' => 'Tingkat Kehadiran', 'value' => round((int) $stats->total_masuk / $total * 100).'%', 'accent' => '#b86e28', 'foot' => 'dari '.number_format($total, 0, ',', '.').' hari kerja'],
+            ];
+        }
+
+        return [
+            'user' => $user,
+            'nip' => $nip,
+            'unitKerja' => $unitKerja,
+            'stats' => $stats,
+            'statistik' => $statistik,
+            'rows' => $rows,
+            'tab' => $tab,
+            'month' => $month,
+            'year' => $year,
+            'periodeLabel' => $periodeLabel,
+            'tabLabel' => $tabLabel,
+            'cetakPada' => Carbon::now('Asia/Jakarta')->locale('id')->isoFormat('dddd, D MMMM Y · HH.mm').' WIB',
+        ];
+    }
+
+    /**
+     * Export riwayat presensi ke PDF (halaman print friendly).
+     */
+    public function presensiHistoryPdf(Request $request)
+    {
+        $data = $this->presensiHistoryPayload($request);
+
+        $data['fontBase'] = str_replace('\\', '/', public_path('fonts/pdf'));
+        $data['letterhead'] = str_replace('\\', '/', public_path('assets/img/template/header.png'));
+        $data['backUrl'] = route('presensi-history', [
+            'tab' => $data['tab'],
+            'month' => $data['month'],
+            'year' => $data['year'],
+        ]);
+
+        $pdf = Pdf::loadView('pdf.riwayat-presensi', $data)
+            ->setPaper('a4', 'portrait')
+            ->setOption('isRemoteEnabled', true)
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('defaultMediaType', 'print');
+
+        $filename = sprintf('riwayat-presensi-%s-%02d%s.pdf', $data['nip'], $data['month'], $data['year']);
+
+        return $pdf->stream($filename);
+    }
+
+    /**
+     * Halaman pratinjau cetak (print friendly) riwayat presensi.
+     */
+    public function presensiHistoryPrint(Request $request)
+    {
+        $data = $this->presensiHistoryPayload($request);
+
+        $data['fontBase'] = asset('fonts/pdf');
+        $data['letterhead'] = asset('assets/img/template/header.png');
+        $data['backUrl'] = route('presensi-history', [
+            'tab' => $data['tab'],
+            'month' => $data['month'],
+            'year' => $data['year'],
+        ]);
+
+        return view('pdf.riwayat-presensi', $data);
     }
 
     /**

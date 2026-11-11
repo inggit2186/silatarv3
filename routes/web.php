@@ -128,6 +128,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/presensi-error/surat/{id}/{jenis}', [PageController::class, 'suratKeteranganPresensiError'])->name('presensi-error.surat')->whereNumber('id')->where('jenis', 'masuk|pulang');
 
     Route::get('/riwayat-presensi', [PageController::class, 'presensiHistory'])->name('presensi-history');
+    Route::get('/riwayat-presensi/cetak', [PageController::class, 'presensiHistoryPrint'])->name('presensi-history.print');
+    Route::get('/riwayat-presensi/pdf', [PageController::class, 'presensiHistoryPdf'])->name('presensi-history.pdf');
 
 });
 

@@ -34,6 +34,8 @@
 !/storage/framework/sessions/.gitignore
 !/storage/framework/testing/.gitignore
 !/storage/framework/views/.gitignore
+/storage/fonts/*
+!/storage/fonts/.gitignore
 /storage/logs/*
 !/storage/logs/.gitignore
 npm-debug.log
