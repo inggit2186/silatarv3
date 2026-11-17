@@ -54,6 +54,18 @@
         </div>
     </div>
 
+    @if($stats['total_pelanggaran'] > 0)
+        <div class="card mb-6">
+            <div class="card-body flex flex-wrap items-center gap-3">
+                <span class="badge badge-warning">{{ $stats['total_pelanggaran'] }} pelanggaran tercatat</span>
+                <span class="text-sm text-muted">
+                    Peserta yang membuka tab lain, keluar dari layar penuh, atau menyalin isi soal
+                    tercatat di kolom Pelanggaran pada tabel rekap di bawah.
+                </span>
+            </div>
+        </div>
+    @endif
+
     <div class="card mb-6">
         <div class="table-header">
             <div class="table-title-group">
@@ -69,10 +81,14 @@
                         <th>Status</th>
                         <th>Nilai</th>
                         <th>Waktu</th>
+                        <th>Pelanggaran</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($peserta as $item)
+                    @php
+                        $daftarPelanggaran = $pelanggaran->get($item->user_id, collect());
+                    @endphp
                     <tr>
                         <td>
                             <div class="flex items-center gap-3">
@@ -108,10 +124,34 @@
                                 @endif
                             </span>
                         </td>
+                        <td>
+                            @if($daftarPelanggaran->isNotEmpty())
+                                <span class="badge badge-warning">{{ $daftarPelanggaran->count() }} kali</span>
+                                <details class="mt-2">
+                                    <summary class="cursor-pointer text-xs text-primary">Rincian</summary>
+                                    <ul class="mt-2 space-y-1">
+                                        @foreach($daftarPelanggaran as $langgaran)
+                                            <li class="text-xs text-muted">
+                                                <span class="font-medium text-gray-700 dark:text-gray-200">{{ $langgaran->label() }}</span>
+                                                <span class="font-mono">{{ $langgaran->created_at->format('d/m H:i') }}</span>
+                                                @if($langgaran->ip)
+                                                    <span class="font-mono text-xs">IP {{ $langgaran->ip }}</span>
+                                                @endif
+                                                @if($langgaran->keterangan)
+                                                    <span class="block">{{ $langgaran->keterangan }}</span>
+                                                @endif
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </details>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4">
+                        <td colspan="5">
                             <div class="empty-state">
                                 <svg class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/></svg>
                                 <p class="empty-state-title">Belum ada peserta</p>

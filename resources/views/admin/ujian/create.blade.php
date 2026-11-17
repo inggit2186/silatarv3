@@ -70,11 +70,12 @@
                         @enderror
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Acak Urutan Soal</label>
+                        <label class="form-label">Acak Urutan Soal &amp; Pilihan</label>
                         <select name="acak_soal" class="form-select">
                             <option value="0">Tidak</option>
                             <option value="1">Ya</option>
                         </select>
+                        <p class="form-hint text-sm text-muted">Setiap peserta mendapat urutan soal dan pilihan yang berbeda, tetapi tetap sama saat halaman dimuat ulang.</p>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Mulai Ujian</label>

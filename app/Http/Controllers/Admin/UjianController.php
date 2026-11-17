@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Ujian;
 use App\Models\UjianJawaban;
+use App\Models\UjianPelanggaran;
 use App\Models\UjianPeserta;
 use App\Models\UjianPilihan;
 use App\Models\UjianSoal;
@@ -418,6 +419,11 @@ class UjianController extends Controller
 
         $totalPoin = UjianSoal::where('ujian_id', $id)->sum('poin');
 
+        $pelanggaran = UjianPelanggaran::where('ujian_id', $id)
+            ->orderBy('created_at')
+            ->get()
+            ->groupBy('user_id');
+
         $nilaiTerisi = UjianPeserta::where('ujian_id', $id)
             ->whereNotNull('nilai')
             ->pluck('nilai');
@@ -428,6 +434,7 @@ class UjianController extends Controller
             'berjalan' => UjianPeserta::where('ujian_id', $id)->where('status', 'berjalan')->count(),
             'rata_rata' => $nilaiTerisi->isEmpty() ? null : round($nilaiTerisi->avg(), 2),
             'total_peserta' => UjianPeserta::count(),
+            'total_pelanggaran' => $pelanggaran->sum(fn ($items) => $items->count()),
         ];
 
         return view('admin.ujian.hasil', [
@@ -438,6 +445,7 @@ class UjianController extends Controller
             'jawabanEssay' => $jawabanEssay,
             'totalPoin' => $totalPoin,
             'stats' => $stats,
+            'pelanggaran' => $pelanggaran,
         ]);
     }
 

@@ -77,11 +77,12 @@
                         <input type="number" name="durasi_menit" value="{{ old('durasi_menit', $ujian->durasi_menit) }}" min="1" max="600" class="form-input" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Acak Urutan Soal</label>
+                        <label class="form-label">Acak Urutan Soal &amp; Pilihan</label>
                         <select name="acak_soal" class="form-select">
                             <option value="0" {{ old('acak_soal', $ujian->acak_soal) ? '' : 'selected' }}>Tidak</option>
                             <option value="1" {{ old('acak_soal', $ujian->acak_soal) ? 'selected' : '' }}>Ya</option>
                         </select>
+                        <p class="form-hint text-sm text-muted">Setiap peserta mendapat urutan soal dan pilihan yang berbeda, tetapi tetap sama saat halaman dimuat ulang.</p>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Mulai Ujian</label>

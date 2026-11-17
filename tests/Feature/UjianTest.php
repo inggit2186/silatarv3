@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\UjianController;
 use App\Models\Ujian;
 use App\Models\UjianJawaban;
 use App\Models\UjianPeserta;
@@ -9,6 +10,7 @@ use App\Models\UjianPilihan;
 use App\Models\UjianSoal;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -83,7 +85,7 @@ class UjianTest extends TestCase
             'status' => 'belum_mulai',
         ]);
 
-        \Illuminate\Support\Facades\Cache::forget("ujian:{$this->ujian->id}:soal");
+        Cache::forget("ujian:{$this->ujian->id}:soal");
     }
 
     private UjianPilihan $pilihanBenar;
@@ -301,5 +303,259 @@ class UjianTest extends TestCase
         $this->actingAs($admin)->get(route('admin.ujian.index'))->assertOk();
         $this->actingAs($admin)->get(route('admin.ujian.edit', $this->ujian->id))->assertOk();
         $this->actingAs($admin)->get(route('admin.ujian.hasil', $this->ujian->id))->assertOk();
+    }
+
+    public function test_halaman_hasil_tidak_membocorkan_kunci_sebelum_ujian_selesai(): void
+    {
+        // Peserta belum memulai ujian.
+        $response = $this->actingAs($this->peserta)->get(route('ujian.hasil', $this->ujian->id));
+        $response->assertRedirect(route('ujian.kerjakan', $this->ujian->id));
+        $response->assertDontSee($this->pilihanBenar->teks);
+
+        // Peserta sedang mengerjakan ujian.
+        $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id))->assertOk();
+
+        $sesi = UjianPeserta::where('ujian_id', $this->ujian->id)
+            ->where('user_id', $this->peserta->id)
+            ->first();
+        $this->assertSame('berjalan', $sesi->status);
+
+        $response = $this->actingAs($this->peserta)->get(route('ujian.hasil', $this->ujian->id));
+        $response->assertRedirect(route('ujian.kerjakan', $this->ujian->id));
+        $response->assertDontSee($this->pilihanBenar->teks);
+
+        // Setelah ujian ditutup, halaman hasil boleh dibuka.
+        $this->actingAs($this->peserta)->postJson(route('ujian.submit', $this->ujian->id))->assertOk();
+
+        $this->actingAs($this->peserta)->get(route('ujian.hasil', $this->ujian->id))->assertOk();
+    }
+
+    public function test_sesi_yang_kedaluwarsa_langsung_menutup_dan_membuka_halaman_hasil(): void
+    {
+        // Sesi sudah berjalan tetapi batas waktu sudah lewat.
+        UjianPeserta::where('ujian_id', $this->ujian->id)
+            ->where('user_id', $this->peserta->id)
+            ->update([
+                'status' => 'berjalan',
+                'started_at' => now()->subHour(),
+                'ends_at' => now()->subMinute(),
+            ]);
+
+        $this->actingAs($this->peserta)
+            ->get(route('ujian.kerjakan', $this->ujian->id))
+            ->assertRedirect(route('ujian.hasil', $this->ujian->id));
+
+        $sesi = UjianPeserta::where('ujian_id', $this->ujian->id)
+            ->where('user_id', $this->peserta->id)
+            ->first();
+        $this->assertSame('selesai', $sesi->status);
+
+        // Halaman hasil harus terbuka, tidak berputar kembali ke pengerjaan.
+        $this->actingAs($this->peserta)->get(route('ujian.hasil', $this->ujian->id))->assertOk();
+    }
+
+    public function test_urutan_soal_tetap_urut_bila_acak_soal_nonaktif(): void
+    {
+        $response = $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id));
+        $response->assertOk();
+
+        $ids = array_column($response->viewData('soal'), 'id');
+        $this->assertSame([$this->soalPg->id, $this->soalEssay->id], $ids);
+    }
+
+    public function test_urutan_soal_diacak_bila_acak_soal_aktif(): void
+    {
+        $soalTambahan = [];
+        foreach (range(3, 6) as $urut) {
+            $soalTambahan[] = UjianSoal::create([
+                'ujian_id' => $this->ujian->id,
+                'tipe' => 'pilihan_ganda',
+                'pertanyaan' => 'Soal tambahan nomor '.$urut,
+                'poin' => 10,
+                'urut' => $urut,
+            ])->id;
+        }
+
+        $this->ujian->update(['acak_soal' => true]);
+        Cache::forget("ujian:{$this->ujian->id}:soal");
+
+        $response = $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id));
+        $response->assertOk();
+
+        $soal = $response->viewData('soal');
+        $ids = array_column($soal, 'id');
+        $canonical = [$this->soalPg->id, $this->soalEssay->id, ...$soalTambahan];
+
+        // Seluruh soal tetap ada, hanya urutannya yang diacak.
+        $this->assertEqualsCanonicalizing($canonical, $ids);
+
+        // Urutan yang sama harus muncul lagi saat halaman dimuat ulang.
+        $ulang = $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id));
+        $this->assertSame($ids, array_column($ulang->viewData('soal'), 'id'));
+
+        // Label pilihan diurutkan ulang mengikuti posisi tampil.
+        foreach ($soal as $s) {
+            $labels = array_column($s['pilihan'], 'label');
+            $this->assertSame(
+                array_map(fn ($i) => chr(65 + $i), array_keys($labels)),
+                $labels
+            );
+        }
+    }
+
+    public function test_penilaian_tetap_benar_saat_soal_diacak(): void
+    {
+        $this->ujian->update(['acak_soal' => true]);
+        Cache::forget("ujian:{$this->ujian->id}:soal");
+
+        $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id));
+
+        $this->actingAs($this->peserta)->postJson(route('ujian.jawaban', $this->ujian->id), [
+            'jawaban' => [
+                $this->soalPg->id => ['pilihan_id' => $this->pilihanBenar->id],
+            ],
+        ])->assertOk();
+
+        $this->actingAs($this->peserta)->postJson(route('ujian.submit', $this->ujian->id))->assertOk();
+
+        $sesi = UjianPeserta::where('ujian_id', $this->ujian->id)
+            ->where('user_id', $this->peserta->id)
+            ->first();
+
+        $this->assertSame('selesai', $sesi->status);
+        // 20 poin benar dari total 50 poin.
+        $this->assertEquals(40.0, (float) $sesi->nilai);
+    }
+
+    public function test_acak_soal_konsisten_untuk_seed_yang_sama_dan_berbeda_untuk_seed_lain(): void
+    {
+        $items = range(1, 6);
+
+        $a = $this->acakArray($items, 'seed-a');
+        $b = $this->acakArray($items, 'seed-a');
+        $c = $this->acakArray($items, 'seed-b');
+
+        $this->assertSame($a, $b, 'Seed yang sama harus menghasilkan urutan yang sama.');
+        $this->assertEqualsCanonicalizing($items, $a, 'Hasil acak harus memuat seluruh item.');
+        $this->assertNotSame($a, $c, 'Seed yang berbeda harus menghasilkan urutan yang berbeda.');
+    }
+
+    public function test_halaman_pengerjaan_memuat_penjaga_tab_dan_layar_penh(): void
+    {
+        $response = $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id));
+
+        $response->assertOk();
+        $response->assertSee('Masuk Layar Penuh');
+        $response->assertSee('Lanjut tanpa layar penuh');
+
+        // Penjaga di sisi peramban harus ikut terkirim ke halaman.
+        $response->assertSee('X-Ujian-Perangkat', false);
+        $response->assertSee('perpindahan_fokus', false);
+        $response->assertSee('keluar_layar_penh', false);
+        $response->assertSee('sesi_ganda', false);
+    }
+
+    public function test_pelanggaran_bisa_dicatat_dan_ditampilkan_di_halaman_hasil(): void
+    {
+        $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id))->assertOk();
+
+        $response = $this->actingAs($this->peserta)->postJson(route('ujian.pelanggaran', $this->ujian->id), [
+            'jenis' => 'perpindahan_fokus',
+            'keterangan' => 'Membuka tab lain',
+        ]);
+
+        $response->assertOk()->assertJson(['ok' => true, 'total' => 1]);
+
+        $this->assertDatabaseHas('ujian_pelanggaran', [
+            'ujian_id' => $this->ujian->id,
+            'user_id' => $this->peserta->id,
+            'jenis' => 'perpindahan_fokus',
+            'keterangan' => 'Membuka tab lain',
+        ]);
+
+        // Admin melihat rekap pelanggaran di halaman hasil ujian.
+        $admin = User::where('role', 'superadmin')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->get(route('admin.ujian.hasil', $this->ujian->id))
+            ->assertOk()
+            ->assertSee('Berpindah tab / jendela')
+            ->assertSee('1 kali');
+    }
+
+    public function test_jenis_pelanggaran_tidak_dikenal_ditolak(): void
+    {
+        $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id))->assertOk();
+
+        $this->actingAs($this->peserta)
+            ->postJson(route('ujian.pelanggaran', $this->ujian->id), ['jenis' => 'ngawur'])
+            ->assertStatus(422);
+
+        $this->assertDatabaseCount('ujian_pelanggaran', 0);
+    }
+
+    public function test_pelanggaran_ditolak_setelah_sesi_selesai(): void
+    {
+        $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id))->assertOk();
+        $this->actingAs($this->peserta)->postJson(route('ujian.submit', $this->ujian->id))->assertOk();
+
+        $this->actingAs($this->peserta)
+            ->postJson(route('ujian.pelanggaran', $this->ujian->id), ['jenis' => 'tab_baru'])
+            ->assertStatus(409);
+
+        $this->assertDatabaseCount('ujian_pelanggaran', 0);
+    }
+
+    public function test_perangkat_pertama_mendaftarkan_sesi_dan_perangkat_kedua_tercatat_sebagai_sesi_ganda(): void
+    {
+        $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id))->assertOk();
+
+        // Perangkat pertama terdaftar pada sesi.
+        $this->actingAs($this->peserta)
+            ->postJson(route('ujian.perangkat', $this->ujian->id), [], ['X-Ujian-Perangkat' => 'perangkat-a'])
+            ->assertOk()
+            ->assertJson(['ok' => true]);
+
+        $sesi = UjianPeserta::where('ujian_id', $this->ujian->id)
+            ->where('user_id', $this->peserta->id)
+            ->first();
+
+        $this->assertNotNull($sesi->sidik_perangkat);
+
+        // Perangkat yang sama tidak dianggap pelanggaran.
+        $this->actingAs($this->peserta)
+            ->postJson(route('ujian.perangkat', $this->ujian->id), [], ['X-Ujian-Perangkat' => 'perangkat-a'])
+            ->assertOk();
+
+        $this->assertDatabaseCount('ujian_pelanggaran', 0);
+
+        // Perangkat berbeda dicatat sebagai sesi ganda.
+        $this->actingAs($this->peserta)
+            ->postJson(route('ujian.perangkat', $this->ujian->id), [], ['X-Ujian-Perangkat' => 'perangkat-b'])
+            ->assertStatus(409);
+
+        $this->assertDatabaseHas('ujian_pelanggaran', [
+            'ujian_id' => $this->ujian->id,
+            'user_id' => $this->peserta->id,
+            'jenis' => 'sesi_ganda',
+        ]);
+    }
+
+    public function test_peserta_yang_bukan_peserta_ujian_tidak_boleh_mencatat_pelanggaran(): void
+    {
+        $this->actingAs($this->bukanPeserta)
+            ->postJson(route('ujian.pelanggaran', $this->ujian->id), ['jenis' => 'tab_baru'])
+            ->assertNotFound();
+    }
+
+    /**
+     * Panggil helper pengacak pada controller secara langsung.
+     */
+    private function acakArray(array $items, string $seed): array
+    {
+        $method = new \ReflectionMethod(UjianController::class, 'acakArray');
+        $method->setAccessible(true);
+
+        return $method->invoke(new UjianController, $items, $seed);
     }
 }

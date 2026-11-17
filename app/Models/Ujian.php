@@ -19,6 +19,7 @@ class Ujian extends Model
         'mulai_at',
         'selesai_at',
         'acak_soal',
+        'jumlah_soal_diambil',
         'created_by',
     ];
 
@@ -27,6 +28,7 @@ class Ujian extends Model
         'selesai_at' => 'datetime',
         'acak_soal' => 'boolean',
         'durasi_menit' => 'integer',
+        'jumlah_soal_diambil' => 'integer',
     ];
 
     public function soal(): HasMany
@@ -42,6 +44,11 @@ class Ujian extends Model
     public function jawaban(): HasMany
     {
         return $this->hasMany(UjianJawaban::class, 'ujian_id');
+    }
+
+    public function pelanggaran(): HasMany
+    {
+        return $this->hasMany(UjianPelanggaran::class, 'ujian_id');
     }
 
     public function scopeTerbit($query)

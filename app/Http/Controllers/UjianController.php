@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Ujian;
 use App\Models\UjianJawaban;
+use App\Models\UjianPelanggaran;
 use App\Models\UjianPeserta;
 use App\Models\UjianSoal;
 use Illuminate\Http\Request;
@@ -21,6 +22,20 @@ class UjianController extends Controller
     private const MAX_UPLOAD = 5120;
 
     private const EKSTENSI = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'jpg', 'jpeg', 'png', 'txt', 'zip', 'rar'];
+
+    /**
+     * Jenis pelanggaran yang boleh dicatat oleh peserta.
+     */
+    private const JENIS_PELANGGARAN = [
+        'perpindahan_fokus',
+        'keluar_layar_penh',
+        'tanpa_layar_penh',
+        'sesi_ganda',
+        'tab_baru',
+        'salin',
+        'tempel',
+        'cetak',
+    ];
 
     /**
      * Daftar ujian yang ditugaskan ke user yang sedang login.
@@ -75,11 +90,19 @@ class UjianController extends Controller
                 ->with('error', 'Ujian ini belum dimulai.');
         }
 
-        $payload = $this->payloadSoal($id);
+        $payload = $this->payloadSoalUntuk($id, $userId, (bool) $ujian->acak_soal);
 
         if (empty($payload)) {
             return redirect()->route('ujian.index')
                 ->with('error', 'Ujian ini belum memiliki soal.');
+        }
+
+        // Sesi sudah lewat batas waktu tetapi belum pernah dikirim. Dicek
+        // sebelum sesi dimulai ulang supaya durasi tidak bisa diperpanjang.
+        if ($peserta->ends_at && now()->gte($peserta->ends_at)) {
+            $this->tutupSesi($peserta);
+
+            return redirect()->route('ujian.hasil', $id);
         }
 
         if ($peserta->status === 'belum_mulai' || ! $peserta->started_at) {
@@ -89,13 +112,6 @@ class UjianController extends Controller
                 'started_at' => $startedAt,
                 'ends_at' => $startedAt->copy()->addMinutes($ujian->durasi_menit),
             ]);
-        }
-
-        // Sesi sudah lewat batas waktu tetapi belum pernah dikirim.
-        if ($peserta->ends_at && now()->gte($peserta->ends_at)) {
-            $this->tutupSesi($peserta);
-
-            return redirect()->route('ujian.hasil', $id);
         }
 
         $jawaban = UjianJawaban::where('ujian_id', $id)
@@ -129,6 +145,9 @@ class UjianController extends Controller
             'sudahDijawab' => $sudahDijawab,
             'esai' => $esai,
             'lampiran' => $lampiran,
+            'jumlahPelanggaran' => UjianPelanggaran::where('ujian_id', $id)
+                ->where('user_id', $userId)
+                ->count(),
             'remainingSeconds' => max(0, $peserta->ends_at ? now()->diffInSeconds($peserta->ends_at, false) : 0),
         ]);
     }
@@ -341,6 +360,103 @@ class UjianController extends Controller
     }
 
     /**
+     * Daftarkan perangkat peserta. Bila sidik perangkat berbeda dari perangkat
+     * yang memulai sesi, violation dicatat sebagai sesi ganda.
+     */
+    public function catatPerangkat(Request $request, int $id)
+    {
+        $sesi = $this->cariSesi($request, $id);
+
+        if (! $sesi) {
+            return response()->json(['message' => 'Sesi ujian tidak ditemukan.'], 404);
+        }
+
+        if ($sesi->status === 'selesai') {
+            return response()->json(['message' => 'Sesi ujian sudah ditutup.'], 409);
+        }
+
+        $sidik = $this->sidikPerangkat($request);
+
+        if (blank($sesi->sidik_perangkat)) {
+            $sesi->update([
+                'sidik_perangkat' => $sidik,
+                'ip' => $request->ip(),
+                'user_agent' => Str::limit((string) $request->userAgent(), 255, ''),
+            ]);
+
+            return response()->json(['ok' => true]);
+        }
+
+        if (! hash_equals($sesi->sidik_perangkat, $sidik)) {
+            $this->simpanPelanggaran(
+                $id,
+                (int) $sesi->user_id,
+                'sesi_ganda',
+                'Ujian dibuka dari perangkat lain pada '.now()->format('d/m/Y H:i:s'),
+                $request->ip()
+            );
+
+            return response()->json([
+                'message' => 'Ujian ini sedang berjalan pada perangkat lain.',
+                'konflik' => true,
+            ], 409);
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Catat pelanggaran yang terdeteksi di browser peserta.
+     */
+    public function catatPelanggaran(Request $request, int $id)
+    {
+        $sesi = $this->cariSesi($request, $id);
+
+        if (! $sesi) {
+            return response()->json(['message' => 'Sesi ujian tidak ditemukan.'], 404);
+        }
+
+        if ($sesi->status === 'selesai') {
+            return response()->json([
+                'message' => 'Sesi ujian sudah ditutup.',
+                'redirect' => route('ujian.hasil', $id),
+            ], 409);
+        }
+
+        if ($sesi->ends_at && now()->gte($sesi->ends_at)) {
+            $this->tutupSesi($sesi);
+
+            return response()->json([
+                'message' => 'Waktu ujian telah habis.',
+                'redirect' => route('ujian.hasil', $id),
+            ], 409);
+        }
+
+        $jenis = (string) $request->input('jenis', '');
+
+        if (! in_array($jenis, self::JENIS_PELANGGARAN, true)) {
+            return response()->json(['message' => 'Jenis pelanggaran tidak dikenal.'], 422);
+        }
+
+        $keterangan = trim((string) $request->input('keterangan', ''));
+
+        $this->simpanPelanggaran(
+            $id,
+            (int) $sesi->user_id,
+            $jenis,
+            $keterangan === '' ? null : Str::limit($keterangan, 200, ''),
+            $request->ip()
+        );
+
+        return response()->json([
+            'ok' => true,
+            'total' => UjianPelanggaran::where('ujian_id', $id)
+                ->where('user_id', $sesi->user_id)
+                ->count(),
+        ]);
+    }
+
+    /**
      * Halaman hasil & pembahasan.
      */
     public function hasil(Request $request, int $id)
@@ -353,10 +469,16 @@ class UjianController extends Controller
         $sesi = UjianPeserta::where('ujian_id', $id)->where('user_id', $userId)->first();
         abort_unless($sesi, 404);
 
+        // Kunci jawaban hanya boleh dibuka setelah ujian ditutup, jika tidak
+        // peserta bisa melihat kunci sebelum menjawab.
+        if ($sesi->status !== 'selesai') {
+            return redirect()->route('ujian.kerjakan', $id);
+        }
+
         $data = Cache::remember(
             "ujian:{$id}:hasil:{$userId}",
             self::CACHE_HASIL,
-            fn () => $this->susunHasil($id, $userId)
+            fn () => $this->susunHasil($id, $userId, (bool) $ujian->acak_soal)
         );
 
         return view('ujian.hasil', [
@@ -364,6 +486,9 @@ class UjianController extends Controller
             'ujian' => $ujian,
             'sesi' => $sesi,
             'data' => $data,
+            'jumlahPelanggaran' => UjianPelanggaran::where('ujian_id', $id)
+                ->where('user_id', $userId)
+                ->count(),
         ]);
     }
 
@@ -397,6 +522,41 @@ class UjianController extends Controller
         return UjianPeserta::where('ujian_id', $id)
             ->where('user_id', $request->user()->id)
             ->first();
+    }
+
+    /**
+     * Sidik perangkat peserta. Nilai yang dikirim browser digabung dengan
+     * kunci aplikasi sehingga yang tersimpan di database tidak dapat dipakai
+     * untuk meniru perangkat lain.
+     */
+    private function sidikPerangkat(Request $request): string
+    {
+        $raw = trim((string) $request->header('X-Ujian-Perangkat', ''));
+
+        if ($raw === '') {
+            $raw = (string) $request->userAgent();
+        }
+
+        return hash('sha256', (string) config('app.key').'|'.$raw);
+    }
+
+    /**
+     * Simpan satu baris pelanggaran.
+     */
+    private function simpanPelanggaran(
+        int $ujianId,
+        int $userId,
+        string $jenis,
+        ?string $keterangan = null,
+        ?string $ip = null
+    ): UjianPelanggaran {
+        return UjianPelanggaran::create([
+            'ujian_id' => $ujianId,
+            'user_id' => $userId,
+            'jenis' => $jenis,
+            'keterangan' => $keterangan,
+            'ip' => $ip,
+        ]);
     }
 
     /**
@@ -477,6 +637,53 @@ class UjianController extends Controller
     }
 
     /**
+     * Payload soal untuk peserta tertentu. Bila ujian mengaktifkan acak soal,
+     * urutan soal dan urutan pilihan diacak secara deterministik per peserta
+     * sehingga tetap sama saat halaman dimuat ulang.
+     */
+    private function payloadSoalUntuk(int $ujianId, int $userId, bool $acakSoal): array
+    {
+        $payload = $this->payloadSoal($ujianId);
+
+        if (! $acakSoal) {
+            return $payload;
+        }
+
+        $seed = "ujian:{$ujianId}:user:{$userId}";
+        $payload = $this->acakArray($payload, $seed.':soal');
+
+        foreach ($payload as $index => $soal) {
+            $pilihan = $this->acakArray($soal['pilihan'], $seed.':soal:'.$soal['id']);
+
+            // Label diurutkan ulang mengikuti posisi tampil pada peserta ini.
+            $payload[$index]['pilihan'] = array_map(
+                fn ($p, $urut) => array_replace($p, ['label' => chr(65 + $urut)]),
+                $pilihan,
+                array_keys($pilihan)
+            );
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Acak array secara deterministik memakai seed yang sama, tanpa menyentuh
+     * state generator acak global.
+     */
+    private function acakArray(array $items, string $seed): array
+    {
+        $items = array_values($items);
+        $total = count($items);
+
+        for ($i = $total - 1; $i > 0; $i--) {
+            $acak = hexdec(substr(hash('sha256', $seed.':'.$i), 0, 7)) % ($i + 1);
+            [$items[$i], $items[$acak]] = [$items[$acak], $items[$i]];
+        }
+
+        return $items;
+    }
+
+    /**
      * Buang kunci jawaban sebelum dikirim ke browser peserta.
      */
     private function tanpaKunci(array $payload): array
@@ -499,9 +706,9 @@ class UjianController extends Controller
     /**
      * Susun rekap hasil + pembahasan per soal.
      */
-    private function susunHasil(int $ujianId, int $userId): array
+    private function susunHasil(int $ujianId, int $userId, bool $acakSoal): array
     {
-        $payload = $this->payloadSoal($ujianId);
+        $payload = $this->payloadSoalUntuk($ujianId, $userId, $acakSoal);
 
         $jawaban = UjianJawaban::where('ujian_id', $ujianId)
             ->where('user_id', $userId)
@@ -515,7 +722,7 @@ class UjianController extends Controller
 
         $rincian = [];
 
-        foreach ($payload as $s) {
+        foreach ($payload as $index => $s) {
             $j = $jawaban->get($s['id']);
 
             $kunci = null;
@@ -561,7 +768,8 @@ class UjianController extends Controller
             $totalSkor += $skorSoal;
 
             $rincian[] = [
-                'nomor' => $s['urut'],
+                // Nomor mengikuti urutan tampil pada peserta, bukan urutan asli.
+                'nomor' => $index + 1,
                 'tipe' => $s['tipe'],
                 'pertanyaan' => $s['pertanyaan'],
                 'petunjuk' => $s['petunjuk'],

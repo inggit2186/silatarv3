@@ -49,6 +49,26 @@
                 </div>
             </div>
 
+            <!-- Pelanggaran -->
+            @if($jumlahPelanggaran > 0)
+                <div class="neo-card mb-6">
+                    <div class="neo-card-body flex items-start gap-3">
+                        <svg class="w-6 h-6 shrink-0 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                        </svg>
+                        <div>
+                            <p class="font-display font-semibold text-[var(--ink)]">
+                                Terdapat {{ $jumlahPelanggaran }} pelanggaran selama ujian
+                            </p>
+                            <p class="text-sm text-[var(--ink-soft)] mt-1">
+                                Berpindah tab atau jendela, keluar dari mode layar penuh, menyalin, menempel,
+                                dan mencetak halaman ujian dicatat sebagai pelanggaran dan dapat ditinjau oleh admin.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Pembahasan -->
             <h2 class="font-display text-xl font-semibold text-[var(--ink)] mb-4">Pembahasan</h2>
 

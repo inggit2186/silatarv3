@@ -70,6 +70,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/jawaban', [UjianController::class, 'simpanJawaban'])->whereNumber('id')->name('jawaban');
         Route::post('/{id}/upload', [UjianController::class, 'uploadLampiran'])->whereNumber('id')->name('upload');
         Route::post('/{id}/submit', [UjianController::class, 'submit'])->whereNumber('id')->name('submit');
+        Route::post('/{id}/perangkat', [UjianController::class, 'catatPerangkat'])->whereNumber('id')->name('perangkat');
+        Route::post('/{id}/pelanggaran', [UjianController::class, 'catatPelanggaran'])->whereNumber('id')->name('pelanggaran');
         Route::get('/{id}/hasil', [UjianController::class, 'hasil'])->whereNumber('id')->name('hasil');
         Route::get('/jawaban/{jawabanId}/berkas', [UjianController::class, 'unduhBerkas'])->whereNumber('jawabanId')->name('berkas');
     });

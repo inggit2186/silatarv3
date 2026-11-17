@@ -5,7 +5,9 @@
     'submit' => route('ujian.submit', $ujian->id),
     'upload' => route('ujian.upload', $ujian->id),
     'hasil' => route('ujian.hasil', $ujian->id),
-]))">
+    'perangkat' => route('ujian.perangkat', $ujian->id),
+    'pelanggaran' => route('ujian.pelanggaran', $ujian->id),
+]), @js($jumlahPelanggaran))">
 
     <!-- ============ BAR ATAS ============ -->
     <div class="sticky top-0 z-30 border-b border-[var(--line)] bg-[var(--paper)]">
@@ -46,8 +48,31 @@
                     <span class="font-mono text-lg font-bold text-[var(--ink)] tabular-nums" :class="remaining <= 60 ? 'text-red-600' : ''" x-text="timeText"></span>
                 </div>
 
+                <!-- Pelanggaran -->
+                <div class="flex items-center gap-2 px-3 py-2 rounded-xl border text-xs"
+                     :class="violasi > 0 ? 'border-red-300 bg-red-50 text-red-700' : 'border-[var(--line)] bg-[var(--paper-soft)] text-[var(--ink-soft)]'"
+                     x-show="violasi > 0">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    </svg>
+                    <span>Pelanggaran: <span class="font-mono font-bold" x-text="violasi"></span></span>
+                </div>
+
                 <button type="button" class="neo-btn" @click="confirmOpen = true">Kumpulkan Jawaban</button>
             </div>
+        </div>
+    </div>
+
+    <div class="border-b border-[var(--line)] bg-[var(--paper-soft)]">
+        <div class="content-centered px-5 py-2 flex items-start gap-2 text-xs text-[var(--ink-soft)]">
+            <svg class="w-4 h-4 mt-0.5 shrink-0 text-[var(--gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>
+                Ujian berjalan dalam mode layar penuh. Membuka tab atau jendela lain, keluar dari layar penuh,
+                menyalin, menempel, dan mencetak halaman ini dicatat sebagai <strong class="text-[var(--ink)]">pelanggaran</strong>
+                dan terlihat oleh admin.
+            </span>
         </div>
     </div>
 
@@ -251,11 +276,63 @@
         </div>
     </div>
 
+    <!-- ============ MODAL MODE LAYAR PENUH ============ -->
+    <div class="neo-modal-backdrop" x-show="fsOpen" x-cloak>
+        <div class="neo-modal neo-modal-sm">
+            <div class="neo-modal-header">
+                <h3 class="neo-modal-title">Mulai Ujian dalam Mode Layar Penuh</h3>
+            </div>
+            <div class="neo-modal-body">
+                <p class="text-sm text-[var(--ink-soft)]">
+                    Agar ujian tetap berjalan di satu halaman, ujian ini disarankan dijalankan dalam mode layar penuh.
+                    Peserta tetap dapat menutup layar penuh, tetapi setiap keluar dari layar penuh
+                    dicatat sebagai pelanggaran.
+                </p>
+                <ul class="mt-4 space-y-2 text-sm text-[var(--ink-soft)]">
+                    <li class="flex items-start gap-2">
+                        <span class="font-mono text-[var(--gold)]">01</span>
+                        <span>Jangan membuka tab, jendela, atau aplikasi lain selama ujian berlangsung.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="font-mono text-[var(--gold)]">02</span>
+                        <span>Menyalin, menempel, dan mencetak halaman ujian dinonaktifkan.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="font-mono text-[var(--gold)]">03</span>
+                        <span>Jawaban tersimpan otomatis. Jangan menutup jendela browser ini.</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="neo-modal-footer">
+                <button type="button" class="neo-btn-secondary" @click="lewatiLayarPenuh()">Lanjut tanpa layar penuh</button>
+                <button type="button" class="neo-btn" @click="masukLayarPenuh()">Masuk Layar Penuh</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ MODAL PERINGATAN PELANGGARAN ============ -->
+    <div class="neo-modal-backdrop" x-show="warnOpen" x-cloak>
+        <div class="neo-modal neo-modal-sm">
+            <div class="neo-modal-header">
+                <h3 class="neo-modal-title" x-text="warnTitle"></h3>
+            </div>
+            <div class="neo-modal-body">
+                <p class="text-sm text-[var(--ink-soft)]" x-text="warnText"></p>
+                <p class="text-sm text-[var(--ink-soft)] mt-3">
+                    Total pelanggaran pada sesi ini: <span class="font-mono font-bold text-[var(--ink)]" x-text="violasi"></span>
+                </p>
+            </div>
+            <div class="neo-modal-footer">
+                <button type="button" class="neo-btn" @click="warnOpen = false">Kembali ke Ujian</button>
+            </div>
+        </div>
+    </div>
+
 </main>
 
 @once
 <script>
-    document.addEventListener('alpine:init', () => {        window.Alpine.data('ujian', (soal, answers, essays, lampiran, remaining, urls) => ({
+    document.addEventListener('alpine:init', () => {        window.Alpine.data('ujian', (soal, answers, essays, lampiran, remaining, urls, jumlahPelanggaran) => ({
             soal: soal,
             answers: answers,
             essays: essays,
@@ -275,17 +352,328 @@
             flushTimer: null,
             inflight: Promise.resolve(),
             autoSubmitted: false,
+            sudahSelesai: false,
+            violasi: Math.max(0, Math.round(jumlahPelanggaran || 0)),
+            catatanPelanggaran: {},
+            fsOpen: true,
+            fsAktif: false,
+            warnOpen: false,
+            warnTitle: '',
+            warnText: '',
 
             init() {
                 this.timer = setInterval(() => this.tick(), 1000);
 
                 document.addEventListener('visibilitychange', () => {
                     if (document.visibilityState === 'hidden') {
+                        this.catat('perpindahan_fokus', 'Halaman ujian tidak lagi aktif, kemungkinan tab atau jendela lain dibuka.');
                         this.beacon();
                     }
                 });
 
-                window.addEventListener('pagehide', () => this.beacon());
+                window.addEventListener('pagehide', () => {
+                    this.catat('perpindahan_fokus', 'Halaman ujian ditutup.');
+                    this.beacon();
+                });
+
+                this.pasangPenjaga();
+                this.daftarPerangkat();
+            },
+
+            /**
+             * Penjaga browser: tab baru, keluar layar penuh, salin, tempel, cetak.
+             */
+            pasangPenjaga() {
+                // Jendela kehilangan fokus, misalnya karena membuka jendela lain.
+                window.addEventListener('blur', () => {
+                    if (document.visibilityState === 'hidden') {
+                        return;
+                    }
+
+                    // Dialog pemilih berkas bawaan juga membuat jendela kehilangan fokus.
+                    const aktif = document.activeElement;
+                    if (aktif && aktif.type === 'file') {
+                        return;
+                    }
+
+                    this.catat('perpindahan_fokus', 'Fokus berpindah ke jendela lain.');
+                });
+
+                // Keluar dari mode layar penuh.
+                const periksaLayarPenuh = () => {
+                    if (document.fullscreenElement || document.webkitFullscreenElement) {
+                        this.fsAktif = true;
+                        this.fsOpen = false;
+                        return;
+                    }
+
+                    if (this.fsAktif) {
+                        this.fsAktif = false;
+                        this.catat('keluar_layar_penh', 'Peserta keluar dari mode layar penuh.');
+                    }
+                };
+
+                document.addEventListener('fullscreenchange', periksaLayarPenuh);
+                document.addEventListener('webkitfullscreenchange', periksaLayarPenuh);
+
+                // Pembukaan tab atau jendela baru.
+                window.open = () => {
+                    this.catat('tab_baru', 'Upaya membuka tab atau jendela baru.');
+                    return null;
+                };
+
+                document.addEventListener('click', (e) => {
+                    const tautan = e.target && e.target.closest ? e.target.closest('a[target="_blank"]') : null;
+
+                    if (tautan) {
+                        e.preventDefault();
+                        this.catat('tab_baru', 'Upaya membuka tab baru lewat tautan.');
+                    }
+                }, true);
+
+                // Klik kanan.
+                document.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    this.tampilkanPeringatan('Klik Kanan Diblokir', 'Menu klik kanan dinonaktifkan selama ujian berlangsung.');
+                });
+
+                // Salin dan potong, kecuali teks jawaban sendiri milik peserta.
+                document.addEventListener('copy', (e) => {
+                    if (this.bolehSalin(e.target)) {
+                        return;
+                    }
+
+                    e.preventDefault();
+                    this.catat('salin', 'Upaya menyalin isi soal ujian.');
+                });
+
+                document.addEventListener('cut', (e) => {
+                    if (this.bolehSalin(e.target)) {
+                        return;
+                    }
+
+                    e.preventDefault();
+                    this.catat('salin', 'Upaya memotong isi soal ujian.');
+                });
+
+                // Tempel.
+                document.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    this.catat('tempel', 'Upaya menempel teks ke halaman ujian.');
+                });
+
+                // Pencetakan dan pintasan papan ketik.
+                document.addEventListener('keydown', (e) => {
+                    if (! e.ctrlKey && ! e.metaKey) {
+                        return;
+                    }
+
+                    const tombol = (e.key || '').toLowerCase();
+
+                    if (tombol === 'p') {
+                        e.preventDefault();
+                        this.catat('cetak', 'Upaya mencetak halaman ujian.');
+                        return;
+                    }
+
+                    if (tombol === 'c' || tombol === 'x') {
+                        if (this.bolehSalin(e.target)) {
+                            return;
+                        }
+
+                        e.preventDefault();
+                        this.catat('salin', 'Upaya menyalin isi soal ujian.');
+                        return;
+                    }
+
+                    if (tombol === 'v') {
+                        e.preventDefault();
+                        this.catat('tempel', 'Upaya menempel teks ke halaman ujian.');
+                    }
+                });
+
+                // Peringatan saat menutup atau meninggalkan halaman ujian.
+                window.addEventListener('beforeunload', (e) => {
+                    if (this.sudahSelesai) {
+                        return;
+                    }
+
+                    e.preventDefault();
+                    e.returnValue = '';
+                });
+            },
+
+            /**
+             * Teks milik peserta sendiri (kolom jawaban esai) boleh disalin.
+             */
+            bolehSalin(target) {
+                if (! target || ! target.tagName) {
+                    return false;
+                }
+
+                const tag = target.tagName.toLowerCase();
+
+                return tag === 'textarea' || (tag === 'input' && (target.type === 'text' || target.type === 'search'));
+            },
+
+            async masukLayarPenuh() {
+                const elemen = document.documentElement;
+
+                try {
+                    if (elemen.requestFullscreen) {
+                        await elemen.requestFullscreen();
+                    } else if (elemen.webkitRequestFullscreen) {
+                        elemen.webkitRequestFullscreen();
+                    } else {
+                        throw new Error('Browser tidak mendukung mode layar penuh.');
+                    }
+
+                    this.fsAktif = true;
+                    this.fsOpen = false;
+                } catch (e) {
+                    this.fsAktif = false;
+                    this.lewatiLayarPenuh();
+                }
+            },
+
+            lewatiLayarPenuh() {
+                this.fsOpen = false;
+                this.catat('tanpa_layar_penh', 'Peserta melanjutkan ujian tanpa mode layar penuh.');
+            },
+
+            /**
+             * Catat satu pelanggaran ke server dan tampilkan peringatan.
+             */
+            catat(jenis, keterangan) {
+                if (this.sudahSelesai) {
+                    return;
+                }
+
+                const sekarang = Date.now();
+                const terakhir = this.catatanPelanggaran[jenis] || 0;
+
+                // Satu kejadian bisa memicu beberapa event sekaligus,
+                // misalnya berpindah tab memicu blur dan visibilitychange.
+                if (sekarang - terakhir < 3000) {
+                    return;
+                }
+
+                this.catatanPelanggaran[jenis] = sekarang;
+                this.violasi++;
+
+                const payload = JSON.stringify({
+                    _token: this.token,
+                    jenis: jenis,
+                    keterangan: keterangan || '',
+                });
+
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon(urls.pelanggaran, new Blob([payload], { type: 'application/json' }));
+                } else {
+                    fetch(urls.pelanggaran, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': this.token,
+                        },
+                        body: payload,
+                    }).catch(() => {});
+                }
+
+                this.tampilkanPeringatan(this.judulPelanggaran(jenis), this.pesanPelanggaran(jenis));
+            },
+
+            judulPelanggaran(jenis) {
+                return {
+                    perpindahan_fokus: 'Fokus Berpindah',
+                    keluar_layar_penh: 'Keluar dari Layar Penuh',
+                    tanpa_layar_penh: 'Tanpa Mode Layar Penuh',
+                    sesi_ganda: 'Sesi Ganda Terdeteksi',
+                    tab_baru: 'Tab Baru Diblokir',
+                    salin: 'Penyalinan Diblokir',
+                    tempel: 'Penempelan Diblokir',
+                    cetak: 'Percetakan Diblokir',
+                }[jenis] || 'Pelanggaran Terdeteksi';
+            },
+
+            pesanPelanggaran(jenis) {
+                return {
+                    perpindahan_fokus: 'Anda berpindah ke tab, jendela, atau aplikasi lain. Tindakan ini dicatat sebagai pelanggaran oleh admin.',
+                    keluar_layar_penh: 'Anda keluar dari mode layar penuh. Tindakan ini dicatat sebagai pelanggaran oleh admin.',
+                    tanpa_layar_penh: 'Ujian dilanjutkan tanpa mode layar penuh. Tindakan ini dicatat sebagai pelanggaran oleh admin.',
+                    sesi_ganda: 'Ujian ini sedang berjalan pada perangkat lain. Tindakan ini dicatat sebagai pelanggaran oleh admin.',
+                    tab_baru: 'Membuka tab atau jendela baru dinonaktifkan selama ujian.',
+                    salin: 'Menyalin isi soal ujian dinonaktifkan selama ujian.',
+                    tempel: 'Menempel teks ke halaman ujian dinonaktifkan selama ujian.',
+                    cetak: 'Mencetak halaman ujian dinonaktifkan selama ujian.',
+                }[jenis] || 'Tindakan ini dicatat sebagai pelanggaran oleh admin.';
+            },
+
+            tampilkanPeringatan(judul, pesan) {
+                this.warnTitle = judul;
+                this.warnText = pesan;
+                this.warnOpen = true;
+            },
+
+            /**
+             * Daftarkan perangkat peserta. Perangkat yang berbeda dari perangkat
+             * memulai sesi dicatat sebagai pelanggaran sesi ganda.
+             */
+            async daftarPerangkat() {
+                try {
+                    const res = await fetch(urls.perangkat, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': this.token,
+                            'X-Ujian-Perangkat': this.sidikPerangkat(),
+                        },
+                        body: JSON.stringify({}),
+                    });
+
+                    if (res.status === 409) {
+                        const data = await res.json().catch(() => ({}));
+                        this.violasi++;
+                        this.tampilkanPeringatan(
+                            'Sesi Ganda Terdeteksi',
+                            data.message || 'Ujian ini sedang berjalan pada perangkat lain.'
+                        );
+                    }
+                } catch (e) {
+                    // Gagal mendaftarkan perangkat tidak boleh menghentikan ujian.
+                }
+            },
+
+            /**
+             * Sidik peramban, dikirim apa adanya ke server yang menyimpannya
+             * dalam bentuk terenkripsi hashing.
+             */
+            sidikPerangkat() {
+                const dasar = [
+                    navigator.userAgent || '',
+                    (screen.width || 0) + 'x' + (screen.height || 0),
+                    screen.colorDepth || 0,
+                    navigator.language || '',
+                    navigator.hardwareConcurrency || 0,
+                    window.devicePixelRatio || 1,
+                ].join('|');
+
+                let peramban = '';
+
+                try {
+                    peramban = localStorage.getItem('ujian_sidik') || '';
+
+                    if (! peramban) {
+                        peramban = Math.random().toString(36).slice(2) + Date.now().toString(36);
+                        localStorage.setItem('ujian_sidik', peramban);
+                    }
+                } catch (e) {
+                    peramban = '';
+                }
+
+                return dasar + '#' + peramban;
             },
 
             tick() {
@@ -481,6 +869,7 @@
                         body: JSON.stringify({}),
                     });
                     const data = await res.json().catch(() => ({}));
+                    this.sudahSelesai = true;
                     window.location.href = data.redirect || urls.hasil;
                 } catch (e) {
                     this.submitting = false;

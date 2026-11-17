@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UjianPeserta extends Model
 {
@@ -17,6 +18,9 @@ class UjianPeserta extends Model
         'ends_at',
         'submitted_at',
         'nilai',
+        'ip',
+        'user_agent',
+        'sidik_perangkat',
     ];
 
     protected $casts = [
@@ -34,6 +38,11 @@ class UjianPeserta extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function pelanggaran(): HasMany
+    {
+        return $this->hasMany(UjianPelanggaran::class, 'user_id');
     }
 
     public function scopeAktif($query)
