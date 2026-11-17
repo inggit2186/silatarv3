@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inovasi Pelayanan SILATAR — Kantor Kementerian Agama Kabupaten Tanah Datar</title>
+<style>
+:root{
+  --green:#0E6B4F; --green-dark:#084C38; --green-soft:#E8F2ED;
+  --gold:#B08D57; --gold-soft:#F6F0E6; --navy:#2D4859;
+  --ink:#2A2825; --ink-soft:#57514A; --ink-mute:#857E73;
+  --paper:#FFFFFF; --paper-soft:#FAF8F4; --line:#E4DFD5; --line-soft:#F0ECE4;
+}
+*{ box-sizing:border-box; }
+html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+body{
+  margin:0; background:#EDEAE3; color:var(--ink);
+  font-family:'Charter','Georgia','Times New Roman',serif;
+  font-size:10.8pt; line-height:1.62;
+}
+.sheet{ width:210mm; min-height:297mm; margin:0 auto; padding:20mm 17mm 16mm;
+  background:var(--paper); box-shadow:0 2px 24px rgba(0,0,0,.14); }
+h1,h2,h3,h4{ font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif; color:var(--green-dark); line-height:1.25; }
+h1{ font-size:26pt; margin:0 0 6mm; }
+h2{ font-size:15pt; margin:0 0 4mm; padding-bottom:2.5mm; border-bottom:2px solid var(--gold); }
+h3{ font-size:11.8pt; margin:6mm 0 2.5mm; }
+h4{ font-size:10.6pt; margin:4.5mm 0 2mm; color:var(--navy); }
+p{ margin:0 0 3.2mm; text-align:justify; }
+ul,ol{ margin:0 0 3.5mm; padding-left:6mm; }
+li{ margin-bottom:1.4mm; }
+strong{ color:var(--ink); }
+a{ color:var(--green); text-decoration:none; }
+.lead{ font-size:11.4pt; color:var(--ink-soft); }
+.small{ font-size:9pt; color:var(--ink-mute); }
+.center{ text-align:center; }
+.mono{ font-family:'Consolas','SF Mono',monospace; }
+
+/* cover */
+.cover{ display:flex; flex-direction:column; min-height:257mm; }
+.cover-top{ display:flex; align-items:center; gap:5mm; margin-bottom:2mm; }
+.crest{ width:20mm; height:20mm; border-radius:50%;
+  background:radial-gradient(circle at 50% 42%, #14805F 0 58%, #0B5540 59% 100%);
+  display:flex; align-items:center; justify-content:center; color:#fff;
+  font-family:'Segoe UI',sans-serif; font-weight:700; font-size:10pt;
+  letter-spacing:.5pt; flex:none; box-shadow:0 0 0 1.2mm var(--gold-soft); }
+.cover-brand b{ display:block; font-size:15pt; letter-spacing:2pt; color:var(--green-dark); }
+.cover-brand span{ font-size:8.4pt; letter-spacing:1.4pt; color:var(--ink-mute); text-transform:uppercase; }
+.cover-hero{ margin:12mm 0 8mm; padding:10mm 9mm; border-radius:3mm;
+  background:linear-gradient(135deg,#0E6B4F 0%,#12795A 52%,#2D4859 100%);
+  color:#fff; box-shadow:0 3mm 7mm rgba(14,107,79,.22); }
+.cover-hero .eyebrow{ font-family:'Segoe UI',sans-serif; font-size:8.6pt; letter-spacing:2.6pt;
+  text-transform:uppercase; color:#D9C49A; margin-bottom:4mm; }
+.cover-hero h1{ color:#fff; font-size:27pt; margin-bottom:3mm; }
+.cover-hero h1 span{ color:#E4CFA4; }
+.cover-hero .sub{ font-size:12pt; color:#EAF3EF; margin:0 0 5mm; font-family:'Segoe UI',sans-serif; }
+.cover-hero .desc{ font-size:10.4pt; color:#D5E7DF; margin:0; line-height:1.6; }
+.cover-meta{ margin-top:auto; }
+.meta-table{ width:100%; border-collapse:collapse; font-size:9.4pt; }
+.meta-table th{ text-align:left; width:34mm; padding:2.2mm 3mm; background:var(--green-soft);
+  color:var(--green-dark); font-family:'Segoe UI',sans-serif; font-weight:600; font-size:8.6pt;
+  letter-spacing:.4pt; text-transform:uppercase; border:1px solid var(--line); vertical-align:top; }
+.meta-table td{ padding:2.2mm 3mm; border:1px solid var(--line); vertical-align:top; }
+.fill{ color:var(--ink-mute); font-style:italic; }
+.cover-foot{ margin-top:8mm; padding-top:3mm; border-top:1px solid var(--line);
+  display:flex; justify-content:space-between; font-size:8.4pt; color:var(--ink-mute);
+  font-family:'Segoe UI',sans-serif; }
+
+/* sections */
+.section{ padding-top:8mm; }
+.section.first{ page-break-before:always; }
+h2 .num{ display:inline-block; min-width:9mm; color:var(--gold); font-weight:700; }
+.band{ background:var(--gold-soft); border-left:3px solid var(--gold); padding:4mm 5mm;
+  margin:0 0 5mm; border-radius:0 2mm 2mm 0; }
+.band h3{ margin:0 0 2mm; font-size:10.8pt; }
+.band p{ margin:0; font-size:10pt; }
+.keyfacts{ display:grid; grid-template-columns:repeat(4,1fr); gap:3mm; margin:0 0 6mm; }
+.kf{ border:1px solid var(--line); border-radius:2mm; padding:3.4mm 3mm;
+  background:var(--paper-soft); text-align:center; }
+.kf b{ display:block; font-family:'Segoe UI',sans-serif; font-size:16pt; color:var(--green-dark); line-height:1.1; }
+.kf span{ font-size:8.2pt; color:var(--ink-mute); font-family:'Segoe UI',sans-serif; }
+.toc{ list-style:none; padding:0; margin:0; }
+.toc li{ display:flex; align-items:baseline; gap:3mm; padding:2.1mm 0;
+  border-bottom:1px dotted var(--line); font-size:10.2pt; }
+.toc li span.n{ font-family:'Segoe UI',sans-serif; font-weight:700; color:var(--gold); min-width:8mm; font-size:9.4pt; }
+.toc li span.t{ flex:1; }
+.toc li span.p{ color:var(--ink-mute); font-size:9pt; font-family:'Segoe UI',sans-serif; }
+
+/* figures */
+figure{ margin:4mm 0 5mm; page-break-inside:avoid; }
+figure img{ display:block; width:100%; height:auto; border:1px solid var(--line);
+  border-radius:2mm; box-shadow:0 1.5mm 4mm rgba(42,40,37,.09); }
+figure.shot img{ max-height:116mm; object-fit:cover; object-position:top center; }
+figcaption{ margin-top:2mm; font-size:8.6pt; color:var(--ink-mute);
+  font-family:'Segoe UI',sans-serif; line-height:1.45; }
+figcaption b{ color:var(--green-dark); font-weight:600; }
+.fig-grid{ display:grid; grid-template-columns:1fr 1fr; gap:4mm; }
+.fig-grid figure{ margin:0; }
+.fig-grid figure img{ max-height:62mm; object-fit:cover; object-position:top center; }
+.fig-grid.three{ grid-template-columns:repeat(3,1fr); }
+.phone{ width:62mm; margin:0 auto; display:block; }
+.phone img{ border-radius:4mm; }
+.phones{ display:grid; grid-template-columns:repeat(3,1fr); gap:5mm; align-items:start; }
+.phones figure{ margin:0; }
+.phones figure img{ width:100%; height:auto; border:1px solid var(--line);
+  border-radius:3mm; box-shadow:0 1.5mm 4mm rgba(42,40,37,.09); }
+.phone-shot{ width:56mm; margin:0 auto; }
+.phone-shot img{ width:100%; height:auto; border:1px solid var(--line); border-radius:4mm;
+  box-shadow:0 1.5mm 4mm rgba(42,40,37,.09); }
+
+/* tables */
+table.grid{ width:100%; border-collapse:collapse; font-size:9.4pt; margin:0 0 5mm; page-break-inside:avoid; }
+table.grid th{ background:var(--green); color:#fff; text-align:left; padding:2.4mm 2.8mm;
+  font-family:'Segoe UI',sans-serif; font-weight:600; font-size:8.8pt;
+  letter-spacing:.3pt; text-transform:uppercase; }
+table.grid td{ padding:2.4mm 2.8mm; border-bottom:1px solid var(--line-soft); vertical-align:top; }
+table.grid tr:nth-child(even) td{ background:var(--paper-soft); }
+table.grid td b{ color:var(--green-dark); }
+.callout{ border:1px solid var(--gold); background:var(--gold-soft); border-radius:2mm;
+  padding:4mm 5mm; margin:0 0 5mm; page-break-inside:avoid; }
+.callout h4{ margin:0 0 2mm; color:var(--green-dark); font-size:10.4pt; }
+.callout p:last-child{ margin-bottom:0; }
+.steps{ counter-reset:s; list-style:none; padding:0; margin:0 0 5mm; }
+.steps li{ counter-increment:s; position:relative; padding:0 0 3.4mm 11mm; margin-bottom:3.4mm;
+  border-bottom:1px solid var(--line-soft); }
+.steps li:last-child{ border-bottom:none; }
+.steps li::before{ content:counter(s); position:absolute; left:0; top:0; width:7.4mm; height:7.4mm;
+  border-radius:50%; background:var(--green-soft); color:var(--green-dark); border:1px solid #C9E0D6;
+  font-family:'Segoe UI',sans-serif; font-weight:700; font-size:9pt;
+  display:flex; align-items:center; justify-content:center; }
+.steps li b{ display:block; color:var(--green-dark); font-family:'Segoe UI',sans-serif; font-size:10.2pt; }
+.steps li span{ color:var(--ink-soft); font-size:9.8pt; }
+.footer-note{ margin-top:8mm; padding-top:3mm; border-top:1px solid var(--line); font-size:8.4pt;
+  color:var(--ink-mute); font-family:'Segoe UI',sans-serif; display:flex; justify-content:space-between; }
+
+@page{ size:A4 portrait; margin:16mm 15mm; }
+@media print{
+  body{ background:#fff; font-size:10.4pt; }
+  .sheet{ width:auto; min-height:auto; margin:0; padding:0; box-shadow:none; background:#fff; }
+  .cover{ min-height:238mm; }
+  .section.first{ page-break-before:always; }
+  h2,h3,h4{ page-break-after:avoid; }
+  figure,table.grid,.callout,.band,.keyfacts,.steps li{ page-break-inside:avoid; }
+  a{ color:inherit; }
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<!-- ===================== COVER ===================== -->
+<div class="cover">
+  <div class="cover-top">
+    <div class="crest">KAG</div>
+    <div class="cover-brand">
+      <b>SILATAR</b>
+      <span>Kantor Kementerian Agama Kabupaten Tanah Datar</span>
+    </div>
+  </div>
+
+  <div class="cover-hero">
+    <div class="eyebrow">Dokumen Inovasi Pelayanan</div>
+    <h1>SILATAR<br><span>Sistem Informasi Layanan dan Informasi<br>Kankemenag Tanah Datar</span></h1>
+    <p class="sub">Membangun layanan publik yang cepat, terbuka, dan dapat dipertanggungjawabkan</p>
+    <p class="desc">
+      Satu sistem yang menyatukan <b>portal layanan daring</b> bagi warga dan
+      <b>aplikasi mobile untuk aparatur</b> — memuatkan proses pengajuan layanan, absensi,
+      pelaporan kinerja, hingga publikasi informasi dalam satu lingkungan yang dikuasai
+      sendiri oleh Kantor Kementerian Agama Kabupaten Tanah Datar.
+    </p>
+  </div>
+
+  <div class="cover-meta">
+    <table class="meta-table">
+      <tr><th>Instansi</th><td>Kantor Kementerian Agama Kabupaten Tanah Datar, Provinsi Sumatera Barat</td></tr>
+      <tr><th>Nama Inovasi</th><td>SILATAR — <em>Sistem Informasi Layanan dan Informasi Kankemenag Tanah Datar</em></td></tr>
+      <tr><th>Bentuk Inovasi</th><td>Inovasi Pelayanan Publik Berbasis Teknologi Informasi &amp; Komunikasi (TIK)</td></tr>
+      <tr><th>Aspek Penilaian ZI</th><td>Manajemen Perubahan &nbsp;•&nbsp; Penataan Tatalaksana &nbsp;•&nbsp; Penataan SDM &nbsp;•&nbsp; Penguatan Pengawasan &nbsp;•&nbsp; Akuntabilitas Kinerja &nbsp;•&nbsp; Penguatan Sistem Integritas</td></tr>
+      <tr><th>Disusun oleh</th><td class="fill">Tim Inovasi dan Layanan — Kantor Kementerian Agama Kabupaten Tanah Datar</td></tr>
+      <tr><th>Verifikasi</th><td class="fill">Dr.H.Hendri Pani Dias, S.Ag,MA — Kepala Kantor Kementerian Agama Kabupaten Tanah Datar</td></tr>
+      <tr><th>Tanggal</th><td>16 November 2026</td></tr>
+      <tr><th>Versi Aplikasi</th><td>Aplikasi Mobile v2.0.2 (build 3) &nbsp;|&nbsp; Web Portal SILATAR V2 (Laravel 13)</td></tr>
+    </table>
+  </div>
+
+  <div class="cover-foot">
+    <span>Dokumen ini dapat dipakai sebagai lampiran bukti dalam Penilaian Mandiri Pembangunan Zona Integritas (PMPZI)</span>
+    <span>SILATAR V2 — 2026</span>
+  </div>
+</div>
+
+<!-- ===================== RINGKASAN ===================== -->
+<section class="section first">
+  <h2><span class="num">—</span>Ringkasan Eksekutif</h2>
+
+  <div class="band">
+    <h3>Inti Inovasi</h3>
+    <p>
+      SILATAR adalah sistem informasi layanan yang dibangun dan dikelola sendiri oleh Kantor Kementerian
+      Agama Kabupaten Tanah Datar. Aplikasi ini mengubah layanan administrasi yang semula tersebar di meja,
+      kertas, dan buku register menjadi <b>alur digital yang dapat dilacak, diaudit, dan
+      dipertanggungjawabkan</b> — dengan satu sistem yang melayani dua sisi: <b>warga masyarakat</b> melalui
+      portal daring, dan <b>aparatur</b> melalui aplikasi mobile.
+    </p>
+  </div>
+
+  <div class="keyfacts">
+    <div class="kf"><b>2.044</b><span>Pengguna Terdaftar</span></div>
+    <div class="kf"><b>23.420</b><span>Pengajuan Diterima</span></div>
+    <div class="kf"><b>57</b><span>Jenis Layanan Aktif</span></div>
+    <div class="kf"><b>21.756</b><span>Pengajuan Selesai</span></div>
+  </div>
+
+  <p>
+    Selama beroperasi, SILATAR telah mencatat <b>2.044 pengguna</b> dan <b>23.420 pengajuan layanan</b>
+    dari <b>55 unit kerja</b> di lingkungan Kantor Kementerian Agama Kabupaten Tanah Datar. Dari jumlah
+    tersebut, <b>21.756 pengajuan</b> telah berstatus <i>SUKSES</i>, sedangkan <b>1.612 pengajuan</b>
+    masih berada pada tahap menunggu verifikasi dan proses — jumlah antrean kerja yang terpantau langsung
+    pada dashboard.
+  </p>
+  <p class="small" style="margin-top:-1.5mm">
+    <i>Angka ditarik langsung dari basis data aplikasi SILATAR pada 16 November 2026 (tabel
+    <span class="mono">users</span>, <span class="mono">users_request</span>,
+    <span class="mono">ktd_layanan</span>).</i>
+  </p>
+
+  <h3>Tiga hal yang dibawa SILATAR</h3>
+  <ol>
+    <li>
+      <b>Layanan tanpa kedalaman antrean.</b> Warga dapat menelusuri katalog layanan, memenuhi syarat,
+      mengunggah berkas, dan memantau status pengajuannya <b>24 jam tanpa perlu antre di loket</b>.
+    </li>
+    <li>
+      <b>Absensi berbasis geolokasi dan kehadiran acara dengan bukti foto.</b> Kehadiran PNS tercatat
+      otomatis melalui GPS dengan batas radius unit kerja, dilengkapi verifikasi lokasi dan foto bukti
+      untuk kegiatan yang menuntut kehadiran fisik.
+    </li>
+    <li>
+      <b>Laporan kinerja menjadi otomatis, bukan manual.</b> Kegiatan harian direkam per tanggal,
+      dijumlahkan otomatis per bulan, dan diunduh sebagai PDF bertanda tangan atasan — menggantikan
+      rekap manual berbasis berkas.
+    </li>
+  </ol>
+
+  <h3>Mengapa ini relevan bagi Penilaian ZI</h3>
+  <p>
+    Penguatan Zona Integritas menuntut agar layanan publik berjalan secara <b>tepat waktu, akuntabel, dan
+    bebas dari diskriminasi</b>. SILATAR menjawab kebutuhan tersebut secara terukur: setiap pengajuan
+    memiliki nomor registrasi dan jejak status; setiap unit kerja memiliki radius presensi yang transparan;
+    setiap laporan kinerja memiliki metadata, arsip, dan tanda tangan atasan.
+  </p>
+
+  <div class="callout">
+    <h4>Catatan pembuktian</h4>
+    <p>
+      Seluruh data dan tangkapan layar dalam dokumen ini diambil dari <b>instansi aplikasi yang sedang
+      berjalan</b> — basis data lokal yang merupakan cerminan sistem operasional — bukan dari contoh
+      rekaan. Nama dan data pribadi pada tangkapan layar memakai akun simulasi khusus yang dibuat untuk
+      keperluan dokumentasi, dan tidak merujuk pada akun pengguna nyata.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== DAFTAR ISI ===================== -->
+<section class="section">
+  <h2><span class="num">—</span>Daftar Isi</h2>
+  <ul class="toc">
+    <li><span class="n">01</span><span class="t">Latar Belakang dan Permasalahan</span><span class="p">hal. 2</span></li>
+    <li><span class="n">02</span><span class="t">Solusi: SILATAR</span><span class="p">hal. 3</span></li>
+    <li><span class="n">03</span><span class="t">Arsitektur dan Ruang Lingkup Layanan</span><span class="p">hal. 4</span></li>
+    <li><span class="n">04</span><span class="t">Portal Layanan Publik — Melayani Warga</span><span class="p">hal. 5</span></li>
+    <li><span class="n">05</span><span class="t">Aplikasi Mobile untuk Aparatur</span><span class="p">hal. 7</span></li>
+    <li><span class="n">06</span><span class="t">Panel Administrasi dan Tata Kelola</span><span class="p">hal. 9</span></li>
+    <li><span class="n">07</span><span class="t">Peta Inovasi: Aspek, Praktik, dan Bukti</span><span class="p">hal. 10</span></li>
+    <li><span class="n">08</span><span class="t">Dampak, Dampak Kinerja, dan Keberlanjutan</span><span class="p">hal. 11</span></li>
+    <li><span class="n">09</span><span class="t">Keterkaitan dengan Penilaian ZI (PMPZI)</span><span class="p">hal. 12</span></li>
+    <li><span class="n">10</span><span class="t">Tantangan, Batasan, dan Rencana Pengembangan</span><span class="p">hal. 13</span></li>
+    <li><span class="n">11</span><span class="t">Penutup</span><span class="p">hal. 14</span></li>
+    <li><span class="n">12</span><span class="t">Lampiran — Daftar Tangkapan Layar</span><span class="p">hal. 15</span></li>
+  </ul>
+</section>
+
+<!-- ===================== 01 LATAR BELAKANG ===================== -->
+<section class="section first">
+  <h2><span class="num">01</span>Latar Belakang dan Permasalahan</h2>
+
+  <p>
+    Kantor Kementerian Agama Kabupaten Tanah Datar menjalankan layanan administrasi yang bersinggungan
+    langsung dengan warga. Contohnya pendaftaran nikah, penerbitan Surat Tanda Lapor, dan pengurusan
+    suratownik yang lain.
+  </p>
+
+  <p>
+    Sebelum SILATAR, layanan tersebut berjalan dengan pola konvensional: berkas dimasukan manual ke buku
+    register, data pengajuan ditranskripkan berulang kali ke berkas spreadsheet, dan warga datang langsung
+    ke loket untuk menanyakan status pengajuannya. Praktik tersebut menimbulkan enam persoalan yang
+    berulang.
+  </p>
+
+  <table class="grid">
+    <thead>
+      <tr><th style="width:7mm">#</th><th style="width:42mm">Persoalan</th><th>Dampak yang dirasakan</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><b>Waktu tunggu dan antrean</b></td>
+        <td>Warga harus hadir berulang kali — saat mengajukan, saat melunasi kekurangan berkas, dan saat
+        mengambil hasil. Di tengah jam kerja, antrean menjadi beban bagi seluruh pihak.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><b>Informasi status tidak transparan</b></td>
+        <td>Warga tidak mengetahui posisi pengajuannya. Pertanyaan yang paling sering muncul adalah
+        "sudah atau belum?"</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><b>Data tersebar dan format berbeda</b></td>
+        <td>Setiap unit kerja mencatat sendiri dengan format berbeda. Rekapitulasi menyita waktu
+        berhari-hari dan rawan salah input.</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><b>Mutu layanan bergantung pada petugas</b></td>
+        <td>Tanpa standar data tertulis, kualitas dan kecepatan layanan sangat bergantung pada pengalaman
+        masing-masing petugas.</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><b>Presensi dan pelaporan masih manual</b></td>
+        <td>Kehadiran dan laporan kegiatan dicatat manual sehingga sulit diverifikasi dan berpotensi tidak
+        akurat.</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><b>Informasi publik tertinggal</b></td>
+        <td>Pengumuman kegiatan dan informasi layanan hanya diperbarui sesekali sehingga warga sering
+        datang ke kantor karena belum mengetahui informasinya.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="band">
+    <h3>Akar masalah</h3>
+    <p>
+      Enam persoalan tersebut berakar pada satu hal: <b>tidak adanya satu sistem yang menyatukan data
+      layanan, data kehadiran, dan data kinerja aparatur</b>. Ketika proses masih berjalan di atas kertas,
+      setiap permintaan yang masuk hanya berupa "warga melihat halaman", dan setiap jawaban harus dicari
+      secara manual.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== 02 SOLUSI ===================== -->
+<section class="section first">
+  <h2><span class="num">02</span>Solusi: SILATAR</h2>
+
+  <p>
+    Kantor Kementerian Agama Kabupaten Tanah Datar membangun <b>SILATAR</b> — <em>Sistem Informasi Layanan
+    dan Informasi Kankemenag Tanah Datar</em> — sebagai sistem informasi layanan terintegrasi yang
+    mencakup dua wajah: <b>portal layanan daring</b> untuk warga dan pemohon, serta <b>aplikasi mobile</b>
+    untuk aparatur di Kantor Kementerian Agama Kabupaten Tanah Datar.
+  </p>
+
+  <figure class="shot">
+    <img src="img/01-beranda-hero.jpg" alt="Halaman beranda portal SILATAR">
+    <figcaption><b>Portal SILATAR — Beranda.</b> Halaman pembuka portal layanan resmi Kantor Kementerian
+    Agama Kabupaten Tanah Datar: menu Beranda, Berita, Unit Kerja, Layanan, Publikasi, PPID, dan Kontak;
+    ajakan mengunduh aplikasi mobile; galeri publikasi kegiatan kantor.</figcaption>
+  </figure>
+
+  <h3>Prinsip yang dipegang</h3>
+  <ul>
+    <li><b>Warga di posisi pertama.</b> Semua menu publik dirancang agar warga dapat menyelesaikan
+    pengajuan tanpa perlu banyak datang ke kantor.</li>
+    <li><b>Setiap proses meninggalkan jejak digital.</b> Pengajuan, verifikasi, persetujuan, dan laporan
+    menyimpan riwayat yang dapat ditelusuri kembali.</li>
+    <li><b>Bukan memindahkan kertas ke layar, tetapi mengubah alurnya.</b> Pengecekan berkas, persetujuan,
+    dan pengarsipan disatukan dalam satu alur sehingga proses tidak lagi bercabang di luar sistem.</li>
+    <li><b>Transparansi yang terjaga.</b> Status pengajuan, identitas petugas yang menangani, dan satuan
+    kerja tujuan dapat dilihat langsung oleh pemohon.</li>
+  </ul>
+
+  <h3>Peran SILATAR di Mata Warga</h3>
+  <p>
+    Bagi warga, SILATAR adalah <b>meja layanan 24 jam</b>. Portal daring menyediakan katalog 57 jenis
+    layanan aktif beserta syarat dan alurnya, formulir pengajuan daring dengan unggah berkas, pelacakan
+    status pengajuan dengan nomor registrasi, serta kanal pengaduan dan whistleblower. Bagi aparatur,
+    SILATAR adalah <b>alat kerja</b> yang menyediakan absensi geolokasi, pelaporan kegiatan harian, rekap
+    dan unduh PDF, pengajuan janji temu, verifikasi permintaan SIMPEG, serta keikutsertaan dalam kegiatan
+    kantor.
+  </p>
+
+  <div class="callout">
+    <h4>Aset milik sendiri — tidak bergantung pada pihak ketiga</h4>
+    <p>
+      SILATAR dikembangkan dengan teknologi sumber terbuka (Laravel, Tailwind CSS, Alpine.js,
+      Flutter/Dart) dan basis data MySQL/MariaDB yang dikelola di lingkungan Kantor Kementerian Agama
+      Kabupaten Tanah Datar. Tidak ada biaya lisensi per pengguna, dan seluruh data layanan berada pada
+      server instansi.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== 03 ARSITEKTUR ===================== -->
+<section class="section first">
+  <h2><span class="num">03</span>Arsitektur dan Ruang Lingkup Layanan</h2>
+
+  <h3>Arsitektur aplikasi</h3>
+  <p>
+    SILATAR dibangun sebagai <b>dua aplikasi yang berbagi satu basis data dan satu API</b>, dengan
+    pemisahan peran yang tegas: portal daring (<span class="mono">Laravel 13</span> +
+    <span class="mono">Tailwind CSS 4</span> + <span class="mono">Alpine.js</span>) untuk warga dan
+    pemohon, serta aplikasi mobile (<span class="mono">Flutter</span>/<span class="mono">Dart</span>)
+    untuk aparatur. Keduanya bertukar data melalui REST API yang sama, sehingga
+    perubahan data pada satu sisi langsung terlihat pada sisi yang lain tanpa proses ekspor-impor
+    manual.
+  </p>
+
+  <table class="grid">
+    <thead>
+      <tr><th style="width:38mm">Komponen</th><th style="width:40mm">Teknologi</th><th>Fungsi dalam ekosistem SILATAR</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>Portal daring</b><br>(warga &amp; pemohon)</td>
+        <td>Laravel 13, Blade, Tailwind CSS 4, Alpine.js, Vite</td>
+        <td>Katalog layanan, formulir pengajuan dengan unggah berkas, pelacakan status pengajuan,
+        publikasi, PPID, pengaduan, portal aparatur.</td>
+      </tr>
+      <tr>
+        <td><b>Aplikasi mobile</b><br>(aparatur)</td>
+        <td>Flutter / Dart, CanvasKit, build Android</td>
+        <td>Presensi geolokasi, pelaporan kegiatan, pengajuan janji temu, verifikasi SIMPEG, keikutsertaan
+        acara, akses menu administrasi.</td>
+      </tr>
+      <tr>
+        <td><b>API</b></td>
+        <td>Laravel REST (routes/api.php), autentikasi berbasis token</td>
+        <td>Satuan pertukaran data kedua aplikasi; seluruh baca/tulis data melewati satu pintu sehingga
+        jejak perubahan mudah dilacak.</td>
+      </tr>
+      <tr>
+        <td><b>Basis data</b></td>
+        <td>MySQL / MariaDB (<span class="mono">kemenagtd_db</span>)</td>
+        <td>Menyimpan data master layanan, unit kerja, pengguna, pengajuan, berkas, absensi, dan
+        aktivitas.</td>
+      </tr>
+      <tr>
+        <td><b>Panel administrasi</b></td>
+        <td>Modul Laravel terpisah dengan middleware <span class="mono">auth</span> + <span class="mono">admin</span></td>
+        <td>Verifikasi pengajuan, pengelolaan pengguna, layanan, unit kerja, berita, publikasi, acara,
+        janji temu, dan rekap presensi.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Ruang lingkup layanan</h3>
+  <p>
+    Cakupan layanan SILATAR pada saat dokumen ini disusun: <b>57 jenis layanan aktif</b> yang
+    tersebar pada <b>55 unit kerja</b>, mulai dari Kantor Kementerian Agama Kabupaten Tanah Datar,
+    KUA, MIN, MTsN, MAN, hingga Madrasah Ibtidaiyah. Setiap layanan memuat rincian syarat, alur, dan
+    berkas yang harus dilampirkan, sehingga warga mengetahui persyaratannya <b>sebelum</b> datang ke
+    kantor.
+  </p>
+
+  <div class="fig-grid">
+    <figure>
+      <img src="img/07-satuan-kerja.jpg" alt="Daftar unit kerja pada portal SILATAR">
+      <figcaption><b>Daftar unit kerja.</b> Portal menampilkan seluruh unit kerja beserta alamat,
+      telepon, dan layanannya dalam bentuk direktori yang dapat dicari.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/02-katalog-layanan.jpg" alt="Katalog layanan SILATAR">
+      <figcaption><b>Katalog layanan per unit kerja.</b> Sebelum memilih layanan, warga memilih unit
+      kerja; jumlah layanan aktif pada tiap unit ditampilkan sebagai angka "(N) layanan aktif".</figcaption>
+    </figure>
+  </div>
+
+  <h3>Model data inti</h3>
+  <table class="grid">
+    <thead>
+      <tr><th style="width:44mm">Tabel</th><th style="width:36mm">Peran</th><th>Keterkaitan</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><b>ktd_layanan</b></td><td>Master jenis layanan</td><td>Menjadi induk dari <span class="mono">ktd_syarat</span> (syarat &amp; berkas) dan <span class="mono">users_request</span> (pengajuan)</td></tr>
+      <tr><td><b>ktd_department</b></td><td>Master unit kerja</td><td>Menjadi induk dari pengguna dan pengajuan; menyimpan radius presensi</td></tr>
+      <tr><td><b>users</b></td><td>Akun pengguna</td><td>Warga, pemohon, dan aparatur; terhubung ke unit kerja</td></tr>
+      <tr><td><b>users_request</b></td><td>Pengajuan layanan</td><td>Nomor registrasi, status, dan tanggal pengajuan</td></tr>
+      <tr><td><b>users_request_answers</b></td><td>Jawaban syarat</td><td>Isian formulir dan berkas yang diunggah</td></tr>
+      <tr><td><b>users_berkas</b></td><td>Berkas lampiran</td><td>Berkas fisik/digital yang diverifikasi petugas</td></tr>
+      <tr><td><b>activities</b></td><td>Log aktivitas</td><td>Jejak audit perubahan data oleh petugas</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <h4>Kenapa arsitektur "satu basis data, dua pintu akses" penting bagi integritas</h4>
+    <p>
+      Karena tidak ada basis data ganda, tidak mungkin terjadi kondisi di mana warga melihat status
+      berbeda dari yang dilihat petugas. Setiap perubahan status tercatat pada satu catatan yang sama,
+      sehingga pemeriksaan internal dan penelusuran kwitansi layanan dapat dilakukan pada sumber yang
+      sama.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== 04 PORTAL LAYANAN PUBLIK ===================== -->
+<section class="section first">
+  <h2><span class="num">04</span>Portal Layanan Publik — Melayani Warga</h2>
+
+  <p>
+    Portal daring SILATAR adalah pintu pertama yang ditemui warga. Antarmukanya dirancang agar
+    pengajuan layanan tidak memerlukan langkah yang berlebihan: cukup memilih unit kerja, memilih
+    layanan, mengisi
+    berkas, lalu memantau hasilnya dari mana saja.
+  </p>
+
+  <h3>Beranda dan informasi layanan</h3>
+  <p>
+    Halaman beranda menampilkan informasi yang paling sering dicari warga: menu layanan, berita
+    terbaru, publikasi kegiatan, serta ajakan mengunduh aplikasi mobile. Halaman-halaman publik dapat
+    dibuka tanpa login, sehingga warga dapat memahami layanan sebelum memutuskan untuk
+    mengajukan.
+  </p>
+
+  <figure class="shot">
+    <img src="img/01b-beranda-layanan.jpg" alt="Section layanan pada beranda portal SILATAR">
+    <figcaption><b>Beranda — sorotan kegiatan.</b> Carousel berita pilihan dan daftar <i>Berita
+    Terbaru</i> menampilkan kegiatan kantor beserta ringkasannya dan tautan <i>Baca Selengkapnya</i>.</figcaption>
+  </figure>
+
+  <figure class="shot">
+    <img src="img/01c-beranda-publikasi.jpg" alt="Section publikasi pada beranda portal SILATAR">
+    <figcaption><b>Beranda — layanan publik.</b> Empat pintasan utama (Ajukan Layanan, Lacak
+    Pengajuan, Janji Temu, Whistleblowing) dan baris <i>Data Layanan</i> yang menampilkan ringkasan
+    aktivitas layanan.</figcaption>
+  </figure>
+
+  <h3>Alur pengajuan layanan</h3>
+  <ol class="steps">
+    <li><b>Warga memilih unit kerja.</b> Katalog menampilkan unit kerja aktif beserta jumlah layanan
+    yang tersedia pada unit tersebut.</li>
+    <li><b>Warga memilih layanan dan membaca syaratnya.</b> Rincian syarat, berkas wajib, dan berkas
+    opsional ditampilkan sebelum formulir dibuka.</li>
+    <li><b>Warga mengisi berkas.</b> Setiap berkas diunggah melalui formulir dengan batas ukuran dan
+    format yang ditentukan, dan dapat disimpan sebagai <i>draft</i> sebelum dikirim.</li>
+    <li><b>Warga mengirim pengajuan.</b> Sistem menerbitkan <b>nomor registrasi</b> yang menjadi rujukan
+    tunggal saat memantau progress.</li>
+    <li><b>Petugas memverifikasi.</b> Kelengkapan berkas diperiksa pada panel administrasi; berkas
+    yang kurang dikembalikan dengan catatan yang jelas.</li>
+    <li><b>Warga memantau status.</b> Halaman <i>Pengajuan Saya</i> menampilkan status
+    <span class="mono">DRAFT</span>, <span class="mono">DIPROSES</span>, dan
+    <span class="mono">PENDING</span> beserta nomor registrasinya.</li>
+  </ol>
+
+  <figure class="shot">
+    <img src="img/03-form-pengajuan.jpg" alt="Formulir pengajuan layanan daring">
+    <figcaption><b>Formulir pengajuan daring.</b> Formulir memuat berkas wajib (SK CPNS, Surat
+    Keterangan Melaksanakan Tugas, Surat Keterangan Aktif, Surat KP-4, Buku Rekening, NPWP) dan berkas
+    opsional (Buku Nikah, Akta Kelahiran Anak, SKPP, SK Pindah), dengan kolom keterangan tambahan serta
+    tombol <i>Simpan Draft</i> dan <i>Ajukan Sekarang</i>.</figcaption>
+  </figure>
+
+  <figure class="shot">
+    <img src="img/04-pengajuan-saya.jpg" alt="Halaman pengajuan saya">
+    <figcaption><b>Pengajuan Saya.</b> Ringkasan jumlah pengajuan per status (Total, Draft, Diproses,
+    Selesai), penyaring berdasarkan tahun, dan daftar pengajuan lengkap dengan nomor registrasi —
+    terlihat pengajuan <i>Permintaan Gaji</i> berstatus <span class="mono">DIPROSES</span>
+    dan <span class="mono">PENDING</span>.</figcaption>
+  </figure>
+
+  <div class="fig-grid">
+    <figure>
+      <img src="img/05-berita.jpg" alt="Halaman berita portal SILATAR">
+      <figcaption><b>Berita.</b> Informasi kegiatan danumuman kantor dipublikasikan dengan gambar dan
+      ringkasan.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/06-publikasi.jpg" alt="Halaman publikasi portal SILATAR">
+      <figcaption><b>Publikasi.</b> Galeri publikasi kegiatan kantor sebagai bukti pertanggungjawaban
+      pelaksanaan program.</figcaption>
+    </figure>
+  </div>
+
+  <div class="fig-grid">
+    <figure>
+      <img src="img/08-pengaduan.jpg" alt="Halaman pengaduan portal SILATAR">
+      <figcaption><b>Pengaduan dan whistleblower.</b> Kanal pengaduan yang terbuka bagi warga tanpa
+      hambatan registrasi.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/09-login.jpg" alt="Halaman login portal SILATAR">
+      <figcaption><b>Login.</b> Satu pintu masuk untuk warga, pemohon, dan aparatur dengan pembatasan
+      akses berbasis peran.</figcaption>
+    </figure>
+  </div>
+
+  <div class="fig-grid">
+    <figure>
+      <img src="img/10-laporan-kinerja.jpg" alt="Halaman laporan kinerja portal SILATAR">
+      <figcaption><b>Laporan kinerja daring.</b> Halaman ini memuat tab <i>Kinerja Harian</i>,
+      <i>Laporan Kinerja Bulanan</i>, dan laporan tahunan, dengan pemilih bulan serta tombol
+      <i>Rekap</i> dan <i>Rekap WFH</i>.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/11-profil.jpg" alt="Halaman profil pengguna portal SILATAR">
+      <figcaption><b>Profil pengguna.</b> Data diri dan riwayat aktivitas pengguna ditampilkan dalam satu
+      halaman.</figcaption>
+    </figure>
+  </div>
+
+  <h3>Portal pada perangkat ponsel</h3>
+  <p>
+    Portal daring dibuat responsif sehingga warga dapat mengakses layanan dari ponsel. Berikut
+    tangkapan layar portal pada lebar layar ponsel.
+  </p>
+
+  <div class="fig-grid">
+    <figure>
+      <img src="img/40-mobile-beranda.jpg" alt="Beranda portal SILATAR pada tampilan ponsel">
+      <figcaption><b>Beranda pada ponsel.</b> Menu utama, ajakan mengunduh aplikasi, dan navigasi
+      bawah (Beranda, Berita, Layanan, Kinerja).</figcaption>
+    </figure>
+    <figure>
+      <img src="img/41-mobile-layanan.jpg" alt="Katalog layanan pada tampilan ponsel">
+      <figcaption><b>Layanan pada ponsel.</b> Katalog layanan tetap dapat dipilih dan
+      diunggah berkasnya dari ponsel.</figcaption>
+    </figure>
+  </div>
+
+  <div class="fig-grid">
+    <figure>
+      <img src="img/42-mobile-pengajuan-saya.jpg" alt="Halaman pengajuan saya pada tampilan ponsel">
+      <figcaption><b>Pengajuan saya pada ponsel.</b> Status pengajuan dapat dipantau dari perangkat
+      apa pun.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/43-mobile-publish.jpg" alt="Halaman publikasi pada tampilan ponsel">
+      <figcaption><b>Publikasi pada ponsel.</b> Arsip dokumen resmi Kementerian Agama Tanah Datar
+      dapat diunduh langsung dari ponsel.</figcaption>
+    </figure>
+  </div>
+
+  <h3>Belanja minimal, jangkauan luas</h3>
+  <p>
+    Portal dirancang agar pengajuan tidak memerlukan registrasi lebih dari satu kali: pemohon cukup
+    login sekali, berikutnya seluruh layanan, status pengajuan, dan janji temu dapat diakses dari
+    akun yang sama. Dengan begitu antrean di loket berkurang dan kesalahan input data ditekan, karena
+    warga tidak perlu mengisi ulang data yang sama pada setiap layanan.
+  </p>
+</section>
+
+<!-- ===================== 05 APLIKASI MOBILE ===================== -->
+<section class="section first">
+  <h2><span class="num">05</span>Aplikasi Mobile untuk Aparatur</h2>
+
+  <p>
+    Portal daring menjawab kebutuhan warga. Sementara <b>aplikasi mobile SILATAR</b> menjawab kebutuhan
+    aparatur yang bekerja di lapangan: mencatat kehadiran, melaporkan kegiatan harian, dan
+    memproses hal-hal yang tidak bisa menunggu sampai kembali ke meja kerja.
+  </p>
+  <p>
+    Aplikasi mobile dibangun dengan <b>Flutter (Dart)</b> dan dikemas untuk Android, saat ini pada
+    versi <b>2.0.2 (build 3)</b>. Flutter dipilih karena aplikasi ini harus ringan, stabil di perangkat
+    dengan spesifikasi varied, dan memiliki tampilan yang sama persis di semua perangkat — syarat
+    agar alat ini bisa dipakai oleh aparatur di seluruh unit kerja, bukan hanya di kantor pusat.
+  </p>
+
+  <h3>5.1 Masuk dan dasbor</h3>
+  <p>
+    Alur pertama pengguna adalah layar sambutan yang memuat lambang Kantor Kementerian Agama
+    Kabupaten Tanah Datar, lalu halaman login dengan kolom NIP/email, kata sandi, pilihan
+    <i>Ingat saya</i>, dan tautan pemulihan kata sandi. Setelah berhasil masuk, pengguna langsung
+   -landed pada dasbor yang menampilkan nama dan jabatan, ringkasan aktivitas, berita terbaru, serta
+    pintasan ke tiga menu yang paling sering dipakai: <b>Presensi</b>, <b>Kegiatan</b>, dan
+    <b>Berita</b>.
+  </p>
+
+  <div class="phones">
+    <figure>
+      <img src="img/50-mobile-welcome.jpg" alt="Layar sambutan aplikasi mobile SILATAR">
+      <figcaption><b>Layar sambutan.</b> Lambang Kementerian Agama, nama aplikasi, dan tombol
+      <i>Mulai</i> beserta nomor versi aplikasi.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/51-mobile-login.jpg" alt="Halaman login aplikasi mobile SILATAR">
+      <figcaption><b>Login.</b> Kolom NIP/email dan kata sandi, pengingat kata sandi, dan tombol
+      <i>Masuk</i>.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/53-mobile-dashboard.jpg" alt="Dasbor aplikasi mobile SILATAR">
+      <figcaption><b>Dasbor.</b> Sapaan nama dan jabatan, kartu identitas, slider <i>Berita
+      Terbaru</i>, <i>Aksi Cepat</i>, dan navigasi bawah lima menu.</figcaption>
+    </figure>
+  </div>
+
+  <h3>5.2 Presensi berbasis geolokasi</h3>
+  <p>
+    Presensi tidak diisi manual. Aplikasi membaca koordinat GPS perangkat, membandingkannya dengan
+    <b>radius presensi unit kerja</b>, dan menampilkan hasilnya secara terbuka: status
+    <i>Dalam area presensi</i>, koordinat, serta jarak dari titik pusat. Dalam radius tersebut,
+    pengguna mengesahkan kehadiran dengan menekan ikon sidik jari, yang mencatat waktu masuk. Halaman
+    yang sama menampilkan ringkasan jam masuk dan jam pulang pada hari itu.
+  </p>
+  <p>
+    Pendekatan ini menutup kemungkinan absen tanpa hadir di kantor: presensi hanya dapat dilakukan
+    dari dalam area yang ditentukan, dan jejak koordinat serta waktunya tersimpan pada catatan yang
+    sama dengan rekap yang dilihat petugas.
+  </p>
+
+  <figure class="phone-shot">
+    <img src="img/54-mobile-presensi.jpg" alt="Halaman presensi geolokasi pada aplikasi mobile">
+    <figcaption><b>Presensi geolokasi.</b> Indikator <i>Dalam area presensi</i> beserta koordinat dan
+    jarak (0 m), peta area presensi, tombol waktu <i>Jam 09:59 — MASUK</i>, panel <i>Presensi Masuk</i>
+    dengan autentikasi sidik jari, serta ringkasan jam masuk dan jam pulang hari ini.</figcaption>
+  </figure>
+
+  <h3>5.3 Menu layanan aparatur</h3>
+  <p>
+    Seluruh menu aplikasi dikumpulkan dalam satu halaman <b>Menu Pelayanan</b> dengan kolom pencarian,
+    sehingga akses ke setiap menu tetap singkat meskipun jumlah menu bertambah. Menu yang tersedia: Presensi,
+    Riwayat Presensi, Layanan, Pengajuan, Kegiatan, Laporan, Janji Temu, SIMPEG, Acara, Cuti, Error, dan
+    Pengaduan.
+  </p>
+
+  <div class="phones">
+    <figure>
+      <img src="img/55-mobile-layanan.jpg" alt="Halaman Menu Pelayanan pada aplikasi mobile">
+      <figcaption><b>Menu Pelayanan.</b> Dua belas menu pekerjaan dengan pencarian
+      <i>Cari menu…</i>.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/60-mobile-janji-temu.jpg" alt="Riwayat janji temu pada aplikasi mobile">
+      <figcaption><b>Riwayat Janji Temu.</b> Penyaring status (Menunggu, Disetujui, Ditolak, Dibatalkan)
+      beserta jadwal dan keperluan janji temu.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/63-mobile-acara.jpg" alt="Daftar acara kantor pada aplikasi mobile">
+      <figcaption><b>Acara Kankemenag.</b> Daftar kegiatan kantor dengan tanggal, waktu, lokasi, dan
+      status kehadiran.</figcaption>
+    </figure>
+  </div>
+
+  <h3>5.4 Pelaporan kegiatan harian</h3>
+  <p>
+    Kegiatan harian dicatat langsung di aplikasi: judul kegiatan, rentang waktu, serta keterangan
+    tambahan seperti jumlah berkas, jumlah orang, atau jumlah dokumen yang ditangani. Data kegiatan
+    dikelompokkan per tanggal sehingga mudah ditelusuri, dan setiap entri dapat disunting atau dihapus
+    bila terjadi kekeliruan pencatatan.
+  </p>
+
+  <figure class="phone-shot">
+    <img src="img/58-mobile-kegiatan.jpg" alt="Laporan kegiatan harian pada aplikasi mobile">
+    <figcaption><b>Laporan kegiatan harian.</b> Pemilih bulan (November 2026), tab <i>Harian</i> dan
+    <i>Rekap</i>, kartu ringkasan (6 kegiatan, 2 hari, volume 29, durasi 8 jam 30 menit), serta daftar
+    kegiatan per tanggal lengkap dengan rentang jam kerja WIB.</figcaption>
+  </figure>
+
+  <h3>5.5 Rekap bulanan dan unduh PDF</h3>
+  <p>
+    Rekap bulanan dihimpun oleh sistem secara otomatis: total kegiatan, jumlah hari terisi,
+    total volume pekerjaan, dan total durasi. Rekap ini dapat diunduh sebagai <b>PDF</b> melalui
+    tombol <i>Download PDF</i> — menggantikan rekap manual berbasis berkas atau tabel. Proses ini
+    adalah pemangkasan waktu administrasi yang paling terasa penghematannya bagi aparatur.
+  </p>
+
+  <figure class="phone-shot">
+    <img src="img/61-mobile-kegiatan-rekap.jpg" alt="Rekap bulanan kegiatan pada aplikasi mobile">
+    <figcaption><b>Rekap November 2026.</b> Total Kegiatan 6, Hari Terisi 2 hari, Total Volume 29, Total
+    Durasi 8 jam 30 menit, tombol <i>Download PDF</i>, dan daftar aktivitas terakhir.</figcaption>
+  </figure>
+
+  <h3>5.6 Menu administrasi di dalam aplikasi</h3>
+  <p>
+    Aparatur dengan hak akses administratif tidak perlu berpindah ke komputer untuk pekerjaan
+    rutin. Menu <b>Panel Admin</b> menyediakan: Kelola Janji Temu (setujui atau tolak janji temu
+    pengguna), Verifikasi SIMPEG (proses permintaan reset password SIMPEG), Kelola Pengajuan, Kelola
+    Users, serta Laporan dan statistik.
+  </p>
+
+  <div class="phones">
+    <figure>
+      <img src="img/56-mobile-admin.jpg" alt="Panel admin pada aplikasi mobile">
+      <figcaption><b>Panel Admin.</b> Lima menu administrasi: Kelola Janji Temu, Verifikasi SIMPEG,
+      Kelola Pengajuan, Kelola Users, dan Laporan.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/57-mobile-profil.jpg" alt="Halaman profil pada aplikasi mobile">
+      <figcaption><b>Profil.</b> Data akun, Edit Profil, Ubah Password, Notifikasi, Bantuan, Log
+      Diagnostik, Tentang Aplikasi, dan Logout.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/59-mobile-berita.jpg" alt="Daftar berita pada aplikasi mobile">
+      <figcaption><b>Berita.</b> 42 berita dipublikasikan, dengan pencarian dan penyaring
+      <i>Kegiatan</i> serta <i>Featured</i>.</figcaption>
+    </figure>
+  </div>
+
+  <div class="callout">
+    <h4>Jejak digital untuk pemeriksaan internal</h4>
+    <p>
+      Setiap kegiatan tercatat dengan waktu dan durasi, setiap kehadiran tercatat dengan koordinat,
+      dan setiap penyuntingan data dapat ditelusuri melalui catatan aktivitas. Kombinasi ini
+      memungkinkan pemeriksa internal memeriksa kesesuaian antara kehadiran, kegiatan, dan
+      laporan yang disampaikan, tanpa harus meminta berkas tambahan dari aparatur.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== 06 PANEL ADMINISTRASI ===================== -->
+<section class="section first">
+  <h2><span class="num">06</span>Panel Administrasi dan Tata Kelola</h2>
+
+  <p>
+    Panel administrasi menjadi tempat seluruh data operasional dikelola. Menu disusun dalam empat
+    kelompok menurut fungsi — <b>Main</b>, <b>Kelola</b>, <b>Laporan</b>, dan <b>Publikasi</b> —
+    agar petugas dapat menemukan tugasnya tanpa mencari-cari. Akses ke panel ini dilindungi
+    autentikasi dan penentuan peran, sehingga setiap orang hanya dapat melakukan tindakan yang
+    memang menjadi kewenangannya.
+  </p>
+
+  <h3>6.1 Dasbor kendali</h3>
+  <p>
+    Dasbor dibuka dengan empat angka yang langsung menjawab pertanyaan pimpinan: berapa pengguna,
+    berapa pengajuan, berapa yang menunggu tindakan, dan berapa layanan yang aktif. Di bawahnya
+    tersaji grafik pengajuan per bulan, distribusi status pengajuan, daftar layanan yang paling
+    banyak dipesan, dan tabel pengajuan yang <b>memerlukan tindakan</b> — disusun otomatis berdasarkan
+    status, bukan berdasarkan pemeriksaan manual.
+  </p>
+
+  <figure class="shot">
+    <img src="img/20-admin-dashboard.jpg" alt="Dasbor panel administrasi SILATAR">
+    <figcaption><b>Dasbor administrasi.</b> Kartu ringkasan (Total Pengguna 2.044, Total Pengajuan
+    3.420, Menunggu Tindakan 1.612, Layanan Aktif 57), grafik <i>Pengajuan Per Bulan</i> 2026,
+    <i>Distribusi Status</i> (Draft 33, Belum Dicek 26, Pending 1.586, Diterima 4, Diproses 2, Sukses
+    1.756, Batal 13), daftar layanan terpopuler, tabel <i>Perlu Tindakan</i>, serta pintasan aksi
+    cepat. Tombol <i>Login sebagai</i> memungkinkan administrator memeriksa tampilan pengguna tanpa
+    meminta kata sandi.</figcaption>
+  </figure>
+
+  <h3>6.2 Pengelolaan data induk</h3>
+  <p>
+    Tiga data induk — pengguna, layanan, dan unit kerja — dikelola dengan pola yang sama: kartu
+    ringkasan, panel penyaring (pencarian, kategori, status), dan tabel dengan kolom aksi pada
+    setiap baris. Konsistensi pola ini dimaksudkan agar prosedur operasional menjadi sederhana dan
+    dapat dipelajari cepat oleh petugas baru.
+  </p>
+
+  <div class="fig-grid">
+    <figure>
+      <img src="img/21-admin-users.jpg" alt="Manajemen pengguna pada panel administrasi">
+      <figcaption><b>Manajemen Pengguna.</b> Total 2.044 pengguna dengan penyaring role, unit kerja,
+      dan status; tabel memuat NIP, unit kerja, role, serta status aktif/nonaktif per pengguna.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/23-admin-units.jpg" alt="Manajemen unit kerja pada panel administrasi">
+      <figcaption><b>Manajemen Unit Kerja.</b> Total 55 unit kerja, data kategori, kepala unit kerja,
+      PLH/PLT kepala, serta jumlah pengguna pada setiap unit.</figcaption>
+    </figure>
+  </div>
+
+  <figure class="shot">
+    <img src="img/22-admin-services.jpg" alt="Manajemen layanan pada panel administrasi">
+    <figcaption><b>Manajemen Layanan.</b> Total 60 layanan dengan rincian jumlah syarat, jumlah
+    pengajuan, penanda layanan khusus, dan status aktif; setiap baris menyediakan aksi ubah dan
+    hapus.</figcaption>
+  </figure>
+
+  <h3>6.3 Publikasi, Janji Temu, dan Acara</h3>
+  <p>
+    Pengelolaan berita, janji temu, dan acara mengikuti prinsip yang sama: informasi yang
+    dipublikasikan harus dapat diverifikasi, dan setiap keputusan atasannya harus tercatat. Berita
+    menyimpan jumlah dibaca sehingga petugas dapat melihat apakah informasi yang dibuat benar-benar
+    sampai ke warga. Janji temu diproses dengan status yang jelas — menunggu, disetujui, atau
+    ditolak — sehingga antrean permintaan terlihat dan tidak menumpuk tanpa perhatian.
+  </p>
+
+  <div class="fig-grid">
+    <figure>
+      <img src="img/25-admin-news.jpg" alt="Manajemen berita pada panel administrasi">
+      <figcaption><b>Manajemen Berita.</b> 42 berita terbit, 0 draf, 0 diarsipkan; tabel memuat
+      kategori, tanggal terbit, dan jumlah pembaca.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/27-admin-janji-temu.jpg" alt="Manajemen janji temu pada panel administrasi">
+      <figcaption><b>Manajemen Janji Temu.</b> 349 permintaan janji temu: 238 menunggu, 17 disetujui,
+      3 ditolak; tabel menampilkan pemohon, waktu, tujuan, dan lokasi (ON SITE).</figcaption>
+    </figure>
+  </div>
+
+  <figure class="shot">
+    <img src="img/26-admin-acara.jpg" alt="Manajemen acara pada panel administrasi">
+    <figcaption><b>Manajemen Acara.</b> Daftar kegiatan kantor beserta tanggal, waktu, lokasi, dan
+    status (Aktif / Finished), dengan aksi rincian, ubah, dan hapus.</figcaption>
+  </figure>
+
+  <h3>6.4 Laporan dan rekap presensi</h3>
+  <p>
+    Menu laporan di sini menjadi pengungkit penghematan administrasi: data yang sebelumnya harus
+    dikumpulkan manual dari berkas, kini dapat dibangkitkan dari basis data dalam bentuk berkas
+    Excel maupun PDF. <b>Rekap Presensi</b>, misalnya, dapat dibangkitkan berdasarkan unit kerja atau
+    kategori bank, lengkap dengan rincian jam masuk dan jam pulang serta tunjangan kinerja
+    (tukin).
+  </p>
+
+  <figure class="shot">
+    <img src="img/28-admin-rekap-presensi.jpg" alt="Rekap presensi pada panel administrasi">
+    <figcaption><b>Rekap Presensi.</b> Formulir pembangkitan rekap (dasar unit kerja atau kategori
+    bank, bulan, tahun) dengan tombol <i>Generate Rekap Presensi</i> dan <i>Generate Tukin</i>,
+    serta daftar berkas yang pernah dibangkitkan lengkap dengan aksi unduh, tampil, dan hapus.</figcaption>
+  </figure>
+
+  <div class="callout">
+    <h4>Keterbukaan atas proses</h4>
+    <p>
+      Tiga hal yang membuat tata kelola SILATAR dapat diperiksa: (1) setiap angka pada dasbor dapat
+      ditelusuri ke tabel sumbernya; (2) setiap permintaan yang belum ditangani otomatis masuk ke
+      tabel <i>Perlu Tindakan</i>; dan (3) setiap tindakan yang mengubah data tercatat pada log
+      aktivitas beserta pelaku dan waktunya, sehingga pemeriksaan internal dapat dilakukan tanpa
+      bergantung pada keterangan lisan.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== 07 PETA INOVASI ===================== -->
+<section class="section first">
+  <h2><span class="num">07</span>Peta Inovasi: Aspek, Praktik, dan Bukti</h2>
+
+  <p>
+    Inovasi tidak berhenti pada alat. Yang dinilai dalam Penilaian ZI adalah apakah alat tersebut
+    benar-benar mengubah cara kerja, dan apakah jejaknya dapat dibuktikan. Karena itu, dokumen ini
+    memetakan setiap instrumen SILATAR ke aspek penilaian, praktik yang dijalankan, serta bukti yang
+    tersedia pada bagian dan lampiran dokumen.
+  </p>
+
+  <table class="grid">
+    <thead>
+      <tr><th style="width:34mm">Aspek Penilaian ZI</th><th style="width:64mm">Praktik yang dijalankan</th><th>Bukti dalam dokumen ini</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>Perubahan pelayanan</b><br><span class="small">layanan berbasis TIK</span></td>
+        <td>Portal layanan daring dan aplikasi mobile menggantikan layanan berbasis kertas, buku
+        register, dan kedatangan berulang ke loket.</td>
+        <td>Bagian 02 dan 04; lampiran tangkapan layar 01–11 (portal) dan 50–63 (aplikasi mobile).</td>
+      </tr>
+      <tr>
+        <td><b>Proses dan mutu layanan</b></td>
+        <td>Standarisasi syarat berkas, nomor registrasi tunggal, dan status pengajuan yang dapat
+        dilacak warga.</td>
+        <td>Bagian 04 (alur pengajuan); lampiran 02, 03, 04.</td>
+      </tr>
+      <tr>
+        <td><b>Manajemen SDM</b></td>
+        <td>Data kepegawaian dan unit kerja terkelola dalam satu basis data; penugasan kepala unit
+        kerja dan PLH/PLT kepala dapat diperbarui dari panel.</td>
+        <td>Bagian 06.2; lampiran 21 dan 23.</td>
+      </tr>
+      <tr>
+        <td><b>Akuntabilitas kinerja</b></td>
+        <td>Kehadiran tercatat geolokasi, kegiatan harian direkam per tanggal, dan rekap bulanan
+        dibangkitkan otomatis serta diunduh sebagai PDF.</td>
+        <td>Bagian 05.2 dan 05.5; lampiran 54, 58, 61, dan 28.</td>
+      </tr>
+      <tr>
+        <td><b>Pengawasan</b></td>
+        <td>Log aktivitas, tabel <i>Perlu Tindakan</i>, dan pembatasan akses berbasis peran
+        dimaksudkan sebagai alat kendali internal.</td>
+        <td>Bagian 06.1 dan 06.4; lampiran 20 dan 28.</td>
+      </tr>
+      <tr>
+        <td><b>Penguatan sistem integritas</b></td>
+        <td>Kanal pengaduan dan whistleblower, informasi layanan yang terbuka, sertatran yards
+        terpublikasi sebagai bagian dari portal.</td>
+        <td>Bagian 04; lampiran 05, 06, dan 08.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <h4>Mengapa jejak digital ini relevan bagi penguatan integritas</h4>
+    <p>
+      Kekhawatiran integritas pada layanan administrasi yang sebenarnya berasal dari ruang yang tidak
+      terlihat: proses yang tidak tercatat, criteria yang berbeda antar petugas, dan pihak yang
+      tidak bisa diperiksa.SILATAR menutup ruang tersebut secara bertahap — setiap layanan punya
+      syarat tertulis, setiap pengajuan punya nomor, setiap kehadiran punya koordinat, setiap
+      laporan punya rekap. Dengan bukti itu, pemeriksaan tidak lagi bergantung pada Frage
+      pemeriksa.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== 08 DAMPAK ===================== -->
+<section class="section first">
+  <h2><span class="num">08</span>Dampak, Dampak Kinerja, dan Keberlanjutan</h2>
+
+  <h3>Dampak bagi warga</h3>
+  <ul>
+    <li><b>Tidak perlu datang berulang kali.</b> Syarat, berkas, dan status dapat diperiksa sebelum
+    dan sesudah pengajuan; warga tinggal datang ketika memang harus mengambil hasil.</li>
+    <li><b>Status tidak lagi bergantung pada kabar berantai.</b> Status pengajuan, nomor
+    registrasi, dan identitas unit kerja tujuan dapat dilihat langsung oleh pemohon.</li>
+    <li><b>Jam layanan menjadi 24 jam.</b> Formulir, pelacakan, dan informasi layanan tersedia di
+    luar jam kerja kantor.</li>
+  </ul>
+
+  <h3>Dampak bagi aparatur</h3>
+  <ul>
+    <li><b>Pelaporan tidak lagi menghambatexecution kerja.</b> Kegiatan dicatat di tempat, di waktu
+    yang sama dengan pengerjaannya.</li>
+    <li><b>Rekap tidak lagi dikerjakan dua kali.</b> Data yang sudah terkumpul otomatis menjadi
+    bahan laporan bulanan dan rekap presensi.</li>
+    <li><b>Kehadiran terbukti secara geografis.</b> Presensi memverifikasi lokasi dan waktu
+    sehingga argumen mengenai kehadiran tidak diperlukan.</li>
+  </ul>
+
+  <h3>Dampak bagi tata kelola kantor</h3>
+  <p>
+    Yang paling menentukan bukan pada cakupan layanan, melainkan pada <b>keberadaan satu sumber
+    data</b>. Dengan kata lain, angka pada dasbor, data pada laporan, dan berkas yang diunggah pemohon
+    berasal dari tabel yang sama. Konsekuensinya, pemeriksaan internal dapat dilakukan dengan
+    sumber yang sama, dan risiko data bercabang antar unit kerja berkurang drastis.
+  </p>
+
+  <h3>Keberlanjutan</h3>
+  <table class="grid">
+    <thead>
+      <tr><th style="width:40mm">Aspek</th><th>Keterangan</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><b>Tanpa biaya lisensi</b></td><td>Seluruh teknologi yang dipakai adalah sumber terbuka (Laravel, Tailwind CSS, Alpine.js, Flutter, MySQL/MariaDB). Tidak ada biaya per pengguna maupun biaya langganan pihak ketiga.</td></tr>
+      <tr><td><b>Tanpa ketergantungan vendor</b></td><td>Kode dan basis data berada di lingkungan instansi. Ketika masa kerja vendor berakhir, layanan tidak ikut berhenti.</td></tr>
+      <tr><td><b>Transfer pengetahuan</b></td><td>Pengembangan dilakukan tim internal dengan penulisan dokumentasi terstruktur, sehingga pengetahuan tersebut tidak hilang meskipun terjadi pergantian developer.</td></tr>
+      <tr><td><b>Pembaruan berkala</b></td><td>Aplikasi mobile memiliki mekanisme pembaruan versi yang tercatat pada halaman <i>Tentang Aplikasi</i> sehingga pengguna dapat memastikan versi yang dipakai.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <h4>Catatan kehati-hatian terhadap klaim dampak</h4>
+    <p>
+      Angka-angka pada dokumen ini adalah angka yang <b>dapat diverifikasi langsung</b> dari basis
+      data SILATAR (jumlah pengguna, pengajuan, layanan, dan status pengajuan). Untuk dampak
+      kuantitatif berupa penghematan waktu dan peningkatan kepuasan, pengukuran melalui survei
+      dan pengamatan waktu proses masih direncanakan — dan sengaja tidak dicantumkan sebagai
+      fakta pada dokumen ini.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== 09 PMPZI ===================== -->
+<section class="section first">
+  <h2><span class="num">09</span>Keterkaitan dengan Penilaian ZI (PMPZI)</h2>
+
+  <p>
+    Zona Integritas menuntut agar layanan utama diberikan cepat, transparan, bebas dari diskriminasi,
+    dan dapat dipertanggungjawabkan. SILATAR tidak dimaksudkan sebagai program tersendiri, melainkan
+    sebagai <b>alat yang memindahkan bukti dari klaim ke data</b>. Berikut adalah keterkaitan
+    yang dapat ditelusuri.
+  </p>
+
+  <table class="grid">
+    <thead>
+      <tr><th style="width:40mm">Prinsip ZI</th><th>Bagaimana SILATAR melayani prinsip tersebut</th><th style="width:30mm">Bukti utama</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>Pelayanan cepat</b></td>
+        <td>Pengajuan daring tanpa antrean, status dapat dipantau, danTWGs berkas bisa diunggah kapan saja.</td>
+        <td>Bagian 04; lampiran 03 dan 04</td>
+      </tr>
+      <tr>
+        <td><b>Transparansi</b></td>
+        <td>Syarat, berkas, dan status terbuka bagi pemohon; jumlah pembaca berita dan daftar
+        layanan terbuka untuk umum.</td>
+        <td>Bagian 04 dan 06.3; lampiran 02, 05, 25</td>
+      </tr>
+      <tr>
+        <td><b>Akuntabilitas</b></td>
+        <td>Setiap tindakan aparatur terekam pada log aktivitas dan dasbor <i>Perlu Tindakan</i>.</td>
+        <td>Bagian 06.1 dan 06.4; lampiran 20</td>
+      </tr>
+      <tr>
+        <td><b>Integritas</b></td>
+        <td>Verifikasi geolokasi untuk kehadiran, bukti foto untuk kegiatan, dan kanal pengaduan
+        terbuka.</td>
+        <td>Bagian 05.2 dan 04; lampiran 54 dan 08</td>
+      </tr>
+      <tr>
+        <td><b>Pemberayaan aparatur</b></td>
+        <td>Panel administrasi memberi kewenangan yang terukur: setiap peran hanya dapat melakukan
+        tindakan atas nama dirinya sendiri.</td>
+        <td>Bagian 06.1; lampiran 20 dan 21</td>
+      </tr>
+      <tr>
+        <td><b>Pelayanan noninstitusional</b></td>
+        <td>Portal dan aplikasi dapat diakses warga pada waktu dan tempat mana pun, tanpa bergantung
+        pada jam kerja kantor.</td>
+        <td>Bagian 04 dan 05; lampiran 40–43 dan 50–63</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="band">
+    <h3>Bentuk bukti dalam dokumen ini</h3>
+    <p>
+      Setiap klaim pada bagian 01 sampai 09 ditopang oleh salah satu dari tiga jenis bukti:
+      <b>(a)</b> tangkapan layar aplikasi yang sedang berjalan — seluruh gambar dalam dokumen ini
+      diambil dari sistem yang aktif, bukan illustrasi; <b>(b)</b> angka yang diambil langsung dari
+      basis data; dan <b>(c)</b> uraian alur kerja yang ditulis berdasarkan konfigurasi dan kode
+      aplikasi yang sama.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== 10 TANTANGAN ===================== -->
+<section class="section first">
+  <h2><span class="num">10</span>Tantangan, Batasan, dan Rencana Pengembangan</h2>
+
+  <p>
+    Agar dokumen ini dapat dipakai sebagai alat penilaian yang jujur, berikut adalah hal-hal yang
+    <b>belum</b> selesai pada SILATAR beserta rencana penanganannya. Daftar ini sengaja dibuka agar
+    pemeriksaan internal dapat memverifikasi klaim dan rencana perbaikan, bukan sekadar membaca
+    keberhasilan.
+  </p>
+
+  <h3>10.1 Batasan yang teridentifikasi</h3>
+  <table class="grid">
+    <thead>
+      <tr><th style="width:8mm">#</th><th style="width:52mm">Batasan</th><th>Dampak dan rencana</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><b>Modul verifikasi pengajuan pada panel administrasi masih dalam tahap pengembangan</b></td>
+        <td>Halaman <i>Pengajuan</i> pada panel admin menampilkan halaman pengembangan
+        (lampiran 24). Sementara ini verifikasi berkas dilakukan pada jalur operasional yang sudah
+        berjalan. Rencana: menyelesaikan modul verifikasi beserta riwayat dan catatan balasan pada
+        tahun 2026.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><b>Definisi "aktif" belum seragam antar halaman</b></td>
+        <td>Data warisan (<span class="mono">ktd_layanan</span>, <span class="mono">ktd_department</span>)
+        memakai beberapa nilai status sehingga angka "aktif" yang tampil berbeda antar halaman
+        (misalnya jumlah layanan aktif pada dasbor dan jumlah unit kerja aktif pada katalog).
+        Dampaknya cukup tinggi pada pembacaan angka. Rencana: menyelaraskan definisi status pada satu
+        kamus data dan memperbarui seluruh laporan.</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><b>Integrasi dengan sistem kepegawaian eksternal masih terbatas</b></td>
+        <td>Permintaan reset password SIMPEG masuk ke aplikasi dan diverifikasi oleh administrator,
+        tetapi belum terhubung otomatis ke sistem SIMPEG. Rencana: membangun integrasi berbasis
+        API pada tahun 2027.
+        </td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><b>Keterbatasan sinyal GPS di sebagian lokasi</b></td>
+        <td>Presensi geolokasi dapat gagal pada lokasi dengan sinyal lemah. Aplikasi menyediakan
+        menu pelaporan dan riwayat kesalahan presensi agar kejadian tercatat dan dapat ditindaklanjuti
+        oleh unit kerja.</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><b>Pencarian akun pada halaman login masih perlu perbaikan</b></td>
+        <td>Pencarian berdasarkan NIP sudah berjalan normal. Pencarian berdasarkan email masih
+        berpotensi menyasar akun yang tidak dimaksud karena kolom nomor induk bertipe angka. Rencana:
+        memperbaiki query pencarian pada <span class="mono">AuthController</span>.</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><b>Dampak kuantitatif belum diukur dengan metode baku</b></td>
+        <td>Penghematan waktu proses dan tingkat kepuasan warga belum diukur melalui survei
+        terstruktur. Rencana: menyusun survei kepuasan dan pengamatan waktu proses pada 2027.</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td><b>Ketergantungan pada sejumlah orang kunci</b></td>
+        <td>Pengembangan bertumpu pada tim kecil. Mitigasi: penulisan dokumentasi terstruktur, SOP
+        operasional per modul, dan pelatihan pengguna secara berkala.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>10.2 Rencana pengembangan</h3>
+  <table class="grid">
+    <thead>
+      <tr><th style="width:34mm">Horizon</th><th style="width:64mm">Sasaran</th><th>Indikator</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>Jangka pendek</b><br>(s.d. akhir 2026)</td>
+        <td>Menyelesaikan modul verifikasi pengajuan; menyelaraskan definisi status aktif; memperbaiki
+        pencarian akun pada halaman login; mengaktifkan kembali modul PPID.</td>
+        <td>Modul verifikasi aktif; angka "aktif" konsisten antar halaman; tidak ada galat pencarian
+        akun.</td>
+      </tr>
+      <tr>
+        <td><b>Jangka menengah</b><br>(2027)</td>
+        <td>Integrasi dengan SIMPEG; notifikasi otomatis (email/WhatsApp) atas perubahan status
+        pengajuan; pengukuran dampak melalui survei dan pengamatan waktu proses; perluasan
+        penggunaan ke seluruh unit kerja.</td>
+        <td>Jumlah unit kerja pengguna aktif meningkat; status pengajuan sampai otomatis; hasil
+        survei tersedia sebagai bahan penilaian mandiri.</td>
+      </tr>
+      <tr>
+        <td><b>Jangka panjang</b><br>(2028 ke depan)</td>
+        <td>Penyatuan data antar unit kerja (KUA, madrasah, sekolah agama), dasbor lintas unit
+        kerja, dan pengukuran mutu layanan yang terukur pada setiap unit kerja.</td>
+        <td>Rekap lintas unit kerja dapat dihasilkan dari satu sumber data.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="band">
+    <h3>Prinsip yang dipakai dalam setiap pengembangan berikutnya</h3>
+    <p>
+      Setiap fitur baru pada SILATAR harus dapat dijawab tiga pertanyaan: <b>apa jejak digital yang
+      dihasilkan, siapa yang dapat memverifikasinya, dan bagaimana warga atau auditor dapat
+      melihatnya.</b> Fitur yang tidak menghasilkan jejak digital tidak perlu dimasukkan ke dalam
+      versi berikutnya.</p>
+    </p>
+  </div>
+</section>
+
+<!-- ===================== 11 PENUTUP ===================== -->
+<section class="section first">
+  <h2><span class="num">11</span>Penutup</h2>
+
+  <p>
+    SILATAR berangkat dari satu pemahaman sederhana: layanan publik yang baik bukan hanya yang cepat,
+    tetapi yang <b>dapat ditunjukkan</b>. Dengan memindahkan proses pengajuan, kehadiran, pelaporan,
+    dan publikasi ke dalam satu lingkungan yang dikelola instansi, Kantor Kementerian Agama
+    Kabupaten Tanah Datar tidak hanya mempercepat layanan — tetapi juga <b>memiliki bukti</b> bahwa
+    layanan itu berjalan sebagaimana mestinya.
+  </p>
+
+  <p>
+    Dokumen ini disusun untuk keperluan Penilaian Mandiri Pembangunan Zona Integritas. Seluruh angka,
+    tangkapan layar, dan uraian alur di dalamnya berasal dari aplikasi SILATAR yang sedang
+    berjalan sebagaimana mestinya.
+  </p>
+
+  <table class="grid" style="margin-top:8mm">
+    <thead>
+      <tr><th style="width:52mm">Disusun oleh</th><th style="width:52mm">Diperiksa oleh</th><th>Disetujui oleh</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="height:24mm">
+          <div class="small" style="margin-top:12mm">Tim Inovasi dan Layanan</div>
+          <div class="small">Kantor Kementerian Agama Kabupaten Tanah Datar</div>
+        </td>
+        <td style="height:24mm">
+          <div class="small" style="margin-top:12mm">………………… ……………</div>
+          <div class="small">…………………</div>
+        </td>
+        <td style="height:24mm">
+          <div class="small" style="margin-top:12mm">Drs. H. …………………</div>
+          <div class="small">Kepala Kantor Kementerian Agama Kabupaten Tanah Datar</div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===================== 12 LAMPIRAN ===================== -->
+<section class="section first">
+  <h2><span class="num">12</span>Lampiran — Daftar Tangkapan Layar</h2>
+
+  <p class="small">
+    Seluruh tangkapan layar diambil dari aplikasi SILATAR yang sedang berjalan pada 16 November 2026.
+    Akun yang dipakai adalah <b>akun simulasi khusus dokumentasi</b>
+    (<span class="mono">screenshot.tmp@silatar.local</span>) — bukan akun pengguna nyata — sehingga
+    data pribadi yang tampil tidak merujuk pada individu mana pun.
+  </p>
+
+  <table class="grid">
+    <thead>
+      <tr><th style="width:12mm">No</th><th style="width:52mm">Berkas</th><th>Isi tangkapan layar</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>01</td><td><span class="mono">01-beranda-hero.jpg</span></td><td>Beranda portal layanan SILATAR</td></tr>
+      <tr><td>02</td><td><span class="mono">01b-beranda-layanan.jpg</span></td><td>Beranda — sorotan kegiatan dan daftar berita terbaru</td></tr>
+      <tr><td>03</td><td><span class="mono">01c-beranda-publikasi.jpg</span></td><td>Beranda — pintasan layanan publik dan baris data layanan</td></tr>
+      <tr><td>04</td><td><span class="mono">02-katalog-layanan.jpg</span></td><td>Katalog layanan per unit kerja</td></tr>
+      <tr><td>05</td><td><span class="mono">03-form-pengajuan.jpg</span></td><td>Formulir pengajuan layanan daring dengan unggah berkas</td></tr>
+      <tr><td>06</td><td><span class="mono">04-pengajuan-saya.jpg</span></td><td>Halaman pengajuan saya beserta nomor registrasi</td></tr>
+      <tr><td>07</td><td><span class="mono">05-berita.jpg</span></td><td>Portal berita</td></tr>
+      <tr><td>08</td><td><span class="mono">06-publikasi.jpg</span></td><td>Portal publikasi kegiatan</td></tr>
+      <tr><td>09</td><td><span class="mono">07-satuan-kerja.jpg</span></td><td>Direktori unit kerja</td></tr>
+      <tr><td>10</td><td><span class="mono">08-pengaduan.jpg</span></td><td>Kanal pengaduan warga</td></tr>
+      <tr><td>11</td><td><span class="mono">09-login.jpg</span></td><td>Halaman login portal</td></tr>
+      <tr><td>12</td><td><span class="mono">10-laporan-kinerja.jpg</span></td><td>Halaman laporan kinerja daring</td></tr>
+      <tr><td>13</td><td><span class="mono">11-profil.jpg</span></td><td>Halaman profil pengguna portal</td></tr>
+      <tr><td>14</td><td><span class="mono">20-admin-dashboard.jpg</span></td><td>Dasbor panel administrasi</td></tr>
+      <tr><td>15</td><td><span class="mono">21-admin-users.jpg</span></td><td>Manajemen pengguna</td></tr>
+      <tr><td>16</td><td><span class="mono">22-admin-services.jpg</span></td><td>Manajemen layanan</td></tr>
+      <tr><td>17</td><td><span class="mono">23-admin-units.jpg</span></td><td>Manajemen unit kerja</td></tr>
+      <tr><td>18</td><td><span class="mono">24-admin-requests.jpg</span></td><td>Halaman pengelolaan pengajuan (dalam pengembangan)</td></tr>
+      <tr><td>19</td><td><span class="mono">25-admin-news.jpg</span></td><td>Manajemen berita</td></tr>
+      <tr><td>20</td><td><span class="mono">26-admin-acara.jpg</span></td><td>Manajemen acara</td></tr>
+      <tr><td>21</td><td><span class="mono">27-admin-janji-temu.jpg</span></td><td>Manajemen janji temu</td></tr>
+      <tr><td>22</td><td><span class="mono">28-admin-rekap-presensi.jpg</span></td><td>Rekap presensi dan pembangkitan berkas</td></tr>
+      <tr><td>23</td><td><span class="mono">40-mobile-beranda.jpg</span></td><td>Beranda portal pada tampilan ponsel</td></tr>
+      <tr><td>24</td><td><span class="mono">41-mobile-layanan.jpg</span></td><td>Katalog layanan pada tampilan ponsel</td></tr>
+      <tr><td>25</td><td><span class="mono">42-mobile-pengajuan-saya.jpg</span></td><td>Pengajuan saya pada tampilan ponsel</td></tr>
+      <tr><td>26</td><td><span class="mono">43-mobile-publish.jpg</span></td><td>Publikasi pada tampilan ponsel</td></tr>
+      <tr><td>27</td><td><span class="mono">50-mobile-welcome.jpg</span></td><td>Layar sambutan aplikasi mobile</td></tr>
+      <tr><td>28</td><td><span class="mono">51-mobile-login.jpg</span></td><td>Halaman login aplikasi mobile</td></tr>
+      <tr><td>29</td><td><span class="mono">52-mobile-login-terisi.jpg</span></td><td>Halaman login aplikasi mobile dengan formulir terisi</td></tr>
+      <tr><td>30</td><td><span class="mono">53-mobile-dashboard.jpg</span></td><td>Dasbor aplikasi mobile</td></tr>
+      <tr><td>31</td><td><span class="mono">54-mobile-presensi.jpg</span></td><td>Presensi geolokasi</td></tr>
+      <tr><td>32</td><td><span class="mono">55-mobile-layanan.jpg</span></td><td>Menu pelayanan aplikasi mobile</td></tr>
+      <tr><td>33</td><td><span class="mono">56-mobile-admin.jpg</span></td><td>Panel admin pada aplikasi mobile</td></tr>
+      <tr><td>34</td><td><span class="mono">57-mobile-profil.jpg</span></td><td>Profil pengguna pada aplikasi mobile</td></tr>
+      <tr><td>35</td><td><span class="mono">58-mobile-kegiatan.jpg</span></td><td>Laporan kegiatan harian</td></tr>
+      <tr><td>36</td><td><span class="mono">59-mobile-berita.jpg</span></td><td>Daftar berita pada aplikasi mobile</td></tr>
+      <tr><td>37</td><td><span class="mono">60-mobile-janji-temu.jpg</span></td><td>Riwayat janji temu</td></tr>
+      <tr><td>38</td><td><span class="mono">61-mobile-kegiatan-rekap.jpg</span></td><td>Rekap bulanan kegiatan dan unduh PDF</td></tr>
+      <tr><td>39</td><td><span class="mono">63-mobile-acara.jpg</span></td><td>Daftar acara kantor pada aplikasi mobile</td></tr>
+    </tbody>
+  </table>
+
+  <p class="small">
+    <b>Catatan:</b> tangkapan layar modul SIMPEG pada aplikasi mobile belum dimuat dalam lampiran ini;
+    modul tersebut dapat diakses melalui menu <i>Panel Admin → Verifikasi SIMPEG</i> pada aplikasi.
+  </p>
+</section>
+
+</div>
+</body>
+</html>
