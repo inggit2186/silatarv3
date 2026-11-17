@@ -118,10 +118,11 @@
         }
         .ledger tbody tr.odd td { background: #faf9f6; }
         .c-no { width: 8mm; }
-        .c-date { width: 27mm; }
-        .c-status { width: 32mm; }
-        .c-time { width: 16mm; }
-        .c-dur { width: 18mm; }
+        .c-date { width: 25mm; }
+        .c-status { width: 30mm; }
+        .c-time { width: 15mm; }
+        .c-dur { width: 17mm; }
+        .c-jadwal { width: 22mm; }
         .c-note { width: auto; }
 
         .idx {
@@ -268,12 +269,32 @@
                     <div class="meta-value">{{ $periodeLabel }}</div>
                 </td>
                 <td>
-                    <div class="meta-label">Jenis Laporan</div>
-                    <div class="meta-value">{{ $tabLabel }}</div>
+                    <div class="meta-label">Jadwal Kerja</div>
+                    <div class="meta-value mono">
+                        @if(! empty($jadwal['hari_kerja']))
+                            {{ substr($jadwal['hari_kerja']->masuk ?? '--:--', 0, 5) }} &ndash; {{ substr($jadwal['hari_kerja']->biasa ?? '--:--', 0, 5) }}
+                        @else
+                            Belum diatur
+                        @endif
+                    </div>
                 </td>
                 <td>
                     <div class="meta-label">Dicetak Pada</div>
                     <div class="meta-value mono">{{ $cetakPada }}</div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="meta-label">Hari Kerja Efektif</div>
+                    <div class="meta-value mono">{{ $stats->hari_kerja_efektif }} hari</div>
+                </td>
+                <td>
+                    <div class="meta-label">Libur Nasional / Cuti</div>
+                    <div class="meta-value mono">{{ $jadwal['hari_libur_nasional'] }} hari</div>
+                </td>
+                <td>
+                    <div class="meta-label">Libur Sesuai Jadwal</div>
+                    <div class="meta-value mono">{{ $jadwal['hari_libur_jadwal'] }} hari</div>
                 </td>
             </tr>
         </table>
@@ -304,6 +325,7 @@
                         <th class="c-no">#</th>
                         <th class="c-date">Tanggal</th>
                         <th class="c-status">Status</th>
+                        <th class="c-jadwal">Jadwal</th>
                         <th class="c-time">Masuk</th>
                         <th class="c-time">Pulang</th>
                         <th class="c-dur">Durasi</th>
@@ -315,6 +337,10 @@
                         @php
                             $carbon = Carbon::parse($row->tanggal)->locale('id');
                             $meta = PresensiStatus::meta($row->status, (bool) ($row->m_absen || $row->p_absen));
+                            $override = $row->status_override ?? null;
+                            if ($override) {
+                                $meta['label'] = $override['label'];
+                            }
                             $masuk = $row->m_absen ? Carbon::parse($row->tanggal.' '.$row->m_absen) : null;
                             $pulang = $row->p_absen ? Carbon::parse($row->tanggal.' '.$row->p_absen) : null;
                             $durasi = ($masuk && $pulang) ? (int) round($masuk->diffInMinutes($pulang, false)) : null;
@@ -334,6 +360,27 @@
                                 @if (in_array($row->status, $errorStatuses, true))
                                     <div style="margin-top: 0.8mm;">
                                         <span class="flag" style="background: {{ $meta['accent'] }}; color: #ffffff;">Perlu verifikasi</span>
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="c-jadwal">
+                                @if (! empty($row->jadwal['masuk']))
+                                    <span class="clock" style="font-size: 7pt;">{{ substr($row->jadwal['masuk'], 0, 5) }}</span>
+                                    <span class="date-sub">
+                                        &ndash; {{ ! empty($row->jadwal['pulang']) ? substr($row->jadwal['pulang'], 0, 5) : 'Libur' }}
+                                    </span>
+                                @else
+                                    <span class="clock none">--:--</span>
+                                @endif
+                                @if ($row->is_libur_nasional)
+                                    <div style="margin-top: 0.6mm;">
+                                        <span class="flag" style="background: #1d4ed8; color: #ffffff;">
+                                            {{ $row->libur_status === 'cuti' ? 'Cuti Bersama' : 'Libur Nasional' }}
+                                        </span>
+                                    </div>
+                                @elseif (! $row->is_hari_kerja)
+                                    <div style="margin-top: 0.6mm;">
+                                        <span class="flag" style="background: #8a8580; color: #ffffff;">Libur Jadwal</span>
                                     </div>
                                 @endif
                             </td>

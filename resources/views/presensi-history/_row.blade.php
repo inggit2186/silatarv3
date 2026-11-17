@@ -9,8 +9,19 @@
 
     $meta = \App\Support\PresensiStatus::meta($item->status, (bool) ($item->m_absen || $item->p_absen));
 
+    $override = $item->status_override ?? null;
+    if ($override) {
+        $meta = [
+            'label' => $override['label'],
+            'tone' => $override['tone'],
+            'accent' => $meta['accent'],
+            'bg' => $meta['bg'],
+            'fg' => $meta['fg'],
+        ];
+    }
+
     $icon = match (true) {
-        str_starts_with($status, 'Cuti'), str_contains($status, 'Libur') => $iconCalendar,
+        $override !== null => $iconCalendar,
         $meta['tone'] === 'emerald' => $iconHadir,
         $meta['tone'] === 'amber' => $status === 'TERLAMBAT'
             ? '<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>'
@@ -63,6 +74,35 @@
 
         {{-- Chip jam masuk / pulang / durasi --}}
         <div class="flex flex-wrap gap-2">
+            @if(! empty($item->jadwal['masuk']) && ! empty($item->jadwal['pulang']))
+                <span style="font-family: var(--font-mono);" class="inline-flex items-center gap-1.5 rounded-xl border border-[var(--gold)]/40 bg-[var(--gold)]/10 px-2.5 py-1.5">
+                    <svg class="w-3.5 h-3.5 text-[var(--gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span class="text-[0.65rem] uppercase tracking-[0.08em] text-[var(--ink-soft)]">Jadwal</span>
+                    <span class="text-xs font-bold text-[var(--ink)]">{{ substr($item->jadwal['masuk'], 0, 5) }}&ndash;{{ substr($item->jadwal['pulang'], 0, 5) }}</span>
+                </span>
+            @elseif(! empty($item->jadwal['masuk']))
+                <span style="font-family: var(--font-mono);" class="inline-flex items-center gap-1.5 rounded-xl border border-[var(--gold)]/40 bg-[var(--gold)]/10 px-2.5 py-1.5">
+                    <svg class="w-3.5 h-3.5 text-[var(--gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span class="text-[0.65rem] uppercase tracking-[0.08em] text-[var(--ink-soft)]">Jadwal</span>
+                    <span class="text-xs font-bold text-[var(--ink)]">Masuk {{ substr($item->jadwal['masuk'], 0, 5) }}</span>
+                </span>
+            @endif
+
+            @if($item->is_libur_nasional)
+                <span style="font-family: var(--font-mono);" class="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-2.5 py-1.5">
+                    <svg class="w-3.5 h-3.5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span class="text-[0.65rem] uppercase tracking-[0.08em] text-blue-700">{{ $item->libur_status === 'cuti' ? 'Cuti Bersama' : 'Libur Nasional' }}</span>
+                    @if($item->libur_keterangan)
+                        <span class="text-xs font-bold text-blue-800">{{ $item->libur_keterangan }}</span>
+                    @endif
+                </span>
+            @elseif(! $item->is_hari_kerja && empty($item->jadwal['pulang']))
+                <span style="font-family: var(--font-mono);" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100 px-2.5 py-1.5">
+                    <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span class="text-[0.65rem] uppercase tracking-[0.08em] text-slate-600">Libur Jadwal</span>
+                </span>
+            @endif
+
             <span style="font-family: var(--font-mono);" class="inline-flex items-center gap-1.5 rounded-xl border border-[var(--line)] bg-[var(--paper-soft)] px-2.5 py-1.5">
                 <svg class="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/><circle cx="12" cy="12" r="4"/></svg>
                 <span class="text-[0.65rem] uppercase tracking-[0.08em] text-[var(--ink-soft)]">Masuk</span>

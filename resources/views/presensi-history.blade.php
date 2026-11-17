@@ -55,20 +55,12 @@
                         <div class="ml-auto flex flex-wrap items-center gap-2">
                             <a href="{{ route('presensi-history.print', ['tab' => $tab, 'month' => $month, 'year' => $year]) }}"
                                target="_blank" rel="noopener"
-                               style="font-family: var(--font-mono);"
-                               class="inline-flex items-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3.5 py-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-[var(--ink)] transition-colors hover:border-[var(--gold)] hover:text-[var(--gold)]">
+                               style="font-family: var(--font-mono); background: linear-gradient(135deg, var(--gold) 0%, var(--sun-deep) 100%);"
+                               class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-[var(--night)] transition-transform hover:-translate-y-0.5">
                                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/>
                                 </svg>
                                 Pratinjau Cetak
-                            </a>
-                            <a href="{{ route('presensi-history.pdf', ['tab' => $tab, 'month' => $month, 'year' => $year]) }}"
-                               style="font-family: var(--font-mono); background: linear-gradient(135deg, var(--gold) 0%, var(--sun-deep) 100%);"
-                               class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-[var(--night)] transition-transform hover:-translate-y-0.5">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>
-                                </svg>
-                                Export PDF
                             </a>
                         </div>
                     </div>

@@ -131,7 +131,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/riwayat-presensi', [PageController::class, 'presensiHistory'])->name('presensi-history');
     Route::get('/riwayat-presensi/cetak', [PageController::class, 'presensiHistoryPrint'])->name('presensi-history.print');
-    Route::get('/riwayat-presensi/pdf', [PageController::class, 'presensiHistoryPdf'])->name('presensi-history.pdf');
 
 });
 
