@@ -59,7 +59,7 @@
         @stack('styles')
         @stack('extraHead')
     </head>
-    <body class="neo-mirai min-h-full text-slate-900 antialiased">
+    <body class="neo-mirai min-h-full text-slate-900 antialiased {{ request()->routeIs('ujian.kerjakan') ? 'neo-ujian-mode' : '' }}">
         <!-- Site Header - Sticky Full Navigation -->
         <x-layouts.site-header />
 

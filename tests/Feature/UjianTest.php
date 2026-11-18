@@ -158,13 +158,50 @@ class UjianTest extends TestCase
         $response->assertOk();
         $response->assertSee('Ibu kota Indonesia adalah?');
 
-        // Sesi harus terbentuk dengan batas waktu sesuai durasi.
         $sesi = UjianPeserta::where('ujian_id', $this->ujian->id)
             ->where('user_id', $this->peserta->id)
             ->first();
 
+        // Membuka halaman belum memulai waktu ujian.
+        $this->assertSame('belum_mulai', $sesi->status);
+        $this->assertNull($sesi->started_at);
+        $this->assertNull($sesi->ends_at);
+
+        // Waktu ujian baru berjalan setelah peserta menekan tombol mulai.
+        $this->mulaiUjian();
+
+        $sesi->refresh();
+
         $this->assertSame('berjalan', $sesi->status);
+        $this->assertNotNull($sesi->started_at);
         $this->assertNotNull($sesi->ends_at);
+    }
+
+    public function test_ujian_tidak_bisa_dimulai_oleh_bukan_peserta(): void
+    {
+        $this->actingAs($this->bukanPeserta)
+            ->postJson(route('ujian.mulai', $this->ujian->id))
+            ->assertNotFound();
+
+        $this->assertSame('belum_mulai', UjianPeserta::where('ujian_id', $this->ujian->id)
+            ->where('user_id', $this->peserta->id)
+            ->value('status'));
+    }
+
+    public function test_jawaban_tidak_bisa_disimpan_sebelum_ujian_dimulai(): void
+    {
+        $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id));
+
+        $this->actingAs($this->peserta)->postJson(route('ujian.jawaban', $this->ujian->id), [
+            'jawaban' => [
+                $this->soalPg->id => ['pilihan_id' => $this->pilihanBenar->id],
+            ],
+        ])->assertStatus(409);
+
+        $this->assertDatabaseMissing('ujian_jawaban', [
+            'user_id' => $this->peserta->id,
+            'soal_id' => $this->soalPg->id,
+        ]);
     }
 
     public function test_kunci_jawaban_tidak_pernah_dikirim_ke_browser(): void
@@ -187,6 +224,7 @@ class UjianTest extends TestCase
     public function test_menyimpan_jawaban_dalam_satu_batch(): void
     {
         $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id));
+        $this->mulaiUjian();
 
         $response = $this->actingAs($this->peserta)->postJson(route('ujian.jawaban', $this->ujian->id), [
             'jawaban' => [
@@ -229,6 +267,7 @@ class UjianTest extends TestCase
         ]);
 
         $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id));
+        $this->mulaiUjian();
 
         $this->actingAs($this->peserta)->postJson(route('ujian.jawaban', $this->ujian->id), [
             'jawaban' => [
@@ -246,6 +285,7 @@ class UjianTest extends TestCase
     public function test_submit_menghitung_nilai_dan_menutup_sesi(): void
     {
         $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id));
+        $this->mulaiUjian();
 
         $this->actingAs($this->peserta)->postJson(route('ujian.jawaban', $this->ujian->id), [
             'jawaban' => [
@@ -278,6 +318,7 @@ class UjianTest extends TestCase
     public function test_halaman_hasil_menampilkan_pembahasan(): void
     {
         $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id));
+        $this->mulaiUjian();
 
         $this->actingAs($this->peserta)->postJson(route('ujian.submit', $this->ujian->id))->assertOk();
 
@@ -290,6 +331,7 @@ class UjianTest extends TestCase
     public function test_sesi_yang_sudah_selesai_diarahkan_ke_halaman_hasil(): void
     {
         $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id));
+        $this->mulaiUjian();
 
         $this->actingAs($this->peserta)->postJson(route('ujian.submit', $this->ujian->id))->assertOk();
 
@@ -547,6 +589,7 @@ class UjianTest extends TestCase
 
         // Peserta sedang mengerjakan ujian.
         $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id))->assertOk();
+        $this->mulaiUjian();
 
         $sesi = UjianPeserta::where('ujian_id', $this->ujian->id)
             ->where('user_id', $this->peserta->id)
@@ -642,6 +685,7 @@ class UjianTest extends TestCase
         Cache::forget("ujian:{$this->ujian->id}:soal");
 
         $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id));
+        $this->mulaiUjian();
 
         $this->actingAs($this->peserta)->postJson(route('ujian.jawaban', $this->ujian->id), [
             'jawaban' => [
@@ -679,7 +723,8 @@ class UjianTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Masuk Layar Penuh');
-        $response->assertSee('Lanjut tanpa layar penuh');
+        $response->assertSee('Mulai Ujian');
+        $response->assertSee('Kembali');
 
         // Penjaga di sisi peramban harus ikut terkirim ke halaman.
         $response->assertSee('X-Ujian-Perangkat', false);
@@ -691,6 +736,7 @@ class UjianTest extends TestCase
     public function test_pelanggaran_bisa_dicatat_dan_ditampilkan_di_halaman_hasil(): void
     {
         $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id))->assertOk();
+        $this->mulaiUjian();
 
         $response = $this->actingAs($this->peserta)->postJson(route('ujian.pelanggaran', $this->ujian->id), [
             'jenis' => 'perpindahan_fokus',
@@ -730,6 +776,7 @@ class UjianTest extends TestCase
     public function test_pelanggaran_ditolak_setelah_sesi_selesai(): void
     {
         $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id))->assertOk();
+        $this->mulaiUjian();
         $this->actingAs($this->peserta)->postJson(route('ujian.submit', $this->ujian->id))->assertOk();
 
         $this->actingAs($this->peserta)
@@ -744,10 +791,7 @@ class UjianTest extends TestCase
         $this->actingAs($this->peserta)->get(route('ujian.kerjakan', $this->ujian->id))->assertOk();
 
         // Perangkat pertama terdaftar pada sesi.
-        $this->actingAs($this->peserta)
-            ->postJson(route('ujian.perangkat', $this->ujian->id), [], ['X-Ujian-Perangkat' => 'perangkat-a'])
-            ->assertOk()
-            ->assertJson(['ok' => true]);
+        $this->mulaiUjian('perangkat-a');
 
         $sesi = UjianPeserta::where('ujian_id', $this->ujian->id)
             ->where('user_id', $this->peserta->id)
@@ -790,5 +834,17 @@ class UjianTest extends TestCase
         $method->setAccessible(true);
 
         return $method->invoke(new UjianController, $items, $seed);
+    }
+
+    /**
+     * Mulai sesi ujian seperti yang dilakukan peserta saat menekan tombol
+     * "Masuk ke Layar Penuh".
+     */
+    private function mulaiUjian(string $perangkat = 'perangkat-ujian'): void
+    {
+        $this->actingAs($this->peserta)
+            ->postJson(route('ujian.mulai', $this->ujian->id), [], ['X-Ujian-Perangkat' => $perangkat])
+            ->assertOk()
+            ->assertJson(['ok' => true]);
     }
 }

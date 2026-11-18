@@ -67,6 +67,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('ujian')->name('ujian.')->group(function () {
         Route::get('/', [UjianController::class, 'index'])->name('index');
         Route::get('/{id}', [UjianController::class, 'kerjakan'])->whereNumber('id')->name('kerjakan');
+        Route::post('/{id}/mulai', [UjianController::class, 'mulai'])->whereNumber('id')->name('mulai');
         Route::post('/{id}/jawaban', [UjianController::class, 'simpanJawaban'])->whereNumber('id')->name('jawaban');
         Route::post('/{id}/upload', [UjianController::class, 'uploadLampiran'])->whereNumber('id')->name('upload');
         Route::post('/{id}/submit', [UjianController::class, 'submit'])->whereNumber('id')->name('submit');

@@ -10,7 +10,23 @@
 ## Status: DALAM PROGRES (implementasi kode selesai, verifikasi manual pending)
 
 **Tanggal mulai:** 2026-10-28
-**Update terakhir:** 2026-11-18 (sesi 7 — redesign modal pelanggaran, modal kumpulkan jawaban & halaman hasil)
+**Update terakhir:** 2026-11-18 (sesi 9 — cover fit-to-cover, waktu ujian mulai saat tombol layar penuh ditekan, tombol kembali & modal layar penuh ringkas di mobile)
+
+> **Ringkasan 2026-11-18 (sesi 9):** **Cover ujian** di daftar kini benar-benar memenuhi
+> area cover (*fit to cover*). **Waktu ujian tidak lagi berjalan saat halaman dibuka** — sesi
+> baru started setelah peserta menekan **"Mulai Ujian"** di modal layar penuh (endpoint baru
+> `POST /ujian/{id}/mulai`); sebelum itu jawaban/lampiran/pelanggaran ditolak server
+> (`409`). Modal layar penuh kini **hanya 2 tombol — "Kembali" & "Mulai Ujian"** (ujian wajib
+> layar penuh, tombol "Lanjut Tanpa Layar Penuh" dihapus) dan di mobile tampil **lebih ringkas**
+> (tombol kecil, kepala modal diperkecil) supaya area informasi tidak tergerus.
+> Detail di section 3 (Fase 12), 5.2, 9, dan 11.
+
+> **Ringkasan 2026-11-18 (sesi 8):** Halaman `/ujian` dibuat **responsif untuk mobile/Android** —
+> bilah atas dua baris, palet soal jadi strip geser, navigasi dua kolom, modal lebih ringkas.
+> **Bottom mobile nav disembunyikan** saat mengerjakan ujian (kelas `neo-ujian-mode` di `<body>`),
+> dan **backdrop modal ujian dinaikkan ke `z-index: 200`** sehingga tombol **"Masuk Layar Penuh"**
+> tidak lagi tertutup bottom nav. Ketiga modal ujian kini bisa digulir (badan scroll, kaki modal
+> tetap terlihat). Detail di section 3 (Fase 11), 5.2, 9, dan 11.
 
 > **Ringkasan 2026-11-18 (sesi 7):** Tiga tampilan dipercantik — modal **"Total Pelanggaran pada
 > sesi ini"** (`.neo-ujian-alert-*`), modal **"Kumpulkan Jawaban?"** (`.neo-ujian-submit-*`),
@@ -359,7 +375,7 @@ Ringkas: **1 request buka halaman, 1 request per batch jawaban, 1 request saat s
       - kepala gradasi malam + ikon monitor emas berglow + judul display + subjudul
       - 3 aturan tampil sebagai kartu bernomor (`.neo-ujian-fs-rule`, nomor mono emas)
       - catatan merah "keluar layar penuh = pelanggaran" (`.neo-ujian-fs-alert`)
-      - footer 2 tombol: sekunder "Lanjut tanpa layar penuh" & utama "Masuk Layar Penuh" (ikon)
+      - footer 2 tombol: sekunder "Kembali" & utama "Mulai Ujian" (ikon) — lihat Fase 12
 - [x] Halaman pengerjaan:
       - bar atas sticky `.neo-ujian-topbar` + **garis progres jawaban** tipis di bawah bar
       - timer jadi pill `.neo-ujian-timer`, **berkedip merah** saat sisa waktu ≤ 60 detik
@@ -430,6 +446,106 @@ Ringkas: **1 request buka halaman, 1 request per batch jawaban, 1 request saat s
         ganda (sudah dibuat di `setUp`) → duplikat; dan `Storage::put()` mengembalikan `bool`,
         bukan path → path ditulis manual
 - [x] `UjianTest` **27/27 hijau** (112 assertion) + `UjianImportTest` **10/10 hijau** (41 assertion)
+
+### Fase 11 — Responsive mobile & perbaikan modal ujian (2026-11-18, sesi 8)
+> Permintaan user: (1) halaman `/ujian` dibuat **responsif untuk semua layar mobile/Android**,
+> (2) pada modal **"Masuk ke Layar Penuh"** tombol **"Masuk Layar Penuh"** tertutup **bottom nav
+> mobile**, (3) **bottom mobile nav disembunyikan** saat di halaman ujian/pengisian jawaban.
+
+- [x] **Bottom mobile nav disembunyikan saat mengerjakan ujian:**
+      - `<body>` dapat kelas `neo-ujian-mode` bila route = `ujian.kerjakan`
+        (`resources/views/components/layouts/app.blade.php`)
+      - CSS di `resources/views/components/layouts/site-header.blade.php` (blok `@media (max-width: 900px)`):
+        `body.neo-ujian-mode .bottom-nav { display: none !important; }`
+      - padding bawah halaman (`padding-bottom: 70px`) yang biasanya ada untuk memberi ruang
+        bottom nav diganti jadi `calc(1rem + env(safe-area-inset-bottom, 0px))` — tidak ada lagi
+        celah kosong di bawah halaman ujian
+- [x] **Tombol modal "Masuk Layar Penuh" tidak lagi tertutup bottom nav:**
+      - `.neo-ujian-fs-backdrop` (dan `.neo-ujian-submit-backdrop`, `.neo-ujian-alert-backdrop`)
+        dinaikkan ke `z-index: 200` — di atas `.bottom-nav` (`z-index: 100`)
+      - `padding-bottom` backdrop memakai `env(safe-area-inset-bottom)` supaya tombol tetap
+        terjangkau pada perangkat Android dengan gesture bar
+- [x] **Ketiga modal ujian jadi bisa digulir (badan modal scroll, kaki modal tetap terlihat):**
+      - `.neo-ujian-fs-modal`, `.neo-ujian-submit-modal`, `.neo-ujian-alert-modal` memakai
+        `display: flex; flex-direction: column; max-height: calc(100dvh - 2rem)` (fallback `92vh`)
+      - kepala & kaki modal `flex: 0 0 auto`, badan modal `flex: 1 1 auto; min-height: 0;
+        overflow-y: auto` — previously `overflow: hidden` menimpa `overflow-y: auto` sehingga
+        isi modal terpotong dan tombolnya tidak bisa dijangkau
+- [x] **Responsive halaman pengerjaan (`.neo-ujian-*`):**
+      - bilah atas jadi dua baris di layar kecil: judul + badge (dapat digeser horizontal) di baris 1,
+        timer + tombol **"Kumpulkan"** (label pendek) di baris 2, status simpan di baris 3
+      - palet soal di sidebar berubah jadi **strip horizontal yang dapat digeser** di ≤1023px,
+        dan sidebar dipindah **ke atas** panel soal (`order-first lg:order-none`)
+      - tombol **"Kumpulkan Jawaban"** di sidebar disembunyikan di ≤1023px (sudah ada di bilah atas)
+      - navigasi.soal: di ≤480px tombol Sebelumnya/Berikutnya jadi dua kolom dan penomoran
+        pindah ke baris sendiri
+      - notifikasi mode layar penuh, ikon & padding ketiga modal diperkecil di ≤640px
+- [x] **Responsive halaman daftar (`index.blade.php`) & halaman hasil (`hasil.blade.php`):**
+      - padding hero dipindah dari inline style ke kelas `.neo-ujian-hero-pad` (responsif)
+      - halaman hasil: lingkaran nilai dipusatkan, statistik jadi **2 kolom** di ≤640px,
+        tombol "Tampilkan Pembahasan" boleh membungkus
+      - banner promo Android disembunyikan saat mengerjakan ujian (`body.neo-ujian-mode .neo-app-promo`)
+- [x] CSS ditambahkan di `resources/css/neo-mirai-home.css` — **tanpa file CSS baru**;
+      `php artisan view:cache` lolos. **Verifikasi manual di browser ditunda** (sesuai instruksi user).
+
+---
+
+### Fase 12 — Cover fit-to-cover, mulai ujian saat tombol ditekan & modal layar penuh ringkas (2026-11-18, sesi 9)
+> Permintaan user: (1) **cover pada list ujian** harus pas di area cover (*fit to cover*),
+> (2) **waktu ujian tidak boleh berjalan sejak halaman dibuka** — baru berjalan saat peserta
+> menekan **"Mulai Ujian"**, (3) di mobile tombol pada modal **"Masuk ke Layar Penuh"**
+> terlalu besar sehingga area informasi jadi kecil,
+> (4) ganti tombol modal menjadi **2 buah: "Kembali" & "Mulai Ujian"** — ujian **wajib**
+> dalam layar penuh, sehingga tombol **"Lanjut Tanpa Layar Penuh"** dihapus.
+
+- [x] **Cover ujian memenuhi area cover (fit to cover):**
+      - `.neo-ujian-card-img` diubah jadi `position: absolute; inset: 0; display: block;
+        object-fit: cover; object-position: center` di `resources/css/neo-mirai-home.css`
+      - sebelumnya `height: 100%` pada `<img>` inline di dalam box `aspect-ratio: 16/9`
+        tidak selalu sampai penuh sehingga cover terlihat tidak proporsional
+- [x] **Waktu ujian baru berjalan setelah peserta menekan tombol mulai:**
+      - **Route baru** `POST /ujian/{id}/mulai` → `UjianController::mulai()`
+        (`routes/web.php`, name `ujian.mulai`)
+      - `UjianController::kerjakan()` **tidak lagi** menulis `started_at` / `ends_at` /
+        status `berjalan`; halaman hanya menampilkan soal
+      - `UjianController::mulai()`: cek peserta, cek ujian terbit & sudah mulai,
+        daftar **sidik perangkat** (perangkat berbeda → pelanggaran `sesi_ganda` + `409`),
+        baru tulis `status = berjalan`, `started_at = now()`,
+        `ends_at = started_at + durasi_menit`, dan kembalikan `remaining` ke browser
+      - Helper `sesiBelumMulai()` dipakai sebagai penjaga di `simpanJawaban()`,
+        `uploadLampiran()`, `submit()`, dan `catatPelanggaran()` → `409 "Ujian belum dimulai."`
+        (validasi `jenis` pelanggaran tetap diperiksa lebih dulu agar tetap `422`)
+      - `catatPerangkat()` **tidak** lagi menyimpan sidik perangkat sebelum ujian dimulai,
+        sehingga perpindahan perangkat sebelum menekan tombol mulai tidak dianggap sesi ganda
+      - View `ujian/kerjakan.blade.php`: state Alpine `dimulai` / `memulai` / `startError`,
+        method `mulaiSesi()` (POST ke `ujian.mulai`), `tick()` & `timeText` baru mulai
+        setelah sesi berjalan (sebelumnya tampil `--:--`), `catat()` diabaikan sebelum mulai,
+        `beforeunload` tidak memunculkan peringatan sebelum ujian dimulai
+      - Peserta yang **batal** mengikuti ujian: `kembaliKeDaftarUjian()` kembali ke daftar
+        tanpa memulai sesi, tanpa mencatat pelanggaran
+- [x] **Tombol modal layar penuh diganti 2 buah: "Kembali" & "Mulai Ujian":**
+      - tombol **"Lanjut tanpa layar penuh"** dihapus — **ujian wajib layar penuh**
+      - tombol **"Mulai Ujian"**: masuk ke layar penuh → `POST /ujian/{id}/mulai` → waktu
+        ujian mulai; bila peramban menolak layar penuh, sesi **tidak** dimulai dan pesan
+        `.neo-ujian-fs-error` muncul
+      - tombol **"Kembali"**: kembali ke daftar ujian tanpa memulai sesi dan tanpa mencatat
+        pelanggaran
+      - `.neo-ujian-fs-foot` jadi **dua baris**: baris 1 dua tombol aksi
+        (`.neo-ujian-fs-actions`), baris 2 tombol kembali
+      - di ≤640px tombol aksi diperkecil (`padding: 0.5rem 0.6rem`) supaya area
+        informasi (aturan 01–03) tetap luas
+      - kepala modal juga diringkas (ikon & padding lebih kecil) di ≤640px
+- [x] **Test `tests/Feature/UjianTest.php` disesuaikan** dengan aturan baru:
+      - helper `mulaiUjian()` memanggil endpoint `ujian.mulai` (dengan header
+        `X-Ujian-Perangkat`), ditambahkan ke test yang butuh sesi berjalan
+      - test baru: `test_ujian_tidak_bisa_dimulai_oleh_bukan_peserta` &
+        `test_jawaban_tidak_bisa_disimpan_sebelum_ujian_dimulai`
+      - `test_peserta_ditunjuk_dapat_membuka_halaman_pengerjaan` kini memastikan halaman
+        **tidak** memulai sesi, lalu `mulaiUjian()` memulai sesi
+- [x] CSS & view ditambahkan di `resources/css/neo-mirai-home.css` dan
+      `resources/views/ujian/kerjakan.blade.php` — **tanpa file CSS baru**;
+      `php artisan view:cache` lolos. **Verifikasi manual di browser ditunda**
+      (sesuai instruksi user).
 
 ---
 
@@ -572,10 +688,12 @@ dengan `style="width: X%"` (satu-satunya inline style, nilainya dinamis server).
 }
 ```
 
-**Pengawasan ujian (added 2026-11-16):**
-- Saat halaman dibuka muncul modal **"Mulai Ujian dalam Mode Layar Penuh"** (`fsOpen`).
-  Tombol "Masuk Layar Penuh" memanggil `requestFullscreen`; tombol "Lanjut tanpa layar penuh"
-  menutup modal dan mencatat `tanpa_layar_penh`.
+**Pengawasan ujian (added 2026-11-16, diubah di sesi 9):**
+- Saat halaman dibuka muncul modal **"Masuk ke Layar Penuh"** (`fsOpen`).
+  **Tombol "Mulai Ujian"** memanggil `requestFullscreen` lalu `POST /ujian/{id}/mulai`
+  (waktu ujian baru berjalan sejak tombol ini ditekan); **tombol "Kembali"** menutup
+  halaman tanpa memulai sesi. Ujian **wajib** berjalan dalam mode layar penuh — tombol
+  "Lanjut tanpa layar penuh" sudah dihapus (semula mencatat `tanpa_layar_penh`).
 - Penjaga peramban dipasang di `pasangPenjaga()`: `visibilitychange`, `blur`, `fullscreenchange`,
   override `window.open`, intercept `a[target="_blank"]`, `copy`, `cut`, `paste`, `contextmenu`,
   `keydown` (Ctrl/Cmd + C/X/V/P), dan `beforeunload`.
@@ -709,8 +827,9 @@ Admin ──PUT /admin/ujian/jawaban/{id}/skor──▶ skor manual essay
   - [ ] Unggah file `.csv`/`.txt` → ditolak oleh validasi dengan pesan jelas
   - [ ] Import kedua kali pada ujian yang sama → `urut` soal baru melanjutkan urutan lama
 - [ ] Manual browser (**fitur pengawasan ujian**):
-  - [ ] Modal layar penuh muncul; "Masuk Layar Penuh" → browser fullscreen; keluar fullscreen
-        → badge pelanggaran bertambah dan baris `keluar_layar_penh` muncul di admin
+  - [ ] Modal layar penuh muncul; "Mulai Ujian" → browser fullscreen + waktu mulai berjalan;
+        keluar fullscreen → badge pelanggaran bertambah dan baris `keluar_layar_penh` muncul di admin
+  - [ ] "Kembali" → kembali ke daftar ujian, waktu ujian belum berjalan, tidak ada pelanggaran
   - [ ] Buka tab baru → badge bertambah, jenis `perpindahan_fokus` / `tab_baru` tercatat
   - [ ] `window.open` dari console diblokir (return `null`)
   - [ ] Ctrl+C / Ctrl+V / klik kanan / Ctrl+P diblokir; menyalin jawaban esai sendiri tetap boleh
@@ -839,6 +958,32 @@ Admin ──PUT /admin/ujian/jawaban/{id}/skor──▶ skor manual essay
 > berisi baris dari uji manual di browser pada 2026-11-18) diperbaiki dengan pembatasan
 > cakupan assertion, bukan dengan menghapus data.
 
+### Files Diperbarui — Cover, Mulai Ujian Saat Tombol Ditekan & Modal Layar Penuh (2026-11-18, sesi 9)
+| File | Perubahan |
+|------|---------|
+| `app/Http/Controllers/UjianController.php` | `kerjakan()` tidak lagi memulai sesi otomatis; **tambah `mulai()`** (daftar sidik perangkat + tulis `started_at`/`ends_at` + kirim `remaining`); helper `sesiBelumMulai()` dipakai sebagai penjaga di `simpanJawaban()`, `uploadLampiran()`, `submit()`, `catatPelanggaran()` (409 "Ujian belum dimulai."); `catatPerangkat()` tidak menyimpan sidik perangkat sebelum ujian dimulai |
+| `routes/web.php` | Tambah route `POST ujian/{id}/mulai` → `ujian.mulai` |
+| `resources/views/ujian/kerjakan.blade.php` | State Alpine `dimulai`/`memulai`/`startError` + method `mulaiSesi()`, `keluarLayarPenuh()`, `kembaliKeDaftarUjian()`; `tick()`/`timeText`/`catat()`/`beforeunload` hanya aktif setelah sesi berjalan; kaki modal layar penuh dipecah jadi `.neo-ujian-fs-actions` (2 tombol: "Kembali" & "Mulai Ujian"); pesan error mulai di `.neo-ujian-fs-error`; notifikasi baris atas punya kondisi "belum dimulai" |
+| `resources/css/neo-mirai-home.css` | `.neo-ujian-card-img` jadi `position:absolute; inset:0; object-fit:cover` (cover memenuhi area); `.neo-ujian-fs-foot` jadi kolom + `.neo-ujian-fs-actions` + `.neo-ujian-fs-error`; ≤640px tombol modal layar penuh diperkecil & kepala modal diperkecil |
+| `tests/Feature/UjianTest.php` | Helper `mulaiUjian()`; test yang butuh sesi berjalan disesuaikan; test baru `test_ujian_tidak_bisa_dimulai_oleh_bukan_peserta` & `test_jawaban_tidak_bisa_disimpan_sebelum_ujian_dimulai` |
+| `UJIAN_PROGRESS.md` | Fase 12 + changelog sesi 9 |
+
+> Catatan: **tidak ada test/Pint/browser yang dijalankan** untuk sesi ini — verifikasi manual
+> dilakukan user sesuai instruksi. `php artisan view:cache` & `php -l` lolos.
+
+### Files Diperbarui — Responsive Mobile & Perbaikan Modal Ujian (2026-11-18, sesi 8)
+| File | Perubahan |
+|------|---------|
+| `resources/views/components/layouts/app.blade.php` | `<body>` mendapat kelas `neo-ujian-mode` bila route = `ujian.kerjakan` (dasar sembunyikan bottom nav & banner promo) |
+| `resources/views/components/layouts/site-header.blade.php` | `@media (max-width: 900px)`: `body.neo-ujian-mode .bottom-nav { display: none !important; }` + padding bawah halaman jadi `calc(1rem + env(safe-area-inset-bottom, 0px))` |
+| `resources/views/ujian/kerjakan.blade.php` | Bilah atas dua baris di layar kecil (badge dapat digeser, label tombol "Kumpulkan" pendek, status simpan baris sendiri); sidebar palet `order-first lg:order-none` + kelas `neo-ujian-side-hint` / `neo-ujian-side-submit`; backdrop modal kumpulkan diberi kelas `neo-ujian-submit-backdrop` |
+| `resources/views/ujian/index.blade.php` | Padding hero dipindah dari inline style ke kelas `.neo-ujian-hero-pad` supaya bisa responsif |
+| `resources/css/neo-mirai-home.css` | Backdrop modal ujian `z-index: 200` + safe-area; ketiga modal ujian jadi flex column dengan badan bisa digulir; section baru "Ujian - penyesuaian layar mobile & tablet" (1023/640/480 px): palet geser, navigasi dua kolom, modal ringkas, halaman hasil 2 kolom, banner promo disembunyikan saat ujian — tanpa file CSS baru |
+| `UJIAN_PROGRESS.md` | Fase 11 + changelog sesi 8 |
+
+> Catatan: **tidak ada test/Pint/browser yang dijalankan** untuk sesi ini — verifikasi manual
+> dilakukan user sesuai instruksi. `php artisan view:cache` lolos ( syntaks Blade valid).
+
 ### Files Diperbarui — Pencarian Peserta berdasarkan Nomor Induk (2026-11-18)
 | File | Perubahan |
 |------|-----------|
@@ -871,6 +1016,56 @@ Admin ──PUT /admin/ujian/jawaban/{id}/skor──▶ skor manual essay
 ---
 
 ## 11. Changelog
+
+### 2026-11-18 (sesi 9) — Cover fit-to-cover, mulai ujian saat tombol ditekan & modal layar penuh ringkas
+
+- **Cover ujian (daftar peserta)** kini memenuhi area cover — `.neo-ujian-card-img` diposisikan
+  absolut dengan `object-fit: cover`.
+- **Waktu ujian tidak lagi berjalan sejak halaman dibuka.** Sesi baru dimulai setelah peserta
+  menekan **"Mulai Ujian"** pada modal layar penuh melalui endpoint baru
+  `POST /ujian/{id}/mulai`. Server mengembalikan sisa waktu sehingga jam di browser selalu sama
+  dengan batas waktu server. Sebelum sesi berjalan, jawaban/lampiran/pelanggaran ditolak (`409`).
+- **Modal layar penuh kini hanya 2 tombol: "Kembali" & "Mulai Ujian".** Tombol
+  **"Lanjut tanpa layar penuh" dihapus** — ujian **wajib** berjalan dalam mode layar penuh.
+  Bila peramban menolak permintaan layar penuh, sesi tidak dimulai dan pesan error tampil.
+- **Tombol "Kembali"** mengembalikan peserta ke daftar ujian tanpa memulai sesi dan tanpa
+  mencatat pelanggaran.
+- **Sidik perangkat** baru didaftarkan saat ujian benar-benar dimulai, sehingga perpindahan
+  perangkat sebelum menekan tombol mulai tidak salah dianggap sebagai sesi ganda.
+- **Modal layar penuh di mobile** diringkas: dua tombol aksi jadi kecil dengan label pendek
+  ("Tanpa layar penuh" / "Layar Penuh"), area informasi (aturan 01–03) jadi lebih luas.
+- **Tombol "Kembali"** pada modal layar penuh mengembalikan peserta ke daftar ujian tanpa
+  memulai sesi dan tanpa mencatat pelanggaran.
+- **Test** `tests/Feature/UjianTest.php` disesuaikan (helper `mulaiUjian()` + 2 test baru).
+
+### 2026-11-18 (sesi 8) — Responsive mobile, perbaikan modal & bottom nav saat ujian
+
+- Permintaan user:
+  1. halaman `/ujian` dibuat **responsif untuk semua macam layar mobile/Android**;
+  2. saat peserta klik **"Mulai Ujian"**, modal **"Masuk ke Layar Penuh"** tombol
+     **"Masuk Layar Penuh"** tertutup **bottom mobile nav**;
+  3. **bottom mobile nav disembunyikan** di halaman ujian/pengisian jawaban.
+- **Bottom nav disembunyikan saat ujian:** `<body>` mendapat kelas `neo-ujian-mode` bila route =
+  `ujian.kerjakan` (`resources/views/components/layouts/app.blade.php`), lalu
+  `body.neo-ujian-mode .bottom-nav { display: none !important; }` di style site-header
+  (hanya relevan di `@media (max-width: 900px)`). Padding bawah halaman yang biasanya menyisakan
+  ruang untuk bottom nav (`70px`) diganti jadi `calc(1rem + env(safe-area-inset-bottom, 0px))`.
+- **Modal tidak lagi tertutup bottom nav:** backdrop modal ujian (`.neo-ujian-fs-backdrop`,
+  `.neo-ujian-submit-backdrop`, `.neo-ujian-alert-backdrop`) dinaikkan ke `z-index: 200`
+  (di atas `.bottom-nav` z-100) dan memakai `padding-bottom` dengan `env(safe-area-inset-bottom)`.
+- **Modal jadi bisa digulir:** ketiga modal ujian kini flex column dengan
+  `max-height: calc(100dvh - 2rem)` (fallback `92vh`), kepala & kaki modal `flex: 0 0 auto`,
+  badan modal `overflow-y: auto`. Sebelumnya `overflow: hidden` menimpa `overflow-y: auto`
+  sehingga isi modal terpotong dan tombol footer tidak terjangkau di layar pendek.
+- **Responsive halaman pengerjaan:** bilah atas dua baris di layar kecil (judul + badge dapat
+  digeser / timer + tombol "Kumpulkan" / status simpan), palet soal jadi strip horizontal yang
+  dapat digeser dan dipindah ke atas panel soal di ≤1023px, navigasi soal dua kolom di ≤480px,
+  serta ikon/padding/notifikasi modal diperkecil di ≤640px.
+- **Responsive daftar & halaman hasil:** padding hero dipindah ke kelas `.neo-ujian-hero-pad`;
+  halaman hasil memakai lingkaran nilai terpusat, statistik 2 kolom, dan tombol pembahasan yang
+  boleh membungkus. Banner promo Android disembunyikan saat mengerjakan ujian.
+- CSS di `resources/css/neo-mirai-home.css` (tanpa file CSS baru), `php artisan view:cache` lolos.
+  **Verifikasi manual di browser tidak dijalankan** (sesuai instruksi user).
 
 ### 2026-11-18 (sesi 7) — Redesign modal pelanggaran, modal kumpulkan jawaban & halaman hasil
 

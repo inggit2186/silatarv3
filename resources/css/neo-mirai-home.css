@@ -11170,6 +11170,17 @@ a.neo-upload-preview:active {
     min-height: 300px;
 }
 
+/* Jarak atas hero: menyisakan ruang untuk banner aplikasi & header */
+.neo-ujian-hero-pad {
+    padding: 92px 2rem 1.5rem;
+}
+
+@media (max-width: 640px) {
+    .neo-ujian-hero-pad {
+        padding: 86px 1.1rem 1.25rem;
+    }
+}
+
 /* Overlay terang (sama seperti halaman lain) supaya foto tetap terlihat
    namun tulisan di atasnya tetap gampang dibaca */
 .neo-ujian-hero::before {
@@ -11373,9 +11384,13 @@ a.neo-upload-preview:active {
 }
 
 .neo-ujian-card-img {
+    position: absolute;
+    inset: 0;
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
     transition: transform 600ms var(--ease-quint);
 }
 
@@ -11588,13 +11603,19 @@ a.neo-upload-preview:active {
    ======================================== */
 
 .neo-ujian-fs-backdrop {
+    z-index: 200;
     background: oklch(17% 0.035 185 / 0.55);
     backdrop-filter: blur(6px);
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
 .neo-ujian-fs-modal {
     width: 100%;
     max-width: 34rem;
+    max-height: 92vh;
+    max-height: calc(100dvh - 2rem);
+    display: flex;
+    flex-direction: column;
     padding: 0;
     border: 1px solid var(--line);
     border-radius: 1rem;
@@ -11606,6 +11627,7 @@ a.neo-upload-preview:active {
 /* Kepala modal: gradasi malam + ikon emas */
 .neo-ujian-fs-head {
     position: relative;
+    flex: 0 0 auto;
     padding: 2rem 1.75rem 1.6rem;
     text-align: center;
     background: linear-gradient(135deg, oklch(17% 0.035 185) 0%, oklch(24% 0.04 170) 100%);
@@ -11661,6 +11683,11 @@ a.neo-upload-preview:active {
 }
 
 .neo-ujian-fs-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     padding: 1.4rem 1.75rem 0.5rem;
 }
 
@@ -11720,16 +11747,40 @@ a.neo-upload-preview:active {
 
 .neo-ujian-fs-foot {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 0.6rem;
     padding: 1.25rem 1.75rem 1.5rem;
     border-top: 1px solid var(--line);
     background: var(--paper-soft);
 }
 
-.neo-ujian-fs-foot .neo-btn {
+.neo-ujian-fs-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.neo-ujian-fs-actions .neo-btn {
     flex: 1 1 12rem;
     justify-content: center;
+}
+
+.neo-ujian-fs-actions .neo-btn:disabled {
+    opacity: 0.65;
+    cursor: progress;
+}
+
+/* Pesan gagal memulai ujian */
+.neo-ujian-fs-error {
+    margin: 0 0 0.9rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 0.7rem;
+    border: 1px solid oklch(55% 0.19 25 / 0.35);
+    background: oklch(55% 0.19 25 / 0.1);
+    color: oklch(45% 0.17 25);
+    font-size: 0.78rem;
+    line-height: 1.5;
 }
 
 /* ========================================
@@ -12073,15 +12124,19 @@ a.neo-upload-preview:active {
    ======================================== */
 
 .neo-ujian-alert-backdrop {
+    z-index: 200;
     background: oklch(15% 0.03 185 / 0.62);
     backdrop-filter: blur(8px);
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
 .neo-ujian-alert-modal {
     width: 100%;
     max-width: 32rem;
-    max-height: 90vh;
-    overflow-y: auto;
+    max-height: 92vh;
+    max-height: calc(100dvh - 2rem);
+    display: flex;
+    flex-direction: column;
     border: 1px solid var(--line);
     border-radius: 1.1rem;
     overflow: hidden;
@@ -12098,6 +12153,7 @@ a.neo-upload-preview:active {
 /* Kepala modal: gradasi malam + halo merah */
 .neo-ujian-alert-head {
     position: relative;
+    flex: 0 0 auto;
     padding: 2rem 1.6rem 1.5rem;
     text-align: center;
     background:
@@ -12183,6 +12239,11 @@ a.neo-upload-preview:active {
 
 /* Isi modal */
 .neo-ujian-alert-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     padding: 1.5rem 1.6rem 0.5rem;
 }
 
@@ -12255,6 +12316,7 @@ a.neo-upload-preview:active {
 }
 
 .neo-ujian-alert-foot {
+    flex: 0 0 auto;
     padding: 1.25rem 1.6rem 1.5rem;
 }
 
@@ -12283,11 +12345,18 @@ a.neo-upload-preview:active {
    Modal Kumpulkan Jawaban
    ======================================== */
 
+.neo-ujian-submit-backdrop {
+    z-index: 200;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
 .neo-ujian-submit-modal {
     width: 100%;
     max-width: 30rem;
-    max-height: 90vh;
-    overflow-y: auto;
+    max-height: 92vh;
+    max-height: calc(100dvh - 2rem);
+    display: flex;
+    flex-direction: column;
     border: 1px solid var(--line);
     border-radius: 1.1rem;
     overflow: hidden;
@@ -12298,6 +12367,7 @@ a.neo-upload-preview:active {
 
 .neo-ujian-submit-head {
     position: relative;
+    flex: 0 0 auto;
     padding: 2rem 1.6rem 1.5rem;
     text-align: center;
     background:
@@ -12366,6 +12436,11 @@ a.neo-upload-preview:active {
 }
 
 .neo-ujian-submit-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     padding: 1.6rem 1.6rem 0.5rem;
 }
 
@@ -12498,6 +12573,7 @@ a.neo-upload-preview:active {
 
 .neo-ujian-submit-foot {
     display: flex;
+    flex: 0 0 auto;
     gap: 0.75rem;
     padding: 1.25rem 1.6rem 1.5rem;
 }
@@ -13161,5 +13237,267 @@ a.neo-upload-preview:active {
 
     .neo-hasil-ring-value strong {
         font-size: 2.25rem;
+    }
+}
+
+/* ========================================
+   Ujian - penyesuaian layar mobile & tablet
+   ======================================== */
+
+/* Banner promo Android menutupi bar atas ujian */
+body.neo-ujian-mode .neo-app-promo {
+    display: none !important;
+}
+
+/* Ruang di bawah bar atas tidak perlu selebar halaman lain */
+body.neo-ujian-mode .page-content {
+    padding-top: clamp(1.25rem, 3vw, 2rem);
+}
+
+.neo-ujian-submit-btn {
+    white-space: nowrap;
+}
+
+@media (max-width: 1023px) {
+    /* Panel navigasi tidak lagi menempel di sisi (akan menabrak panel soal) */
+    .neo-ujian-side {
+        position: static;
+    }
+
+    /* Tombol kumpulkan sudah ada di bar atas, jadi sembunyikan duplikatnya */
+    .neo-ujian-side-submit {
+        display: none;
+    }
+
+    .neo-ujian-side-hint {
+        display: none;
+    }
+
+    /* Palet soal jadi strip horizontal yang bisa digeser */
+    .neo-ujian-palette {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0.4rem;
+        overflow-x: auto;
+        padding-bottom: 0.4rem;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .neo-ujian-palette-btn {
+        flex: 0 0 auto;
+        width: 2.4rem;
+        height: 2.4rem;
+        aspect-ratio: auto;
+    }
+}
+
+@media (max-width: 640px) {
+    /* Bar atas lebih ringkas */
+    .neo-ujian-submit-btn {
+        padding: 0.55rem 0.85rem;
+        font-size: 0.8rem;
+    }
+
+    .neo-ujian-hero-stats {
+        gap: 0.5rem;
+    }
+
+    .neo-ujian-timer {
+        padding: 0.35rem 0.6rem;
+        gap: 0.35rem;
+    }
+
+    /* Halaman hasil: ringkasan nilai & statistik */
+    .neo-hasil-hero-grid {
+        gap: 1.25rem;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .neo-hasil-ring {
+        margin: 0 auto;
+    }
+
+    .neo-hasil-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+
+    .neo-hasil-stat {
+        gap: 0.6rem;
+        padding: 0.8rem 0.85rem;
+    }
+
+    .neo-hasil-stat-icon {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.65rem;
+    }
+
+    .neo-hasil-stat-value {
+        font-size: 1.25rem;
+    }
+
+    .neo-hasil-stat-label {
+        font-size: 0.62rem;
+    }
+
+    .neo-hasil-reveal {
+        flex-wrap: wrap;
+        padding: 0.9rem 1rem;
+        gap: 0.75rem;
+    }
+
+    .neo-hasil-reveal-badge {
+        margin-left: auto;
+    }
+
+    /* Notifikasi mode layar penuh diringkas */
+    .neo-ujian-notice {
+        font-size: 0.72rem;
+        padding: 0.6rem 0.8rem;
+    }
+
+    /* Modal layar penuh */
+    .neo-ujian-fs-head {
+        padding: 1.1rem 1.15rem 0.9rem;
+    }
+
+    .neo-ujian-fs-icon {
+        width: 2.6rem;
+        height: 2.6rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0.9rem;
+    }
+
+    .neo-ujian-fs-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .neo-ujian-fs-title {
+        font-size: 1.15rem;
+    }
+
+    .neo-ujian-fs-sub {
+        margin-top: 0.3rem;
+        font-size: 0.78rem;
+    }
+
+    .neo-ujian-fs-body {
+        padding: 0.9rem 1.15rem 0.3rem;
+    }
+
+    .neo-ujian-fs-foot {
+        padding: 0.85rem 1rem 1rem;
+        gap: 0.45rem;
+    }
+
+    .neo-ujian-fs-actions {
+        gap: 0.45rem;
+    }
+
+    .neo-ujian-fs-actions .neo-btn {
+        flex: 1 1 0;
+        min-width: 0;
+        gap: 0.3rem;
+        padding: 0.5rem 0.6rem;
+    }
+
+    .neo-ujian-fs-actions .neo-btn svg {
+        flex-shrink: 0;
+        width: 13px;
+        height: 13px;
+    }
+
+    .neo-ujian-fs-rule {
+        padding: 0.7rem 0.8rem;
+    }
+
+    .neo-ujian-fs-rule-text {
+        font-size: 0.78rem;
+    }
+
+    /* Modal kumpulkan jawaban */
+    .neo-ujian-submit-head {
+        padding: 1.4rem 1.15rem 1.1rem;
+    }
+
+    .neo-ujian-submit-icon {
+        width: 3rem;
+        height: 3rem;
+        margin-bottom: 0.7rem;
+        border-radius: 1rem;
+    }
+
+    .neo-ujian-submit-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .neo-ujian-submit-body {
+        padding: 1.1rem 1.15rem 0.4rem;
+    }
+
+    .neo-ujian-submit-foot {
+        padding: 1rem 1.15rem 1.15rem;
+    }
+
+    .neo-ujian-ring-wrap {
+        width: 7.5rem;
+        height: 7.5rem;
+    }
+
+    .neo-ujian-ring-value strong {
+        font-size: 1.7rem;
+    }
+
+    /* Modal pelanggaran */
+    .neo-ujian-alert-head {
+        padding: 1.4rem 1.15rem 1.1rem;
+    }
+
+    .neo-ujian-alert-icon {
+        width: 3rem;
+        height: 3rem;
+        margin-bottom: 0.7rem;
+        border-radius: 1rem;
+    }
+
+    .neo-ujian-alert-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .neo-ujian-alert-body {
+        padding: 1.1rem 1.15rem 0.4rem;
+    }
+
+    .neo-ujian-alert-foot {
+        padding: 1rem 1.15rem 1.15rem;
+    }
+
+    .neo-ujian-alert-count {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Navigasi soal: tombol jadi dua kolom, penomoran pindah ke baris sendiri */
+    .neo-ujian-nav {
+        flex-wrap: wrap;
+        padding: 0.85rem 1rem;
+    }
+
+    .neo-ujian-nav .neo-btn {
+        flex: 1 1 calc(50% - 0.4rem);
+        justify-content: center;
+    }
+
+    .neo-ujian-nav .neo-ujian-panel-index {
+        order: 3;
+        width: 100%;
+        justify-content: center;
     }
 }

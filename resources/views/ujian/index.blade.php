@@ -3,8 +3,8 @@
 <main class="neo-mirai">
 
     <!-- ================= HERO ================= -->
-    <section class="hero-page neo-ujian-hero"
-        style="background-image: url('/assets/img/template/ujian-bg.webp'); background-size: cover; background-position: center top; padding: 92px 2rem 1.5rem;">
+    <section class="hero-page neo-ujian-hero neo-ujian-hero-pad"
+        style="background-image: url('/assets/img/template/ujian-bg.webp'); background-size: cover; background-position: center top;">
 
         <div class="neo-ujian-hero-content">
             <div class="neo-ujian-hero-icon">

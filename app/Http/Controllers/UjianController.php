@@ -105,15 +105,6 @@ class UjianController extends Controller
             return redirect()->route('ujian.hasil', $id);
         }
 
-        if ($peserta->status === 'belum_mulai' || ! $peserta->started_at) {
-            $startedAt = now();
-            $peserta->update([
-                'status' => 'berjalan',
-                'started_at' => $startedAt,
-                'ends_at' => $startedAt->copy()->addMinutes($ujian->durasi_menit),
-            ]);
-        }
-
         $jawaban = UjianJawaban::where('ujian_id', $id)
             ->where('user_id', $userId)
             ->get(['soal_id', 'pilihan_id', 'esai', 'file_path', 'file_nama', 'skor']);
@@ -148,7 +139,75 @@ class UjianController extends Controller
             'jumlahPelanggaran' => UjianPelanggaran::where('ujian_id', $id)
                 ->where('user_id', $userId)
                 ->count(),
-            'remainingSeconds' => max(0, $peserta->ends_at ? now()->diffInSeconds($peserta->ends_at, false) : 0),
+            'sesiBerjalan' => ! $this->sesiBelumMulai($peserta),
+            'remainingSeconds' => $this->sesiBelumMulai($peserta)
+                ? 0
+                : max(0, $peserta->ends_at ? now()->diffInSeconds($peserta->ends_at, false) : 0),
+        ]);
+    }
+
+    /**
+     * Mulai sesi ujian. Waktu ujian baru berjalan sejak peserta menekan
+     * tombol "Masuk ke Layar Penuh", bukan sejak halaman dibuka.
+     */
+    public function mulai(Request $request, int $id)
+    {
+        $userId = $request->user()->id;
+
+        $ujian = Ujian::find($id);
+        abort_unless($ujian, 404);
+
+        $peserta = UjianPeserta::where('ujian_id', $id)->where('user_id', $userId)->first();
+        abort_unless($peserta, 404);
+
+        if ($peserta->status === 'selesai') {
+            return response()->json([
+                'message' => 'Sesi ujian sudah ditutup.',
+                'redirect' => route('ujian.hasil', $id),
+            ], 409);
+        }
+
+        if ($ujian->status !== 'terbit' || ($ujian->mulai_at && now()->lt($ujian->mulai_at))) {
+            return response()->json(['message' => 'Ujian ini belum dapat dimulai.'], 409);
+        }
+
+        // Perangkat harus sama dengan perangkat yang memulai sesi.
+        $sidik = $this->sidikPerangkat($request);
+
+        if (blank($peserta->sidik_perangkat)) {
+            $peserta->update([
+                'sidik_perangkat' => $sidik,
+                'ip' => $request->ip(),
+                'user_agent' => Str::limit((string) $request->userAgent(), 255, ''),
+            ]);
+        } elseif (! hash_equals($peserta->sidik_perangkat, $sidik)) {
+            $this->simpanPelanggaran(
+                $id,
+                (int) $peserta->user_id,
+                'sesi_ganda',
+                'Ujian dibuka dari perangkat lain pada '.now()->format('d/m/Y H:i:s'),
+                $request->ip()
+            );
+
+            return response()->json([
+                'message' => 'Ujian ini sedang berjalan pada perangkat lain.',
+                'konflik' => true,
+            ], 409);
+        }
+
+        if ($this->sesiBelumMulai($peserta)) {
+            $startedAt = now();
+            $peserta->update([
+                'status' => 'berjalan',
+                'started_at' => $startedAt,
+                'ends_at' => $startedAt->copy()->addMinutes($ujian->durasi_menit),
+            ]);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'remaining' => max(0, $peserta->ends_at ? now()->diffInSeconds($peserta->ends_at, false) : 0),
+            'ends_at' => $peserta->ends_at?->toIso8601String(),
         ]);
     }
 
@@ -174,6 +233,10 @@ class UjianController extends Controller
                 'message' => 'Sesi ujian sudah ditutup.',
                 'redirect' => route('ujian.hasil', $id),
             ], 409);
+        }
+
+        if ($this->sesiBelumMulai($sesi)) {
+            return response()->json(['message' => 'Ujian belum dimulai.'], 409);
         }
 
         if ($sesi->ends_at && now()->gte($sesi->ends_at)) {
@@ -285,6 +348,10 @@ class UjianController extends Controller
             ], 409);
         }
 
+        if ($this->sesiBelumMulai($sesi)) {
+            return response()->json(['message' => 'Ujian belum dimulai.'], 409);
+        }
+
         $request->validate([
             'soal_id' => ['required', 'integer'],
             'berkas' => ['required', 'file', 'max:'.self::MAX_UPLOAD],
@@ -351,6 +418,10 @@ class UjianController extends Controller
             ]);
         }
 
+        if ($this->sesiBelumMulai($sesi)) {
+            return response()->json(['message' => 'Ujian belum dimulai.'], 409);
+        }
+
         $this->tutupSesi($sesi);
 
         return response()->json([
@@ -373,6 +444,13 @@ class UjianController extends Controller
 
         if ($sesi->status === 'selesai') {
             return response()->json(['message' => 'Sesi ujian sudah ditutup.'], 409);
+        }
+
+        // Sebelum ujian dimulai belum ada perangkat yang dicatat, sehingga
+        // perpindahan perangkat sebelum menekan tombol mulai tidak dianggap
+        // sebagai sesi ganda.
+        if ($this->sesiBelumMulai($sesi)) {
+            return response()->json(['ok' => true]);
         }
 
         $sidik = $this->sidikPerangkat($request);
@@ -436,6 +514,11 @@ class UjianController extends Controller
 
         if (! in_array($jenis, self::JENIS_PELANGGARAN, true)) {
             return response()->json(['message' => 'Jenis pelanggaran tidak dikenal.'], 422);
+        }
+
+        // Pelanggaran hanya relevan selama ujian sedang berjalan.
+        if ($this->sesiBelumMulai($sesi)) {
+            return response()->json(['message' => 'Ujian belum dimulai.'], 409);
         }
 
         $keterangan = trim((string) $request->input('keterangan', ''));
@@ -522,6 +605,16 @@ class UjianController extends Controller
         return UjianPeserta::where('ujian_id', $id)
             ->where('user_id', $request->user()->id)
             ->first();
+    }
+
+    /**
+     * Sesi yang belum dimulai. Waktu ujian baru berjalan setelah peserta
+     * menekan tombol mulai, sehingga sebelum itu tidak ada jawaban,
+     * lampiran, maupun pelanggaran yang boleh dicatat.
+     */
+    private function sesiBelumMulai(UjianPeserta $sesi): bool
+    {
+        return $sesi->status !== 'berjalan' || ! $sesi->started_at;
     }
 
     /**

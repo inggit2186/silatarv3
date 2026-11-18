@@ -7,26 +7,28 @@
     'hasil' => route('ujian.hasil', $ujian->id),
     'perangkat' => route('ujian.perangkat', $ujian->id),
     'pelanggaran' => route('ujian.pelanggaran', $ujian->id),
-]), @js($jumlahPelanggaran))">
+    'mulai' => route('ujian.mulai', $ujian->id),
+    'daftar' => route('ujian.index'),
+]), @js($jumlahPelanggaran), @js($sesiBerjalan))">
 
     <!-- ============ BAR ATAS ============ -->
     <div class="neo-ujian-topbar">
-        <div class="content-centered px-5 py-3 flex flex-wrap items-center justify-between gap-3">
-            <div class="min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="neo-badge neo-badge-gold">
+        <div class="content-centered px-4 sm:px-5 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+            <div class="w-full sm:w-auto sm:flex-1 min-w-0">
+                <div class="flex items-center gap-1.5 sm:gap-2 mb-1 overflow-x-auto">
+                    <span class="neo-badge neo-badge-gold shrink-0">
                         <span class="neo-badge-dot"></span>
                         {{ $ujian->kode }}
                     </span>
-                    <span class="neo-badge">{{ count($soal) }} soal</span>
-                    <span class="neo-badge">{{ $ujian->durasi_menit }} menit</span>
+                    <span class="neo-badge shrink-0">{{ count($soal) }} soal</span>
+                    <span class="neo-badge shrink-0">{{ $ujian->durasi_menit }} menit</span>
                 </div>
-                <h1 class="font-display text-lg font-semibold text-[var(--ink)] truncate">{{ $ujian->judul }}</h1>
+                <h1 class="font-display text-base sm:text-lg font-semibold text-[var(--ink)] truncate">{{ $ujian->judul }}</h1>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="w-full sm:w-auto flex flex-wrap items-center gap-2 sm:gap-3">
                 <!-- Status simpan -->
-                <div class="text-right text-xs">
+                <div class="order-4 sm:order-none w-full sm:w-auto text-left sm:text-right text-[0.7rem] sm:text-xs">
                     @if($errors->any())
                         <span class="text-red-600">Gagal menyimpan</span>
                     @endif
@@ -41,15 +43,15 @@
                 </div>
 
                 <!-- Timer -->
-                <div class="neo-ujian-timer" :class="{ 'is-low': remaining <= 60 }">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="neo-ujian-timer order-1 sm:order-none" :class="{ 'is-low': remaining <= 60 }">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <span class="font-mono text-lg font-bold tabular-nums" x-text="timeText"></span>
+                    <span class="font-mono text-base sm:text-lg font-bold tabular-nums" x-text="timeText"></span>
                 </div>
 
                 <!-- Pelanggaran -->
-                <div class="flex items-center gap-2 px-3 py-2 rounded-xl border text-xs"
+                <div class="order-2 sm:order-none flex items-center gap-2 px-3 py-2 rounded-xl border text-xs"
                      :class="violasi > 0 ? 'border-red-300 bg-red-50 text-red-700' : 'border-[var(--line)] bg-[var(--paper-soft)] text-[var(--ink-soft)]'"
                      x-show="violasi > 0">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -58,11 +60,12 @@
                     <span>Pelanggaran: <span class="font-mono font-bold" x-text="violasi"></span></span>
                 </div>
 
-                <button type="button" class="neo-btn" @click="confirmOpen = true">
+                <button type="button" class="neo-btn neo-ujian-submit-btn order-3 sm:order-none ml-auto sm:ml-0" @click="confirmOpen = true">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                     </svg>
-                    Kumpulkan Jawaban
+                    <span class="hidden sm:inline">Kumpulkan Jawaban</span>
+                    <span class="sm:hidden">Kumpulkan</span>
                 </button>
             </div>
         </div>
@@ -79,12 +82,17 @@
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <span x-show="fsAktif">
+                <span x-show="!dimulai" x-cloak>
+                    Ujian <strong class="text-[var(--ink)]">belum dimulai</strong>. Waktu ujian akan
+                    berjalan setelah Anda menekan tombol <strong class="text-[var(--ink)]">Mulai Ujian</strong>
+                    pada jendela yang terbuka.
+                </span>
+                <span x-show="dimulai && fsAktif" x-cloak>
                     Ujian berjalan dalam mode layar penuh. Membuka tab atau jendela lain, keluar dari layar penuh,
                     menyalin, menempel, dan mencetak halaman ini dicatat sebagai <strong class="text-[var(--ink)]">pelanggaran</strong>
                     dan terlihat oleh admin.
                 </span>
-                <span x-show="! fsAktif" x-cloak>
+                <span x-show="dimulai && ! fsAktif" x-cloak>
                     Ujian sedang berjalan <strong class="text-[var(--ink)]">tanpa mode layar penuh</strong>.
                     Kembali ke layar penuh untuk menghindari pelanggaran baru.
                 </span>
@@ -236,10 +244,10 @@
                 </div>
 
                 <!-- ============ SIDEBAR PALET ============ -->
-                <aside class="neo-ujian-side self-start">
+                <aside class="neo-ujian-side self-start order-first lg:order-none">
                     <div class="neo-ujian-side-head">
                         <h2 class="neo-card-title">Navigasi Soal</h2>
-                        <p class="text-xs text-[var(--ink-soft)] mt-1">
+                        <p class="neo-ujian-side-hint text-xs text-[var(--ink-soft)] mt-1">
                             Klik nomor untuk berpindah soal
                         </p>
                     </div>
@@ -273,7 +281,7 @@
                             <div :style="`width: ${progress}%`"></div>
                         </div>
 
-                        <button type="button" class="neo-btn w-full justify-center mt-6" @click="confirmOpen = true">
+                        <button type="button" class="neo-btn neo-ujian-side-submit w-full justify-center mt-6" @click="confirmOpen = true">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                             </svg>
@@ -287,7 +295,7 @@
     </div>
 
     <!-- ============ MODAL KONFIRMASI ============ -->
-    <div class="neo-modal-backdrop" x-show="confirmOpen" x-cloak @keydown.escape.window="confirmOpen = false">
+    <div class="neo-modal-backdrop neo-ujian-submit-backdrop" x-show="confirmOpen" x-cloak @keydown.escape.window="confirmOpen = false">
         <div class="neo-ujian-submit-modal" @click.outside="confirmOpen = false">
             <!-- Kepala -->
             <div class="neo-ujian-submit-head">
@@ -389,13 +397,15 @@
                 </div>
                 <h3 class="neo-ujian-fs-title">Masuk ke Layar Penuh</h3>
                 <p class="neo-ujian-fs-sub">
-                    Agar ujian berjalan optimal di satu halaman, masuk ke mode layar penuh
-                    sebelum mulai mengerjakan soal.
+                    Ujian hanya dapat dimulai dalam mode layar penuh. Tekan
+                    <strong>Mulai Ujian</strong> untuk masuk ke layar penuh dan memulai waktu ujian.
                 </p>
             </div>
 
             <!-- Isi -->
             <div class="neo-ujian-fs-body">
+                <p class="neo-ujian-fs-error" x-show="startError" x-cloak x-text="startError"></p>
+
                 <div class="neo-ujian-fs-rule">
                     <span class="neo-ujian-fs-rule-num">01</span>
                     <span class="neo-ujian-fs-rule-text">
@@ -420,6 +430,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
                     </svg>
                     <span>
+                        <span x-show="!dimulai" x-cloak>Waktu ujian <strong>belum berjalan</strong> dan baru mulai setelah tombol <strong>Mulai Ujian</strong> ditekan. </span>
                         Peserta tetap dapat menutup layar penuh, tetapi setiap keluar dari layar penuh
                         <strong>dicatat sebagai pelanggaran</strong> dan dapat dilihat oleh admin.
                     </span>
@@ -428,19 +439,20 @@
 
             <!-- Aksi -->
             <div class="neo-ujian-fs-foot">
-                <button type="button" class="neo-btn neo-btn-secondary" @click="lewatiLayarPenuh()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 6L6 18M6 6l12 12"/>
-                    </svg>
-                    Lanjut tanpa layar penuh
-                </button>
-                <button type="button" class="neo-btn" @click="masukLayarPenuh()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="3" width="20" height="14" rx="2"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 21h8m-4-4v4"/>
-                    </svg>
-                    Masuk Layar Penuh
-                </button>
+                <div class="neo-ujian-fs-actions">
+                    <button type="button" class="neo-btn neo-btn-secondary" @click="kembaliKeDaftarUjian()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5m7 7l-7-7 7-7"/>
+                        </svg>
+                        Kembali
+                    </button>
+                    <button type="button" class="neo-btn" @click="masukLayarPenuh()" :disabled="memulai">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        <span x-text="memulai ? 'Memulai...' : 'Mulai Ujian'"></span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -505,7 +517,7 @@
 
 @once
 <script>
-    document.addEventListener('alpine:init', () => {        window.Alpine.data('ujian', (soal, answers, essays, lampiran, remaining, urls, jumlahPelanggaran) => ({
+    document.addEventListener('alpine:init', () => {        window.Alpine.data('ujian', (soal, answers, essays, lampiran, remaining, urls, jumlahPelanggaran, started) => ({
             soal: soal,
             answers: answers,
             essays: essays,
@@ -534,6 +546,9 @@
             warnOpen: false,
             warnTitle: '',
             warnText: '',
+            dimulai: !! started,
+            memulai: false,
+            startError: '',
 
             init() {
                 this.timer = setInterval(() => this.tick(), 1000);
@@ -578,7 +593,13 @@
                     if (document.fullscreenElement || document.webkitFullscreenElement) {
                         this.fsAktif = true;
                         this.fsPernahAktif = true;
-                        this.fsOpen = false;
+
+                        // Jendela popup baru hanya ditutup setelah sesi ujian
+                        // benar-benar berjalan.
+                        if (this.dimulai) {
+                            this.fsOpen = false;
+                        }
+
                         return;
                     }
 
@@ -669,7 +690,7 @@
 
                 // Peringatan saat menutup atau meninggalkan halaman ujian.
                 window.addEventListener('beforeunload', (e) => {
-                    if (this.sudahSelesai) {
+                    if (this.sudahSelesai || ! this.dimulai) {
                         return;
                     }
 
@@ -691,24 +712,35 @@
                 return tag === 'textarea' || (tag === 'input' && (target.type === 'text' || target.type === 'search'));
             },
 
+            /**
+             * Masuk ke layar penuh lalu memulai sesi ujian. Ujian wajib
+             * berjalan dalam mode layar penuh, sehingga bila peramban
+             * menolak permintaan layar penuh sesi tidak dimulai.
+             */
             async masukLayarPenuh() {
                 const berhasil = await this.aktifkanLayarPenuh();
 
                 if (! berhasil) {
-                    this.lewatiLayarPenuh();
+                    this.startError = 'Mode layar penuh tidak dapat diaktifkan. Mohon buka halaman ujian di browser Chrome pada perangkat Android.';
                     return;
                 }
 
                 this.fsAktif = true;
                 this.fsPernahAktif = true;
+
+                const ok = await this.mulaiSesi();
+
+                if (! ok) {
+                    this.keluarLayarPenuh();
+                    return;
+                }
+
                 this.fsOpen = false;
             },
 
             /**
-             * Meminta mode layar penuh tanpa mencatat pelanggaran.
-             * Dipakai saat peserta menekan tombol "Kembali ke Ujian",
-             * karena klik tombol tersebut adalah gestur pengguna yang
-             * diizinkan browser untuk memulai layar penuh.
+             * Meminta mode layar penuh ke peramban. Klik tombol adalah gestur
+             * pengguna yang diizinkan browser untuk memulai layar penuh.
              */
             async aktifkanLayarPenuh() {
                 const elemen = document.documentElement;
@@ -725,6 +757,79 @@
                     return true;
                 } catch (e) {
                     return false;
+                }
+            },
+
+            /**
+             * Keluar dari mode layar penuh tanpa mencatat pelanggaran baru.
+             */
+            keluarLayarPenuh() {
+                try {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
+                } catch (e) {
+                    // Keluar layar penuh hanya tambahan, kegagalan diabaikan.
+                }
+            },
+
+            /**
+             * Mulai sesi ujian di server. Server mengembalikan sisa waktu
+             * sehingga jam di browser selalu sama dengan batas waktu server.
+             */
+            async mulaiSesi() {
+                if (this.dimulai) {
+                    return true;
+                }
+
+                if (this.memulai) {
+                    return false;
+                }
+
+                this.memulai = true;
+                this.startError = '';
+
+                try {
+                    const res = await fetch(urls.mulai, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': this.token,
+                            'X-Ujian-Perangkat': this.sidikPerangkat(),
+                        },
+                        body: JSON.stringify({}),
+                    });
+
+                    const data = await res.json().catch(() => ({}));
+
+                    if (res.status === 409) {
+                        this.startError = data.message || 'Ujian ini sedang berjalan pada perangkat lain.';
+
+                        if (data.konflik) {
+                            this.violasi++;
+                            this.tampilkanPeringatan('Sesi Ganda Terdeteksi', this.startError);
+                        }
+
+                        return false;
+                    }
+
+                    if (! res.ok) {
+                        this.startError = data.message || 'Gagal memulai ujian.';
+                        return false;
+                    }
+
+                    this.dimulai = true;
+                    this.remaining = Math.max(0, Math.round(data.remaining || 0));
+
+                    return true;
+                } catch (e) {
+                    this.startError = 'Gagal memulai ujian. Periksa koneksi internet Anda.';
+                    return false;
+                } finally {
+                    this.memulai = false;
                 }
             },
 
@@ -747,16 +852,21 @@
                 this.fsPernahAktif = this.fsPernahAktif || berhasil;
             },
 
-            lewatiLayarPenuh() {
+            /**
+             * Peserta batal mengikuti ujian. Sesi belum dimulai sehingga
+             * tidak ada pelanggaran yang dicatat dan tidak ada peringatan
+             * ketika meninggalkan halaman.
+             */
+            kembaliKeDaftarUjian() {
                 this.fsOpen = false;
-                this.catat('tanpa_layar_penh', 'Peserta melanjutkan ujian tanpa mode layar penuh.');
+                window.location.href = urls.daftar;
             },
 
             /**
              * Catat satu pelanggaran ke server dan tampilkan peringatan.
              */
             catat(jenis, keterangan) {
-                if (this.sudahSelesai) {
+                if (this.sudahSelesai || ! this.dimulai) {
                     return;
                 }
 
@@ -888,6 +998,10 @@
             },
 
             tick() {
+                if (!this.dimulai) {
+                    return;
+                }
+
                 if (this.remaining > 0) {
                     this.remaining--;
                 }
@@ -903,6 +1017,10 @@
             },
 
             get timeText() {
+                if (!this.dimulai) {
+                    return '--:--';
+                }
+
                 const m = Math.floor(this.remaining / 60);
                 const s = this.remaining % 60;
                 return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
@@ -1062,7 +1180,7 @@
             },
 
             async doSubmit(auto) {
-                if (this.submitting) {
+                if (this.submitting || !this.dimulai) {
                     return;
                 }
                 this.submitting = true;

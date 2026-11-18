@@ -636,6 +636,16 @@
             padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
         }
 
+        /* Mode ujian: sembunyikan bottom nav agar tidak menutup modal & tombol aksi */
+        body.neo-ujian-mode .bottom-nav {
+            display: none !important;
+        }
+
+        body.neo-ujian-mode main,
+        body.neo-ujian-mode .neo-mirai {
+            padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+        }
+
         /* Hide desktop header nav on mobile */
         .site-nav {
             display: none !important;
