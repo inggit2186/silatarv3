@@ -113,9 +113,13 @@
                     <tr>
                         <td>
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(212,168,83,0.1); color: var(--gold);">
-                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
-                                </div>
+                                @if($item->cover_url)
+                                    <img src="{{ $item->cover_url }}" alt="{{ $item->judul }}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0" style="border: 1px solid var(--line);">
+                                @else
+                                    <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(212,168,83,0.1); color: var(--gold);">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+                                    </div>
+                                @endif
                                 <div>
                                     <span class="table-user-name">{{ $item->judul }}</span>
                                     <span class="table-user-email line-clamp-1">{{ $item->kode }}</span>
@@ -143,6 +147,9 @@
                                 </a>
                                 <a href="{{ route('admin.ujian.hasil', $item->id) }}" class="action-btn" title="Hasil Ujian">
                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17v-2m4 2v-2m4 2v-2M3 5h18v14H3z"/></svg>
+                                </a>
+                                <a href="{{ route('admin.ujian.cetak', $item->id) }}" class="action-btn" title="Cetak Hasil Ujian">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
                                 </a>
                                 <form method="POST" action="{{ route('admin.ujian.destroy', $item->id) }}" onsubmit="return confirm('Yakin ingin menghapus ujian ini beserta seluruh soalnya?')" class="inline">
                                     @csrf

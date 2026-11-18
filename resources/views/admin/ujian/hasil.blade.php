@@ -6,6 +6,10 @@
             <p class="page-subtitle">{{ $ujian->judul }} &mdash; {{ $ujian->kode }}</p>
         </div>
         <div class="page-actions">
+            <a href="{{ route('admin.ujian.cetak', $ujian->id) }}" class="btn btn-primary">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+                Cetak Hasil
+            </a>
             <a href="{{ route('admin.ujian.edit', $ujian->id) }}" class="btn btn-secondary">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 Kembali
@@ -82,6 +86,7 @@
                         <th>Nilai</th>
                         <th>Waktu</th>
                         <th>Pelanggaran</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -97,7 +102,7 @@
                                 </div>
                                 <div>
                                     <span class="table-user-name">{{ $item->user->name ?? '-' }}</span>
-                                    <span class="table-user-email">{{ $item->user->nip ?? '-' }}</span>
+                                    <span class="table-user-email">{{ $item->user->nomor_induk ?? '-' }}</span>
                                 </div>
                             </div>
                         </td>
@@ -148,10 +153,27 @@
                                 <span class="text-muted">-</span>
                             @endif
                         </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{{ route('admin.ujian.peserta.jawaban', [$ujian->id, $item->user_id]) }}"
+                                   class="action-btn" title="Lihat Jawaban Peserta">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </a>
+                                @if($item->status !== 'berjalan')
+                                    <form method="POST" action="{{ route('admin.ujian.peserta.reset', [$ujian->id, $item->user_id]) }}"
+                                          onsubmit="return confirm('Reset jawaban {{ $item->user->name ?? 'peserta ini' }}? Seluruh jawaban, nilai, dan riwayat pelanggaran akan dihapus sehingga peserta dapat mengulang ujian.')">
+                                        @csrf
+                                        <button type="submit" class="action-btn delete" title="Reset Jawaban">
+                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m1 0v14a2 2 0 01-2 2H8a2 2 0 01-2-2V6h12z"/></svg>
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5">
+                        <td colspan="6">
                             <div class="empty-state">
                                 <svg class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/></svg>
                                 <p class="empty-state-title">Belum ada peserta</p>

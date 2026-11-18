@@ -10,8 +10,10 @@ use App\Models\UjianPilihan;
 use App\Models\UjianSoal;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class UjianTest extends TestCase
@@ -305,6 +307,237 @@ class UjianTest extends TestCase
         $this->actingAs($admin)->get(route('admin.ujian.hasil', $this->ujian->id))->assertOk();
     }
 
+    public function test_admin_dapat_mengunggah_cover_ujian(): void
+    {
+        $admin = User::where('role', 'superadmin')->firstOrFail();
+
+        Storage::fake('public');
+
+        $cover = UploadedFile::fake()->image('cover.jpg', 800, 500);
+
+        $this->actingAs($admin)->put(route('admin.ujian.update', $this->ujian->id), [
+            'kode' => $this->ujian->kode,
+            'judul' => $this->ujian->judul,
+            'durasi_menit' => $this->ujian->durasi_menit,
+            'status' => $this->ujian->status,
+            'acak_soal' => 0,
+            'cover' => $cover,
+        ])->assertRedirect(route('admin.ujian.edit', $this->ujian->id));
+
+        $this->ujian->refresh();
+
+        $this->assertNotNull($this->ujian->cover_path, 'Cover ujian tidak tersimpan.');
+        Storage::disk('public')->assertExists($this->ujian->cover_path);
+    }
+
+    public function test_admin_dapat_menghapus_cover_ujian(): void
+    {
+        $admin = User::where('role', 'superadmin')->firstOrFail();
+
+        Storage::fake('public');
+
+        $path = Storage::disk('public')->put('ujian/cover/awal.webp', 'isi');
+        $this->ujian->update(['cover_path' => $path]);
+
+        $this->actingAs($admin)->put(route('admin.ujian.update', $this->ujian->id), [
+            'kode' => $this->ujian->kode,
+            'judul' => $this->ujian->judul,
+            'durasi_menit' => $this->ujian->durasi_menit,
+            'status' => $this->ujian->status,
+            'acak_soal' => 0,
+            'remove_cover' => 1,
+        ])->assertRedirect(route('admin.ujian.edit', $this->ujian->id));
+
+        $this->ujian->refresh();
+
+        $this->assertNull($this->ujian->cover_path, 'Cover ujian tidak terhapus.');
+        Storage::disk('public')->assertMissing($path);
+    }
+
+    public function test_cover_ujian_tampil_pada_daftar_ujian_peserta(): void
+    {
+        Storage::fake('public');
+
+        $path = 'ujian/cover/uji.webp';
+        Storage::disk('public')->put($path, 'isi');
+        $this->ujian->update(['cover_path' => $path]);
+
+        $response = $this->actingAs($this->peserta)->get(route('ujian.index'));
+
+        $response->assertOk();
+        $response->assertSee('ujian/cover/uji.webp');
+    }
+
+    public function test_admin_bisa_mencari_peserta_berdasarkan_nomor_induk(): void
+    {
+        $admin = User::where('role', 'superadmin')->firstOrFail();
+
+        $target = User::whereNotNull('nomor_induk')->where('nomor_induk', '!=', '')->firstOrFail();
+
+        $response = $this->actingAs($admin)
+            ->getJson(route('admin.ujian.peserta.cari', $this->ujian->id).'?q='.$target->nomor_induk);
+
+        $response->assertOk();
+
+        $results = collect($response->json('results'));
+
+        $this->assertTrue(
+            $results->contains('id', $target->id),
+            'Peserta tidak ditemukan saat dicari memakai nomor induk.'
+        );
+
+        // Nomor induk yang dikembalikan harus berasal dari kolom nomor_induk.
+        $cocok = $results->firstWhere('id', $target->id);
+        $this->assertSame($target->nomor_induk, $cocok['nomor_induk']);
+    }
+
+    public function test_admin_bisa_mencari_peserta_berdasarkan_nama(): void
+    {
+        $admin = User::where('role', 'superadmin')->firstOrFail();
+
+        $response = $this->actingAs($admin)
+            ->getJson(route('admin.ujian.peserta.cari', $this->ujian->id).'?q='.$this->peserta->name);
+
+        $response->assertOk();
+
+        $results = collect($response->json('results'));
+
+        $this->assertTrue(
+            $results->contains('id', $this->peserta->id),
+            'Peserta tidak ditemukan saat dicari memakai nama.'
+        );
+    }
+
+    public function test_admin_dapat_melihat_jawaban_peserta(): void
+    {
+        $admin = User::where('role', 'superadmin')->firstOrFail();
+
+        UjianJawaban::create([
+            'ujian_id' => $this->ujian->id,
+            'soal_id' => $this->soalPg->id,
+            'user_id' => $this->peserta->id,
+            'pilihan_id' => $this->pilihanSalah->id,
+            'dijawab_at' => now(),
+        ]);
+
+        $response = $this->actingAs($admin)->get(
+            route('admin.ujian.peserta.jawaban', [$this->ujian->id, $this->peserta->id])
+        );
+
+        $response->assertOk();
+        $response->assertSee($this->peserta->name);
+        $response->assertSee($this->soalPg->pertanyaan);
+        $response->assertSee($this->pilihanSalah->teks);
+        $response->assertSee($this->pilihanBenar->teks);
+    }
+
+    public function test_halaman_jawaban_peserta_menolak_peserta_yang_tidak_terdaftar(): void
+    {
+        $admin = User::where('role', 'superadmin')->firstOrFail();
+
+        $this->actingAs($admin)->get(
+            route('admin.ujian.peserta.jawaban', [$this->ujian->id, $this->bukanPeserta->id])
+        )->assertNotFound();
+    }
+
+    public function test_admin_dapat_mereset_jawaban_peserta(): void
+    {
+        $admin = User::where('role', 'superadmin')->firstOrFail();
+
+        UjianJawaban::create([
+            'ujian_id' => $this->ujian->id,
+            'soal_id' => $this->soalPg->id,
+            'user_id' => $this->peserta->id,
+            'pilihan_id' => $this->pilihanBenar->id,
+            'skor' => 20,
+            'dijawab_at' => now(),
+        ]);
+
+        DB::table('ujian_pelanggaran')->insert([
+            'ujian_id' => $this->ujian->id,
+            'user_id' => $this->peserta->id,
+            'jenis' => 'tab_baru',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        UjianPeserta::where('ujian_id', $this->ujian->id)
+            ->where('user_id', $this->peserta->id)
+            ->update([
+                'status' => 'selesai',
+                'started_at' => now()->subMinutes(30),
+                'ends_at' => now(),
+                'submitted_at' => now(),
+                'nilai' => 100,
+            ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.ujian.peserta.reset', [$this->ujian->id, $this->peserta->id]))
+            ->assertRedirect();
+
+        $this->assertSame(
+            0,
+            UjianJawaban::where('ujian_id', $this->ujian->id)->where('user_id', $this->peserta->id)->count(),
+            'Jawaban peserta belum dihapus.'
+        );
+
+        $this->assertSame(
+            0,
+            DB::table('ujian_pelanggaran')->where('ujian_id', $this->ujian->id)->where('user_id', $this->peserta->id)->count(),
+            'Riwayat pelanggaran peserta belum dihapus.'
+        );
+
+        $peserta = UjianPeserta::where('ujian_id', $this->ujian->id)
+            ->where('user_id', $this->peserta->id)
+            ->first();
+
+        $this->assertSame('belum_mulai', $peserta->status);
+        $this->assertNull($peserta->nilai);
+        $this->assertNull($peserta->started_at);
+        $this->assertNull($peserta->ends_at);
+        $this->assertNull($peserta->submitted_at);
+    }
+
+    public function test_reset_jawaban_ditolak_saat_peserta_sedang_berjalan(): void
+    {
+        $admin = User::where('role', 'superadmin')->firstOrFail();
+
+        UjianPeserta::where('ujian_id', $this->ujian->id)
+            ->where('user_id', $this->peserta->id)
+            ->update(['status' => 'berjalan', 'started_at' => now(), 'ends_at' => now()->addMinutes(10)]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.ujian.peserta.reset', [$this->ujian->id, $this->peserta->id]))
+            ->assertRedirect();
+
+        $this->assertSame(
+            'berjalan',
+            UjianPeserta::where('ujian_id', $this->ujian->id)->where('user_id', $this->peserta->id)->value('status'),
+            'Status peserta berubah padahal sesi sedang berjalan.'
+        );
+    }
+
+    public function test_admin_dapat_mencetak_hasil_ujian(): void
+    {
+        $admin = User::where('role', 'superadmin')->firstOrFail();
+
+        UjianJawaban::create([
+            'ujian_id' => $this->ujian->id,
+            'soal_id' => $this->soalPg->id,
+            'user_id' => $this->peserta->id,
+            'pilihan_id' => $this->pilihanBenar->id,
+            'dijawab_at' => now(),
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.ujian.cetak', $this->ujian->id));
+
+        $response->assertOk();
+        $response->assertSee($this->ujian->kode);
+        $response->assertSee($this->ujian->judul);
+        $response->assertSee($this->peserta->name);
+        $response->assertSee($this->soalPg->pertanyaan);
+    }
+
     public function test_halaman_hasil_tidak_membocorkan_kunci_sebelum_ujian_selesai(): void
     {
         // Peserta belum memulai ujian.
@@ -491,7 +724,7 @@ class UjianTest extends TestCase
             ->postJson(route('ujian.pelanggaran', $this->ujian->id), ['jenis' => 'ngawur'])
             ->assertStatus(422);
 
-        $this->assertDatabaseCount('ujian_pelanggaran', 0);
+        $this->assertSame(0, DB::table('ujian_pelanggaran')->where('ujian_id', $this->ujian->id)->count());
     }
 
     public function test_pelanggaran_ditolak_setelah_sesi_selesai(): void
@@ -503,7 +736,7 @@ class UjianTest extends TestCase
             ->postJson(route('ujian.pelanggaran', $this->ujian->id), ['jenis' => 'tab_baru'])
             ->assertStatus(409);
 
-        $this->assertDatabaseCount('ujian_pelanggaran', 0);
+        $this->assertSame(0, DB::table('ujian_pelanggaran')->where('ujian_id', $this->ujian->id)->count());
     }
 
     public function test_perangkat_pertama_mendaftarkan_sesi_dan_perangkat_kedua_tercatat_sebagai_sesi_ganda(): void
@@ -527,7 +760,7 @@ class UjianTest extends TestCase
             ->postJson(route('ujian.perangkat', $this->ujian->id), [], ['X-Ujian-Perangkat' => 'perangkat-a'])
             ->assertOk();
 
-        $this->assertDatabaseCount('ujian_pelanggaran', 0);
+        $this->assertSame(0, DB::table('ujian_pelanggaran')->where('ujian_id', $this->ujian->id)->count());
 
         // Perangkat berbeda dicatat sebagai sesi ganda.
         $this->actingAs($this->peserta)

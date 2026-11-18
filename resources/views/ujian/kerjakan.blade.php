@@ -10,7 +10,7 @@
 ]), @js($jumlahPelanggaran))">
 
     <!-- ============ BAR ATAS ============ -->
-    <div class="sticky top-0 z-30 border-b border-[var(--line)] bg-[var(--paper)]">
+    <div class="neo-ujian-topbar">
         <div class="content-centered px-5 py-3 flex flex-wrap items-center justify-between gap-3">
             <div class="min-w-0">
                 <div class="flex items-center gap-2 mb-1">
@@ -41,11 +41,11 @@
                 </div>
 
                 <!-- Timer -->
-                <div class="flex items-center gap-2 px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--paper-soft)]">
-                    <svg class="w-5 h-5 text-[var(--gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="neo-ujian-timer" :class="{ 'is-low': remaining <= 60 }">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <span class="font-mono text-lg font-bold text-[var(--ink)] tabular-nums" :class="remaining <= 60 ? 'text-red-600' : ''" x-text="timeText"></span>
+                    <span class="font-mono text-lg font-bold tabular-nums" x-text="timeText"></span>
                 </div>
 
                 <!-- Pelanggaran -->
@@ -58,21 +58,37 @@
                     <span>Pelanggaran: <span class="font-mono font-bold" x-text="violasi"></span></span>
                 </div>
 
-                <button type="button" class="neo-btn" @click="confirmOpen = true">Kumpulkan Jawaban</button>
+                <button type="button" class="neo-btn" @click="confirmOpen = true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Kumpulkan Jawaban
+                </button>
             </div>
+        </div>
+
+        <!-- Garis progres jawaban -->
+        <div class="neo-ujian-progress-line">
+            <div :style="`width: ${progress}%`"></div>
         </div>
     </div>
 
     <div class="border-b border-[var(--line)] bg-[var(--paper-soft)]">
-        <div class="content-centered px-5 py-2 flex items-start gap-2 text-xs text-[var(--ink-soft)]">
-            <svg class="w-4 h-4 mt-0.5 shrink-0 text-[var(--gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <span>
-                Ujian berjalan dalam mode layar penuh. Membuka tab atau jendela lain, keluar dari layar penuh,
-                menyalin, menempel, dan mencetak halaman ini dicatat sebagai <strong class="text-[var(--ink)]">pelanggaran</strong>
-                dan terlihat oleh admin.
-            </span>
+        <div class="content-centered px-5 py-3">
+            <div class="neo-ujian-notice">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span x-show="fsAktif">
+                    Ujian berjalan dalam mode layar penuh. Membuka tab atau jendela lain, keluar dari layar penuh,
+                    menyalin, menempel, dan mencetak halaman ini dicatat sebagai <strong class="text-[var(--ink)]">pelanggaran</strong>
+                    dan terlihat oleh admin.
+                </span>
+                <span x-show="! fsAktif" x-cloak>
+                    Ujian sedang berjalan <strong class="text-[var(--ink)]">tanpa mode layar penuh</strong>.
+                    Kembali ke layar penuh untuk menghindari pelanggaran baru.
+                </span>
+            </div>
         </div>
     </div>
 
@@ -81,45 +97,46 @@
             <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
 
                 <!-- ============ PANEL SOAL ============ -->
-                <div class="neo-card">
-                    <div class="neo-card-header">
-                        <div class="flex items-center justify-between gap-3 flex-wrap">
-                            <h2 class="neo-card-title">
-                                Soal <span x-text="current + 1"></span> dari <span x-text="soal.length"></span>
-                            </h2>
-                            <div class="flex items-center gap-2">
-                                <span class="neo-badge neo-badge-gold" x-show="active && active.tipe === 'pilihan_ganda'">Pilihan Ganda</span>
-                                <span class="neo-badge neo-badge-primary" x-show="active && active.tipe === 'essay'">Esai</span>
-                                <span class="neo-badge" x-show="active"><span x-text="(active ? active.poin : 0) + ' poin'"></span></span>
-                            </div>
+                <div class="neo-ujian-panel">
+                    <div class="neo-ujian-panel-head">
+                        <span class="neo-ujian-panel-index">
+                            Soal <strong x-text="current + 1"></strong> dari <span x-text="soal.length"></span>
+                        </span>
+                        <div class="neo-ujian-meta">
+                            <span class="neo-badge neo-badge-gold" x-show="active && active.tipe === 'pilihan_ganda'">Pilihan Ganda</span>
+                            <span class="neo-badge neo-badge-primary" x-show="active && active.tipe === 'essay'">Esai</span>
+                            <span class="neo-badge" x-show="active"><span x-text="(active ? active.poin : 0) + ' poin'"></span></span>
                         </div>
                     </div>
 
-                    <div class="neo-card-body">
+                    <div class="neo-ujian-panel-body">
                         <template x-if="active">
                             <div>
-                                <p class="font-display text-lg font-semibold text-[var(--ink)] leading-relaxed mb-4" x-text="active.pertanyaan"></p>
+                                <p class="neo-ujian-question" x-text="active.pertanyaan"></p>
 
-                                <p class="text-sm text-[var(--ink-soft)] mb-5" x-show="active.petunjuk" x-text="active.petunjuk"></p>
+                                <div class="neo-ujian-hint" x-show="active.petunjuk">
+                                    <svg class="w-4 h-4 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span x-text="active.petunjuk"></span>
+                                </div>
 
                                 <!-- PILIHAN GANDA -->
-                                <div x-show="active.tipe === 'pilihan_ganda'" class="grid gap-3">
+                                <div x-show="active.tipe === 'pilihan_ganda'" class="neo-ujian-options">
                                     <template x-for="p in active.pilihan" :key="p.id">
-                                        <div class="flex items-start gap-3">
+                                        <label class="neo-ujian-option" :class="{ 'is-active': answers[active.id] == p.id }">
                                             <input type="radio"
-                                                   class="peer sr-only"
-                                                   :id="`pilihan-${active.id}-${p.id}`"
+                                                   class="sr-only"
                                                    :name="`soal-${active.id}`"
                                                    :value="p.id"
                                                    :checked="answers[active.id] == p.id"
                                                    @change="pick(active.id, p.id)">
-                                            <label :for="`pilihan-${active.id}-${p.id}`"
-                                                   class="shrink-0 w-8 h-8 rounded-full border border-[var(--line)] bg-[var(--paper)] flex items-center justify-center font-mono text-xs font-bold text-[var(--ink-soft)] cursor-pointer peer-checked:bg-[var(--gold)] peer-checked:text-[var(--night)] peer-checked:border-[var(--gold)]"
-                                                   x-text="p.label"></label>
-                                            <label :for="`pilihan-${active.id}-${p.id}`"
-                                                   class="flex-1 p-4 rounded-xl border border-[var(--line)] bg-[var(--paper)] cursor-pointer transition peer-checked:border-[var(--gold)] peer-checked:bg-[var(--paper-soft)]"
-                                                   x-text="p.teks"></label>
-                                        </div>
+                                            <span class="neo-ujian-option-label" x-text="p.label"></span>
+                                            <span class="neo-ujian-option-text" x-text="p.teks"></span>
+                                            <svg class="neo-ujian-option-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        </label>
                                     </template>
                                 </div>
 
@@ -191,34 +208,50 @@
                     </div>
 
                     <!-- Navigasi -->
-                    <div class="flex items-center justify-between gap-3 mt-6 pt-5 border-t border-[var(--line)]">
+                    <div class="neo-ujian-nav">
                         <button type="button"
                                 class="neo-btn neo-btn-secondary"
                                 @click="goto(current - 1)"
-                                :disabled="current === 0">Sebelumnya</button>
+                                :disabled="current === 0">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5m7 7l-7-7 7-7"/>
+                            </svg>
+                            Sebelumnya
+                        </button>
+
+                        <span class="neo-ujian-panel-index">
+                            <strong x-text="current + 1"></strong> / <span x-text="soal.length"></span>
+                        </span>
+
                         <button type="button"
                                 class="neo-btn"
                                 @click="goto(current + 1)"
-                                :disabled="current >= soal.length - 1">Berikutnya</button>
+                                :disabled="current >= soal.length - 1">
+                            Berikutnya
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-5-5 5 5-5 5"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
                 <!-- ============ SIDEBAR PALET ============ -->
-                <aside class="neo-card self-start">
-                    <div class="neo-card-header">
+                <aside class="neo-ujian-side self-start">
+                    <div class="neo-ujian-side-head">
                         <h2 class="neo-card-title">Navigasi Soal</h2>
+                        <p class="text-xs text-[var(--ink-soft)] mt-1">
+                            Klik nomor untuk berpindah soal
+                        </p>
                     </div>
-                    <div class="neo-card-body">
-                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-5">
+                    <div class="neo-ujian-side-body">
+                        <div class="neo-ujian-palette mb-4">
                             <template x-for="(s, i) in soal" :key="s.id">
                                 <button type="button"
                                         @click="goto(i)"
-                                        class="flex h-10 items-center justify-center rounded-xl border text-sm font-mono transition"
+                                        class="neo-ujian-palette-btn"
                                         :class="[
-                                            isAnswered(s)
-                                                ? 'bg-[var(--gold)] text-[var(--night)] border-[var(--gold)]'
-                                                : 'bg-[var(--paper)] text-[var(--ink-soft)] border-[var(--line)] hover:border-[var(--gold)]',
-                                            i === current ? 'ring-2 ring-[var(--gold)]' : ''
+                                            isAnswered(s) ? 'is-answered' : '',
+                                            i === current ? 'is-current' : ''
                                         ]"
                                         x-text="i + 1"></button>
                             </template>
@@ -234,13 +267,16 @@
                                 <span class="font-mono font-bold text-[var(--ink)]" x-text="answeredCount"></span>
                                 dari <span class="font-mono" x-text="soal.length"></span> soal terjawab
                             </span>
-                            <span class="font-mono text-xs text-[var(--gold)]" x-text="progress + '%'"></span>
+                            <span class="font-mono text-xs font-bold text-[var(--gold)]" x-text="progress + '%'"></span>
                         </div>
-                        <div class="h-2 rounded-full bg-[var(--paper-deep)] overflow-hidden">
-                            <div class="h-2 rounded-full bg-[var(--gold)] transition-all duration-300" :style="`width: ${progress}%`"></div>
+                        <div class="neo-ujian-progress">
+                            <div :style="`width: ${progress}%`"></div>
                         </div>
 
                         <button type="button" class="neo-btn w-full justify-center mt-6" @click="confirmOpen = true">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
                             Kumpulkan Jawaban
                         </button>
                     </div>
@@ -252,78 +288,215 @@
 
     <!-- ============ MODAL KONFIRMASI ============ -->
     <div class="neo-modal-backdrop" x-show="confirmOpen" x-cloak @keydown.escape.window="confirmOpen = false">
-        <div class="neo-modal neo-modal-sm" @click.outside="confirmOpen = false">
-            <div class="neo-modal-header">
-                <h3 class="neo-modal-title">Kumpulkan Jawaban?</h3>
-                <button type="button" class="neo-modal-close" @click="confirmOpen = false">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        <div class="neo-ujian-submit-modal" @click.outside="confirmOpen = false">
+            <!-- Kepala -->
+            <div class="neo-ujian-submit-head">
+                <div class="neo-ujian-submit-icon">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m7 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <p class="neo-ujian-submit-eyebrow">Konfirmasi Pengumpulan</p>
+                <h3 class="neo-ujian-submit-title">Kumpulkan Jawaban?</h3>
+                <p class="neo-ujian-submit-sub">
+                    Setelah dikumpulkan, jawaban tidak dapat diubah lagi dan halaman hasil
+                    langsung ditampilkan.
+                </p>
+            </div>
+
+            <!-- Isi -->
+            <div class="neo-ujian-submit-body">
+                <div class="neo-ujian-ring-wrap">
+                    <svg class="neo-ujian-ring" viewBox="0 0 120 120">
+                        <defs>
+                            <linearGradient id="neoUjianRing" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="var(--gold)"/>
+                                <stop offset="100%" stop-color="var(--sun)"/>
+                            </linearGradient>
+                        </defs>
+                        <circle class="neo-ujian-ring-track" cx="60" cy="60" r="52"></circle>
+                        <circle class="neo-ujian-ring-bar" cx="60" cy="60" r="52"
+                                stroke-dasharray="326.7"
+                                :stroke-dashoffset="326.7 - (326.7 * progress / 100)"></circle>
+                    </svg>
+                    <div class="neo-ujian-ring-value">
+                        <strong x-text="progress + '%'"></strong>
+                        <span>Terjawab</span>
+                    </div>
+                </div>
+
+                <div class="neo-ujian-submit-meta">
+                    <div class="neo-ujian-submit-meta-item">
+                        <strong x-text="answeredCount"></strong>
+                        <span>Dijawab</span>
+                    </div>
+                    <div class="neo-ujian-submit-meta-item" :class="{ 'is-warn': soal.length - answeredCount > 0 }">
+                        <strong x-text="soal.length - answeredCount"></strong>
+                        <span>Kosong</span>
+                    </div>
+                    <div class="neo-ujian-submit-meta-item">
+                        <strong x-text="soal.length"></strong>
+                        <span>Total Soal</span>
+                    </div>
+                </div>
+
+                <div class="neo-ujian-submit-warn" x-show="answeredCount < soal.length" x-cloak>
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    </svg>
+                    <span>
+                        Masih ada <strong x-text="soal.length - answeredCount"></strong> soal belum dijawab
+                        dan akan dinilai sebagai tidak dijawab.
+                    </span>
+                </div>
+
+                <p class="neo-ujian-submit-note">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                    Jawaban yang sudah tersimpan aman di server.
+                </p>
+            </div>
+
+            <!-- Aksi -->
+            <div class="neo-ujian-submit-foot">
+                <button type="button" class="neo-btn neo-btn-secondary" @click="confirmOpen = false">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                    Batal
                 </button>
-            </div>
-            <div class="neo-modal-body">
-                <p class="text-sm text-[var(--ink-soft)]">
-                    Anda telah menjawab <span class="font-mono font-bold text-[var(--ink)]" x-text="answeredCount"></span>
-                    dari <span class="font-mono font-bold text-[var(--ink)]" x-text="soal.length"></span> soal.
-                    Setelah dikumpulkan, jawaban tidak dapat diubah lagi.
-                </p>
-                <p class="text-sm text-[var(--ink-soft)] mt-3" x-show="answeredCount < soal.length">
-                    <span class="text-[var(--sun-deep)]">Perhatian:</span> masih ada soal yang belum dijawab.
-                </p>
-            </div>
-            <div class="neo-modal-footer">
-                <button type="button" class="neo-btn-secondary" @click="confirmOpen = false">Batal</button>
-                <button type="button" class="neo-btn" @click="doSubmit(false)" :disabled="submitting">Ya, Kumpulkan</button>
+                <button type="button" class="neo-btn" @click="doSubmit(false)" :disabled="submitting">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span x-text="submitting ? 'Mengirim...' : 'Ya, Kumpulkan'"></span>
+                </button>
             </div>
         </div>
     </div>
 
     <!-- ============ MODAL MODE LAYAR PENUH ============ -->
-    <div class="neo-modal-backdrop" x-show="fsOpen" x-cloak>
-        <div class="neo-modal neo-modal-sm">
-            <div class="neo-modal-header">
-                <h3 class="neo-modal-title">Mulai Ujian dalam Mode Layar Penuh</h3>
-            </div>
-            <div class="neo-modal-body">
-                <p class="text-sm text-[var(--ink-soft)]">
-                    Agar ujian tetap berjalan di satu halaman, ujian ini disarankan dijalankan dalam mode layar penuh.
-                    Peserta tetap dapat menutup layar penuh, tetapi setiap keluar dari layar penuh
-                    dicatat sebagai pelanggaran.
+    <div class="neo-modal-backdrop neo-ujian-fs-backdrop" x-show="fsOpen" x-cloak>
+        <div class="neo-ujian-fs-modal">
+            <!-- Kepala -->
+            <div class="neo-ujian-fs-head">
+                <div class="neo-ujian-fs-icon">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 21h8m-4-4v4"/>
+                    </svg>
+                </div>
+                <h3 class="neo-ujian-fs-title">Masuk ke Layar Penuh</h3>
+                <p class="neo-ujian-fs-sub">
+                    Agar ujian berjalan optimal di satu halaman, masuk ke mode layar penuh
+                    sebelum mulai mengerjakan soal.
                 </p>
-                <ul class="mt-4 space-y-2 text-sm text-[var(--ink-soft)]">
-                    <li class="flex items-start gap-2">
-                        <span class="font-mono text-[var(--gold)]">01</span>
-                        <span>Jangan membuka tab, jendela, atau aplikasi lain selama ujian berlangsung.</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <span class="font-mono text-[var(--gold)]">02</span>
-                        <span>Menyalin, menempel, dan mencetak halaman ujian dinonaktifkan.</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <span class="font-mono text-[var(--gold)]">03</span>
-                        <span>Jawaban tersimpan otomatis. Jangan menutup jendela browser ini.</span>
-                    </li>
-                </ul>
             </div>
-            <div class="neo-modal-footer">
-                <button type="button" class="neo-btn-secondary" @click="lewatiLayarPenuh()">Lanjut tanpa layar penuh</button>
-                <button type="button" class="neo-btn" @click="masukLayarPenuh()">Masuk Layar Penuh</button>
+
+            <!-- Isi -->
+            <div class="neo-ujian-fs-body">
+                <div class="neo-ujian-fs-rule">
+                    <span class="neo-ujian-fs-rule-num">01</span>
+                    <span class="neo-ujian-fs-rule-text">
+                        Jangan membuka tab, jendela, atau aplikasi lain selama ujian berlangsung.
+                    </span>
+                </div>
+                <div class="neo-ujian-fs-rule">
+                    <span class="neo-ujian-fs-rule-num">02</span>
+                    <span class="neo-ujian-fs-rule-text">
+                        Menyalin, menempel, dan mencetak halaman ujian dinonaktifkan.
+                    </span>
+                </div>
+                <div class="neo-ujian-fs-rule">
+                    <span class="neo-ujian-fs-rule-num">03</span>
+                    <span class="neo-ujian-fs-rule-text">
+                        Jawaban tersimpan otomatis setiap beberapa detik. Jangan menutup jendela browser ini.
+                    </span>
+                </div>
+
+                <div class="neo-ujian-fs-alert">
+                    <svg class="w-4 h-4 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    </svg>
+                    <span>
+                        Peserta tetap dapat menutup layar penuh, tetapi setiap keluar dari layar penuh
+                        <strong>dicatat sebagai pelanggaran</strong> dan dapat dilihat oleh admin.
+                    </span>
+                </div>
+            </div>
+
+            <!-- Aksi -->
+            <div class="neo-ujian-fs-foot">
+                <button type="button" class="neo-btn neo-btn-secondary" @click="lewatiLayarPenuh()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                    Lanjut tanpa layar penuh
+                </button>
+                <button type="button" class="neo-btn" @click="masukLayarPenuh()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 21h8m-4-4v4"/>
+                    </svg>
+                    Masuk Layar Penuh
+                </button>
             </div>
         </div>
     </div>
 
     <!-- ============ MODAL PERINGATAN PELANGGARAN ============ -->
-    <div class="neo-modal-backdrop" x-show="warnOpen" x-cloak>
-        <div class="neo-modal neo-modal-sm">
-            <div class="neo-modal-header">
-                <h3 class="neo-modal-title" x-text="warnTitle"></h3>
-            </div>
-            <div class="neo-modal-body">
-                <p class="text-sm text-[var(--ink-soft)]" x-text="warnText"></p>
-                <p class="text-sm text-[var(--ink-soft)] mt-3">
-                    Total pelanggaran pada sesi ini: <span class="font-mono font-bold text-[var(--ink)]" x-text="violasi"></span>
+    <div class="neo-modal-backdrop neo-ujian-alert-backdrop" x-show="warnOpen" x-cloak>
+        <div class="neo-ujian-alert-modal">
+            <!-- Kepala -->
+            <div class="neo-ujian-alert-head">
+                <div class="neo-ujian-alert-icon">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    </svg>
+                </div>
+                <p class="neo-ujian-alert-eyebrow">Pelanggaran Terdeteksi</p>
+                <h3 class="neo-ujian-alert-title" x-text="warnTitle"></h3>
+                <p class="neo-ujian-alert-sub">
+                    Tindakan ini dicatat oleh sistem dan dapat ditinjau oleh admin ujian.
                 </p>
             </div>
-            <div class="neo-modal-footer">
-                <button type="button" class="neo-btn" @click="warnOpen = false">Kembali ke Ujian</button>
+
+            <!-- Isi -->
+            <div class="neo-ujian-alert-body">
+                <p class="neo-ujian-alert-text" x-text="warnText"></p>
+
+                <div class="neo-ujian-alert-counter">
+                    <span class="neo-ujian-alert-count" x-text="violasi"></span>
+                    <div>
+                        <p class="neo-ujian-alert-count-label">Total Pelanggaran</p>
+                        <p class="neo-ujian-alert-count-text">pada sesi ini</p>
+                    </div>
+                </div>
+
+                <div class="neo-ujian-alert-ticks">
+                    <template x-for="i in tickTotal" :key="i">
+                        <span class="neo-ujian-alert-tick" :class="{ 'is-empty': i > violasi }"></span>
+                    </template>
+                </div>
+
+                <p class="neo-ujian-alert-note">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-4m0-4h.01"/>
+                    </svg>
+                    Tombol di bawah mengembalikan Anda ke halaman ujian dalam mode layar penuh.
+                </p>
+            </div>
+
+            <!-- Aksi -->
+            <div class="neo-ujian-alert-foot">
+                <button type="button" class="neo-btn" @click="kembaliKeUjian()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5m7 7l-7-7 7-7"/>
+                    </svg>
+                    Kembali ke Ujian
+                </button>
             </div>
         </div>
     </div>
@@ -357,6 +530,7 @@
             catatanPelanggaran: {},
             fsOpen: true,
             fsAktif: false,
+            fsPernahAktif: false,
             warnOpen: false,
             warnTitle: '',
             warnText: '',
@@ -403,6 +577,7 @@
                 const periksaLayarPenuh = () => {
                     if (document.fullscreenElement || document.webkitFullscreenElement) {
                         this.fsAktif = true;
+                        this.fsPernahAktif = true;
                         this.fsOpen = false;
                         return;
                     }
@@ -517,23 +692,59 @@
             },
 
             async masukLayarPenuh() {
+                const berhasil = await this.aktifkanLayarPenuh();
+
+                if (! berhasil) {
+                    this.lewatiLayarPenuh();
+                    return;
+                }
+
+                this.fsAktif = true;
+                this.fsPernahAktif = true;
+                this.fsOpen = false;
+            },
+
+            /**
+             * Meminta mode layar penuh tanpa mencatat pelanggaran.
+             * Dipakai saat peserta menekan tombol "Kembali ke Ujian",
+             * karena klik tombol tersebut adalah gestur pengguna yang
+             * diizinkan browser untuk memulai layar penuh.
+             */
+            async aktifkanLayarPenuh() {
                 const elemen = document.documentElement;
 
                 try {
                     if (elemen.requestFullscreen) {
                         await elemen.requestFullscreen();
-                    } else if (elemen.webkitRequestFullscreen) {
+                    } else if (elumen.webkitRequestFullscreen) {
                         elemen.webkitRequestFullscreen();
                     } else {
-                        throw new Error('Browser tidak mendukung mode layar penuh.');
+                        return false;
                     }
 
-                    this.fsAktif = true;
-                    this.fsOpen = false;
+                    return true;
                 } catch (e) {
-                    this.fsAktif = false;
-                    this.lewatiLayarPenuh();
+                    return false;
                 }
+            },
+
+            /**
+             * Tutup peringatan pelanggaran dan kembalikan peserta ke halaman
+             * ujian dalam mode layar penuh.
+             */
+            async kembaliKeUjian() {
+                this.warnOpen = false;
+
+                if (document.fullscreenElement || document.webkitFullscreenElement) {
+                    this.fsAktif = true;
+                    this.fsPernahAktif = true;
+                    return;
+                }
+
+                const berhasil = await this.aktifkanLayarPenuh();
+
+                this.fsAktif = berhasil;
+                this.fsPernahAktif = this.fsPernahAktif || berhasil;
             },
 
             lewatiLayarPenuh() {
@@ -706,6 +917,13 @@
                     return 0;
                 }
                 return Math.round((this.answeredCount / this.soal.length) * 100);
+            },
+
+            /**
+             * Jumlah penanda visual pada strip di modal pelanggaran.
+             */
+            get tickTotal() {
+                return Math.min(12, Math.max(this.violasi, 4));
             },
 
             isAnswered(s) {

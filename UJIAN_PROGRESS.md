@@ -10,8 +10,36 @@
 ## Status: DALAM PROGRES (implementasi kode selesai, verifikasi manual pending)
 
 **Tanggal mulai:** 2026-10-28
-**Update terakhir:** 2026-11-16 (sesi 2 — pengawasan ujian)
+**Update terakhir:** 2026-11-18 (sesi 7 — redesign modal pelanggaran, modal kumpulkan jawaban & halaman hasil)
+
+> **Ringkasan 2026-11-18 (sesi 7):** Tiga tampilan dipercantik — modal **"Total Pelanggaran pada
+> sesi ini"** (`.neo-ujian-alert-*`), modal **"Kumpulkan Jawaban?"** (`.neo-ujian-submit-*`),
+> dan **halaman hasil** (`.neo-hasil-*`). Tombol "Kembali ke Ujian" kini mengembalikan peserta
+> ke halaman ujian **dalam mode layar penuh**. Bagian **"Pembahasan"** di halaman hasil punya
+> **expand/collapse satu tombol** (`.neo-hasil-reveal`) yang **tersembunyi secara default** untuk
+> menampilkan/menyembunyikan seluruh daftar pembahasan. Detail di section 3 (Fase 10), 5.2, 5.5, 9, dan 11.
+
+> **Ringkasan 2026-11-18 (sesi 5):** Halaman **`/ujian` didesain ulang** — hero background
+> `ujian-bg.webp` (hasil konversi `ujian.jpg` 4,6 MB → **236 KB**), kartu ujian kini menampilkan
+> **cover** + chip meta + countdown, dan **admin bisa mengunggah cover ujian** (kolom `cover_path`
+> baru + upload WebP terkompresi + opsi hapus). Style baru memakai prefix `.neo-ujian-*` di
+> `resources/css/neo-mirai-home.css` (tanpa file CSS baru). Detail di section 3 (Fase 8), 5.1, 9, 11.
+
 **Branch:** `main`
+
+> **Ringkasan 2026-11-18 (sesi 4):** Pencarian peserta di tab **Peserta** halaman kelola ujian
+> diperbaiki — sekarang admin bisa mencari pegawai berdasarkan **nama dan Nomor Induk (NIP)**.
+> Sebelumnya endpoint cari hanya cocokkan kolom `users.nip` yang isinya **NIK (16 digit)**, bukan NIP,
+> sehingga pencarian dengan NIP asli selalu gagal (0 hasil). NIP/NUPTK asli ada di `users.nomor_induk`.
+> `UjianTest` kini **24/24 hijau** (102 assertion), `UjianImportTest` tetap **10/10 hijau**.
+> Detail di section 9 dan 11.
+
+> **Ringkasan 2026-11-17 (sesi 3):** Fitur **import soal dari Excel** ditambahkan. Admin bisa
+> mengunggah file `.xlsx` berisi daftar soal (pilihan ganda + esai) langsung dari halaman
+> **Tambah Ujian** (`/admin/ujian/create`) maupun dari tab **Soal** di halaman kelola ujian.
+> Template Excel bisa diunduh, baris bermasalah dilaporkan per nomor baris, dan impor bersifat
+> *all-or-nothing*. `UjianImportTest` **10/10 hijau**, `UjianTest` tetap **22/22 hijau**.
+> Detail di section 3 (Fase 7), 8, 9, dan 11.
 
 > **Ringkasan 2026-11-16 (sesi 2):** Fitur **pengawasan ujian** (mencegah peserta membuka tab baru
 > atau keluar dari halaman saat ujian) selesai diimplementasikan: penjaga peramban (fullscreen,
@@ -54,7 +82,8 @@ Cakupan (sudah dikonfirmasi user via AskUserQuestion):
 ### 2.1 Model Data (5 tabel baru)
 
 ```
-ujian                 id, kode(uniq), judul, deskripsi, materi, durasi_menit, status(draft|terbit|selesai),
+ujian                 id, kode(uniq), judul, deskripsi, cover_path?(null = belum ada cover),
+                      materi, durasi_menit, status(draft|terbit|selesai),
                       mulai_at, selesai_at, acak_soal(bool), created_by, timestamps
 ujian_soal            id, ujian_id(fk), tipe(pilihan_ganda|essay), pertanyaan, petunjuk, poin, urut
 ujian_pilihan         id, soal_id(fk), label(A..E), teks, benar(bool), urut
@@ -102,6 +131,8 @@ GET    /admin/ujian/{id}/edit            edit
 PUT    /admin/ujian/{id}                 update
 DELETE /admin/ujian/{id}                 destroy
 POST   /admin/ujian/{id}/soal            storeSoal
+POST   /admin/ujian/{id}/soal/import     importSoal      ← import soal dari Excel
+GET    /admin/ujian/soal/template        templateSoal    ← unduh template Excel
 PUT    /admin/ujian/soal/{soalId}        updateSoal
 DELETE /admin/ujian/soal/{soalId}        destroySoal
 POST   /admin/ujian/soal/{soalId}/pilihan storePilihan
@@ -167,7 +198,7 @@ Ringkas: **1 request buka halaman, 1 request per batch jawaban, 1 request saat s
   - [x] `destroy`
   - [x] `storeSoal` / `updateSoal` / `destroySoal`
   - [x] `storePilihan` / `updatePilihan` / `destroyPilihan`
-  - [x] `storePeserta` / `destroyPeserta` + `cariPeserta` (pencarian user via AJAX)
+  - [x] `storePeserta` / `destroyPeserta` + `cariPeserta` (pencarian user via AJAX, cocokkan nama + Nomor Induk)
   - [x] `hasil` (rekap + penilaian manual) / `updateSkor`
   - [x] Setiap method yang mengubah soal → `Cache::forget("ujian:{id}:soal")` (7 titik: `:153, :198, :236, :249, :275, :295, :313`)
 - [x] View `resources/views/admin/ujian/index.blade.php`
@@ -248,6 +279,157 @@ Ringkas: **1 request buka halaman, 1 request per batch jawaban, 1 request saat s
 - [x] Informasi jumlah pelanggaran di **halaman hasil peserta**
 - [x] `UjianTest` 16 → **22 test, 97 assertion, semua hijau**
 
+### Fase 7 — Import soal dari Excel (2026-11-17)
+> Permintaan user: pada halaman **Tambah Ujian** (`/admin/ujian/create`) tersedia cara cepat
+> memasukkan soal dari file Excel, tanpa mengetik satu per satu.
+
+- [x] Service `app/Services/UjianSoalImportService.php`
+      - `parse()` — baca sheet pertama file `.xlsx`/`.xls`, petakan baris pertama sebagai header
+        kolom, validasi tiap baris soal
+      - `simpan()` — simpan soal + pilihan dalam **1 transaksi**, `urut` dilanjutkan dari soal
+        terakhir yang ada
+      - `template()` / `unduhTemplate()` — buat file template Excel (sheet `Soal` + sheet
+        `Petunjuk`), file disimpan di `storage/app/exports/` dan dihapus setelah diunduh
+- [x] Format kolom Excel (baris pertama = header):
+      `tipe`, `pertanyaan`, `petunjuk`, `poin`, `pilihan_a`..`pilihan_e`, `kunci`
+      - `tipe` boleh dikosongkan → dideteksi otomatis (`pilihan_ganda` bila ada opsi, selain itu `essay`)
+      - `kunci` diisi huruf `A`–`E` (angka `1`–`5` juga diterima)
+      - nama kolom alternatif diterima: `soal`, `jenis`, `opsi_a`..`opsi_e`, `jawaban_benar`, dll.
+      - baris contoh diawali `[CONTOH]` otomatis dilewati
+- [x] **All-or-nothing**: bila ada satu baris bermasalah, seluruh impor dibatalkan dan nomor
+      baris + alasannya ditampilkan di halaman (tidak ada soal parsial yang tersimpan)
+- [x] Controller `Admin\UjianController`
+      - `importSoal()` — `POST /admin/ujian/{id}/soal/import` (import ke ujian yang sudah ada)
+      - `templateSoal()` — `GET /admin/ujian/soal/template` (unduh template)
+      - `store()` — field `file_soal` opsional; bila diisi, soal langsung diimpor setelah ujian
+        dibuat (dari halaman Tambah Ujian)
+      - `prosesImportSoal()` — helper: parse → simpan → `Cache::forget("ujian:{id}:soal")`
+- [x] Route baru di `routes/admin.php`: `admin.ujian.soal.import`, `admin.ujian.soal.template`
+- [x] View:
+      - `resources/views/admin/ujian/_partials/import-soal.blade.php` (partial bersama)
+      - `create.blade.php` — kartu **Import Soal dari Excel (Opsional)** + form jadi `multipart`
+      - `edit.blade.php` — kartu import di tab **Soal** (untuk menambah soal lagi di kemudian hari)
+- [x] `tests/Feature/UjianImportTest.php` — **10 test, 41 assertion, semua hijau**
+- [x] `composer pint` — semua file baru lolos
+
+### Fase 8 — Cover ujian & redesign halaman peserta (2026-11-18)
+> Permintaan user (sesi 5): (1) header halaman `/ujian` disamakan dengan halaman lain
+> (`/pelayanan`, `/publikasi`) memakai background `public/assets/img/template/ujian.jpg` yang
+> dikonversi ke WebP, (2) desain halaman `/ujian` dipercantik tanpa keluar dari tema NEO MIRAI,
+> (3) daftar ujian menampilkan **cover ujian**, dan admin bisa mengunggah cover tersebut.
+
+- [x] Konversi gambar header dengan **sharp** (Node, dependency bawaan project):
+      `public/assets/img/template/ujian.jpg` (4,6 MB, 3712×1152) → `ujian-bg.webp`
+      (1920×596, **236 KB**, quality 70, `fit: cover` + `position: attention`) — **~95% lebih ringan**.
+      Berkas `.jpg` asli tetap disimpan sebagai sumber.
+- [x] Migration `2026_11_18_000001_add_cover_path_to_ujian_table.php` — kolom `cover_path`
+      (string nullable) pada tabel `ujian`
+- [x] Model `App\Models\Ujian` — `cover_path` masuk `$fillable`, accessor
+      `getCoverUrlAttribute()` mengembalikan URL publik disk `public` (null bila belum ada cover)
+- [x] Controller `Admin\UjianController`
+      - `simpanCover()` — kompresi via Intervention Image (GD) → WebP quality 82, lebar maks 1200px,
+        disimpan di `ujian/cover/{uuid}.webp`; ada fallback simpan berkas asli bila proses gagal
+      - `hapusCover()` — hapus berkas lama saat cover diganti/dihapus, dan saat ujian dihapus
+      - `store()` / `update()` — field `cover` (image, maks 4 MB) + checkbox `remove_cover`
+- [x] Admin:
+      - `admin/ujian/create.blade.php` — area unggah cover + pratinjau gambar (JS `previewCover`)
+      - `admin/ujian/edit.blade.php` — cover saat ini + unggah pengganti + checkbox "Hapus cover"
+        (form identitas diubah jadi `multipart/form-data`)
+      - `admin/ujian/index.blade.php` — thumbnail cover 48×48 pada kolom Ujian (fallback ikon)
+- [x] Halaman peserta `resources/views/ujian/index.blade.php` — **desain baru**:
+      - Hero `hero-page neo-ujian-hero` dengan background `ujian-bg.webp`, **overlay terang**
+        (krem semi transparan, sama seperti halaman lain) supaya tulisan tetap terbaca,
+        ikon emas berglow, eyebrow mono, judul gradasi, 2 CTA, dan 4 ringkasan angka
+      - Kartu ujian `.neo-ujian-card` (grid `auto-fill minmax(22rem)`): cover 16:9, badge status
+        berwarna, kode ujian, judul, deskripsi, chip meta (soal / durasi / nilai), tombol aksi
+      - Countdown sisa waktu berjalan (Alpine, `x-init setInterval`)
+      - Empty state `.neo-ujian-empty`
+- [x] CSS: **tidak menambah file CSS baru** (sesuai aturan section 12). Semua gaya khusus
+      `/ujian` (prefix `.neo-ujian-*`) ditambahkan di `resources/css/neo-mirai-home.css`;
+      `npm run build` sukses.
+- [x] Test `tests/Feature/UjianTest.php` — 3 test baru: unggah cover, hapus cover, cover tampil
+      di daftar ujian peserta (pakai `Storage::fake('public')`)
+
+### Fase 9 — Redesign halaman pengerjaan & modal layar penuh (2026-11-18, sesi 6)
+> Permintaan user: setelah klik **"Mulai Ujian"**, modal **"Masuk ke Layar Penuh"** dan
+> halaman pengerjaan ujian harus dipercantik — pakai font & ikon menarik tanpa keluar dari tema
+> NEO MIRAI.
+
+- [x] Modal **"Masuk ke Layar Penuh"** (`.neo-ujian-fs-*`) — bukan lagi modal polos:
+      - kepala gradasi malam + ikon monitor emas berglow + judul display + subjudul
+      - 3 aturan tampil sebagai kartu bernomor (`.neo-ujian-fs-rule`, nomor mono emas)
+      - catatan merah "keluar layar penuh = pelanggaran" (`.neo-ujian-fs-alert`)
+      - footer 2 tombol: sekunder "Lanjut tanpa layar penuh" & utama "Masuk Layar Penuh" (ikon)
+- [x] Halaman pengerjaan:
+      - bar atas sticky `.neo-ujian-topbar` + **garis progres jawaban** tipis di bawah bar
+      - timer jadi pill `.neo-ujian-timer`, **berkedip merah** saat sisa waktu ≤ 60 detik
+      - catatan mode layar penuh jadi callout `.neo-ujian-notice`
+      - panel soal `.neo-ujian-panel` (kepala "Soal X dari Y" + badge tipe/poin, pertanyaan
+        display font, petunjuk dengan aksen garis emas)
+      - pilihan jawaban jadi kartu `.neo-ujian-option` (huruf A/B/C jadi chip yang berubah jadi
+        gradasi emas saat dipilih + centang hijau-emas, hover geser 3px)
+      - palet soal `.neo-ujian-palette` (nomor kotak,answered = gradasi emas, soal aktif = outline)
+      - bar progres gradasi emas + tombol navigasi Previously/Berikutnya berikon
+      - modal "Kumpulkan Jawaban" & modal peringatan pelanggaran dirapikan (ikon + bar progres)
+- [x] CSS: semua gaya baru prefix `.neo-ujian-*` di `resources/css/neo-mirai-home.css`
+      (tanpa file CSS baru, font tetap Chakra Petch + JetBrains Mono, ikon SVG inline gaya Lucide)
+- [x] `npm run build` sukses, seluruh view lolos `php artisan view:cache`
+
+### Fase 10 — Redesign modal & halaman hasil (2026-11-18, sesi 7)
+> Permintaan user: (1) modal **"Total Pelanggaran pada sesi ini"** dipercantik dan tombol
+> **"Kembali ke Ujian"** harus mengembalikan peserta ke halaman ujian **dengan layar penuh**,
+> (2) modal **"Kumpulkan Jawaban?"** dipercantik, (3) **halaman hasil** dipercantik tanpa
+> keluar dari tema NEO MIRAI.
+
+- [x] Modal **"Total Pelanggaran pada sesi ini"** (`.neo-ujian-alert-*`) — bukan lagi modal polos:
+      - kepala gradasi malam + halo merah + ikon segitiga peringatan beranimasi (`neo-ujian-halo`)
+      - eyebrow mono "Pelanggaran Terdeteksi" + judul dari `warnTitle` + subjudul
+      - isi: kartu pesan (border kiri merah) + **penghitung total** angka mono besar
+        + strip penanda tiap pelanggaran (`x-for` atas `tickTotal`)
+      - footer: satu tombol **"Kembali ke Ujian"** (ikon panah kiri) lebar penuh
+- [x] **Tombol "Kembali ke Ujian" mengembalikan layar penuh:**
+      - helper Alpine baru `aktifkanLayarPenuh()` — meminta `requestFullscreen` **tanpa**
+        mencatat pelanggaran (dipisah dari `masukLayarPenuh()` yang lama)
+      - `kembaliKeUjian()` menutup modal, memanggil `aktifkanLayarPenuh()` (klik tombol adalah
+        gestur pengguna sehingga browser mengizinkan), lalu menyinkronkan `fsAktif`/`fsPernahAktif`
+      - `fsPernahAktif` baru: penanda bahwa peserta pernah masuk layar penuh
+      - callout mode layar penuh di bawah bilah atas sekarang **dinamis** (`x-show="fsAktif"`)
+- [x] Modal **"Kumpulkan Jawaban?"** (`.neo-ujian-submit-*`):
+      - kepala gradasi malam + ikon centang emas + eyebrow "Konfirmasi Pengumpulan"
+      - **cincin progres SVG** (gradien emas) menampilkan persentase jawaban terjawab
+      - 3 kartu angka: Dijawab / Kosong / Total Soal (angka "Kosong" merah bila > 0)
+      - callout merah bila masih ada soal belum terjawab + catatan "jawaban aman di server"
+      - footer: Batal (sekunder) + "Ya, Kumpulkan" (utama, berubah jadi "Mengirim...")
+- [x] **Halaman hasil** (`resources/views/ujian/hasil.blade.php`) — redesign penuh (`.neo-hasil-*`):
+      - hero gradasi malam dengan eyebrow mono, judul ujian, subjudul, **chip meta**
+        (durasi, jumlah soal, durasi pengerjaan) dan lencana status (Lulus / Belum Lulus / Belum Dinilai)
+      - **lingkaran nilai SVG** (gradien emas) menampilkan nilai akhir
+      - 4 kartu statistik berikon: Jawaban Benar, Jawaban Salah, Tidak Dijawab, Skor dari total poin
+      - kartu peringatan pelanggaran (hanya tampil bila ada pelanggaran)
+      - judul seksi "Pembahasan" + daftar kartu soal: nomor mono, lencana tipe/status/skor,
+        pertanyaan, petunjuk, kartu **Jawaban Anda** vs **Kunci Jawaban** dengan ikon
+        centang/silang, lampiran esai, dan tombol **Cetak Hasil**
+- [x] **Expand / collapse bagian Pembahasan** di halaman hasil (satu tombol untuk **seluruh
+      bagian**, bukan per soal):
+      - tombol `.neo-hasil-reveal` — blok besar bertanda **emas**: border putus-putus, latar
+        gradien hangat, ikon panah dalam lingkaran gradien emas (berputar 180° saat terbuka),
+        judul display font, keterangan, dan lencana jumlah soal
+      - label berpindah antara "Tampilkan Pembahasan" dan "Sembunyikan Pembahasan"
+      - daftar kartu soal dibungkus satu blok `x-show` + `x-transition.opacity`
+      - **default tersembunyi** saat halaman dibuka (`buka: false`)
+      - state Alpine `buka`, atribut `aria-expanded` pada tombol
+      - Alpine `hasilUjian(total)` didaftarkan inline di view (`@once`)
+      - tombol **"Cetak Hasil"** membuka pembahasan lebih dulu lalu mengembalikan susunan
+        sebelumnya setelah selesai dicetak (`afterprint`)
+- [x] CSS: semua gaya baru (`.neo-ujian-alert-*`, `.neo-ujian-submit-*`, `.neo-hasil-*`) ditambahkan
+      di `resources/css/neo-mirai-home.css` — **tanpa file CSS baru**; `npm run build` sukses
+- [x] **Perbaikan test** (pre-existing, bukan dari redesign ini):
+      - `assertDatabaseCount('ujian_pelanggaran', 0)` → cakupan ke `ujian_id` test sendiri,
+        supaya sisa data uji manual di database dev tidak menggagalkan suite
+      - `test_cover_ujian_tampil_pada_daftar_ujian_peserta` sebelumnya membuat `ujian_peserta`
+        ganda (sudah dibuat di `setUp`) → duplikat; dan `Storage::put()` mengembalikan `bool`,
+        bukan path → path ditulis manual
+- [x] `UjianTest` **27/27 hijau** (112 assertion) + `UjianImportTest` **10/10 hijau** (41 assertion)
 
 ---
 
@@ -318,17 +500,25 @@ Ringkas: **1 request buka halaman, 1 request per batch jawaban, 1 request saat s
 ## 5. Detail Desain Halaman Peserta
 
 ### 5.1 `ujian/index.blade.php` — daftar ujian
-- Hero `.hero-page` (`x-ui.page-hero`) judul "Ujian Pegawai".
-- Statistik `.neo-grid-4` + `.neo-stat-card`: Total Ujian / Sedang Berjalan / Belum Dimulai / Selesai.
-- Kartu per ujian (`.neo-card`): badge status, judul, materi ringkas, jumlah soal, durasi, tenggat.
+> **Diperbarui 2026-11-18 (sesi 5)** — lihat "Fase 8" untuk detail perubahan.
+
+- Hero `.hero-page .neo-ujian-hero` background `ujian-bg.webp` (overlay terang krem semi transparan
+  supaya tulisan di atas foto tetap mudah dibaca), ikon emas, eyebrow mono, judul gradasi
+  "Ujian *Pegawai*", 2 CTA, 4 stat ringkasan.
+- Daftar ujian `.neo-ujian-list` → kartu `.neo-ujian-card`: cover 16:9 (atau placeholder),
+  badge status, kode, judul, deskripsi, chip meta (soal/durasi/nilai), tombol aksi.
   Tombol aksi per state:
   - `belum_mulai` → "Mulai Ujian" (`.neo-btn`)
-  - `berjalan` → "Lanjutkan Ujian" + sisa waktu
-  - `selesai` → "Lihat Hasil" (`.neo-btn .neo-btn-secondary`)
-  - belum terbit / belum jadi peserta → tombol nonaktif "Belum Tersedia"
-- Empty state: `.neo-empty` + `.neo-empty-title` + `.neo-empty-text` + ikon SVG besar.
+  - `berjalan` → "Lanjutkan Ujian" + countdown sisa waktu (Alpine)
+  - `selesai` → "Lihat Hasil & Pembahasan" (`.neo-btn .neo-btn-secondary`)
+  - belum terbit / belum mulai → tombol nonaktif "Belum Tersedia"
+- Empty state: `.neo-ujian-empty` + ikon + judul + teks.
+- Kelas CSS khusus: `.neo-ujian-*` (di `resources/css/neo-mirai-home.css`).
 
 ### 5.2 `ujian/kerjakan.blade.php` — pengerjaan
+> **Diperbarui 2026-11-18 (sesi 6)** — halaman pengerjaan & modal "Masuk ke Layar Penuh"
+> didesain ulang (lihat "Fase 9").
+
 Kerangka: `<x-layouts.app>` → `<main class="neo-mirai">` → hero → `.page-content .content-centered`.
 
 Semua interaksi = **satu blok `<script>` inline Alpine** di akhir view (component `ujian`),
@@ -340,7 +530,7 @@ Layout: grid 2 kolom desktop `lg:grid-cols-[minmax(0,1fr)_20rem]`, 1 kolom mobil
 (`font-mono`) + ikon jam + tombol "Kumpulkan Jawaban" (`.neo-btn`) → konfirmasi via
 `.neo-modal` + `.neo-modal-backdrop`. Sebelum submit, `flush()` antrean jawaban.
 
-**Panel utama**: `.neo-card` + `.neo-card-header` + `.neo-card-title`.
+**Panel utama**: `.neo-ujian-panel` + `.neo-ujian-panel-head` + `.neo-ujian-panel-body`.
 - Nomor soal "Soal 3 dari 20" + badge tipe + badge poin.
 - **Pilihan ganda**: `<input type="radio" class="peer sr-only">` + `<label>` dengan
   `peer-checked:border-[var(--gold)] peer-checked:bg-[var(--paper-soft)]`. Label A/B/C/D
@@ -372,11 +562,13 @@ dengan `style="width: X%"` (satu-satunya inline style, nilainya dinamis server).
   saving: false, savedAt: null, error: false,
   remaining: <detik>,
   violasi: <jumlah pelanggaran>,   // badge di bilah atas
-  fsOpen: true, fsAktif: false,    // modal & status layar penuh
+  fsOpen: true, fsAktif: false, fsPernahAktif: false,  // modal & status layar penuh
   warnOpen: false, warnTitle, warnText,  // modal peringatan pelanggaran
   init() { ...setInterval timer...; document.addEventListener('visibilitychange', ...) },
   flush() { ...1 POST batch... },
-  submit() { ... }
+  submit() { ... },
+  aktifkanLayarPenuh() { ...request fullscreen tanpa mencatat pelanggaran... },
+  kembaliKeUjian() { ...tutup modal + kembali ke layar penuh... }
 }
 ```
 
@@ -408,9 +600,33 @@ Endpoint `simpanJawaban` / `uploadLampiran` / `submit` semuanya cek:
 - Cache hasil `ujian:{id}:hasil:{user_id}` 60 dtk; di-invalidate saat admin ubah skor.
 
 ### 5.5 `ujian/hasil.blade.php`
-Ringkasan (nilai besar font display, badge lulus/tidak, jumlah benar/salah/skip, durasi pengerjaan)
-+ daftar per soal: nomor, soal, jawaban peserta (penanda benar/salah untuk PG), kunci jawaban +
-penjelasan, skor. Soal essay: berkas terunggah + skor admin (atau "Menunggu penilaian").
+> **Diperbarui 2026-11-18 (sesi 7)** — halaman hasil didesain ulang (lihat "Fase 10").
+
+Struktur baru (kelas `.neo-hasil-*`):
+
+- **Hero** `.neo-hasil-hero` → `.neo-hasil-hero-grid`:
+  - kiri: eyebrow mono (`Hasil Ujian · {kode}`), judul ujian (display font), subjudul,
+    chip meta (durasi ujian, jumlah soal, durasi pengerjaan), lencana status lulus/tidak
+  - kanan: `.neo-hasil-ring` — lingkaran nilai SVG bergradien emas + angka nilai (display font)
+- **Statistik** `.neo-hasil-stats` → 4 kartu `.neo-hasil-stat` (ikon + angka + label):
+  Benar, Salah, Tidak Dijawab, Skor dari total poin.
+- **Pelanggaran** `.neo-hasil-alert` (hanya bila `jumlahPelanggaran > 0`).
+- **Pembahasan** — judul seksi `.neo-hasil-section` (ikon + garis pembatas) lalu **tombol besar
+  `.neo-hasil-reveal`** untuk **expand/collapse seluruh bagian** (default **tersembunyi**):
+  - tombol full-width, border emas putus-putus + latar gradien hangat, ikon panah dalam
+    lingkaran gradien emas (berputar 180° saat terbuka), judul display font, keterangan, dan
+    lencana jumlah soal; saat terbuka tombol melembut (garis solid, latar polos)
+  - di bawahnya daftar kartu `.neo-hasil-card` per soal dalam satu blok `x-show` + fade:
+    - kepala: nomor mono (`01`, `02`, …) + lencana tipe/status/skor (`.neo-hasil-badge`)
+    - isi: pertanyaan (display font), petunjuk, lalu:
+      - PG → kartu **Jawaban Anda** (ikon centang/silang/garis sesuai status) + kartu
+        **Kunci Jawaban** (ikon kunci, gradasi emas)
+      - Esai → kartu jawaban esai + tautan berkas lampiran (`.neo-hasil-file`)
+- **Footer** `.neo-hasil-foot` → "Kembali ke Daftar Ujian" + "Cetak Hasil" (`window.print()`;
+  pembahasan dibuka otomatis saat mencetak lalu dikembalikan seperti semula).
+
+Data ringkasan (nilai akhir, jumlah benar/salah/skip, skor) tetap berasal dari
+`UjianController::susunHasil()` — tidak ada perubahan pada logika penilaian.
 
 ---
 
@@ -468,6 +684,9 @@ Admin ──PUT /admin/ujian/jawaban/{id}/skor──▶ skor manual essay
       (regresi: peserta `belum_mulai`/`berjalan` diarahkan ke `ujian.kerjakan`)
 - [x] `acak_soal` terimplementasi: urutan soal + pilihan berbeda per peserta, stabil saat reload;
       label pilihan diurutkan ulang (A, B, C…) mengikuti posisi tampil; penilaian tetap benar
+- [x] **Import soal dari Excel**: `UjianImportTest` **10/10 hijau** (41 assertion) — import PG +
+      esai, urutan `urut` berlanjut, impor dibatalkan bila kunci hilang/tidak sesuai opsi, baris
+      `[CONTOH]` dilewati, impor dari halaman Tambah Ujian, template terunduh & bisa dibaca kembali
 
 ### Belum (perlu dijalankan)
 - [ ] Manual browser:
@@ -478,6 +697,17 @@ Admin ──PUT /admin/ujian/jawaban/{id}/skor──▶ skor manual essay
   - [ ] Refresh di tengah ujian → jawaban & sisa waktu tetap
   - [ ] 375px → grid 1 kolom, sidebar ke bawah
   - [ ] Admin centang "Acak Urutan Soal" → urutan soal & pilihan berubah, nomor soal tetap 1..N
+- [ ] Manual browser (**pencarian peserta**):
+  - [ ] `/admin/ujian/{id}/edit` → tab **Peserta** → ketik **Nomor Induk** (mis. `197007301992031001`)
+        → pegawai yang cocok muncul
+  - [ ] Ketik **nama** sebagian (mis. `YUSMARLI`) → muncul
+  - [ ] Hasil pencarian & tabel "Peserta Terdaftar" menampilkan Nomor Induk
+  - [ ] Tab **Hasil** menampilkan Nomor Induk di kolom peserta
+- [ ] Manual browser (**fitur import Excel**):
+  - [ ] `/admin/ujian/create` → unduh template → isi beberapa soal → unggah → soal muncul di tab Soal
+  - [ ] File dengan baris bermasalah → pesan error menyebut nomor baris, tidak ada soal yang tersimpan
+  - [ ] Unggah file `.csv`/`.txt` → ditolak oleh validasi dengan pesan jelas
+  - [ ] Import kedua kali pada ujian yang sama → `urut` soal baru melanjutkan urutan lama
 - [ ] Manual browser (**fitur pengawasan ujian**):
   - [ ] Modal layar penuh muncul; "Masuk Layar Penuh" → browser fullscreen; keluar fullscreen
         → badge pelanggaran bertambah dan baris `keluar_layar_penh` muncul di admin
@@ -489,6 +719,22 @@ Admin ──PUT /admin/ujian/jawaban/{id}/skor──▶ skor manual essay
   - [ ] Buka ujian dari peramban lain → peringatan "Sesi Ganda Terdeteksi" + baris `sesi_ganda`
   - [ ] Auto-save tetap 1 request per batch (penjaga tidak menambah request lain selain
         `POST /perangkat` saat halaman dibuka dan `POST /pelanggaran` per kejadian)
+- [ ] Manual browser (**redesign sesi 7**):
+  - [ ] Modal **"Kumpulkan Jawaban?"** — cincin progres menunjukkan persentase, kartu angka
+        (Dijawab / Kosong / Total) benar, callatan merah muncul bila ada soal kosong
+  - [ ] Modal **pelanggaran** — angka total pelanggaran sesuai badge di bilah atas, strip
+        penanda sesuai jumlah pelanggaran
+  - [ ] Klik **"Kembali ke Ujian"** → modal tertutup, browser **masuk layar penuh** lagi
+        (bukan hanya menutup modal), dan callout mode layar penuh berubah jadi "layar penuh"
+  - [ ] Pelanggaran yang terjadi **saat sudah di layar penuh** (mis. salin) → klik "Kembali
+        ke Ujian" tetap di layar penuh dan **tidak menambah** jumlah pelanggaran
+  - [ ] **Halaman hasil** — lingkaran nilai sesuai nilai akhir, lencana lulus/tidak benar,
+        kartu jawaban (hijau = benar, merah = salah, garis = kosong) sesuai status per soal,
+        tombol "Cetak Hasil" mencetak halaman
+  - [ ] **Expand/collapse pembahasan** — saat halaman dibuka **pembahasan tersembunyi**; klik
+        tombol emas di bawah judul "Pembahasan" menampilkan seluruh daftar soal (panah berputar
+        180°, tombol melembut), label berpindah "Tampilkan Pembahasan" ↔ "Sembunyikan
+        Pembahasan", dan "Cetak Hasil" tetap mencetak seluruh pembahasan
 - [ ] Beban:
   - [ ] Network: buka `/ujian/{id}` → 1 document request, **tanpa polling**
   - [ ] Klik 5 radio berbeda → **1** POST setelah idle
@@ -528,6 +774,9 @@ Admin ──PUT /admin/ujian/jawaban/{id}/skor──▶ skor manual essay
 | `resources/views/admin/ujian/_partials/pilihan-rows.blade.php` | Partial baris opsi pilihan ganda (form tambah soal) |
 | `resources/views/admin/ujian/_partials/flash.blade.php` | Partial flash message |
 | `tests/Feature/UjianTest.php` | 22 feature test (semua hijau dengan driver MySQL) |
+| `app/Services/UjianSoalImportService.php` | Import soal dari Excel: parse, simpan (1 transaksi), buat template |
+| `resources/views/admin/ujian/_partials/import-soal.blade.php` | Partial form import Excel + daftar format kolom + daftar error baris |
+| `tests/Feature/UjianImportTest.php` | 10 feature test import Excel (semua hijau dengan driver MySQL) |
 | `UJIAN_PROGRESS.md` | File progress ini |
 
 ### Files Dimodifikasi
@@ -563,6 +812,54 @@ Admin ──PUT /admin/ujian/jawaban/{id}/skor──▶ skor manual essay
 > Catatan: `app/Models/User.php` **tidak** diubah — relasi `ujian()` tidak dipakai karena
 > query peserta diambil langsung via `ujian_peserta.user_id`.
 
+### Files Diperbarui — Cover Ujian & Redesign Halaman Peserta (2026-11-18, sesi 5)
+| File | Perubahan |
+|------|-----------|
+| `database/migrations/2026_11_18_000001_add_cover_path_to_ujian_table.php` | **Baru** — kolom `cover_path` (nullable) pada tabel `ujian` |
+| `app/Models/Ujian.php` | `cover_path` masuk `$fillable`; accessor `cover_url` (URL publik disk `public`) |
+| `app/Http/Controllers/Admin/UjianController.php` | `simpanCover()` (WebP q82, maks 1200px), `hapusCover()`, `store()`/`update()` menerima `cover` + `remove_cover`, `destroy()` menghapus berkas cover |
+| `resources/views/admin/ujian/create.blade.php` | Area unggah cover + pratinjau gambar (JS `previewCover`) |
+| `resources/views/admin/ujian/edit.blade.php` | Cover saat ini + unggah pengganti + checkbox "Hapus cover"; form identitas jadi `multipart/form-data` |
+| `resources/views/admin/ujian/index.blade.php` | Thumbnail cover 48×48 pada kolom Ujian (fallback ikon) |
+| `resources/views/ujian/index.blade.php` | **Redesign penuh**: hero baru (background `ujian-bg.webp`, ikon emas, stat ringkasan), kartu ujian ber-cover, chip meta, countdown, empty state baru |
+| `resources/css/neo-mirai-home.css` | Tambahan section gaya `.neo-ujian-*` (hero, kartu, chip, empty state) — tanpa file CSS baru |
+| `public/assets/img/template/ujian-bg.webp` | **Baru** — hasil konversi `ujian.jpg` (4,6 MB) → WebP 1920×596, 236 KB |
+| `tests/Feature/UjianTest.php` | 3 test baru: unggah cover, hapus cover, cover tampil di daftar ujian peserta |
+
+### Files Diperbarui — Redesign Modal Pelanggaran, Modal Kumpulkan Jawaban & Halaman Hasil (2026-11-18, sesi 7)
+| File | Perubahan |
+|------|---------|
+| `resources/views/ujian/kerjakan.blade.php` | Modal **"Kumpulkan Jawaban?"** diganti dengan desain `.neo-ujian-submit-*` (cincin progres SVG, kartu angka, callout belum dijawab); modal **pelanggaran** diganti dengan desain `.neo-ujian-alert-*` (kepala gradasi + halo merah, penghitung total, strip penanda); tombol "Kembali ke Ujian" kini memanggil `kembaliKeUjian()`; helper Alpine `aktifkanLayarPenuh()` + state `fsPernahAktif`; callout mode layar penuh jadi dinamis |
+| `resources/views/ujian/hasil.blade.php` | **Redesign penuh** — hero gradasi malam + lingkaran nilai SVG, chip meta, lencana status, 4 kartu statistik berikon, kartu pelanggaran, kartu soal `.neo-hasil-*` (nomor mono, lencana status, jawaban Anda vs kunci jawaban dengan ikon), tombol cetak hasil. **Expand/collapse satu tombol besar `.neo-hasil-reveal`** di bawah judul seksi "Pembahasan" (default **tersembunyi**; border emas putus-putus, ikon panah dalam lingkaran gradien emas berputar saat terbuka, lencana jumlah soal) untuk menampilkan/menampilkan seluruh daftar kartu soal via `x-show` + fade, state Alpine `buka`, `aria-expanded`; "Cetak Hasil" membuka pembahasan lebih dulu lalu mengembalikannya (`afterprint`) |
+| `resources/css/neo-mirai-home.css` | Tambahan section gaya `.neo-ujian-alert-*`, `.neo-ujian-submit-*`, `.neo-hasil-*` (+ keyframe `neo-ujian-pop`, `neo-ujian-halo`) termasuk `.neo-hasil-reveal` + `-icon/-text/-title/-sub/-badge` — tanpa file CSS baru; `npm run build` sukses |
+| `tests/Feature/UjianTest.php` | 3 assertion `assertDatabaseCount('ujian_pelanggaran', 0)` → cakupan ke `ujian_id` test sendiri; `test_cover_ujian_tampil_pada_daftar_ujian_peserta` tidak lagi membuat `ujian_peserta` ganda dan menulis `cover_path` manual (`Storage::put()` mengembalikan bool) |
+
+> Catatan: `UjianTest` kini **27/27 hijau** (112 assertion) dan `UjianImportTest` **10/10 hijau**
+> (41 assertion) dengan `DB_CONNECTION=mysql`. Tiga kegagalan lama (`ujian_pelanggaran` masih
+> berisi baris dari uji manual di browser pada 2026-11-18) diperbaiki dengan pembatasan
+> cakupan assertion, bukan dengan menghapus data.
+
+### Files Diperbarui — Pencarian Peserta berdasarkan Nomor Induk (2026-11-18)
+| File | Perubahan |
+|------|-----------|
+| `app/Http/Controllers/Admin/UjianController.php` | `cariPeserta()` sekarang mencocokkan `name` + `nomor_induk` (sebelumnya `name` + `nip`); kolom `nip` (isi = NIK) tidak lagi jadi target; payload JSON mengembalikan `nomor_induk` (field `nip` & `role` dihapus karena tidak lagi dipakai view) |
+| `resources/views/admin/ujian/edit.blade.php` | Placeholder & label kartu "Tambah Peserta" → "nama atau Nomor Induk (NIP)"; sub-label hasil pencarian & tabel "Peserta Terdaftar" menampilkan `nomor_induk` (sebelumnya `nip`) |
+| `resources/views/admin/ujian/hasil.blade.php` | Rekap peserta menampilkan `nomor_induk` (sebelumnya `nip`) |
+| `tests/Feature/UjianTest.php` | 22 → 24 test: `test_admin_bisa_mencari_peserta_berdasarkan_nomor_induk` & `test_admin_bisa_mencari_peserta_berdasarkan_nama` |
+
+> Catatan penting: **kolom `users.nip` berisi NIK (16 digit), bukan NIP.** NIP/NUPTK asli ada di
+> `users.nomor_induk` (unik, dipakai sebagai kunci login & join ke `tenaga_ktd`).
+> `cariPeserta` adalah satu-satunya tempat di aplikasi yang memakai `users.nip`, sekarang sudah
+> diselaraskan. Lihat `PROFILE_COMPLETION_PROGRESS.md` & `app/Http/Controllers/PageController.php:3099`.
+
+### Files Diperbarui — Import Soal dari Excel (2026-11-17, sesi 3)
+| File | Perubahan |
+|------|-----------|
+| `app/Http/Controllers/Admin/UjianController.php` | Tambah `importSoal()`, `templateSoal()`, helper `prosesImportSoal()`; `store()` menerima `file_soal` opsional; validasi `file_soal` (mimes xlsx/xls, max 5 MB) |
+| `routes/admin.php` | Tambah route `admin.ujian.soal.import` & `admin.ujian.soal.template` |
+| `resources/views/admin/ujian/create.blade.php` | Kartu "Import Soal dari Excel (Opsional)"; form jadi `enctype="multipart/form-data"` |
+| `resources/views/admin/ujian/edit.blade.php` | Kartu import di tab Soal (form terpisah POST ke `admin.ujian.soal.import`) |
+
 ---
 
 ## 10. Out of Scope (sprint berikutnya)
@@ -574,6 +871,149 @@ Admin ──PUT /admin/ujian/jawaban/{id}/skor──▶ skor manual essay
 ---
 
 ## 11. Changelog
+
+### 2026-11-18 (sesi 7) — Redesign modal pelanggaran, modal kumpulkan jawaban & halaman hasil
+
+- Permintaan user:
+  1. modal **"Total Pelanggaran pada sesi ini"** dipercantik (font & ikon menarik), dan tombol
+     **"Kembali ke Ujian"** harus mengembalikan peserta ke halaman ujian **dengan layar penuh**;
+  2. modal **"Kumpulkan Jawaban?"** dipercantik;
+  3. **halaman hasil** dipercantik tanpa keluar dari tema NEO MIRAI.
+- **Modal pelanggaran** (`.neo-ujian-alert-*`): kepala gradasi malam + halo merah beranimasi,
+  ikon segitiga peringatan, eyebrow mono, penghitung total pelanggaran angka mono besar,
+  strip penanda tiap pelanggaran, dan tombol "Kembali ke Ujian" lebar penuh.
+- **Layar penuh saat kembali:** helper Alpine `aktifkanLayarPenuh()` (meminta `requestFullscreen`
+  tanpa mencatat pelanggaran) dipakai oleh `kembaliKeUjian()`; klik tombol adalah gestur pengguna
+  sehingga browser mengizinkan permintaan layar penuh. State baru `fsPernahAktif` menandai bahwa
+  peserta pernah masuk layar penuh. Callout di bawah bilah atas kini menyesuaikan dengan
+  status layar penuh (`x-show="fsAktif"`).
+- **Modal "Kumpulkan Jawaban?"** (`.neo-ujian-submit-*`): kepala gradasi malam + ikon centang emas,
+  **cincin progres SVG** bergradien emas, 3 kartu angka (Dijawab / Kosong / Total Soal),
+  callout merah bila ada soal kosong, catatan "jawaban aman di server", dan tombol utama yang
+  berubah jadi "Mengirim…" saat proses berjalan.
+- **Halaman hasil** (`resources/views/ujian/hasil.blade.php`): hero gradasi malam dengan eyebrow,
+  judul, chip meta (durasi, jumlah soal, durasi pengerjaan), lencana lulus/tidak, dan **lingkaran
+  nilai SVG**; 4 kartu statistik berikon; kartu peringatan pelanggaran; kartu soal `.neo-hasil-*`
+  (nomor mono, lencana tipe/status/skor, pertanyaan, petunjuk, kartu Jawaban Anda vs Kunci Jawaban
+  dengan ikon centang/silang, lampiran esai); tombol "Kembali ke Daftar Ujian" + "Cetak Hasil".
+- **Expand / collapse pembahasan** di halaman hasil: **satu tombol besar `.neo-hasil-reveal`** di
+  bawah judul seksi "Pembahasan" menyembunyikan/menampilkan **seluruh** daftar kartu soal (bukan
+  per soal). **Default tersembunyi** saat halaman dibuka. Tombol full-width dengan border emas
+  putus-putus, latar gradien hangat, ikon panah dalam lingkaran gradien emas (berputar 180° saat
+  terbuka), judul display font + keterangan + lencana jumlah soal; isi pembahasan memakai
+  `x-show` + fade, dan "Cetak Hasil" membuka pembahasan lebih dulu lalu mengembalikan susunan
+  semula setelah selesai dicetak.
+- Font & ikon: tetap **Chakra Petch** (display) + **Azeret/JetBrains Mono** (angka) + ikon SVG
+  inline gaya Lucide — tidak ada font atau ikon baru di luar tema NEO MIRAI.
+- CSS: prefix `.neo-ujian-alert-*`, `.neo-ujian-submit-*`, `.neo-hasil-*` di
+  `resources/css/neo-mirai-home.css` (tanpa file CSS baru), `npm run build` sukses,
+  `php artisan view:cache` lolos.
+- **Perbaikan test (pre-existing):** tiga assertion `assertDatabaseCount('ujian_pelanggaran', 0)`
+  kini dibatasi ke `ujian_id` test sendiri (sebelumnya ikut menghitung baris uji manual di
+  database dev), dan `test_cover_ujian_tampil_pada_daftar_ujian_peserta` tidak lagi membuat
+  `ujian_peserta` ganda maupun menulis `cover_path` dari nilai balik `Storage::put()` (bool).
+  `UjianTest` **27/27 hijau** (112 assertion), `UjianImportTest` **10/10 hijau** (41 assertion).
+
+### 2026-11-18 (sesi 6) — Redesign halaman pengerjaan & modal layar penuh
+
+- Permintaan user: setelah klik **"Mulai Ujian"**, modal **"Masuk ke Layar Penuh"** dan halaman
+  pengerjaan ujian dipercantik (font & ikon menarik) tanpa keluar dari tema NEO MIRAI.
+- **Modal "Masuk ke Layar Penuh"** (`.neo-ujian-fs-*`): kepala gradasi malam + ikon monitor emas
+  berglow, 3 aturan sebagai kartu bernomor, catatan merah soal pencatatan pelanggaran, dan
+  footer 2 tombol (sekunder "Lanjut tanpa layar penuh", utama "Masuk Layar Penuh").
+- **Halaman pengerjaan**: bar atas sticky + garis progres jawaban, timer pill yang berkedip
+  merah ≤ 60 detik, callout mode layar penuh, panel soal `.neo-ujian-panel`, pilihan jawaban
+  kartu `.neo-ujian-option` (chip huruf jadi gradasi emas + centang saat dipilih), palet soal
+  `.neo-ujian-palette`, bar progres gradasi emas, tombol navigasi berikon; modal "Kumpulkan
+  Jawaban" dan modal peringatan pelanggaran ikut dirapikan.
+- Font & ikon: tetap **Chakra Petch** (display) + **JetBrains Mono** (angka/mono) + ikon SVG
+  inline gaya Lucide — tidak ada font atau ikon baru di luar tema.
+- CSS: prefix `.neo-ujian-*` di `resources/css/neo-mirai-home.css` (tanpa file CSS baru),
+  `npm run build` sukses, `php artisan view:cache` lolos.
+
+### 2026-11-18 (sesi 5) — Cover ujian & redesign halaman peserta
+
+- Permintaan user:
+  1. header halaman `/ujian` dibikin sama seperti halaman lain (`/pelayanan`, `/publikasi`) dengan
+     background `public/assets/img/template/ujian.jpg` yang **dikonversi & dikompresi ke WebP**
+     supaya ringan di server;
+  2. desain halaman `/ujian` dipercantik (font & ikon menarik) tanpa keluar dari tema NEO MIRAI;
+  3. daftar ujian menampilkan **cover ujian**, termasuk facility **upload cover di admin**.
+- **Gambar header:** `ujian.jpg` (4,6 MB, 3712×1152) → `ujian-bg.webp` (1920×596, **236 KB**,
+  quality 70) memakai **sharp** (`npm` dependency project). Penghematan ±95%.
+- **Desain halaman `/ujian` (public):** hero bergaya NEO MIRAI (overlay terang krem semi transparan,
+  ikon emas berglow, judul gradasi, CTA, 4 stat ringkasan) + kartu ujian ber-cover 16:9, badge status
+  berwarna, chip meta, countdown sisa waktu, dan empty state baru. Semua memakai font tema
+  (Chakra Petch + JetBrains Mono) dan ikon SVG inline gaya Lucide — tidak ada font/ikon baru
+  yang keluar dari tema.
+- **Cover ujian:**
+  - migration `2026_11_18_000001_add_cover_path_to_ujian_table.php` (kolom `cover_path`);
+  - `App\Models\Ujian` — `$fillable` + accessor `cover_url`;
+  - `Admin\UjianController` — `simpanCover()` (Intervention Image/GD → WebP q82, lebar maks 1200px,
+    path `ujian/cover/{uuid}.webp`), `hapusCover()` (file lama dihapus saat diganti/dihapus),
+    `store()`/`update()` menerima `cover` (maks 4 MB) dan `remove_cover`;
+  - admin `create`/`edit` — area unggah + pratinjau + opsi hapus; `index` — thumbnail cover;
+  - public `ujian/index.blade.php` — cover ditampilkan di kartu (fallback placeholder "Tanpa Cover").
+- **Test:** 3 test baru di `UjianTest` (unggah cover, hapus cover, cover tampil di daftar peserta).
+  Catatan: suite lokal tidak bisa jalan polos karena PHP CLI tidak punya `pdo_sqlite` — jalankan
+  dengan `DB_CONNECTION=mysql DB_DATABASE=kemenagtd_db php vendor/bin/phpunit tests/Feature/UjianTest.php`.
+- **Catatan gaya:** tidak menambah file CSS baru (sesuai section 12); semua gaya `.neo-ujian-*`
+  ditambahkan di `resources/css/neo-mirai-home.css` dan `npm run build` sukses.
+
+### 2026-11-18 — Pencarian peserta berdasarkan nama & Nomor Induk
+
+- Permintaan user: pada halaman `/admin/ujian/{id}/edit` → tab **Peserta** → kartu **Tambah Peserta**,
+  admin harus bisa mencari pegawai berdasarkan **nama dan nomor_induk**.
+- **Bug yang ditemukan & diperbaiki:** `cariPeserta()` mencocokkan kolom `users.nip`. Kolom itu
+  sebenarnya berisi **NIK (16 digit KTP)**, bukan NIP — dibuktikan dari `PageController.php:3099-3108`
+  (`// NIK: prioritas dari input 'nik', fallback ke 'nip'`) dan `PROFILE_COMPLETION_PROGRESS.md:23`.
+  **NIP/NUPTK asli disimpan di `users.nomor_induk`** (kolom unik, dipakai sebagai kunci login di
+  `AuthController.php:33,64`, join ke `tenaga_ktd`, dan folder foto profil).
+  Konsekuensi: **mencari peserta dengan NIP selalu gagal** (0 hasil). Contoh data nyata:
+  user id 2 — `nip`=1303043007700002, `nomor_induk`=197007301992031001; pencarian versi lama
+  dengan `197007301992031001` mengembalikan 0 baris.
+- **Perubahan:**
+  - `cariPeserta()` → mencocokkan `name` + `nomor_induk`; kolom `nip` tidak lagi jadi target.
+    Select & payload JSON mengikuti (`nomor_induk` dikembalikan, `nip` dihapus).
+  - `edit.blade.php` → placeholder & label kartu "Tambah Peserta" menjadi "nama atau Nomor Induk (NIP)";
+    sub-label hasil pencarian & tabel "Peserta Terdaftar" menampilkan Nomor Induk.
+  - `hasil.blade.php` → rekap peserta menampilkan Nomor Induk.
+  - Ketiga tampilan ini adalah satu-satunya di area admin ujian yang masih memakai `users.nip`;
+    sekarang konsisten dengan seluruh admin screen lain (`admin/users/index.blade.php:175`,
+    `admin/units/_pimpinan.blade.php`, `admin/penilaian-kinerja/*`, dll.).
+- **Test:** `UjianTest` 22 → **24 test, 102 assertion, semua hijau**. Test baru:
+  `test_admin_bisa_mencari_peserta_berdasarkan_nomor_induk` & `test_admin_bisa_mencari_peserta_berdasarkan_nama`.
+  `UjianImportTest` tetap 10/10 hijau. `composer pint` lolos.
+
+### 2026-11-17 (sesi 3) — Import soal dari Excel
+
+- Permintaan user: halaman **Tambah Ujian** (`/admin/ujian/create`) perlu cara cepat memasukkan soal
+  dari file Excel. Implementasi:
+  - **Service baru** `App\Services\UjianSoalImportService`:
+    - `parse()` membaca **sheet pertama** file `.xlsx`/`.xls`, memetakan baris pertama sebagai
+      header kolom, lalu memvalidasi tiap baris (tipe, pertanyaan, poin, minimal 2 opsi, kunci).
+      Nama kolom alternatif diterima (`soal`, `jenis`, `opsi_a`, `jawaban_benar`, …).
+      Baris kosong dan baris contoh berawalan `[CONTOH]` dilewati.
+    - `simpan()` menulis soal + pilihan dalam satu transaksi; `urut` dilanjutkan dari soal
+      terakhir pada ujian tersebut.
+    - `template()` menghasilkan workbook 2 sheet: `Soal` (header + 2 baris contoh) dan `Petunjuk`;
+      sheet `Soal` dijadikan sheet aktif agar file yang diunduh langsung bisa diisi.
+  - **Impor bersifat all-or-nothing**: bila ada baris bermasalah, tidak ada soal yang tersimpan dan
+    admin menerima daftar pesan error beserta nomor baris (`Baris 7: kunci jawaban wajib diisi …`).
+  - **Admin UI**:
+    - Kartu "Import Soal dari Excel (Opsional)" di halaman Tambah Ujian; file diunggah bersama
+      penyimpanan identitas ujian, soal langsung masuk setelah ujian dibuat.
+    - Kartu import di tab **Soal** pada halaman kelola ujian untuk menambah soal di kemudian hari.
+    - Partial bersama `admin.ujian._partials.import-soal` berisi input file, tombol unduh template,
+      ringkasan format kolom, dan daftar error import.
+    - Validasi file: `mimes:xlsx,xls`, maksimal 5 MB.
+  - **Route baru**: `POST /admin/ujian/{id}/soal/import` dan `GET /admin/ujian/soal/template`.
+  - **Test**: `tests/Feature/UjianImportTest.php` — 10 test, 41 assertion, semua hijau
+    (import PG + esai, urutan lanjut, batal bila kunci salah, baris contoh dilewati, impor dari
+    halaman tambah ujian, template terunduh & terbaca kembali). `UjianTest` tetap 22/22 hijau.
+- Bug yang ditemukan saat uji manual round-trip template: **sheet aktif pada template adalah
+  `Petunjuk`**, sehingga file hasil unduhan tidak terbaca sebagai tabel soal. Diperbaiki dengan
+  `setActiveSheetIndex(0)` saat membuat template dan pembacaan memakai sheet pertama.
 
 ### 2026-11-16 (sesi 2) — Pencegahan membuka tab baru saat ujian
 
@@ -670,14 +1110,17 @@ Admin ──PUT /admin/ujian/jawaban/{id}/skor──▶ skor manual essay
 
 - **Langkah berikutnya (urutan prioritas):**
   1. Uji manual di browser sesuai section 8 (timer, autosave batch, upload, submit, guard waktu,
-     acak soal, **pengawasan ujian**).
+     acak soal, **pengawasan ujian**, **import Excel**).
   2. Uji beban (target 1 request per batch jawaban, tanpa polling, response < 500ms dgn 50 soal).
   3. Commit ke branch `feature/ujian-peserta` → PR ke `main` (perubahan saat ini masih di `main`).
   4. Fitur yang masih jadi groundwork saja (belum dipakai): kolom `ujian.jumlah_soal_diambil`
      (migration `2026_11_16_000001`) untuk mengambil sejumlah soal dari bank soal.
+  5. Import Excel: peningkatan yang mungkin dibutuhkan — pratinjau (preview) sebelum disimpan, import
+     peserta dari Excel, dan **ekspor hasil ujian ke Excel** (masih di luar scope).
 - Cara menjalankan test (sudah terverifikasi hijau):
   ```bash
   DB_CONNECTION=mysql DB_DATABASE=kemenagtd_db php vendor/bin/phpunit tests/Feature/UjianTest.php
+  DB_CONNECTION=mysql DB_DATABASE=kemenagtd_db php vendor/bin/phpunit tests/Feature/UjianImportTest.php
   ```
   Jangan `php artisan test` polos — `phpunit.xml` memaksa `DB_CONNECTION=sqlite` dan PHP lokal
   tidak punya `pdo_sqlite`.

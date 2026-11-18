@@ -9,12 +9,22 @@ use App\Models\UjianPelanggaran;
 use App\Models\UjianPeserta;
 use App\Models\UjianPilihan;
 use App\Models\UjianSoal;
+use App\Services\UjianSoalImportService;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Format;
+use Intervention\Image\ImageManager;
 
 class UjianController extends Controller
 {
+    public function __construct(private UjianSoalImportService $importSoalService) {}
+
     private array $statuses = [
         'draft' => 'Draft',
         'terbit' => 'Terbit',
@@ -82,10 +92,13 @@ class UjianController extends Controller
             'mulai_at' => ['nullable', 'date'],
             'selesai_at' => ['nullable', 'date', 'after_or_equal:mulai_at'],
             'acak_soal' => ['nullable', 'boolean'],
+            'cover' => ['nullable', 'image', 'max:4096'],
+            'file_soal' => ['nullable', 'file', 'mimes:xlsx,xls', 'max:5120'],
         ]);
 
         $validated['created_by'] = $request->user()->id;
         $validated['acak_soal'] = $request->boolean('acak_soal');
+        unset($validated['cover']);
 
         // Ujian baru belum punya soal maupun peserta, jadi selalu dibuat sebagai draft.
         if ($validated['status'] === 'terbit') {
@@ -93,6 +106,23 @@ class UjianController extends Controller
         }
 
         $ujian = Ujian::create($validated);
+
+        if ($request->hasFile('cover')) {
+            $ujian->update(['cover_path' => $this->simpanCover($request->file('cover'))]);
+        }
+
+        if ($request->hasFile('file_soal')) {
+            $hasil = $this->prosesImportSoal($ujian->id, $request->file('file_soal'));
+
+            if (! $hasil['sukses']) {
+                return redirect()->route('admin.ujian.edit', $ujian->id)
+                    ->with('error', 'Ujian berhasil dibuat, tetapi impor soal gagal: '.$hasil['errors'][0])
+                    ->with('import_errors', $hasil['errors']);
+            }
+
+            return redirect()->route('admin.ujian.edit', $ujian->id)
+                ->with('success', 'Ujian berhasil dibuat. '.$hasil['pesan']);
+        }
 
         return redirect()->route('admin.ujian.edit', $ujian->id)
             ->with('success', 'Ujian berhasil dibuat. Tambahkan soal dan peserta untuk menerbitkannya.');
@@ -126,9 +156,20 @@ class UjianController extends Controller
             'mulai_at' => ['nullable', 'date'],
             'selesai_at' => ['nullable', 'date', 'after_or_equal:mulai_at'],
             'acak_soal' => ['nullable', 'boolean'],
+            'cover' => ['nullable', 'image', 'max:4096'],
+            'remove_cover' => ['nullable', 'boolean'],
         ]);
 
         $validated['acak_soal'] = $request->boolean('acak_soal');
+        unset($validated['cover'], $validated['remove_cover']);
+
+        if ($request->hasFile('cover')) {
+            $this->hapusCover($ujian->cover_path);
+            $validated['cover_path'] = $this->simpanCover($request->file('cover'));
+        } elseif ($request->boolean('remove_cover')) {
+            $this->hapusCover($ujian->cover_path);
+            $validated['cover_path'] = null;
+        }
 
         if ($validated['status'] === 'terbit') {
             $soalCount = UjianSoal::where('ujian_id', $id)->count();
@@ -149,6 +190,8 @@ class UjianController extends Controller
     {
         $ujian = Ujian::find($id);
         abort_unless($ujian, 404);
+
+        $this->hapusCover($ujian->cover_path);
 
         $ujian->delete();
         Cache::forget("ujian:{$id}:soal");
@@ -199,6 +242,95 @@ class UjianController extends Controller
         Cache::forget("ujian:{$id}:soal");
 
         return back()->with('success', 'Soal berhasil ditambahkan.');
+    }
+
+    public function importSoal(Request $request, int $id)
+    {
+        $ujian = Ujian::find($id);
+        abort_unless($ujian, 404);
+
+        $request->validate([
+            'file_soal' => ['required', 'file', 'mimes:xlsx,xls', 'max:5120'],
+        ]);
+
+        $hasil = $this->prosesImportSoal($id, $request->file('file_soal'));
+
+        if (! $hasil['sukses']) {
+            return back()
+                ->with('error', 'Impor soal gagal. Perbaiki file Excel lalu unggah ulang.')
+                ->with('import_errors', $hasil['errors']);
+        }
+
+        return back()->with('success', $hasil['pesan']);
+    }
+
+    public function templateSoal()
+    {
+        $path = $this->importSoalService->unduhTemplate();
+
+        return response()->download($path, 'template-import-soal-ujian.xlsx')
+            ->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Simpan cover ujian sebagai WebP agar ringan di server.
+     */
+    private function simpanCover(UploadedFile $file): string
+    {
+        $nama = Str::uuid().'.webp';
+        $path = 'ujian/cover/'.$nama;
+
+        try {
+            $manager = new ImageManager(new Driver);
+            $img = $manager->decode($file->getPathname());
+
+            // Lebar maksimum 1200px, rasio.aspect dipertahankan.
+            $lebarMaks = 1200;
+            if ($img->width() > $lebarMaks) {
+                $tinggi = (int) round(($lebarMaks / $img->width()) * $img->height());
+                $img->resize($lebarMaks, $tinggi);
+            }
+
+            $encoded = $img->encodeUsingFormat(Format::WEBP, quality: 82);
+            Storage::disk('public')->put($path, $encoded->toString());
+        } catch (\Exception $e) {
+            // Cadangan: simpan berkas asli bila pemrosesan gambar gagal.
+            $path = $file->storeAs('ujian/cover', Str::uuid().'.'.$file->getClientOriginalExtension(), 'public');
+        }
+
+        return $path;
+    }
+
+    /**
+     * Hapus berkas cover lama dari storage.
+     */
+    private function hapusCover(?string $path): void
+    {
+        if ($path && Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
+    }
+
+    /**
+     * @return array{sukses: bool, errors: array<int, string>, pesan: string}
+     */
+    private function prosesImportSoal(int $ujianId, UploadedFile $file): array
+    {
+        $hasil = $this->importSoalService->parse($file);
+
+        if (! empty($hasil['errors'])) {
+            return ['sukses' => false, 'errors' => $hasil['errors'], 'pesan' => ''];
+        }
+
+        $jumlah = $this->importSoalService->simpan($ujianId, $hasil['rows']);
+
+        Cache::forget("ujian:{$ujianId}:soal");
+
+        return [
+            'sukses' => true,
+            'errors' => [],
+            'pesan' => $jumlah.' soal berhasil diimpor dari file Excel.',
+        ];
     }
 
     public function updateSoal(Request $request, int $soalId)
@@ -375,10 +507,10 @@ class UjianController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $users = DB::table('users')
-            ->select('id', 'name', 'nip', 'dept_id', 'role')
+            ->select('id', 'name', 'nomor_induk')
             ->where(function ($query) use ($q) {
                 $query->where('name', 'like', "%{$q}%")
-                    ->orWhere('nip', 'like', "%{$q}%");
+                    ->orWhere('nomor_induk', 'like', "%{$q}%");
             })
             ->orderBy('name')
             ->limit(20)
@@ -390,8 +522,7 @@ class UjianController extends Controller
             'results' => $users->map(fn ($u) => [
                 'id' => $u->id,
                 'name' => $u->name,
-                'nip' => $u->nip,
-                'role' => $u->role,
+                'nomor_induk' => $u->nomor_induk,
                 'terdaftar' => in_array($u->id, $terdaftar, true),
             ]),
         ]);
@@ -447,6 +578,240 @@ class UjianController extends Controller
             'stats' => $stats,
             'pelanggaran' => $pelanggaran,
         ]);
+    }
+
+    /**
+     * Halaman rincian jawaban satu peserta.
+     */
+    public function jawabanPeserta(Request $request, int $id, int $userId)
+    {
+        $ujian = Ujian::find($id);
+        abort_unless($ujian, 404);
+
+        $peserta = UjianPeserta::where('ujian_id', $id)
+            ->where('user_id', $userId)
+            ->with('user')
+            ->first();
+        abort_unless($peserta, 404);
+
+        $soal = UjianSoal::with('pilihan')
+            ->where('ujian_id', $id)
+            ->orderBy('urut')
+            ->get();
+
+        $jawaban = UjianJawaban::where('ujian_id', $id)
+            ->where('user_id', $userId)
+            ->get()
+            ->keyBy('soal_id');
+
+        $pelanggaran = UjianPelanggaran::where('ujian_id', $id)
+            ->where('user_id', $userId)
+            ->orderBy('created_at')
+            ->get();
+
+        return view('admin.ujian.jawaban-peserta', [
+            'title' => 'Jawaban Peserta - SILATAR Admin',
+            'ujian' => $ujian,
+            'peserta' => $peserta,
+            'rincian' => $this->susunRincianJawaban($soal, $jawaban),
+            'pelanggaran' => $pelanggaran,
+        ]);
+    }
+
+    /**
+     * Hapus seluruh jawaban satu peserta supaya ia dapat mengulang ujian.
+     */
+    public function resetJawaban(Request $request, int $id, int $userId)
+    {
+        $peserta = UjianPeserta::where('ujian_id', $id)
+            ->where('user_id', $userId)
+            ->first();
+        abort_unless($peserta, 404);
+
+        if ($peserta->status === 'berjalan') {
+            return back()->with('error', 'Peserta sedang mengerjakan ujian. Tunggu sesi selesai sebelum mereset jawaban.');
+        }
+
+        $jawaban = UjianJawaban::where('ujian_id', $id)
+            ->where('user_id', $userId)
+            ->get();
+
+        // Lampiran esai ikut dihapus agar tidak menyisakan berkas sampah.
+        foreach ($jawaban->pluck('file_path')->filter()->unique() as $path) {
+            Storage::disk('public')->delete($path);
+        }
+
+        UjianJawaban::where('ujian_id', $id)
+            ->where('user_id', $userId)
+            ->delete();
+
+        UjianPelanggaran::where('ujian_id', $id)
+            ->where('user_id', $userId)
+            ->delete();
+
+        $peserta->update([
+            'status' => 'belum_mulai',
+            'started_at' => null,
+            'ends_at' => null,
+            'submitted_at' => null,
+            'nilai' => null,
+            'ip' => null,
+            'user_agent' => null,
+            'sidik_perangkat' => null,
+        ]);
+
+        Cache::forget("ujian:{$id}:hasil:{$userId}");
+
+        return back()->with('success', 'Jawaban peserta telah dihapus. Peserta dapat mengerjakan ulang ujian.');
+    }
+
+    /**
+     * Halaman cetak / export hasil ujian yang print friendly.
+     */
+    public function cetak(Request $request, int $id)
+    {
+        $ujian = Ujian::find($id);
+        abort_unless($ujian, 404);
+
+        $peserta = UjianPeserta::where('ujian_id', $id)
+            ->with('user')
+            ->orderBy('user_id')
+            ->get();
+
+        $soal = UjianSoal::with('pilihan')
+            ->where('ujian_id', $id)
+            ->orderBy('urut')
+            ->get();
+
+        $jawaban = UjianJawaban::where('ujian_id', $id)
+            ->get()
+            ->groupBy('user_id');
+
+        $pelanggaran = UjianPelanggaran::where('ujian_id', $id)
+            ->orderBy('created_at')
+            ->get()
+            ->groupBy('user_id');
+
+        $nilaiTerisi = $peserta->whereNotNull('nilai')->pluck('nilai');
+
+        $stats = [
+            'total' => $peserta->count(),
+            'selesai' => $peserta->where('status', 'selesai')->count(),
+            'berjalan' => $peserta->where('status', 'berjalan')->count(),
+            'belum_mulai' => $peserta->where('status', 'belum_mulai')->count(),
+            'rata_rata' => $nilaiTerisi->isEmpty() ? null : round($nilaiTerisi->avg(), 2),
+            'tertinggi' => $nilaiTerisi->isEmpty() ? null : round($nilaiTerisi->max(), 2),
+            'terendah' => $nilaiTerisi->isEmpty() ? null : round($nilaiTerisi->min(), 2),
+            'total_pelanggaran' => $pelanggaran->sum(fn ($items) => $items->count()),
+        ];
+
+        $rincianPeserta = [];
+
+        foreach ($peserta as $item) {
+            $rincianPeserta[$item->user_id] = $this->susunRincianJawaban(
+                $soal,
+                $jawaban->get($item->user_id, collect())->keyBy('soal_id')
+            );
+        }
+
+        return view('admin.ujian.cetak', [
+            'title' => 'Cetak Hasil Ujian - SILATAR Admin',
+            'ujian' => $ujian,
+            'peserta' => $peserta,
+            'soal' => $soal,
+            'rincianPeserta' => $rincianPeserta,
+            'pelanggaran' => $pelanggaran,
+            'stats' => $stats,
+            'totalPoin' => $soal->sum('poin'),
+            'fontBase' => asset('fonts/pdf'),
+            'letterhead' => asset('assets/img/template/header.png'),
+            'cetakPada' => now()->format('d/m/Y H:i'),
+            'dicetakOleh' => $request->user()->name,
+        ]);
+    }
+
+    /**
+     * Susun rincian jawaban satu peserta terhadap seluruh soal ujian.
+     *
+     * @param  Collection<int, UjianSoal>  $soal
+     * @param  Collection<int, UjianJawaban>  $jawaban  dikunci berdasarkan soal_id
+     */
+    private function susunRincianJawaban($soal, $jawaban): array
+    {
+        $benar = 0;
+        $salah = 0;
+        $kosong = 0;
+        $totalSkor = 0.0;
+        $totalPoin = 0;
+
+        $rincian = [];
+
+        foreach ($soal as $nomor => $s) {
+            $totalPoin += (int) $s->poin;
+
+            $j = $jawaban->get($s->id);
+            $kunci = $s->pilihan->firstWhere('benar', true);
+            $dipilih = $j && $j->pilihan_id
+                ? $s->pilihan->firstWhere('id', $j->pilihan_id)
+                : null;
+
+            if ($s->tipe === 'pilihan_ganda') {
+                if ($dipilih === null) {
+                    $kosong++;
+                    $status = 'kosong';
+                } elseif ($kunci && $dipilih->id === $kunci->id) {
+                    $benar++;
+                    $status = 'benar';
+                } else {
+                    $salah++;
+                    $status = 'salah';
+                }
+
+                $skorSoal = $j && $j->skor !== null ? (float) $j->skor : ($status === 'benar' ? (float) $s->poin : 0.0);
+            } else {
+                $status = 'esai';
+                $skorSoal = (float) ($j?->skor ?? 0);
+            }
+
+            $totalSkor += $skorSoal;
+
+            $rincian[] = [
+                'nomor' => $nomor + 1,
+                'soal_id' => $s->id,
+                'tipe' => $s->tipe,
+                'pertanyaan' => $s->pertanyaan,
+                'petunjuk' => $s->petunjuk,
+                'poin' => (int) $s->poin,
+                'status' => $status,
+                'pilihan' => $s->pilihan->map(fn ($p) => [
+                    'id' => $p->id,
+                    'label' => $p->label,
+                    'teks' => $p->teks,
+                    'benar' => (bool) $p->benar,
+                    'dipilih' => $dipilih !== null && $dipilih->id === $p->id,
+                ])->values(),
+                'kunciLabel' => $kunci?->label,
+                'kunciTeks' => $kunci?->teks,
+                'dipilihLabel' => $dipilih?->label,
+                'dipilihTeks' => $dipilih?->teks,
+                'esai' => $j?->esai,
+                'file_nama' => $j?->file_nama,
+                'file_url' => $j && $j->file_path ? route('ujian.berkas', $j->id) : null,
+                'skor' => $j?->skor,
+                'skorSoal' => round($skorSoal, 2),
+                'dijawab_at' => $j?->dijawab_at,
+            ];
+        }
+
+        return [
+            'rincian' => $rincian,
+            'benar' => $benar,
+            'salah' => $salah,
+            'kosong' => $kosong,
+            'totalPoin' => $totalPoin,
+            'totalSkor' => round($totalSkor, 2),
+            'nilai' => $totalPoin > 0 ? round($totalSkor / $totalPoin * 100, 2) : 0,
+        ];
     }
 
     public function updateSkor(Request $request, int $jawabanId)

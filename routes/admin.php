@@ -252,9 +252,12 @@ Route::middleware(['auth', 'admin'])
             Route::put('/{id}', [UjianController::class, 'update'])->name('update')->whereNumber('id');
             Route::delete('/{id}', [UjianController::class, 'destroy'])->name('destroy')->whereNumber('id');
             Route::get('/{id}/hasil', [UjianController::class, 'hasil'])->name('hasil')->whereNumber('id');
+            Route::get('/{id}/cetak', [UjianController::class, 'cetak'])->name('cetak')->whereNumber('id');
 
             // Soal & pilihan
+            Route::get('/soal/template', [UjianController::class, 'templateSoal'])->name('soal.template');
             Route::post('/{id}/soal', [UjianController::class, 'storeSoal'])->name('soal.store')->whereNumber('id');
+            Route::post('/{id}/soal/import', [UjianController::class, 'importSoal'])->name('soal.import')->whereNumber('id');
             Route::put('/soal/{soalId}', [UjianController::class, 'updateSoal'])->name('soal.update')->whereNumber('soalId');
             Route::delete('/soal/{soalId}', [UjianController::class, 'destroySoal'])->name('soal.destroy')->whereNumber('soalId');
             Route::post('/soal/{soalId}/pilihan', [UjianController::class, 'storePilihan'])->name('pilihan.store')->whereNumber('soalId');
@@ -265,6 +268,10 @@ Route::middleware(['auth', 'admin'])
             Route::post('/{id}/peserta', [UjianController::class, 'storePeserta'])->name('peserta.store')->whereNumber('id');
             Route::delete('/peserta/{pesertaId}', [UjianController::class, 'destroyPeserta'])->name('peserta.destroy')->whereNumber('pesertaId');
             Route::get('/{id}/peserta/cari', [UjianController::class, 'cariPeserta'])->name('peserta.cari')->whereNumber('id');
+
+            // Rincian jawaban & reset jawaban peserta
+            Route::get('/{id}/peserta/{userId}/jawaban', [UjianController::class, 'jawabanPeserta'])->name('peserta.jawaban')->whereNumber('id')->whereNumber('userId');
+            Route::post('/{id}/peserta/{userId}/reset', [UjianController::class, 'resetJawaban'])->name('peserta.reset')->whereNumber('id')->whereNumber('userId');
 
             // Penilaian manual
             Route::put('/jawaban/{jawabanId}/skor', [UjianController::class, 'updateSkor'])->name('skor.update')->whereNumber('jawabanId');

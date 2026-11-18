@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Ujian extends Model
 {
@@ -13,6 +14,7 @@ class Ujian extends Model
         'kode',
         'judul',
         'deskripsi',
+        'cover_path',
         'materi',
         'durasi_menit',
         'status',
@@ -54,5 +56,17 @@ class Ujian extends Model
     public function scopeTerbit($query)
     {
         return $query->where('status', 'terbit');
+    }
+
+    /**
+     * URL publik dari cover ujian, null bila cover belum diunggah.
+     */
+    public function getCoverUrlAttribute(): ?string
+    {
+        if (blank($this->cover_path)) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->cover_path);
     }
 }
