@@ -35,15 +35,6 @@
         }
         table { border-collapse: collapse; }
 
-        /* ── Masthead ───────────────────────────────────────── */
-        .masthead td { vertical-align: middle; }
-        .letterhead { width: 132mm; }
-        .seal-cell { width: 26mm; text-align: right; }
-        .seal-logo {
-            display: block; width: 20mm; height: 20mm;
-            object-fit: contain; margin-left: auto;
-        }
-
         /* ── Judul dokumen ──────────────────────────────────── */
         .head-rule { margin-top: 3mm; border-top: 1.6pt solid #1a2c35; }
         .head-rule-accent { margin-top: 0.8mm; border-top: 0.6pt solid #d4a853; width: 46mm; }
@@ -247,17 +238,8 @@
     </div>
 
     <div class="sheet">
-        {{-- ── Masthead ─────────────────────────────────────────────── --}}
-        <table class="masthead" width="100%">
-            <tr>
-                <td class="letterhead">
-                    <img src="{{ $letterhead }}" alt="Kementerian Agama" style="width: 132mm;">
-                </td>
-                <td class="seal-cell">
-                    <img class="seal-logo" src="{{ $seal }}" alt="SILATAR">
-                </td>
-            </tr>
-        </table>
+        {{-- ── Kop surat ──────────────────────────────────────────────── --}}
+        <x-print.header :font-base="$fontBase" />
 
         <div class="head-rule"></div>
         <div class="head-rule-accent"></div>
