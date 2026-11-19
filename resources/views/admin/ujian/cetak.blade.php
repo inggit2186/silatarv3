@@ -1,6 +1,5 @@
 @php
     $statusLabel = ['belum_mulai' => 'Belum Mulai', 'berjalan' => 'Berjalan', 'selesai' => 'Selesai'];
-    $statusColor = ['belum_mulai' => '#8a8580', 'berjalan' => '#b86e28', 'selesai' => '#1f7a5c'];
     $nomorUrut = 0;
 @endphp
 <!DOCTYPE html>
@@ -112,23 +111,21 @@
         .c-no { width: 8mm; }
         .c-nama { width: auto; }
         .c-nip { width: 32mm; }
-        .c-status { width: 24mm; }
-        .c-nilai { width: 16mm; }
-        .c-waktu { width: 28mm; }
+        .c-nilai { width: 20mm; }
+        .c-waktu { width: 38mm; }
         .c-pelanggaran { width: 22mm; }
 
         .idx { font-family: 'Space Mono'; font-weight: 700; font-size: 7.6pt; color: #8a8580; }
         .nama { font-family: 'Chakra Petch'; font-weight: 600; font-size: 8.4pt; color: #2d2824; }
         .nip { font-family: 'Space Mono'; font-size: 6.8pt; color: #8a8580; margin-top: 0.5mm; }
-        .clock { font-family: 'Space Mono'; font-weight: 700; font-size: 7.4pt; color: #2d2824; }
+        .clock { font-family: 'Space Mono'; font-weight: 700; font-size: 7.4pt; color: #2d2824; display: block; }
         .clock.none { color: #b8b5b0; font-weight: 400; }
-        .nilai { font-family: 'Space Mono'; font-weight: 700; font-size: 8.6pt; color: #b86e28; }
-        .chip {
-            display: inline-block; padding: 0.9mm 2mm; border-radius: 1.2mm;
+        .durasi { font-family: 'Space Mono'; font-size: 6.8pt; color: #8a8580; display: block; margin-top: 0.5mm; }
+        .tidak-hadir {
             font-family: 'Barlow Condensed'; font-weight: 600; font-size: 6.8pt;
-            text-transform: uppercase; letter-spacing: 0.5pt; white-space: nowrap;
+            text-transform: uppercase; letter-spacing: 0.5pt; color: #8a8580; white-space: nowrap;
         }
-        .chip-dot { display: inline-block; width: 1.5mm; height: 1.5mm; border-radius: 50%; margin-right: 1.3mm; vertical-align: middle; }
+        .nilai { font-family: 'Space Mono'; font-weight: 700; font-size: 8.6pt; color: #b86e28; }
         .violation { font-family: 'Barlow Condensed'; font-weight: 700; font-size: 7pt; color: #b03a3a; }
 
         /* ── Rincian jawaban per peserta ────────────────────── */
@@ -290,7 +287,7 @@
                 </td>
                 <td>
                     <div class="meta-label">Jumlah Soal</div>
-                    <div class="meta-value mono">{{ $soal->count() }} soal / {{ $totalPoin }} poin</div>
+                    <div class="meta-value mono">{{ $soal->count() }} soal</div>
                 </td>
             </tr>
             <tr>
@@ -345,7 +342,6 @@
                         <th class="c-no">#</th>
                         <th class="c-nama">Nama Pegawai</th>
                         <th class="c-nip">Nomor Induk</th>
-                        <th class="c-status">Status</th>
                         <th class="c-nilai">Nilai</th>
                         <th class="c-waktu">Dikerjakan</th>
                         <th class="c-pelanggaran">Pelanggaran</th>
@@ -355,30 +351,31 @@
                     @foreach ($peserta as $item)
                         @php
                             $nomorUrut++;
-                            $warna = $statusColor[$item->status] ?? '#8a8580';
                             $daftarPelanggaran = $pelanggaran->get($item->user_id, collect());
+                            $waktu = $rekapWaktu[$item->user_id] ?? ['waktu' => null, 'durasi' => null, 'sedangBerjalan' => false];
+                            $tidakHadir = $item->nilai === null
+                                && $item->started_at === null
+                                && $ujianSelesai;
                         @endphp
                         <tr class="{{ $nomorUrut % 2 === 0 ? 'odd' : '' }}">
                             <td class="c-no"><span class="idx">{{ str_pad((string) $nomorUrut, 2, '0', STR_PAD_LEFT) }}</span></td>
                             <td class="c-nama"><span class="nama">{{ $item->user->name ?? '-' }}</span></td>
                             <td class="c-nip"><span class="nip">{{ $item->user->nomor_induk ?? '-' }}</span></td>
-                            <td class="c-status">
-                                <span class="chip" style="background: {{ $warna }}18; color: {{ $warna }};">
-                                    <span class="chip-dot" style="background: {{ $warna }};"></span>{{ $statusLabel[$item->status] ?? $item->status }}
-                                </span>
-                            </td>
                             <td class="c-nilai">
                                 @if ($item->nilai !== null)
                                     <span class="nilai">{{ number_format($item->nilai, 2) }}</span>
+                                @elseif ($tidakHadir)
+                                    <span class="tidak-hadir">Tidak Hadir</span>
                                 @else
                                     <span class="clock none">—</span>
                                 @endif
                             </td>
                             <td class="c-waktu">
-                                @if ($item->submitted_at)
-                                    <span class="clock">{{ $item->submitted_at->format('d/m/Y H:i') }}</span>
-                                @elseif ($item->started_at)
-                                    <span class="clock">Mulai {{ $item->started_at->format('d/m/Y H:i') }}</span>
+                                @if ($waktu['waktu'])
+                                    <span class="clock">{{ $waktu['waktu'] }}</span>
+                                    @if ($waktu['durasi'])
+                                        <span class="durasi">{{ $waktu['durasi'] }}{{ $waktu['sedangBerjalan'] ? ' (berlangsung)' : '' }}</span>
+                                    @endif
                                 @else
                                     <span class="clock none">—</span>
                                 @endif
@@ -487,9 +484,8 @@
                 <td width="56%">
                     <div class="sign-note">
                         Dokumen ini dihasilkan otomatis oleh <b>SILATAR V2</b> dari basis data
-                        <b>ujian</b>, <b>ujian_peserta</b>, dan <b>ujian_jawaban</b> serta sah sebagai
-                        bukti rekapitulasi hasil ujian <b>{{ $ujian->kode }}</b>. Data tidak dapat
-                        dimodifikasi setelah dokumen dicetak.
+                        <b>Ujian Server</b> serta sah sebagai bukti rekapitulasi hasil ujian
+                        <b>{{ $ujian->kode }}</b>. Data tidak dapat dimodifikasi setelah dokumen dicetak.
                     </div>
                     <div class="sign-title">Catatan Verifikasi</div>
                 </td>

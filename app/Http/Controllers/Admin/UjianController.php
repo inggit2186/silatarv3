@@ -10,6 +10,7 @@ use App\Models\UjianPeserta;
 use App\Models\UjianPilihan;
 use App\Models\UjianSoal;
 use App\Services\UjianSoalImportService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -714,6 +715,29 @@ class UjianController extends Controller
             );
         }
 
+        Carbon::setLocale('id_ID');
+
+        $rekapWaktu = [];
+
+        foreach ($peserta as $item) {
+            $waktu = $item->submitted_at ?? $item->started_at;
+            $durasi = null;
+
+            if ($item->started_at) {
+                $selesaiAt = $item->submitted_at ?? now();
+                $totalDetik = (int) abs($selesaiAt->diffInSeconds($item->started_at));
+                $menit = intdiv($totalDetik, 60);
+                $detik = $totalDetik % 60;
+                $durasi = $menit . ' menit' . ($detik > 0 ? ' ' . $detik . ' detik' : '');
+            }
+
+            $rekapWaktu[$item->user_id] = [
+                'waktu' => $waktu?->translatedFormat('d F Y H:i'),
+                'durasi' => $durasi,
+                'sedangBerjalan' => $item->submitted_at === null && $item->started_at !== null,
+            ];
+        }
+
         return view('admin.ujian.cetak', [
             'title' => 'Cetak Hasil Ujian - SILATAR Admin',
             'ujian' => $ujian,
@@ -721,8 +745,9 @@ class UjianController extends Controller
             'soal' => $soal,
             'rincianPeserta' => $rincianPeserta,
             'pelanggaran' => $pelanggaran,
+            'rekapWaktu' => $rekapWaktu,
             'stats' => $stats,
-            'totalPoin' => $soal->sum('poin'),
+            'ujianSelesai' => $ujian->status === 'selesai' || ($ujian->selesai_at && now()->gte($ujian->selesai_at)),
             'fontBase' => asset('fonts/pdf'),
             'letterhead' => asset('assets/img/template/header.png'),
             'cetakPada' => now()->format('d/m/Y H:i'),
