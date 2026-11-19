@@ -674,9 +674,14 @@ class UjianController extends Controller
         $ujian = Ujian::find($id);
         abort_unless($ujian, 404);
 
-        $peserta = UjianPeserta::where('ujian_id', $id)
+        $peserta = UjianPeserta::query()
+            ->select('ujian_peserta.*')
+            ->leftJoin('users', 'users.id', '=', 'ujian_peserta.user_id')
+            ->where('ujian_peserta.ujian_id', $id)
             ->with('user')
-            ->orderBy('user_id')
+            ->orderByRaw('CASE WHEN ujian_peserta.nilai IS NULL THEN 1 ELSE 0 END')
+            ->orderByDesc('ujian_peserta.nilai')
+            ->orderBy('users.name')
             ->get();
 
         $soal = UjianSoal::with('pilihan')
@@ -750,6 +755,7 @@ class UjianController extends Controller
             'ujianSelesai' => $ujian->status === 'selesai' || ($ujian->selesai_at && now()->gte($ujian->selesai_at)),
             'fontBase' => asset('fonts/pdf'),
             'letterhead' => asset('assets/img/template/header.png'),
+            'seal' => asset('assets/img/ikon/silatar_logo.png'),
             'cetakPada' => now()->format('d/m/Y H:i'),
             'dicetakOleh' => $request->user()->name,
         ]);

@@ -39,15 +39,9 @@
         .masthead td { vertical-align: middle; }
         .letterhead { width: 132mm; }
         .seal-cell { width: 26mm; text-align: right; }
-        .seal {
-            width: 17mm; height: 17mm; border: 0.7pt solid #d4a853; border-radius: 50%;
-            padding: 2.2mm; margin-left: auto;
-        }
-        .seal-ring { width: 100%; height: 100%; border: 0.7pt solid #d4a853; border-radius: 50%; padding: 1.6mm; }
-        .seal-core { width: 100%; height: 100%; background: #d4a853; border-radius: 50%; }
-        .seal-word {
-            font-family: 'Bebas Neue'; font-size: 11pt; color: #b86e28;
-            letter-spacing: 1.2pt; margin-top: 1mm;
+        .seal-logo {
+            display: block; width: 20mm; height: 20mm;
+            object-fit: contain; margin-left: auto;
         }
 
         /* ── Judul dokumen ──────────────────────────────────── */
@@ -112,13 +106,13 @@
         .c-nama { width: auto; }
         .c-nip { width: 32mm; }
         .c-nilai { width: 20mm; }
-        .c-waktu { width: 38mm; }
-        .c-pelanggaran { width: 22mm; }
+        .c-waktu { width: 42mm; }
+        .c-pelanggaran { width: 36mm; }
 
         .idx { font-family: 'Space Mono'; font-weight: 700; font-size: 7.6pt; color: #8a8580; }
         .nama { font-family: 'Chakra Petch'; font-weight: 600; font-size: 8.4pt; color: #2d2824; }
         .nip { font-family: 'Space Mono'; font-size: 6.8pt; color: #8a8580; margin-top: 0.5mm; }
-        .clock { font-family: 'Space Mono'; font-weight: 700; font-size: 7.4pt; color: #2d2824; display: block; }
+        .clock { font-family: 'Space Mono'; font-weight: 700; font-size: 7.4pt; color: #2d2824; display: block; white-space: nowrap; }
         .clock.none { color: #b8b5b0; font-weight: 400; }
         .durasi { font-family: 'Space Mono'; font-size: 6.8pt; color: #8a8580; display: block; margin-top: 0.5mm; }
         .tidak-hadir {
@@ -126,7 +120,13 @@
             text-transform: uppercase; letter-spacing: 0.5pt; color: #8a8580; white-space: nowrap;
         }
         .nilai { font-family: 'Space Mono'; font-weight: 700; font-size: 8.6pt; color: #b86e28; }
-        .violation { font-family: 'Barlow Condensed'; font-weight: 700; font-size: 7pt; color: #b03a3a; }
+        .violation { font-family: 'Barlow Condensed'; font-weight: 700; font-size: 9pt; color: #b03a3a; }
+        .violation-list { margin-top: 0.8mm; padding: 0; list-style: none; }
+        .violation-list li {
+            font-family: 'Barlow Condensed'; font-weight: 600; font-size: 6.6pt;
+            color: #514c46; line-height: 1.35; margin-top: 0.5mm;
+        }
+        .violation-list .vtime { font-family: 'Space Mono'; font-weight: 400; color: #a8a49e; }
 
         /* ── Rincian jawaban per peserta ────────────────────── */
         .detail-page { page-break-before: always; margin-top: 0; }
@@ -254,12 +254,7 @@
                     <img src="{{ $letterhead }}" alt="Kementerian Agama" style="width: 132mm;">
                 </td>
                 <td class="seal-cell">
-                    <div class="seal">
-                        <div class="seal-ring">
-                            <div class="seal-core"></div>
-                        </div>
-                    </div>
-                    <div class="seal-word">SILATAR</div>
+                    <img class="seal-logo" src="{{ $seal }}" alt="SILATAR">
                 </td>
             </tr>
         </table>
@@ -383,6 +378,14 @@
                             <td class="c-pelanggaran">
                                 @if ($daftarPelanggaran->isNotEmpty())
                                     <span class="violation">{{ $daftarPelanggaran->count() }} kali</span>
+                                    <ul class="violation-list">
+                                        @foreach ($daftarPelanggaran as $langgaran)
+                                            <li>
+                                                {{ $langgaran->label() }}
+                                                <span class="vtime">{{ $langgaran->created_at?->format('d/m/Y H:i') }}</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
                                 @else
                                     <span class="clock none">—</span>
                                 @endif
@@ -425,6 +428,16 @@
                                 &nbsp;·&nbsp; Pelanggaran {{ $daftarPelanggaran->count() }}
                             @endif
                         </div>
+                        @if ($daftarPelanggaran->isNotEmpty())
+                            <ul class="violation-list">
+                                @foreach ($daftarPelanggaran as $langgaran)
+                                    <li>
+                                        {{ $langgaran->label() }}
+                                        <span class="vtime">{{ $langgaran->created_at?->format('d/m/Y H:i') }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
                     </div>
 
                     @forelse ($data['rincian'] as $soal)
